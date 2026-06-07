@@ -1,13 +1,13 @@
 import { Link } from "@tanstack/react-router";
-import { Droplets } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
-            <Droplets className="h-5 w-5 text-primary-foreground" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm shadow-primary/20">
+            <Logo className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
             <span className="font-display text-xl font-semibold leading-none tracking-tight text-foreground">

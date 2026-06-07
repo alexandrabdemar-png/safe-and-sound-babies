@@ -40,13 +40,18 @@ function AuthPage() {
     setLoading("email");
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: { emailRedirectTo: `${window.location.origin}/onboarding` },
         });
         if (error) throw error;
-        toast.success("Check your inbox to confirm your email ✨");
+        if (data.session) {
+          toast.success("Welcome to Safe & Sound ✨");
+          navigate({ to: "/onboarding" });
+        } else {
+          toast.success("Check your inbox to confirm your email ✨");
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
