@@ -18,6 +18,7 @@ import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
+import { Route as ApiPublicHooksWeeklyMilestoneCheckRouteImport } from './routes/api/public/hooks/weekly-milestone-check'
 
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
@@ -63,6 +64,12 @@ const AuthenticatedAddRoute = AuthenticatedAddRouteImport.update({
   path: '/add',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicHooksWeeklyMilestoneCheckRoute =
+  ApiPublicHooksWeeklyMilestoneCheckRouteImport.update({
+    id: '/api/public/hooks/weekly-milestone-check',
+    path: '/api/public/hooks/weekly-milestone-check',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof AuthenticatedHomeRoute
   '/products': typeof AuthenticatedProductsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/api/public/hooks/weekly-milestone-check': typeof ApiPublicHooksWeeklyMilestoneCheckRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,6 +91,7 @@ export interface FileRoutesByTo {
   '/home': typeof AuthenticatedHomeRoute
   '/products': typeof AuthenticatedProductsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/api/public/hooks/weekly-milestone-check': typeof ApiPublicHooksWeeklyMilestoneCheckRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,6 +104,7 @@ export interface FileRoutesById {
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/products': typeof AuthenticatedProductsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/api/public/hooks/weekly-milestone-check': typeof ApiPublicHooksWeeklyMilestoneCheckRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/products'
     | '/profile'
+    | '/api/public/hooks/weekly-milestone-check'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/products'
     | '/profile'
+    | '/api/public/hooks/weekly-milestone-check'
   id:
     | '__root__'
     | '/'
@@ -128,6 +140,7 @@ export interface FileRouteTypes {
     | '/_authenticated/home'
     | '/_authenticated/products'
     | '/_authenticated/profile'
+    | '/api/public/hooks/weekly-milestone-check'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -135,6 +148,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   OnboardingRoute: typeof OnboardingRoute
+  ApiPublicHooksWeeklyMilestoneCheckRoute: typeof ApiPublicHooksWeeklyMilestoneCheckRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -202,6 +216,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAddRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/hooks/weekly-milestone-check': {
+      id: '/api/public/hooks/weekly-milestone-check'
+      path: '/api/public/hooks/weekly-milestone-check'
+      fullPath: '/api/public/hooks/weekly-milestone-check'
+      preLoaderRoute: typeof ApiPublicHooksWeeklyMilestoneCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -229,7 +250,19 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   OnboardingRoute: OnboardingRoute,
+  ApiPublicHooksWeeklyMilestoneCheckRoute:
+    ApiPublicHooksWeeklyMilestoneCheckRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
