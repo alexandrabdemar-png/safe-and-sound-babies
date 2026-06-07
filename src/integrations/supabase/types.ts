@@ -52,6 +52,8 @@ export type Database = {
           created_at: string
           due_date: string | null
           id: string
+          logged_at: string
+          notes: string | null
           title: string
           updated_at: string
         }
@@ -62,6 +64,8 @@ export type Database = {
           created_at?: string
           due_date?: string | null
           id?: string
+          logged_at?: string
+          notes?: string | null
           title: string
           updated_at?: string
         }
@@ -72,6 +76,8 @@ export type Database = {
           created_at?: string
           due_date?: string | null
           id?: string
+          logged_at?: string
+          notes?: string | null
           title?: string
           updated_at?: string
         }
@@ -85,40 +91,103 @@ export type Database = {
           },
         ]
       }
+      product_recalls: {
+        Row: {
+          acknowledged: boolean
+          created_at: string
+          id: string
+          product_id: string
+          recall_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged?: boolean
+          created_at?: string
+          id?: string
+          product_id: string
+          recall_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          acknowledged?: boolean
+          created_at?: string
+          id?: string
+          product_id?: string
+          recall_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_recalls_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_recalls_recall_id_fkey"
+            columns: ["recall_id"]
+            isOneToOne: false
+            referencedRelation: "recalls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           barcode: string | null
+          brand: string | null
           category: string | null
           child_id: string | null
           created_at: string
           id: string
+          model: string | null
           name: string
+          next_size_at: string | null
           notes: string | null
           purchased_at: string | null
+          recalled: boolean
+          replace_at: string | null
+          size: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           barcode?: string | null
+          brand?: string | null
           category?: string | null
           child_id?: string | null
           created_at?: string
           id?: string
+          model?: string | null
           name: string
+          next_size_at?: string | null
           notes?: string | null
           purchased_at?: string | null
+          recalled?: boolean
+          replace_at?: string | null
+          size?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           barcode?: string | null
+          brand?: string | null
           category?: string | null
           child_id?: string | null
           created_at?: string
           id?: string
+          model?: string | null
           name?: string
+          next_size_at?: string | null
           notes?: string | null
           purchased_at?: string | null
+          recalled?: boolean
+          replace_at?: string | null
+          size?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -162,6 +231,60 @@ export type Database = {
         }
         Relationships: []
       }
+      recalls: {
+        Row: {
+          brand: string | null
+          category: string | null
+          created_at: string
+          description: string | null
+          hazard: string | null
+          id: string
+          image_url: string | null
+          product_name: string | null
+          recall_date: string | null
+          remedy: string | null
+          source: string
+          source_id: string | null
+          title: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          hazard?: string | null
+          id?: string
+          image_url?: string | null
+          product_name?: string | null
+          recall_date?: string | null
+          remedy?: string | null
+          source?: string
+          source_id?: string | null
+          title: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          hazard?: string | null
+          id?: string
+          image_url?: string | null
+          product_name?: string | null
+          recall_date?: string | null
+          remedy?: string | null
+          source?: string
+          source_id?: string | null
+          title?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -197,10 +320,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_milestones_for_child: {
-        Args: { p_child_id: string; p_dob: string }
-        Returns: undefined
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never

@@ -45,17 +45,6 @@ const CATEGORIES = [
   { key: "gate", name: "Baby gates", image: catGate },
 ];
 
-const STARTER_MILESTONES: Record<string, string> = {
-  carseat: "Check car seat fit",
-  pacifier: "Replace pacifiers",
-  crib: "Lower crib mattress",
-  breastmilk: "Restock storage bags",
-  formula: "Check formula expiration",
-  babyfood: "Introduce new texture",
-  swaddle: "Transition out of swaddle",
-  toothbrush: "First dental check",
-  gate: "Install stair gates",
-};
 
 function OnboardingPage() {
   const navigate = useNavigate();
@@ -115,9 +104,10 @@ function OnboardingPage() {
 
       if (childError) throw childError;
 
-      // Milestones are seeded automatically by a DB trigger based on the
-      // child's date of birth — no client-side insert needed.
-
+      // No auto-seeded milestones — parents log moments themselves.
+      // Selected categories become the starting point for product tracking.
+      void child;
+      void selected;
 
       toast.success(`All set — welcome, ${name.trim()}! 🌙`);
       navigate({ to: "/home" });

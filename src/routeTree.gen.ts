@@ -18,7 +18,10 @@ import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
-import { Route as ApiPublicHooksWeeklyMilestoneCheckRouteImport } from './routes/api/public/hooks/weekly-milestone-check'
+import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products.new'
+import { Route as AuthenticatedMomentsNewRouteImport } from './routes/_authenticated/moments.new'
+import { Route as ApiPublicHooksProductAlertsCheckRouteImport } from './routes/api/public/hooks/product-alerts-check'
+import { Route as ApiPublicHooksCpscSyncRouteImport } from './routes/api/public/hooks/cpsc-sync'
 
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
@@ -64,12 +67,28 @@ const AuthenticatedAddRoute = AuthenticatedAddRouteImport.update({
   path: '/add',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ApiPublicHooksWeeklyMilestoneCheckRoute =
-  ApiPublicHooksWeeklyMilestoneCheckRouteImport.update({
-    id: '/api/public/hooks/weekly-milestone-check',
-    path: '/api/public/hooks/weekly-milestone-check',
+const AuthenticatedProductsNewRoute =
+  AuthenticatedProductsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedProductsRoute,
+  } as any)
+const AuthenticatedMomentsNewRoute = AuthenticatedMomentsNewRouteImport.update({
+  id: '/moments/new',
+  path: '/moments/new',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiPublicHooksProductAlertsCheckRoute =
+  ApiPublicHooksProductAlertsCheckRouteImport.update({
+    id: '/api/public/hooks/product-alerts-check',
+    path: '/api/public/hooks/product-alerts-check',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksCpscSyncRoute = ApiPublicHooksCpscSyncRouteImport.update({
+  id: '/api/public/hooks/cpsc-sync',
+  path: '/api/public/hooks/cpsc-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -78,9 +97,12 @@ export interface FileRoutesByFullPath {
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
   '/home': typeof AuthenticatedHomeRoute
-  '/products': typeof AuthenticatedProductsRoute
+  '/products': typeof AuthenticatedProductsRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
-  '/api/public/hooks/weekly-milestone-check': typeof ApiPublicHooksWeeklyMilestoneCheckRoute
+  '/moments/new': typeof AuthenticatedMomentsNewRoute
+  '/products/new': typeof AuthenticatedProductsNewRoute
+  '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
+  '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -89,9 +111,12 @@ export interface FileRoutesByTo {
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
   '/home': typeof AuthenticatedHomeRoute
-  '/products': typeof AuthenticatedProductsRoute
+  '/products': typeof AuthenticatedProductsRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
-  '/api/public/hooks/weekly-milestone-check': typeof ApiPublicHooksWeeklyMilestoneCheckRoute
+  '/moments/new': typeof AuthenticatedMomentsNewRoute
+  '/products/new': typeof AuthenticatedProductsNewRoute
+  '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
+  '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -102,9 +127,12 @@ export interface FileRoutesById {
   '/_authenticated/add': typeof AuthenticatedAddRoute
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
-  '/_authenticated/products': typeof AuthenticatedProductsRoute
+  '/_authenticated/products': typeof AuthenticatedProductsRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
-  '/api/public/hooks/weekly-milestone-check': typeof ApiPublicHooksWeeklyMilestoneCheckRoute
+  '/_authenticated/moments/new': typeof AuthenticatedMomentsNewRoute
+  '/_authenticated/products/new': typeof AuthenticatedProductsNewRoute
+  '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
+  '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,7 +145,10 @@ export interface FileRouteTypes {
     | '/home'
     | '/products'
     | '/profile'
-    | '/api/public/hooks/weekly-milestone-check'
+    | '/moments/new'
+    | '/products/new'
+    | '/api/public/hooks/cpsc-sync'
+    | '/api/public/hooks/product-alerts-check'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -128,7 +159,10 @@ export interface FileRouteTypes {
     | '/home'
     | '/products'
     | '/profile'
-    | '/api/public/hooks/weekly-milestone-check'
+    | '/moments/new'
+    | '/products/new'
+    | '/api/public/hooks/cpsc-sync'
+    | '/api/public/hooks/product-alerts-check'
   id:
     | '__root__'
     | '/'
@@ -140,7 +174,10 @@ export interface FileRouteTypes {
     | '/_authenticated/home'
     | '/_authenticated/products'
     | '/_authenticated/profile'
-    | '/api/public/hooks/weekly-milestone-check'
+    | '/_authenticated/moments/new'
+    | '/_authenticated/products/new'
+    | '/api/public/hooks/cpsc-sync'
+    | '/api/public/hooks/product-alerts-check'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -148,7 +185,8 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   OnboardingRoute: typeof OnboardingRoute
-  ApiPublicHooksWeeklyMilestoneCheckRoute: typeof ApiPublicHooksWeeklyMilestoneCheckRoute
+  ApiPublicHooksCpscSyncRoute: typeof ApiPublicHooksCpscSyncRoute
+  ApiPublicHooksProductAlertsCheckRoute: typeof ApiPublicHooksProductAlertsCheckRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -216,30 +254,66 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAddRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/hooks/weekly-milestone-check': {
-      id: '/api/public/hooks/weekly-milestone-check'
-      path: '/api/public/hooks/weekly-milestone-check'
-      fullPath: '/api/public/hooks/weekly-milestone-check'
-      preLoaderRoute: typeof ApiPublicHooksWeeklyMilestoneCheckRouteImport
+    '/_authenticated/products/new': {
+      id: '/_authenticated/products/new'
+      path: '/new'
+      fullPath: '/products/new'
+      preLoaderRoute: typeof AuthenticatedProductsNewRouteImport
+      parentRoute: typeof AuthenticatedProductsRoute
+    }
+    '/_authenticated/moments/new': {
+      id: '/_authenticated/moments/new'
+      path: '/moments/new'
+      fullPath: '/moments/new'
+      preLoaderRoute: typeof AuthenticatedMomentsNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/hooks/product-alerts-check': {
+      id: '/api/public/hooks/product-alerts-check'
+      path: '/api/public/hooks/product-alerts-check'
+      fullPath: '/api/public/hooks/product-alerts-check'
+      preLoaderRoute: typeof ApiPublicHooksProductAlertsCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/cpsc-sync': {
+      id: '/api/public/hooks/cpsc-sync'
+      path: '/api/public/hooks/cpsc-sync'
+      fullPath: '/api/public/hooks/cpsc-sync'
+      preLoaderRoute: typeof ApiPublicHooksCpscSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
+interface AuthenticatedProductsRouteChildren {
+  AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
+}
+
+const AuthenticatedProductsRouteChildren: AuthenticatedProductsRouteChildren = {
+  AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
+}
+
+const AuthenticatedProductsRouteWithChildren =
+  AuthenticatedProductsRoute._addFileChildren(
+    AuthenticatedProductsRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAddRoute: typeof AuthenticatedAddRoute
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
-  AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
+  AuthenticatedProductsRoute: typeof AuthenticatedProductsRouteWithChildren
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedMomentsNewRoute: typeof AuthenticatedMomentsNewRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAddRoute: AuthenticatedAddRoute,
   AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
-  AuthenticatedProductsRoute: AuthenticatedProductsRoute,
+  AuthenticatedProductsRoute: AuthenticatedProductsRouteWithChildren,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedMomentsNewRoute: AuthenticatedMomentsNewRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -250,8 +324,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   OnboardingRoute: OnboardingRoute,
-  ApiPublicHooksWeeklyMilestoneCheckRoute:
-    ApiPublicHooksWeeklyMilestoneCheckRoute,
+  ApiPublicHooksCpscSyncRoute: ApiPublicHooksCpscSyncRoute,
+  ApiPublicHooksProductAlertsCheckRoute: ApiPublicHooksProductAlertsCheckRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
