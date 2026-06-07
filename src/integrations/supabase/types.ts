@@ -14,7 +14,181 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      children: {
+        Row: {
+          birth_week: number | null
+          created_at: string
+          date_of_birth: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          birth_week?: number | null
+          created_at?: string
+          date_of_birth?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          birth_week?: number | null
+          created_at?: string
+          date_of_birth?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      milestones: {
+        Row: {
+          category: string | null
+          child_id: string
+          completed: boolean
+          created_at: string
+          due_date: string | null
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          child_id: string
+          completed?: boolean
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          child_id?: string
+          completed?: boolean
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestones_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          barcode: string | null
+          category: string | null
+          child_id: string | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          purchased_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          barcode?: string | null
+          category?: string | null
+          child_id?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          purchased_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          barcode?: string | null
+          category?: string | null
+          child_id?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          purchased_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          plan: string | null
+          status: string | null
+          stripe_customer_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          plan?: string | null
+          status?: string | null
+          stripe_customer_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          plan?: string | null
+          status?: string | null
+          stripe_customer_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
