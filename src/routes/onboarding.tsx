@@ -45,17 +45,6 @@ const CATEGORIES = [
   { key: "gate", name: "Baby gates", image: catGate },
 ];
 
-const STARTER_MILESTONES: Record<string, string> = {
-  carseat: "Check car seat fit",
-  pacifier: "Replace pacifiers",
-  crib: "Lower crib mattress",
-  breastmilk: "Restock storage bags",
-  formula: "Check formula expiration",
-  babyfood: "Introduce new texture",
-  swaddle: "Transition out of swaddle",
-  toothbrush: "First dental check",
-  gate: "Install stair gates",
-};
 
 function OnboardingPage() {
   const navigate = useNavigate();
