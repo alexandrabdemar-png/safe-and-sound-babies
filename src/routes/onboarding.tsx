@@ -115,19 +115,9 @@ function OnboardingPage() {
 
       if (childError) throw childError;
 
-      const milestonesToInsert = Array.from(selected).map((key) => ({
-        child_id: child.id,
-        title: STARTER_MILESTONES[key] ?? "Check in",
-        category: key,
-        completed: false,
-      }));
+      // Milestones are seeded automatically by a DB trigger based on the
+      // child's date of birth — no client-side insert needed.
 
-      if (milestonesToInsert.length > 0) {
-        const { error: msError } = await supabase
-          .from("milestones")
-          .insert(milestonesToInsert);
-        if (msError) throw msError;
-      }
 
       toast.success(`All set — welcome, ${name.trim()}! 🌙`);
       navigate({ to: "/home" });
