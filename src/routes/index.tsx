@@ -1,20 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Shield,
-  CircleDot,
-  Bed,
-  Coffee,
-  FlaskConical,
-  Apple,
-  Shirt,
-  Smile,
-  DoorOpen,
-  ArrowRight,
-  CheckCircle2,
-} from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import phoneMockup from "@/assets/phone-mockup.png";
+import catCarseat from "@/assets/cat-carseat.png";
+import catPacifier from "@/assets/cat-pacifier.png";
+import catCrib from "@/assets/cat-crib.png";
+import catBreastmilk from "@/assets/cat-breastmilk.png";
+import catFormula from "@/assets/cat-formula.png";
+import catBabyfood from "@/assets/cat-babyfood.png";
+import catSwaddle from "@/assets/cat-swaddle.png";
+import catToothbrush from "@/assets/cat-toothbrush.png";
+import catGate from "@/assets/cat-gate.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -39,15 +36,15 @@ export const Route = createFileRoute("/")({
 });
 
 const categories = [
-  { name: "Car seats", icon: Shield },
-  { name: "Pacifiers", icon: CircleDot },
-  { name: "Crib heights", icon: Bed },
-  { name: "Breast milk", icon: Coffee },
-  { name: "Formula", icon: FlaskConical },
-  { name: "Baby food", icon: Apple },
-  { name: "Swaddles", icon: Shirt },
-  { name: "Toothbrush", icon: Smile },
-  { name: "Baby gates", icon: DoorOpen },
+  { name: "Car seats", image: catCarseat },
+  { name: "Pacifiers", image: catPacifier },
+  { name: "Crib heights", image: catCrib },
+  { name: "Breast milk", image: catBreastmilk },
+  { name: "Formula", image: catFormula },
+  { name: "Baby food", image: catBabyfood },
+  { name: "Swaddles", image: catSwaddle },
+  { name: "Toothbrush", image: catToothbrush },
+  { name: "Baby gates", image: catGate },
 ];
 
 const features = [
@@ -140,22 +137,26 @@ function Index() {
           </div>
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6">
-            {categories.map((cat) => {
-              const Icon = cat.icon;
-              return (
-                <div
-                  key={cat.name}
-                  className="group flex flex-col items-center rounded-3xl border border-border/60 bg-card p-6 text-center transition-all hover:border-border hover:shadow-lg hover:shadow-foreground/5"
-                >
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary transition-colors group-hover:bg-primary/10">
-                    <Icon className="h-7 w-7 text-forest transition-colors group-hover:text-primary" />
-                  </div>
-                  <span className="font-body text-sm font-medium text-foreground">
-                    {cat.name}
-                  </span>
+            {categories.map((cat) => (
+              <div
+                key={cat.name}
+                className="group flex flex-col items-center rounded-3xl border border-border/60 bg-card p-6 text-center transition-all hover:border-border hover:shadow-lg hover:shadow-foreground/5"
+              >
+                <div className="mb-4 flex h-20 w-20 items-center justify-center">
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    loading="lazy"
+                    width={512}
+                    height={512}
+                    className="h-full w-full object-contain"
+                  />
                 </div>
-              );
-            })}
+                <span className="font-body text-sm font-medium text-foreground">
+                  {cat.name}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
