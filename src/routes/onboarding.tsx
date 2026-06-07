@@ -115,9 +115,10 @@ function OnboardingPage() {
 
       if (childError) throw childError;
 
-      // Milestones are seeded automatically by a DB trigger based on the
-      // child's date of birth — no client-side insert needed.
-
+      // No auto-seeded milestones — parents log moments themselves.
+      // Selected categories become the starting point for product tracking.
+      void child;
+      void selected;
 
       toast.success(`All set — welcome, ${name.trim()}! 🌙`);
       navigate({ to: "/home" });
