@@ -27,10 +27,10 @@ function AuthPage() {
   // Redirect if already signed in
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/" });
+      if (data.session) navigate({ to: "/home" });
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) navigate({ to: "/" });
+      if (session) navigate({ to: "/home" });
     });
     return () => sub.subscription.unsubscribe();
   }, [navigate]);

@@ -11,7 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
+import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
+import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
 
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
@@ -23,38 +29,110 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProductsRoute = AuthenticatedProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAlertsRoute = AuthenticatedAlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAddRoute = AuthenticatedAddRouteImport.update({
+  id: '/add',
+  path: '/add',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/onboarding': typeof OnboardingRoute
+  '/add': typeof AuthenticatedAddRoute
+  '/alerts': typeof AuthenticatedAlertsRoute
+  '/home': typeof AuthenticatedHomeRoute
+  '/products': typeof AuthenticatedProductsRoute
+  '/profile': typeof AuthenticatedProfileRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/onboarding': typeof OnboardingRoute
+  '/add': typeof AuthenticatedAddRoute
+  '/alerts': typeof AuthenticatedAlertsRoute
+  '/home': typeof AuthenticatedHomeRoute
+  '/products': typeof AuthenticatedProductsRoute
+  '/profile': typeof AuthenticatedProfileRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/onboarding': typeof OnboardingRoute
+  '/_authenticated/add': typeof AuthenticatedAddRoute
+  '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
+  '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/products': typeof AuthenticatedProductsRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/onboarding'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/onboarding'
+    | '/add'
+    | '/alerts'
+    | '/home'
+    | '/products'
+    | '/profile'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/onboarding'
-  id: '__root__' | '/' | '/auth' | '/onboarding'
+  to:
+    | '/'
+    | '/auth'
+    | '/onboarding'
+    | '/add'
+    | '/alerts'
+    | '/home'
+    | '/products'
+    | '/profile'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/onboarding'
+    | '/_authenticated/add'
+    | '/_authenticated/alerts'
+    | '/_authenticated/home'
+    | '/_authenticated/products'
+    | '/_authenticated/profile'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   OnboardingRoute: typeof OnboardingRoute
 }
@@ -75,6 +153,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -82,11 +167,66 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/products': {
+      id: '/_authenticated/products'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof AuthenticatedProductsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/home': {
+      id: '/_authenticated/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AuthenticatedHomeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/alerts': {
+      id: '/_authenticated/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AuthenticatedAlertsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/add': {
+      id: '/_authenticated/add'
+      path: '/add'
+      fullPath: '/add'
+      preLoaderRoute: typeof AuthenticatedAddRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAddRoute: typeof AuthenticatedAddRoute
+  AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
+  AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAddRoute: AuthenticatedAddRoute,
+  AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
+  AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedProductsRoute: AuthenticatedProductsRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   OnboardingRoute: OnboardingRoute,
 }

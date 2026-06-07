@@ -130,7 +130,7 @@ function OnboardingPage() {
       }
 
       toast.success(`All set — welcome, ${name.trim()}! 🌙`);
-      navigate({ to: "/" });
+      navigate({ to: "/home" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
