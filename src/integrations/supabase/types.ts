@@ -137,6 +137,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
+          expo_push_token: string | null
           id: string
           updated_at: string
           user_id: string
@@ -145,6 +146,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          expo_push_token?: string | null
           id?: string
           updated_at?: string
           user_id: string
@@ -153,6 +155,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          expo_push_token?: string | null
           id?: string
           updated_at?: string
           user_id?: string
@@ -194,7 +197,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_milestones_for_child: {
+        Args: { p_child_id: string; p_dob: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
