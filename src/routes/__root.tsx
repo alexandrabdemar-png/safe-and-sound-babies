@@ -1,5 +1,4 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import {
   Outlet,
   Link,
