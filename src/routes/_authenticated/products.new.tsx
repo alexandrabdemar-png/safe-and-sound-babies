@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Baby, Bed, Milk, Shield, ShieldCheck, Sparkles, Wind, Brush } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,41 +12,88 @@ export const Route = createFileRoute("/_authenticated/products/new")({
   head: () => ({ meta: [{ title: "Add product — Safe & Sound" }] }),
 });
 
-const CATEGORIES = [
-  "Car seat",
-  "Crib / sleep",
-  "Pacifier",
-  "Swaddle",
-  "Stroller",
-  "High chair",
-  "Bottle",
-  "Formula",
-  "Toothbrush",
-  "Baby gate",
-  "Other",
+type CategoryKey =
+  | "car_seat"
+  | "pacifier"
+  | "crib"
+  | "formula"
+  | "breast_milk"
+  | "swaddle"
+  | "toothbrush"
+  | "baby_gate";
+
+const CATEGORIES: { key: CategoryKey; label: string; icon: React.ComponentType<{ className?: string }>; hint: string }[] = [
+  { key: "car_seat", label: "Car seat", icon: ShieldCheck, hint: "We'll use the manufacturer expiry date" },
+  { key: "pacifier", label: "Pacifier", icon: Baby, hint: "Replace every 6 weeks" },
+  { key: "crib", label: "Crib", icon: Bed, hint: "No automatic reminder" },
+  { key: "formula", label: "Formula (opened)", icon: Milk, hint: "Use within 1 month of opening" },
+  { key: "breast_milk", label: "Breast milk (fridge)", icon: Milk, hint: "Use within 4 days" },
+  { key: "swaddle", label: "Swaddle", icon: Wind, hint: "Size up at the next weight milestone" },
+  { key: "toothbrush", label: "Toothbrush", icon: Brush, hint: "Replace every 3 months" },
+  { key: "baby_gate", label: "Baby gate", icon: Shield, hint: "No automatic reminder" },
 ];
+
+function addDays(d: Date, n: number) {
+  const out = new Date(d);
+  out.setDate(out.getDate() + n);
+  return out;
+}
+function addMonths(d: Date, n: number) {
+  const out = new Date(d);
+  out.setMonth(out.getMonth() + n);
+  return out;
+}
+function toISODate(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
+function computeReplaceAt(category: CategoryKey | "", purchasedAt: string, carSeatExpiry: string): string {
+  if (!purchasedAt && category !== "car_seat") return "";
+  const base = purchasedAt ? new Date(purchasedAt) : new Date();
+  switch (category) {
+    case "pacifier":
+      return toISODate(addDays(base, 7 * 6));
+    case "toothbrush":
+      return toISODate(addMonths(base, 3));
+    case "breast_milk":
+      return toISODate(addDays(base, 4));
+    case "formula":
+      return toISODate(addMonths(base, 1));
+    case "car_seat":
+      return carSeatExpiry || "";
+    default:
+      return "";
+  }
+}
 
 function NewProductPage() {
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    name: "",
-    brand: "",
-    category: "",
-    size: "",
-    replace_at: "",
-    next_size_at: "",
-    notes: "",
-  });
+  const [category, setCategory] = useState<CategoryKey | "">("");
+  const [name, setName] = useState("");
+  const [purchasedAt, setPurchasedAt] = useState(toISODate(new Date()));
+  const [carSeatExpiry, setCarSeatExpiry] = useState("");
+  const [swaddleSize, setSwaddleSize] = useState("");
 
-  function update<K extends keyof typeof form>(k: K, v: string) {
-    setForm((f) => ({ ...f, [k]: v }));
-  }
+  const computedReplaceAt = useMemo(
+    () => computeReplaceAt(category, purchasedAt, carSeatExpiry),
+    [category, purchasedAt, carSeatExpiry],
+  );
+
+  const activeCategory = CATEGORIES.find((c) => c.key === category);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.name.trim()) {
+    if (!category) {
+      toast.error("Pick a category");
+      return;
+    }
+    if (!name.trim()) {
       toast.error("Give your product a name");
+      return;
+    }
+    if (category === "car_seat" && !carSeatExpiry) {
+      toast.error("Add the car seat's manufacturer expiry date");
       return;
     }
     setSaving(true);
@@ -55,16 +102,14 @@ function NewProductPage() {
       if (!u.user) throw new Error("Not signed in");
       const { error } = await supabase.from("products").insert({
         user_id: u.user.id,
-        name: form.name.trim(),
-        brand: form.brand.trim() || null,
-        category: form.category || null,
-        size: form.size.trim() || null,
-        replace_at: form.replace_at || null,
-        next_size_at: form.next_size_at || null,
-        notes: form.notes.trim() || null,
+        name: name.trim(),
+        category: activeCategory?.label ?? category,
+        purchased_at: purchasedAt ? new Date(purchasedAt).toISOString() : null,
+        replace_at: computedReplaceAt || null,
+        size: category === "swaddle" ? swaddleSize.trim() || null : null,
       });
       if (error) throw error;
-      toast.success("Saved — we'll keep an eye on it 🌙");
+      toast.success("Saved — we'll remind you 🌙");
       navigate({ to: "/products" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't save");
@@ -84,86 +129,108 @@ function NewProductPage() {
           </Button>
           <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight">Add a product</h1>
           <p className="mt-1.5 font-body text-sm text-muted-foreground">
-            We'll watch for recalls, and remind you when it's time to replace or size up — only if you set a date.
+            Pick a category and we'll calculate when to replace it.
           </p>
         </div>
       </header>
 
       <main className="flex-1 px-5 sm:px-6">
-        <form onSubmit={handleSubmit} className="mx-auto max-w-md space-y-5">
+        <form onSubmit={handleSubmit} className="mx-auto max-w-md space-y-6">
+          <Field label="Category" required>
+            <div className="grid grid-cols-2 gap-2.5">
+              {CATEGORIES.map((c) => {
+                const Icon = c.icon;
+                const active = category === c.key;
+                return (
+                  <button
+                    type="button"
+                    key={c.key}
+                    onClick={() => setCategory(c.key)}
+                    className={
+                      active
+                        ? "flex items-center gap-2 rounded-2xl border border-primary bg-primary px-3 py-3 text-left font-body text-sm font-semibold text-primary-foreground"
+                        : "flex items-center gap-2 rounded-2xl border border-border bg-card px-3 py-3 text-left font-body text-sm text-foreground/80"
+                    }
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{c.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {activeCategory && (
+              <p className="mt-2 flex items-center gap-1.5 font-body text-xs text-muted-foreground">
+                <Sparkles className="h-3 w-3 text-accent" />
+                {activeCategory.hint}
+              </p>
+            )}
+          </Field>
+
           <Field label="Name" required>
             <Input
-              autoFocus
-              value={form.name}
-              onChange={(e) => update("name", e.target.value)}
-              placeholder="e.g. Nuna Pipa Lite car seat"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Nuna Pipa Lite"
               maxLength={120}
               className="h-12 rounded-2xl bg-card px-4 font-body text-base"
             />
           </Field>
 
-          <Field label="Brand">
+          <Field label={category === "breast_milk" || category === "formula" ? "Opened / pumped on" : "Purchase date"} required>
             <Input
-              value={form.brand}
-              onChange={(e) => update("brand", e.target.value)}
-              placeholder="e.g. Nuna"
-              maxLength={80}
+              type="date"
+              value={purchasedAt}
+              onChange={(e) => setPurchasedAt(e.target.value)}
               className="h-12 rounded-2xl bg-card px-4 font-body text-base"
             />
           </Field>
 
-          <Field label="Category">
-            <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map((c) => (
-                <button
-                  type="button"
-                  key={c}
-                  onClick={() => update("category", c === form.category ? "" : c)}
-                  className={
-                    form.category === c
-                      ? "rounded-full border border-primary bg-primary px-3.5 py-1.5 font-body text-xs font-semibold text-primary-foreground"
-                      : "rounded-full border border-border bg-card px-3.5 py-1.5 font-body text-xs text-foreground/80"
-                  }
-                >
-                  {c}
-                </button>
-              ))}
+          {category === "car_seat" && (
+            <Field label="Manufacturer expiry date" required>
+              <Input
+                type="date"
+                value={carSeatExpiry}
+                onChange={(e) => setCarSeatExpiry(e.target.value)}
+                className="h-12 rounded-2xl bg-card px-4 font-body text-base"
+              />
+              <p className="mt-1.5 font-body text-xs text-muted-foreground">
+                Usually printed on a sticker on the seat shell.
+              </p>
+            </Field>
+          )}
+
+          {category === "swaddle" && (
+            <Field label="Current size / weight">
+              <Input
+                value={swaddleSize}
+                onChange={(e) => setSwaddleSize(e.target.value)}
+                placeholder="e.g. 0–3 mo, up to 14 lb"
+                maxLength={40}
+                className="h-12 rounded-2xl bg-card px-4 font-body text-base"
+              />
+              <p className="mt-1.5 font-body text-xs text-muted-foreground">
+                We'll prompt you to size up at the next weight milestone.
+              </p>
+            </Field>
+          )}
+
+          {computedReplaceAt && (
+            <div className="rounded-2xl bg-sand/60 px-4 py-3 font-body text-sm text-foreground/80">
+              Replace by{" "}
+              <span className="font-semibold">
+                {new Date(computedReplaceAt).toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </span>
             </div>
-          </Field>
-
-          <Field label="Current size">
-            <Input
-              value={form.size}
-              onChange={(e) => update("size", e.target.value)}
-              placeholder="e.g. 3-6 months, Size 2"
-              maxLength={40}
-              className="h-12 rounded-2xl bg-card px-4 font-body text-base"
-            />
-          </Field>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Replace by">
-              <Input
-                type="date"
-                value={form.replace_at}
-                onChange={(e) => update("replace_at", e.target.value)}
-                className="h-12 rounded-2xl bg-card px-4 font-body text-base"
-              />
-            </Field>
-            <Field label="Size up by">
-              <Input
-                type="date"
-                value={form.next_size_at}
-                onChange={(e) => update("next_size_at", e.target.value)}
-                className="h-12 rounded-2xl bg-card px-4 font-body text-base"
-              />
-            </Field>
-          </div>
+          )}
 
           <Button
             type="submit"
             disabled={saving}
-            className="mt-4 h-12 w-full rounded-full bg-primary font-body text-sm font-semibold"
+            className="mt-2 h-12 w-full rounded-full bg-primary font-body text-sm font-semibold"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save product"}
           </Button>
