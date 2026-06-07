@@ -154,6 +154,8 @@
 
   body {
     background-color: var(--color-background);
+    background-image: radial-gradient(oklch(0.7 0.04 50 / 0.12) 1px, transparent 1px);
+    background-size: 22px 22px;
     color: var(--color-foreground);
   }
 }
