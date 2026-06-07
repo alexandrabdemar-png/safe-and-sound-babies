@@ -88,7 +88,7 @@ function Index() {
 
               <h1 className="font-display text-5xl font-semibold leading-[1.1] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
                 Never miss a{" "}
-                <span className="text-accent">safety</span>
+                <span className="font-display-italic italic text-accent">safety</span>
                 <br />
                 milestone again.
               </h1>
