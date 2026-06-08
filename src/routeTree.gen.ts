@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
+import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
@@ -51,6 +52,11 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
 const AuthenticatedProductsRoute = AuthenticatedProductsRouteImport.update({
   id: '/products',
   path: '/products',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPricingRoute = AuthenticatedPricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/pricing': typeof AuthenticatedPricingRoute
   '/products': typeof AuthenticatedProductsRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/pricing': typeof AuthenticatedPricingRoute
   '/products': typeof AuthenticatedProductsRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/_authenticated/add': typeof AuthenticatedAddRoute
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/pricing': typeof AuthenticatedPricingRoute
   '/_authenticated/products': typeof AuthenticatedProductsRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/moments/new': typeof AuthenticatedMomentsNewRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/add'
     | '/alerts'
     | '/home'
+    | '/pricing'
     | '/products'
     | '/profile'
     | '/moments/new'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/add'
     | '/alerts'
     | '/home'
+    | '/pricing'
     | '/products'
     | '/profile'
     | '/moments/new'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/_authenticated/add'
     | '/_authenticated/alerts'
     | '/_authenticated/home'
+    | '/_authenticated/pricing'
     | '/_authenticated/products'
     | '/_authenticated/profile'
     | '/_authenticated/moments/new'
@@ -245,6 +257,13 @@ declare module '@tanstack/react-router' {
       path: '/products'
       fullPath: '/products'
       preLoaderRoute: typeof AuthenticatedProductsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pricing': {
+      id: '/_authenticated/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof AuthenticatedPricingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/home': {
@@ -323,6 +342,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAddRoute: typeof AuthenticatedAddRoute
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRouteWithChildren
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedMomentsNewRoute: typeof AuthenticatedMomentsNewRoute
@@ -332,6 +352,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAddRoute: AuthenticatedAddRoute,
   AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedPricingRoute: AuthenticatedPricingRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRouteWithChildren,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedMomentsNewRoute: AuthenticatedMomentsNewRoute,
@@ -352,3 +373,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
