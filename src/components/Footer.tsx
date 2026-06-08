@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { Droplets } from "lucide-react";
 
 export function Footer() {
@@ -19,9 +20,18 @@ export function Footer() {
             </div>
           </div>
 
-          <p className="font-body text-sm text-muted-foreground">
-            For the little things that matter.
-          </p>
+          <div className="flex items-center gap-6">
+            <Link
+              to="/terms"
+              className="font-body text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Terms & Conditions
+            </Link>
+            <span className="text-muted-foreground/40">|</span>
+            <p className="font-body text-sm text-muted-foreground">
+              For the little things that matter.
+            </p>
+          </div>
 
           <p className="font-body text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} Safe & Sound. All rights reserved.
