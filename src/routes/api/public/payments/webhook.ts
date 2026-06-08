@@ -29,7 +29,7 @@ async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
   const periodEnd = item?.current_period_end ?? subscription.current_period_end;
   const plan = priceId === 'pro_monthly' ? 'pro' : 'free';
 
-  await (getSupabase().from('subscriptions' as any) as any).upsert(
+  await (getSupabase()(.from('subscriptions' as any) as any) as any).upsert(
     {
       user_id: userId,
       stripe_subscription_id: subscription.id,
@@ -58,7 +58,7 @@ async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
   const plan = priceId === 'pro_monthly' ? 'pro' : 'free';
 
   await getSupabase()
-    .from('subscriptions' as any)
+    (.from('subscriptions' as any) as any)
     .update({
       status: subscription.status,
       product_id: productId,
@@ -75,7 +75,7 @@ async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
 
 async function handleSubscriptionDeleted(subscription: any, env: StripeEnv) {
   await getSupabase()
-    .from('subscriptions' as any)
+    (.from('subscriptions' as any) as any)
     .update({
       status: 'canceled',
       plan: 'free',
