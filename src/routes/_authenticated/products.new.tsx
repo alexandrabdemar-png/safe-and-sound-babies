@@ -43,16 +43,6 @@ const CATEGORIES: { key: CategoryKey; label: string; icon: React.ComponentType<{
 ];
 
 
-function addDays(d: Date, n: number) {
-  const out = new Date(d);
-  out.setDate(out.getDate() + n);
-  return out;
-}
-function addMonths(d: Date, n: number) {
-  const out = new Date(d);
-  out.setMonth(out.getMonth() + n);
-  return out;
-}
 function toISODate(d: Date) {
   return d.toISOString().slice(0, 10);
 }
