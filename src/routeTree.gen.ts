@@ -20,6 +20,7 @@ import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
+import { Route as AuthenticatedProductsScanRouteImport } from './routes/_authenticated/products.scan'
 import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products.new'
 import { Route as AuthenticatedMomentsNewRouteImport } from './routes/_authenticated/moments.new'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -80,6 +81,12 @@ const AuthenticatedAddRoute = AuthenticatedAddRouteImport.update({
   path: '/add',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProductsScanRoute =
+  AuthenticatedProductsScanRouteImport.update({
+    id: '/scan',
+    path: '/scan',
+    getParentRoute: () => AuthenticatedProductsRoute,
+  } as any)
 const AuthenticatedProductsNewRoute =
   AuthenticatedProductsNewRouteImport.update({
     id: '/new',
@@ -122,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
+  '/products/scan': typeof AuthenticatedProductsScanRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -139,6 +147,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
+  '/products/scan': typeof AuthenticatedProductsScanRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -158,6 +167,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/moments/new': typeof AuthenticatedMomentsNewRoute
   '/_authenticated/products/new': typeof AuthenticatedProductsNewRoute
+  '/_authenticated/products/scan': typeof AuthenticatedProductsScanRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/moments/new'
     | '/products/new'
+    | '/products/scan'
     | '/api/public/hooks/cpsc-sync'
     | '/api/public/hooks/product-alerts-check'
     | '/api/public/payments/webhook'
@@ -194,6 +205,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/moments/new'
     | '/products/new'
+    | '/products/scan'
     | '/api/public/hooks/cpsc-sync'
     | '/api/public/hooks/product-alerts-check'
     | '/api/public/payments/webhook'
@@ -212,6 +224,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/moments/new'
     | '/_authenticated/products/new'
+    | '/_authenticated/products/scan'
     | '/api/public/hooks/cpsc-sync'
     | '/api/public/hooks/product-alerts-check'
     | '/api/public/payments/webhook'
@@ -306,6 +319,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAddRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/products/scan': {
+      id: '/_authenticated/products/scan'
+      path: '/scan'
+      fullPath: '/products/scan'
+      preLoaderRoute: typeof AuthenticatedProductsScanRouteImport
+      parentRoute: typeof AuthenticatedProductsRoute
+    }
     '/_authenticated/products/new': {
       id: '/_authenticated/products/new'
       path: '/new'
@@ -346,10 +366,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedProductsRouteChildren {
   AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
+  AuthenticatedProductsScanRoute: typeof AuthenticatedProductsScanRoute
 }
 
 const AuthenticatedProductsRouteChildren: AuthenticatedProductsRouteChildren = {
   AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
+  AuthenticatedProductsScanRoute: AuthenticatedProductsScanRoute,
 }
 
 const AuthenticatedProductsRouteWithChildren =

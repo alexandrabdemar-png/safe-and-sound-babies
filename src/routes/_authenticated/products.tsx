@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Package, Plus, AlertTriangle } from "lucide-react";
+import { Loader2, Package, Plus, AlertTriangle, ScanLine } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,9 @@ function ProductsPage() {
           </div>
           <div className="flex items-center gap-2">
             <ChildSwitcher />
+            <Button asChild size="sm" variant="outline" className="rounded-full px-3 font-body text-xs font-semibold">
+              <Link to="/products/scan"><ScanLine className="mr-1 h-3.5 w-3.5" /> Scan</Link>
+            </Button>
             <Button asChild size="sm" className="rounded-full bg-primary px-4 font-body text-xs font-semibold">
               <Link to="/products/new"><Plus className="mr-1 h-3.5 w-3.5" /> Add</Link>
             </Button>
