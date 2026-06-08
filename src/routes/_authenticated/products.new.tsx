@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Baby, Bed, Milk, Shield, ShieldCheck, Sparkles, Wind, Brush, ScanLine } from "lucide-react";
+import { ArrowLeft, Loader2, Baby, Bed, Milk, ShieldCheck, Sparkles, Wind, Brush, ScanLine, Tent, Armchair, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +25,10 @@ type CategoryKey =
   | "breast_milk"
   | "swaddle"
   | "toothbrush"
-  | "baby_gate";
+  | "pack_n_play"
+  | "carrier"
+  | "bouncer"
+  | "swing";
 
 const CATEGORIES: { key: CategoryKey; label: string; icon: React.ComponentType<{ className?: string }>; hint: string }[] = [
   { key: "car_seat", label: "Car seat", icon: ShieldCheck, hint: "We'll use the manufacturer expiry date" },
@@ -35,7 +38,10 @@ const CATEGORIES: { key: CategoryKey; label: string; icon: React.ComponentType<{
   { key: "breast_milk", label: "Breast milk (fridge)", icon: Milk, hint: "Use within 4 days" },
   { key: "swaddle", label: "Swaddle", icon: Wind, hint: "Size up at the next weight milestone" },
   { key: "toothbrush", label: "Toothbrush", icon: Brush, hint: "Replace every 3 months" },
-  { key: "baby_gate", label: "Baby gate", icon: Shield, hint: "No automatic reminder" },
+  { key: "pack_n_play", label: "Pack 'n Play", icon: Tent, hint: "No automatic reminder" },
+  { key: "carrier", label: "Carrier", icon: Baby, hint: "No automatic reminder" },
+  { key: "bouncer", label: "Bouncer", icon: Armchair, hint: "No automatic reminder" },
+  { key: "swing", label: "Baby swing", icon: Music, hint: "No automatic reminder" },
 ];
 
 function addDays(d: Date, n: number) {

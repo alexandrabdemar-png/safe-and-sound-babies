@@ -17,7 +17,10 @@ import catFormula from "@/assets/cat-formula.png";
 import catBabyfood from "@/assets/cat-babyfood.png";
 import catSwaddle from "@/assets/cat-swaddle.png";
 import catToothbrush from "@/assets/cat-toothbrush.png";
-import catGate from "@/assets/cat-gate.png";
+import catPacknplay from "@/assets/cat-packnplay.png";
+import catCarrier from "@/assets/cat-carrier.png";
+import catBouncer from "@/assets/cat-bouncer.png";
+import catSwing from "@/assets/cat-swing.png";
 
 export const Route = createFileRoute("/onboarding")({
   component: OnboardingPage,
@@ -42,7 +45,10 @@ const CATEGORIES = [
   { key: "babyfood", name: "Baby food", image: catBabyfood },
   { key: "swaddle", name: "Swaddles", image: catSwaddle },
   { key: "toothbrush", name: "Toothbrush", image: catToothbrush },
-  { key: "gate", name: "Baby gates", image: catGate },
+  { key: "packnplay", name: "Pack 'n Plays", image: catPacknplay },
+  { key: "carrier", name: "Carriers", image: catCarrier },
+  { key: "bouncer", name: "Bouncers", image: catBouncer },
+  { key: "swing", name: "Baby swings", image: catSwing },
 ];
 
 

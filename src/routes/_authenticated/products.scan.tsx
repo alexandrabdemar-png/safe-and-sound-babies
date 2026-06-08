@@ -31,7 +31,10 @@ type CategoryKey =
   | "breast_milk"
   | "swaddle"
   | "toothbrush"
-  | "baby_gate"
+  | "pack_n_play"
+  | "carrier"
+  | "bouncer"
+  | "swing"
   | "other";
 
 const CATEGORY_LABELS: Record<CategoryKey, string> = {
@@ -42,7 +45,10 @@ const CATEGORY_LABELS: Record<CategoryKey, string> = {
   breast_milk: "Breast milk (fridge)",
   swaddle: "Swaddle",
   toothbrush: "Toothbrush",
-  baby_gate: "Baby gate",
+  pack_n_play: "Pack 'n Play",
+  carrier: "Carrier",
+  bouncer: "Bouncer",
+  swing: "Baby swing",
   other: "Other",
 };
 
@@ -54,7 +60,10 @@ const CATEGORY_ORDER: CategoryKey[] = [
   "breast_milk",
   "swaddle",
   "toothbrush",
-  "baby_gate",
+  "pack_n_play",
+  "carrier",
+  "bouncer",
+  "swing",
   "other",
 ];
 
@@ -105,7 +114,10 @@ function guessCategory(off: OffProduct): CategoryKey {
   if (/swaddle|sleep sack/.test(hay)) return "swaddle";
   if (/car seat|car-seat|carseat/.test(hay)) return "car_seat";
   if (/crib|cot/.test(hay)) return "crib";
-  if (/baby gate|safety gate/.test(hay)) return "baby_gate";
+  if (/pack ?n ?play|playard|play yard/.test(hay)) return "pack_n_play";
+  if (/baby carrier|infant carrier|sling|wrap carrier/.test(hay)) return "carrier";
+  if (/bouncer|baby bouncer/.test(hay)) return "bouncer";
+  if (/baby swing|infant swing/.test(hay)) return "swing";
   return "other";
 }
 
