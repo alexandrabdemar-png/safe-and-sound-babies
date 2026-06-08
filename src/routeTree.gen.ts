@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -28,6 +29,11 @@ import { Route as ApiPublicHooksProductAlertsCheckRouteImport } from './routes/a
 import { Route as ApiPublicHooksCpscSyncRouteImport } from './routes/api/public/hooks/cpsc-sync'
 import { Route as ApiPublicHooksCheckRecallsRouteImport } from './routes/api/public/hooks/check-recalls'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/onboarding': typeof OnboardingRoute
+  '/terms': typeof TermsRoute
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
   '/home': typeof AuthenticatedHomeRoute
@@ -146,6 +153,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/onboarding': typeof OnboardingRoute
+  '/terms': typeof TermsRoute
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
   '/home': typeof AuthenticatedHomeRoute
@@ -167,6 +175,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/onboarding': typeof OnboardingRoute
+  '/terms': typeof TermsRoute
   '/_authenticated/add': typeof AuthenticatedAddRoute
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
@@ -188,6 +197,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/onboarding'
+    | '/terms'
     | '/add'
     | '/alerts'
     | '/home'
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/onboarding'
+    | '/terms'
     | '/add'
     | '/alerts'
     | '/home'
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/onboarding'
+    | '/terms'
     | '/_authenticated/add'
     | '/_authenticated/alerts'
     | '/_authenticated/home'
@@ -248,6 +260,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   OnboardingRoute: typeof OnboardingRoute
+  TermsRoute: typeof TermsRoute
   ApiPublicHooksCheckRecallsRoute: typeof ApiPublicHooksCheckRecallsRoute
   ApiPublicHooksCpscSyncRoute: typeof ApiPublicHooksCpscSyncRoute
   ApiPublicHooksProductAlertsCheckRoute: typeof ApiPublicHooksProductAlertsCheckRoute
@@ -256,6 +269,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding': {
       id: '/onboarding'
       path: '/onboarding'
@@ -430,6 +450,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   OnboardingRoute: OnboardingRoute,
+  TermsRoute: TermsRoute,
   ApiPublicHooksCheckRecallsRoute: ApiPublicHooksCheckRecallsRoute,
   ApiPublicHooksCpscSyncRoute: ApiPublicHooksCpscSyncRoute,
   ApiPublicHooksProductAlertsCheckRoute: ApiPublicHooksProductAlertsCheckRoute,
