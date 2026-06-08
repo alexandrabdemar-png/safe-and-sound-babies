@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowLeft, Check, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +13,9 @@ import { toast } from 'sonner';
 export const Route = createFileRoute('/_authenticated/pricing')({
   component: PricingPage,
   head: () => ({ meta: [{ title: 'Pricing — Safe & Sound' }] }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    checkout: typeof s.checkout === 'string' ? s.checkout : undefined,
+  }),
 });
 
 const FREE_FEATURES = [
@@ -35,10 +38,19 @@ const PRO_FEATURES = [
 function PricingPage() {
   const navigate = useNavigate();
   const { isPro, subscription, loading } = useSubscription();
+  const { checkout } = Route.useSearch();
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | undefined>();
   const [userId, setUserId] = useState<string | undefined>();
   const [portalLoading, setPortalLoading] = useState(false);
+
+  useEffect(() => {
+    if (checkout === 'success') {
+      toast.success('Payment received — unlocking Pro features…');
+      setCheckoutOpen(false);
+    }
+  }, [checkout]);
+
 
   const handleUpgrade = async () => {
     const { data } = await supabase.auth.getUser();
