@@ -40,7 +40,7 @@ function ProductsPage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      let q = supabase
+      let q: any = supabase
         .from("products")
         .select("id, name, brand, size, category, replace_at, next_size_at, recalled, photo_url, child_id")
         .order("created_at", { ascending: false });
