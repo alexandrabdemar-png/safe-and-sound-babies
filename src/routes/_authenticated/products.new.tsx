@@ -188,6 +188,27 @@ function NewProductPage() {
             />
           </Field>
 
+          <Field label="Barcode">
+            <div className="flex gap-2">
+              <Input
+                value={barcode}
+                onChange={(e) => setBarcode(e.target.value)}
+                placeholder="Scan or type"
+                className="h-12 rounded-2xl bg-card px-4 font-body text-base flex-1"
+              />
+              <Button type="button" variant="outline" className="h-12 rounded-2xl px-4" onClick={openScanner}>
+                <ScanLine className="h-4 w-4 mr-1" /> Scan
+              </Button>
+            </div>
+          </Field>
+
+          <Field label="Photo">
+            <div onClickCapture={(e) => { if (!photoPath && !openPhoto()) { e.stopPropagation(); e.preventDefault(); } }}>
+              <PhotoUpload value={photoPath} onChange={setPhotoPath} prefix="product" />
+            </div>
+          </Field>
+
+
           <Field label={category === "breast_milk" || category === "formula" ? "Opened / pumped on" : "Purchase date"} required>
             <Input
               type="date"
