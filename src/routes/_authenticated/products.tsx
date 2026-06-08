@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Package, Plus, AlertTriangle } from "lucide-react";
+import { Loader2, Package, Plus, AlertTriangle, ScanLine } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Button } from "@/components/ui/button";
