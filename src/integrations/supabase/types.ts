@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      bottles: {
+        Row: {
+          alert_minutes_before: number
+          bottle_type: string
+          child_id: string | null
+          created_at: string
+          expires_at: string
+          finished_at: string | null
+          id: string
+          notes: string | null
+          notified_at: string | null
+          ounces: number | null
+          started_at: string
+          storage: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_minutes_before?: number
+          bottle_type: string
+          child_id?: string | null
+          created_at?: string
+          expires_at: string
+          finished_at?: string | null
+          id?: string
+          notes?: string | null
+          notified_at?: string | null
+          ounces?: number | null
+          started_at?: string
+          storage: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_minutes_before?: number
+          bottle_type?: string
+          child_id?: string | null
+          created_at?: string
+          expires_at?: string
+          finished_at?: string | null
+          id?: string
+          notes?: string | null
+          notified_at?: string | null
+          ounces?: number | null
+          started_at?: string
+          storage?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bottles_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       children: {
         Row: {
           birth_week: number | null

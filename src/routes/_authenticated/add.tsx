@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
-import { Package, Sparkles, ArrowRight } from "lucide-react";
+import { Package, Sparkles, ArrowRight, Milk } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/add")({
   component: AddPage,
@@ -28,6 +28,12 @@ function AddPage() {
             icon={Sparkles}
             title="A new moment"
             blurb="First smile, first tooth, first steps — log it when it happens."
+          />
+          <AddTile
+            to="/bottles/new"
+            icon={Milk}
+            title="A bottle"
+            blurb="Log formula or breastmilk and get reminded before it expires."
           />
           <AddTile
             to="/products/new"
