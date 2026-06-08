@@ -57,24 +57,11 @@ function toISODate(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
-function computeReplaceAt(category: CategoryKey | "", purchasedAt: string, carSeatExpiry: string): string {
-  if (!purchasedAt && category !== "car_seat") return "";
-  const base = purchasedAt ? new Date(purchasedAt) : new Date();
-  switch (category) {
-    case "pacifier":
-      return toISODate(addDays(base, 7 * 6));
-    case "toothbrush":
-      return toISODate(addMonths(base, 3));
-    case "breast_milk":
-      return toISODate(addDays(base, 4));
-    case "formula":
-      return toISODate(addMonths(base, 1));
-    case "car_seat":
-      return carSeatExpiry || "";
-    default:
-      return "";
-  }
+function computeReplaceAt(category: CategoryKey | "", _purchasedAt: string, carSeatExpiry: string): string {
+  if (category === "car_seat") return carSeatExpiry || "";
+  return "";
 }
+
 
 function NewProductPage() {
   const navigate = useNavigate();
