@@ -10,7 +10,7 @@ import catBreastmilk from "@/assets/cat-breastmilk.png";
 import catFormula from "@/assets/cat-formula.png";
 import catBabyfood from "@/assets/cat-babyfood.png";
 import catSwaddle from "@/assets/cat-swaddle.png";
-import catToothbrush from "@/assets/cat-toothbrush.png";
+import catStroller from "@/assets/cat-stroller.png";
 import catGate from "@/assets/cat-gate.png";
 
 export const Route = createFileRoute("/")({
