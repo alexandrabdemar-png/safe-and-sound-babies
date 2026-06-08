@@ -131,9 +131,6 @@ function Index() {
             <h2 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
               Track what matters
             </h2>
-            <p className="mt-4 font-body text-lg text-muted-foreground">
-              Nine essential categories. One calm place to keep them all safe.
-            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6">
