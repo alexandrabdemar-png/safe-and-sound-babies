@@ -156,19 +156,7 @@ function ProfilePage() {
           <h2 className="font-display text-base font-semibold mb-3">Children</h2>
           <ul className="space-y-2 mb-4">
             {children.map((c) => (
-              <li key={c.id} className="flex items-center justify-between rounded-2xl bg-muted/40 px-3 py-2">
-                <div>
-                  <p className="font-body text-sm font-medium">{c.name}</p>
-                  {c.date_of_birth && (
-                    <p className="font-body text-xs text-muted-foreground">
-                      {new Date(c.date_of_birth).toLocaleDateString()}
-                    </p>
-                  )}
-                </div>
-                <Button variant="ghost" size="icon" onClick={() => handleDeleteChild(c.id)} disabled={children.length <= 1}>
-                  <Trash2 className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </li>
+              <ChildRow key={c.id} child={c} onRemove={() => handleDeleteChild(c.id)} disableRemove={children.length <= 1} onUpdated={refreshChildren} />
             ))}
           </ul>
           <form onSubmit={handleAddChild} className="space-y-2">
@@ -192,6 +180,7 @@ function ProfilePage() {
             )}
           </form>
         </section>
+
 
         {/* Tools */}
         <section className="rounded-3xl border border-border/60 bg-card p-5 space-y-2">
