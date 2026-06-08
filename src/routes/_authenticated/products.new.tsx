@@ -19,30 +19,29 @@ export const Route = createFileRoute("/_authenticated/products/new")({
 
 type CategoryKey =
   | "car_seat"
-  | "pacifier"
   | "crib"
-  | "formula"
-  | "breast_milk"
-  | "swaddle"
-  | "toothbrush"
-  | "pack_n_play"
-  | "carrier"
+  | "bassinet"
+  | "stroller"
+  | "high_chair"
+  | "swing"
   | "bouncer"
-  | "swing";
+  | "activity_center"
+  | "sleep_sack"
+  | "baby_gate";
 
 const CATEGORIES: { key: CategoryKey; label: string; icon: React.ComponentType<{ className?: string }>; hint: string }[] = [
-  { key: "car_seat", label: "Car seat", icon: ShieldCheck, hint: "We'll use the manufacturer expiry date" },
-  { key: "pacifier", label: "Pacifier", icon: Baby, hint: "Replace every 6 weeks" },
-  { key: "crib", label: "Crib", icon: Bed, hint: "No automatic reminder" },
-  { key: "formula", label: "Formula (opened)", icon: Milk, hint: "Use within 1 month of opening" },
-  { key: "breast_milk", label: "Breast milk (fridge)", icon: Milk, hint: "Use within 4 days" },
-  { key: "swaddle", label: "Swaddle", icon: Wind, hint: "Size up at the next weight milestone" },
-  { key: "toothbrush", label: "Toothbrush", icon: Brush, hint: "Replace every 3 months" },
-  { key: "pack_n_play", label: "Pack 'n Play", icon: Tent, hint: "No automatic reminder" },
-  { key: "carrier", label: "Carrier", icon: Baby, hint: "No automatic reminder" },
-  { key: "bouncer", label: "Bouncer", icon: Armchair, hint: "No automatic reminder" },
-  { key: "swing", label: "Baby swing", icon: Music, hint: "No automatic reminder" },
+  { key: "car_seat",        label: "Car seat",        icon: ShieldCheck, hint: "We'll use the manufacturer expiry date" },
+  { key: "crib",            label: "Crib",            icon: Bed,         hint: "We'll remind you when to lower the mattress" },
+  { key: "bassinet",        label: "Bassinet",        icon: Moon,        hint: "Outgrown around 4–6 months — we'll flag the transition" },
+  { key: "stroller",        label: "Stroller",        icon: Footprints,  hint: "Tracked for recalls" },
+  { key: "high_chair",      label: "High chair",      icon: Utensils,    hint: "Tracked for recalls" },
+  { key: "swing",           label: "Swing",           icon: Music,       hint: "Usually outgrown around 6 months" },
+  { key: "bouncer",         label: "Bouncer",         icon: Armchair,    hint: "We'll flag the weight limit" },
+  { key: "activity_center", label: "Activity center", icon: Grid3x3,     hint: "Best between 4–10 months" },
+  { key: "sleep_sack",      label: "Sleep sack",      icon: Wind,        hint: "We'll prompt size-ups based on weight" },
+  { key: "baby_gate",       label: "Baby gate",       icon: DoorClosed,  hint: "Hardware-mount at the top of stairs" },
 ];
+
 
 function addDays(d: Date, n: number) {
   const out = new Date(d);
