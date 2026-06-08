@@ -78,30 +78,80 @@ export type Database = {
           birth_week: number | null
           created_at: string
           date_of_birth: string | null
+          height_cm: number | null
           id: string
+          measurements_updated_at: string | null
           name: string
           updated_at: string
           user_id: string
+          weight_kg: number | null
         }
         Insert: {
           birth_week?: number | null
           created_at?: string
           date_of_birth?: string | null
+          height_cm?: number | null
           id?: string
+          measurements_updated_at?: string | null
           name: string
           updated_at?: string
           user_id: string
+          weight_kg?: number | null
         }
         Update: {
           birth_week?: number | null
           created_at?: string
           date_of_birth?: string | null
+          height_cm?: number | null
           id?: string
+          measurements_updated_at?: string | null
           name?: string
           updated_at?: string
           user_id?: string
+          weight_kg?: number | null
         }
         Relationships: []
+      }
+      insight_dismissals: {
+        Row: {
+          action: string
+          child_id: string | null
+          created_at: string
+          id: string
+          rule_id: string
+          until: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          child_id?: string | null
+          created_at?: string
+          id?: string
+          rule_id: string
+          until?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          child_id?: string | null
+          created_at?: string
+          id?: string
+          rule_id?: string
+          until?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insight_dismissals_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       milestones: {
         Row: {
