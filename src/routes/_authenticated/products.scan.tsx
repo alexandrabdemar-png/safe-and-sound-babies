@@ -25,78 +25,52 @@ export const Route = createFileRoute("/_authenticated/products/scan")({
 
 type CategoryKey =
   | "car_seat"
-  | "pacifier"
   | "crib"
-  | "formula"
-  | "breast_milk"
-  | "swaddle"
-  | "toothbrush"
-  | "pack_n_play"
-  | "carrier"
-  | "bouncer"
+  | "bassinet"
+  | "stroller"
+  | "high_chair"
   | "swing"
+  | "bouncer"
+  | "activity_center"
+  | "sleep_sack"
+  | "baby_gate"
   | "other";
 
 const CATEGORY_LABELS: Record<CategoryKey, string> = {
   car_seat: "Car seat",
-  pacifier: "Pacifier",
   crib: "Crib",
-  formula: "Formula (opened)",
-  breast_milk: "Breast milk (fridge)",
-  swaddle: "Swaddle",
-  toothbrush: "Toothbrush",
-  pack_n_play: "Pack 'n Play",
-  carrier: "Carrier",
+  bassinet: "Bassinet",
+  stroller: "Stroller",
+  high_chair: "High chair",
+  swing: "Swing",
   bouncer: "Bouncer",
-  swing: "Baby swing",
+  activity_center: "Activity center",
+  sleep_sack: "Sleep sack",
+  baby_gate: "Baby gate",
   other: "Other",
 };
 
 const CATEGORY_ORDER: CategoryKey[] = [
   "car_seat",
-  "pacifier",
   "crib",
-  "formula",
-  "breast_milk",
-  "swaddle",
-  "toothbrush",
-  "pack_n_play",
-  "carrier",
-  "bouncer",
+  "bassinet",
+  "stroller",
+  "high_chair",
   "swing",
+  "bouncer",
+  "activity_center",
+  "sleep_sack",
+  "baby_gate",
   "other",
 ];
 
-function addDays(d: Date, n: number) {
-  const out = new Date(d);
-  out.setDate(out.getDate() + n);
-  return out;
-}
-function addMonths(d: Date, n: number) {
-  const out = new Date(d);
-  out.setMonth(out.getMonth() + n);
-  return out;
-}
 function toISODate(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
-function computeReplaceAt(category: CategoryKey, purchasedAt: string, carSeatExpiry: string): string {
-  const base = purchasedAt ? new Date(purchasedAt) : new Date();
-  switch (category) {
-    case "pacifier":
-      return toISODate(addDays(base, 42));
-    case "toothbrush":
-      return toISODate(addMonths(base, 3));
-    case "breast_milk":
-      return toISODate(addDays(base, 4));
-    case "formula":
-      return toISODate(addMonths(base, 1));
-    case "car_seat":
-      return carSeatExpiry || "";
-    default:
-      return "";
-  }
+function computeReplaceAt(category: CategoryKey, _purchasedAt: string, carSeatExpiry: string): string {
+  if (category === "car_seat") return carSeatExpiry || "";
+  return "";
 }
 
 function guessCategory(off: OffProduct): CategoryKey {
@@ -108,18 +82,19 @@ function guessCategory(off: OffProduct): CategoryKey {
   ]
     .join(" ")
     .toLowerCase();
-  if (/pacifier|soother|dummy/.test(hay)) return "pacifier";
-  if (/toothbrush|tooth-brush/.test(hay)) return "toothbrush";
-  if (/infant formula|baby formula|follow-on milk|formula milk/.test(hay)) return "formula";
-  if (/swaddle|sleep sack/.test(hay)) return "swaddle";
-  if (/car seat|car-seat|carseat/.test(hay)) return "car_seat";
-  if (/crib|cot/.test(hay)) return "crib";
-  if (/pack ?n ?play|playard|play yard/.test(hay)) return "pack_n_play";
-  if (/baby carrier|infant carrier|sling|wrap carrier/.test(hay)) return "carrier";
-  if (/bouncer|baby bouncer/.test(hay)) return "bouncer";
-  if (/baby swing|infant swing/.test(hay)) return "swing";
+  if (/car ?seat/.test(hay)) return "car_seat";
+  if (/bassinet/.test(hay)) return "bassinet";
+  if (/crib|cot\b/.test(hay)) return "crib";
+  if (/stroller|pram|buggy/.test(hay)) return "stroller";
+  if (/high ?chair/.test(hay)) return "high_chair";
+  if (/baby swing|infant swing|\bswing\b/.test(hay)) return "swing";
+  if (/bouncer/.test(hay)) return "bouncer";
+  if (/activity ?center|jumperoo|exersaucer/.test(hay)) return "activity_center";
+  if (/sleep ?sack|swaddle|wearable blanket/.test(hay)) return "sleep_sack";
+  if (/baby ?gate|safety gate/.test(hay)) return "baby_gate";
   return "other";
 }
+
 
 type OffProduct = {
   product_name?: string;

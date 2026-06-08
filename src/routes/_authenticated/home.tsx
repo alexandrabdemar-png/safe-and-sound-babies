@@ -7,13 +7,23 @@ import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
+import { evaluateInsights, type Insight, type ProductInput } from "@/lib/insights";
+
 
 export const Route = createFileRoute("/_authenticated/home")({
   component: HomePage,
   head: () => ({ meta: [{ title: "Home — Safe & Sound" }] }),
 });
 
-type Child = { id: string; name: string; date_of_birth: string | null };
+type Child = {
+  id: string;
+  name: string;
+  date_of_birth: string | null;
+  height_cm: number | null;
+  weight_kg: number | null;
+  measurements_updated_at: string | null;
+};
+
 
 type Moment = {
   id: string;
@@ -54,16 +64,17 @@ function HomePage() {
   const [child, setChild] = useState<Child | null>(null);
   const [moments, setMoments] = useState<Moment[]>([]);
   const [alerts, setAlerts] = useState<AlertSummary>({ recalls: 0, replace: 0, sizeUp: 0 });
+  const [products, setProducts] = useState<ProductInput[]>([]);
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      // Honor active child selection
       let activeId: string | null = null;
       try { activeId = localStorage.getItem('safesound.activeChildId'); } catch {}
       const { data: kids, error } = await supabase
         .from("children")
-        .select("id, name, date_of_birth")
+        .select("id, name, date_of_birth, height_cm, weight_kg, measurements_updated_at")
         .order("created_at", { ascending: true });
       if (cancelled) return;
       if (error) { toast.error(error.message); setLoading(false); return; }
@@ -75,28 +86,15 @@ function HomePage() {
       horizon.setDate(horizon.getDate() + 30);
       const todayStr = new Date().toISOString().slice(0, 10);
       const horizonStr = horizon.toISOString().slice(0, 10);
+      const nowIso = new Date().toISOString();
 
-      const [mRes, recallRes, replaceRes, sizeRes] = await Promise.all([
-        supabase
-          .from("milestones")
-          .select("id, title, logged_at, notes")
-          .eq("child_id", c.id)
-          .order("logged_at", { ascending: false })
-          .limit(5),
-        supabase
-          .from("product_recalls")
-          .select("id", { count: "exact", head: true })
-          .eq("acknowledged", false),
-        supabase
-          .from("products")
-          .select("id", { count: "exact", head: true })
-          .gte("replace_at", todayStr)
-          .lte("replace_at", horizonStr),
-        supabase
-          .from("products")
-          .select("id", { count: "exact", head: true })
-          .gte("next_size_at", todayStr)
-          .lte("next_size_at", horizonStr),
+      const [mRes, recallRes, replaceRes, sizeRes, productRes, dismRes] = await Promise.all([
+        supabase.from("milestones").select("id, title, logged_at, notes").eq("child_id", c.id).order("logged_at", { ascending: false }).limit(5),
+        supabase.from("product_recalls").select("id", { count: "exact", head: true }).eq("acknowledged", false),
+        supabase.from("products").select("id", { count: "exact", head: true }).gte("replace_at", todayStr).lte("replace_at", horizonStr),
+        supabase.from("products").select("id", { count: "exact", head: true }).gte("next_size_at", todayStr).lte("next_size_at", horizonStr),
+        supabase.from("products").select("id, category, purchased_at, size").or(`child_id.eq.${c.id},child_id.is.null`),
+        supabase.from("insight_dismissals").select("rule_id, action, until").eq("child_id", c.id),
       ]);
 
       if (cancelled) return;
@@ -106,6 +104,13 @@ function HomePage() {
         replace: replaceRes.count ?? 0,
         sizeUp: sizeRes.count ?? 0,
       });
+      setProducts((productRes.data ?? []) as ProductInput[]);
+      const blocked = new Set<string>();
+      for (const d of (dismRes.data ?? []) as { rule_id: string; action: string; until: string | null }[]) {
+        if (d.action === 'done' || d.action === 'dismissed') blocked.add(d.rule_id);
+        else if (d.action === 'snoozed' && d.until && d.until > nowIso) blocked.add(d.rule_id);
+      }
+      setDismissedIds(blocked);
       setLoading(false);
     })();
     return () => { cancelled = true; };
@@ -113,6 +118,11 @@ function HomePage() {
 
   const age = useMemo(() => calcAge(child?.date_of_birth ?? null), [child]);
   const totalAlerts = alerts.recalls + alerts.replace + alerts.sizeUp;
+  const upNext: Insight[] = useMemo(() => {
+    const all = evaluateInsights(child, products);
+    return all.filter((i) => !dismissedIds.has(i.id)).slice(0, 3);
+  }, [child, products, dismissedIds]);
+
 
   if (loading) {
     return (
@@ -154,6 +164,44 @@ function HomePage() {
         </div>
       </header>
 
+      {/* Up next — proactive guidance */}
+      {upNext.length > 0 && (
+        <section className="px-5 pt-4 sm:px-6">
+          <div className="mx-auto max-w-md">
+            <div className="rounded-3xl border border-border/60 bg-card p-5">
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sand/60 text-accent">
+                    <Sparkles className="h-3.5 w-3.5" />
+                  </span>
+                  <p className="font-display text-sm font-semibold tracking-tight">Up next for {child?.name}</p>
+                </div>
+                <Link to="/insights" className="font-body text-[11px] font-semibold text-accent">View all</Link>
+              </div>
+              <ul className="space-y-2.5">
+                {upNext.map((i) => (
+                  <li key={i.id} className="rounded-2xl bg-muted/40 px-3 py-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-body text-sm font-medium leading-snug">{i.title}</p>
+                      <span className={
+                        i.urgency === 'now'
+                          ? "shrink-0 rounded-full bg-destructive/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-destructive"
+                          : i.urgency === 'soon'
+                            ? "shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-amber-700 dark:text-amber-400"
+                            : "shrink-0 rounded-full bg-sand/60 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-accent"
+                      }>
+                        {i.urgency === 'heads_up' ? 'FYI' : i.urgency}
+                      </span>
+                    </div>
+                    <p className="mt-1 font-body text-xs text-muted-foreground line-clamp-2">{i.body}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Alert summary cards */}
       <section className="px-5 pt-4 sm:px-6">
         <div className="mx-auto max-w-md">
@@ -184,6 +232,7 @@ function HomePage() {
           )}
         </div>
       </section>
+
 
       {/* Recent moments */}
       <section className="px-5 pt-10 sm:px-6">

@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Baby, Bed, Milk, ShieldCheck, Sparkles, Wind, Brush, ScanLine, Tent, Armchair, Music, Search, X } from "lucide-react";
+import { ArrowLeft, Loader2, Bed, ShieldCheck, Sparkles, Wind, ScanLine, Armchair, Music, Search, X, Moon, Footprints, Utensils, Grid3x3, DoorClosed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,63 +19,39 @@ export const Route = createFileRoute("/_authenticated/products/new")({
 
 type CategoryKey =
   | "car_seat"
-  | "pacifier"
   | "crib"
-  | "formula"
-  | "breast_milk"
-  | "swaddle"
-  | "toothbrush"
-  | "pack_n_play"
-  | "carrier"
+  | "bassinet"
+  | "stroller"
+  | "high_chair"
+  | "swing"
   | "bouncer"
-  | "swing";
+  | "activity_center"
+  | "sleep_sack"
+  | "baby_gate";
 
 const CATEGORIES: { key: CategoryKey; label: string; icon: React.ComponentType<{ className?: string }>; hint: string }[] = [
-  { key: "car_seat", label: "Car seat", icon: ShieldCheck, hint: "We'll use the manufacturer expiry date" },
-  { key: "pacifier", label: "Pacifier", icon: Baby, hint: "Replace every 6 weeks" },
-  { key: "crib", label: "Crib", icon: Bed, hint: "No automatic reminder" },
-  { key: "formula", label: "Formula (opened)", icon: Milk, hint: "Use within 1 month of opening" },
-  { key: "breast_milk", label: "Breast milk (fridge)", icon: Milk, hint: "Use within 4 days" },
-  { key: "swaddle", label: "Swaddle", icon: Wind, hint: "Size up at the next weight milestone" },
-  { key: "toothbrush", label: "Toothbrush", icon: Brush, hint: "Replace every 3 months" },
-  { key: "pack_n_play", label: "Pack 'n Play", icon: Tent, hint: "No automatic reminder" },
-  { key: "carrier", label: "Carrier", icon: Baby, hint: "No automatic reminder" },
-  { key: "bouncer", label: "Bouncer", icon: Armchair, hint: "No automatic reminder" },
-  { key: "swing", label: "Baby swing", icon: Music, hint: "No automatic reminder" },
+  { key: "car_seat",        label: "Car seat",        icon: ShieldCheck, hint: "We'll use the manufacturer expiry date" },
+  { key: "crib",            label: "Crib",            icon: Bed,         hint: "We'll remind you when to lower the mattress" },
+  { key: "bassinet",        label: "Bassinet",        icon: Moon,        hint: "Outgrown around 4–6 months — we'll flag the transition" },
+  { key: "stroller",        label: "Stroller",        icon: Footprints,  hint: "Tracked for recalls" },
+  { key: "high_chair",      label: "High chair",      icon: Utensils,    hint: "Tracked for recalls" },
+  { key: "swing",           label: "Swing",           icon: Music,       hint: "Usually outgrown around 6 months" },
+  { key: "bouncer",         label: "Bouncer",         icon: Armchair,    hint: "We'll flag the weight limit" },
+  { key: "activity_center", label: "Activity center", icon: Grid3x3,     hint: "Best between 4–10 months" },
+  { key: "sleep_sack",      label: "Sleep sack",      icon: Wind,        hint: "We'll prompt size-ups based on weight" },
+  { key: "baby_gate",       label: "Baby gate",       icon: DoorClosed,  hint: "Hardware-mount at the top of stairs" },
 ];
 
-function addDays(d: Date, n: number) {
-  const out = new Date(d);
-  out.setDate(out.getDate() + n);
-  return out;
-}
-function addMonths(d: Date, n: number) {
-  const out = new Date(d);
-  out.setMonth(out.getMonth() + n);
-  return out;
-}
+
 function toISODate(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
-function computeReplaceAt(category: CategoryKey | "", purchasedAt: string, carSeatExpiry: string): string {
-  if (!purchasedAt && category !== "car_seat") return "";
-  const base = purchasedAt ? new Date(purchasedAt) : new Date();
-  switch (category) {
-    case "pacifier":
-      return toISODate(addDays(base, 7 * 6));
-    case "toothbrush":
-      return toISODate(addMonths(base, 3));
-    case "breast_milk":
-      return toISODate(addDays(base, 4));
-    case "formula":
-      return toISODate(addMonths(base, 1));
-    case "car_seat":
-      return carSeatExpiry || "";
-    default:
-      return "";
-  }
+function computeReplaceAt(category: CategoryKey | "", _purchasedAt: string, carSeatExpiry: string): string {
+  if (category === "car_seat") return carSeatExpiry || "";
+  return "";
 }
+
 
 function NewProductPage() {
   const navigate = useNavigate();
@@ -125,7 +101,7 @@ function NewProductPage() {
         photo_url: photoPath,
         purchased_at: purchasedAt ? new Date(purchasedAt).toISOString() : null,
         replace_at: computedReplaceAt || null,
-        size: category === "swaddle" ? swaddleSize.trim() || null : null,
+        size: category === "sleep_sack" ? swaddleSize.trim() || null : null,
       } as never);
       if (error) throw error;
       toast.success("Saved — we'll remind you 🌙");
@@ -224,7 +200,7 @@ function NewProductPage() {
           </Field>
 
 
-          <Field label={category === "breast_milk" || category === "formula" ? "Opened / pumped on" : "Purchase date"} required>
+          <Field label="Purchase date" required>
             <Input
               type="date"
               value={purchasedAt}
@@ -247,7 +223,7 @@ function NewProductPage() {
             </Field>
           )}
 
-          {category === "swaddle" && (
+          {category === "sleep_sack" && (
             <Field label="Current size / weight">
               <Input
                 value={swaddleSize}
@@ -316,18 +292,19 @@ type SearchResult = {
 
 function guessCategoryFromText(text: string): CategoryKey | "" {
   const hay = text.toLowerCase();
-  if (/pacifier|soother|dummy/.test(hay)) return "pacifier";
-  if (/toothbrush|tooth-brush/.test(hay)) return "toothbrush";
-  if (/infant formula|baby formula|follow-on milk|formula milk|formula/.test(hay)) return "formula";
-  if (/swaddle|sleep sack/.test(hay)) return "swaddle";
-  if (/car seat|car-seat|carseat/.test(hay)) return "car_seat";
+  if (/car ?seat/.test(hay)) return "car_seat";
+  if (/bassinet/.test(hay)) return "bassinet";
   if (/crib|cot\b/.test(hay)) return "crib";
-  if (/pack ?n ?play|playard|play yard/.test(hay)) return "pack_n_play";
-  if (/baby carrier|infant carrier|sling|wrap carrier|\bcarrier\b/.test(hay)) return "carrier";
-  if (/bouncer/.test(hay)) return "bouncer";
+  if (/stroller|pram|buggy/.test(hay)) return "stroller";
+  if (/high ?chair/.test(hay)) return "high_chair";
   if (/baby swing|infant swing|\bswing\b/.test(hay)) return "swing";
+  if (/bouncer/.test(hay)) return "bouncer";
+  if (/activity ?center|jumperoo|exersaucer/.test(hay)) return "activity_center";
+  if (/sleep ?sack|swaddle|wearable blanket/.test(hay)) return "sleep_sack";
+  if (/baby ?gate|safety gate/.test(hay)) return "baby_gate";
   return "";
 }
+
 
 function ProductSearch({ onPick }: { onPick: (r: SearchResult) => void }) {
   const [query, setQuery] = useState("");
