@@ -15,7 +15,15 @@ export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({ meta: [{ title: "Home — Safe & Sound" }] }),
 });
 
-type Child = { id: string; name: string; date_of_birth: string | null };
+type Child = {
+  id: string;
+  name: string;
+  date_of_birth: string | null;
+  height_cm: number | null;
+  weight_kg: number | null;
+  measurements_updated_at: string | null;
+};
+
 
 type Moment = {
   id: string;
