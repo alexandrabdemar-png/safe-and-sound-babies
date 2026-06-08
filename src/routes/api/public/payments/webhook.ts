@@ -29,7 +29,7 @@ async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
   const periodEnd = item?.current_period_end ?? subscription.current_period_end;
   const plan = priceId === 'pro_monthly' ? 'pro' : 'free';
 
-  await getSupabase().from('subscriptions').upsert(
+  await (getSupabase().from('subscriptions') as any).upsert(
     {
       user_id: userId,
       stripe_subscription_id: subscription.id,
