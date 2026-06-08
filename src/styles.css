@@ -177,8 +177,13 @@
 
   body {
     background-color: var(--color-background);
-    background-image: radial-gradient(oklch(0.7 0.04 50 / 0.12) 1px, transparent 1px);
-    background-size: 22px 22px;
+    background-image:
+      radial-gradient(oklch(0.7 0.025 130 / 0.10) 1px, transparent 1px),
+      radial-gradient(oklch(0.76 0.025 240 / 0.06) 1px, transparent 1px);
+    background-size: 26px 26px, 38px 38px;
+    background-position: 0 0, 13px 19px;
     color: var(--color-foreground);
+    font-family: var(--font-body);
   }
+  h1, h2, h3, h4, h5, h6 { font-family: var(--font-display); letter-spacing: -0.005em; }
 }
