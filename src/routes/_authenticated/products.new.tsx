@@ -154,7 +154,16 @@ function NewProductPage() {
 
       <main className="flex-1 px-5 sm:px-6">
         <form onSubmit={handleSubmit} className="mx-auto max-w-md space-y-6">
+          <ProductSearch
+            onPick={(r) => {
+              if (r.name) setName(r.name);
+              if (r.barcode) setBarcode(r.barcode);
+              if (r.category) setCategory(r.category);
+            }}
+          />
+
           <Field label="Category" required>
+
             <div className="grid grid-cols-2 gap-2.5">
               {CATEGORIES.map((c) => {
                 const Icon = c.icon;
