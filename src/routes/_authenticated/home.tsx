@@ -7,6 +7,8 @@ import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
+import { evaluateInsights, type Insight, type ProductInput } from "@/lib/insights";
+
 
 export const Route = createFileRoute("/_authenticated/home")({
   component: HomePage,
