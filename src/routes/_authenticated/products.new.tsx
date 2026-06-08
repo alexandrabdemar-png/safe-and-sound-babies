@@ -302,18 +302,19 @@ type SearchResult = {
 
 function guessCategoryFromText(text: string): CategoryKey | "" {
   const hay = text.toLowerCase();
-  if (/pacifier|soother|dummy/.test(hay)) return "pacifier";
-  if (/toothbrush|tooth-brush/.test(hay)) return "toothbrush";
-  if (/infant formula|baby formula|follow-on milk|formula milk|formula/.test(hay)) return "formula";
-  if (/swaddle|sleep sack/.test(hay)) return "swaddle";
-  if (/car seat|car-seat|carseat/.test(hay)) return "car_seat";
+  if (/car ?seat/.test(hay)) return "car_seat";
+  if (/bassinet/.test(hay)) return "bassinet";
   if (/crib|cot\b/.test(hay)) return "crib";
-  if (/pack ?n ?play|playard|play yard/.test(hay)) return "pack_n_play";
-  if (/baby carrier|infant carrier|sling|wrap carrier|\bcarrier\b/.test(hay)) return "carrier";
-  if (/bouncer/.test(hay)) return "bouncer";
+  if (/stroller|pram|buggy/.test(hay)) return "stroller";
+  if (/high ?chair/.test(hay)) return "high_chair";
   if (/baby swing|infant swing|\bswing\b/.test(hay)) return "swing";
+  if (/bouncer/.test(hay)) return "bouncer";
+  if (/activity ?center|jumperoo|exersaucer/.test(hay)) return "activity_center";
+  if (/sleep ?sack|swaddle|wearable blanket/.test(hay)) return "sleep_sack";
+  if (/baby ?gate|safety gate/.test(hay)) return "baby_gate";
   return "";
 }
+
 
 function ProductSearch({ onPick }: { onPick: (r: SearchResult) => void }) {
   const [query, setQuery] = useState("");
