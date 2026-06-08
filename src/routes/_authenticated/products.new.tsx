@@ -99,9 +99,9 @@ function NewProductPage() {
   const activeCategory = CATEGORIES.find((c) => c.key === category);
 
   function openScanner() {
-    if (!requirePro('Barcode scanner', 'Scan UPC/EAN barcodes to fill in product details instantly.')) return;
     setScannerOpen(true);
   }
+
 
   function openPhoto(): boolean {
     return requirePro('Photo attachments', 'Attach a photo so you can recognize the exact product later.');
