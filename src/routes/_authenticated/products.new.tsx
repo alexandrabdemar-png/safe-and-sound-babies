@@ -305,3 +305,149 @@ function Field({ label, required, children }: { label: string; required?: boolea
     </div>
   );
 }
+
+type SearchResult = {
+  name: string;
+  brand: string | null;
+  barcode: string | null;
+  image: string | null;
+  category: CategoryKey | "";
+};
+
+function guessCategoryFromText(text: string): CategoryKey | "" {
+  const hay = text.toLowerCase();
+  if (/pacifier|soother|dummy/.test(hay)) return "pacifier";
+  if (/toothbrush|tooth-brush/.test(hay)) return "toothbrush";
+  if (/infant formula|baby formula|follow-on milk|formula milk|formula/.test(hay)) return "formula";
+  if (/swaddle|sleep sack/.test(hay)) return "swaddle";
+  if (/car seat|car-seat|carseat/.test(hay)) return "car_seat";
+  if (/crib|cot\b/.test(hay)) return "crib";
+  if (/pack ?n ?play|playard|play yard/.test(hay)) return "pack_n_play";
+  if (/baby carrier|infant carrier|sling|wrap carrier|\bcarrier\b/.test(hay)) return "carrier";
+  if (/bouncer/.test(hay)) return "bouncer";
+  if (/baby swing|infant swing|\bswing\b/.test(hay)) return "swing";
+  return "";
+}
+
+function ProductSearch({ onPick }: { onPick: (r: SearchResult) => void }) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
+
+  async function runSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const q = query.trim();
+    if (!q) return;
+    setLoading(true);
+    setSearched(true);
+    try {
+      const url =
+        `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}` +
+        `&search_simple=1&action=process&json=1&page_size=12` +
+        `&fields=product_name,brands,code,image_front_small_url,categories,categories_tags,generic_name`;
+      const res = await fetch(url);
+      const json = await res.json();
+      const items: SearchResult[] = (json.products ?? [])
+        .map((p: any) => {
+          const name = (p.product_name || p.generic_name || "").trim();
+          if (!name) return null;
+          const hay = [name, p.brands ?? "", p.categories ?? "", (p.categories_tags ?? []).join(" ")].join(" ");
+          return {
+            name,
+            brand: p.brands?.split(",")[0]?.trim() || null,
+            barcode: p.code || null,
+            image: p.image_front_small_url || null,
+            category: guessCategoryFromText(hay),
+          } as SearchResult;
+        })
+        .filter(Boolean)
+        .slice(0, 10);
+      setResults(items);
+    } catch {
+      toast.error("Search failed — try again");
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function clear() {
+    setQuery("");
+    setResults([]);
+    setSearched(false);
+  }
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+      <div>
+        <p className="font-body text-sm font-semibold">Search baby products</p>
+        <p className="font-body text-xs text-muted-foreground mt-0.5">
+          Find a product by name and we'll fill in the details.
+        </p>
+      </div>
+      <form onSubmit={runSearch} className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="e.g. Avent Soothie, Enfamil, Nuna Pipa"
+            className="h-11 rounded-2xl bg-background pl-9 pr-9 font-body text-base"
+            maxLength={80}
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={clear}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-muted"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+        <Button type="submit" disabled={loading || !query.trim()} className="h-11 rounded-2xl px-4">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Search"}
+        </Button>
+      </form>
+
+      {searched && !loading && results.length === 0 && (
+        <p className="font-body text-xs text-muted-foreground">
+          No matches. Try the barcode scanner or fill the form manually below.
+        </p>
+      )}
+
+      {results.length > 0 && (
+        <ul className="space-y-2 max-h-72 overflow-y-auto">
+          {results.map((r, i) => (
+            <li key={`${r.barcode ?? "x"}-${i}`}>
+              <button
+                type="button"
+                onClick={() => {
+                  onPick(r);
+                  toast.success(`Loaded ${r.name}`);
+                }}
+                className="flex w-full items-center gap-3 rounded-xl border border-border bg-background p-2.5 text-left hover:border-primary/40 transition-colors"
+              >
+                {r.image ? (
+                  <img src={r.image} alt="" className="h-12 w-12 rounded-lg object-cover shrink-0 border border-border" />
+                ) : (
+                  <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-body text-sm font-semibold">{r.name}</p>
+                  <p className="truncate font-body text-xs text-muted-foreground">
+                    {[r.brand, r.barcode].filter(Boolean).join(" · ") || "Tap to use"}
+                  </p>
+                </div>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
