@@ -133,10 +133,13 @@ function HomePage() {
               </div>
               <span className="font-display text-base font-semibold tracking-tight">Safe & Sound</span>
             </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 font-body text-[11px] font-medium text-muted-foreground shadow-sm">
-              <Sparkles className="h-3 w-3 text-accent" />
-              {totalAlerts === 0 ? "All quiet" : `${totalAlerts} to look at`}
-            </span>
+            <div className="flex items-center gap-2">
+              <ChildSwitcher />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 font-body text-[11px] font-medium text-muted-foreground shadow-sm">
+                <Sparkles className="h-3 w-3 text-accent" />
+                {totalAlerts === 0 ? "All quiet" : `${totalAlerts} to look at`}
+              </span>
+            </div>
           </div>
 
           <p className="font-body text-sm font-medium uppercase tracking-[0.2em] text-accent">
