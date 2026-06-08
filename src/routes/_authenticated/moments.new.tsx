@@ -27,49 +27,37 @@ const PROMPTS = [
 
 function NewMomentPage() {
   const navigate = useNavigate();
+  const { activeChildId } = useActiveChild();
+  const { requirePro } = useProGate();
   const [saving, setSaving] = useState(false);
-  const [childId, setChildId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [loggedAt, setLoggedAt] = useState(new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState("");
-
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from("children")
-        .select("id")
-        .order("created_at", { ascending: true })
-        .limit(1);
-      if (data && data[0]) setChildId(data[0].id);
-    })();
-  }, []);
+  const [photoPath, setPhotoPath] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim()) {
-      toast.error("Give the moment a title");
-      return;
-    }
-    if (!childId) {
-      toast.error("Add a child first");
-      return;
-    }
+    if (!title.trim()) { toast.error("Give the moment a title"); return; }
+    if (!activeChildId) { toast.error("Add a child first"); return; }
     setSaving(true);
     const { error } = await supabase.from("milestones").insert({
-      child_id: childId,
+      child_id: activeChildId,
       title: title.trim(),
       logged_at: loggedAt,
       notes: notes.trim() || null,
+      photo_url: photoPath,
       completed: true,
-    });
+    } as never);
     setSaving(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
+    if (error) { toast.error(error.message); return; }
     toast.success("Saved that moment 💛");
     navigate({ to: "/home" });
   }
+
+  function gatePhoto(): boolean {
+    return requirePro('Photo attachments', 'Attach a photo to each moment so you remember the exact day.');
+  }
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-16">
