@@ -210,7 +210,7 @@ function NewProductPage() {
           </Field>
 
 
-          <Field label={category === "breast_milk" || category === "formula" ? "Opened / pumped on" : "Purchase date"} required>
+          <Field label="Purchase date" required>
             <Input
               type="date"
               value={purchasedAt}
