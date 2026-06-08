@@ -5,7 +5,7 @@ interface LogoProps {
 }
 
 /**
- * Soft, whimsical brand mark — a sleepy crescent moon with a tiny star.
+ * Soft, hand-tied linen bow — a gentle ribbon mark for a nursery.
  * Uses currentColor so it inherits from text-* classes on the parent.
  */
 export function Logo({ className }: LogoProps) {
@@ -17,24 +17,31 @@ export function Logo({ className }: LogoProps) {
       className={cn("h-5 w-5", className)}
       aria-hidden="true"
     >
-      {/* Crescent moon */}
+      {/* Left loop */}
       <path
-        d="M22.5 20.2c-5.1 0-9.2-4.1-9.2-9.2 0-1.6.4-3.1 1.1-4.4-4.4 1-7.7 5-7.7 9.7 0 5.5 4.4 9.9 9.9 9.9 4.4 0 8.2-2.9 9.5-6.9-1.1.6-2.3.9-3.6.9z"
+        d="M16 18c-2.5-1-5.5-1.5-7.5-.5-2.5 1.2-3.5 4-2.5 6 1 2 3.5 2.5 5.5 1.5 2-1 3.5-3.5 4.5-7z"
         fill="currentColor"
         opacity="0.95"
       />
-      {/* Sleepy eye on the moon */}
+      {/* Right loop */}
       <path
-        d="M17.4 16.6c.7-.3 1.5-.3 2.2 0"
-        stroke="var(--background)"
-        strokeWidth="1.1"
-        strokeLinecap="round"
-      />
-      {/* Tiny star */}
-      <path
-        d="M24.5 9.5l.5 1.5 1.5.5-1.5.5-.5 1.5-.5-1.5L22.5 11.5l1.5-.5z"
+        d="M16 18c2.5-1 5.5-1.5 7.5-.5 2.5 1.2 3.5 4 2.5 6-1 2-3.5 2.5-5.5 1.5-2-1-3.5-3.5-4.5-7z"
         fill="currentColor"
-        opacity="0.6"
+        opacity="0.95"
+      />
+      {/* Center knot */}
+      <circle cx="16" cy="18" r="2.5" fill="currentColor" />
+      {/* Left tail */}
+      <path
+        d="M14.5 20c-1 3-2 5.5-4 7-1 1-2 .5-1.5-1 .5-2 2-4.5 3.5-6z"
+        fill="currentColor"
+        opacity="0.7"
+      />
+      {/* Right tail */}
+      <path
+        d="M17.5 20c1 3 2 5.5 4 7 1 1 2 .5 1.5-1-.5-2-2-4.5-3.5-6z"
+        fill="currentColor"
+        opacity="0.7"
       />
     </svg>
   );
