@@ -1,7 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export type ChildOption = { id: string; name: string; date_of_birth: string | null };
+export type ChildOption = {
+  id: string;
+  name: string;
+  date_of_birth: string | null;
+  height_cm: number | null;
+  weight_kg: number | null;
+  measurements_updated_at: string | null;
+};
 
 const STORAGE_KEY = 'safesound.activeChildId';
 const listeners = new Set<() => void>();
@@ -28,7 +35,7 @@ export function useActiveChild() {
   const refresh = useCallback(async () => {
     const { data } = await supabase
       .from('children')
-      .select('id, name, date_of_birth')
+      .select('id, name, date_of_birth, height_cm, weight_kg, measurements_updated_at')
       .order('created_at', { ascending: true });
     const list = (data ?? []) as ChildOption[];
     setChildren(list);
@@ -44,6 +51,7 @@ export function useActiveChild() {
       setActiveIdState(null);
     }
   }, []);
+
 
   useEffect(() => { refresh(); }, [refresh]);
 
