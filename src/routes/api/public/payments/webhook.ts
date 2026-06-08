@@ -58,7 +58,11 @@ async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
   const productId = item?.price?.product;
   const periodStart = item?.current_period_start ?? subscription.current_period_start;
   const periodEnd = item?.current_period_end ?? subscription.current_period_end;
-  const plan = priceId === 'pro_monthly' ? 'pro' : 'free';
+  // Keep plan='pro' while inside the paid period; downgrade only once it lapses.
+  const periodEndDate = periodEnd ? new Date(periodEnd * 1000) : null;
+  const stillInPeriod = !periodEndDate || periodEndDate > new Date();
+  const isProPrice = priceId === 'pro_monthly';
+  const plan = isProPrice && stillInPeriod ? 'pro' : 'free';
 
   await subs()
     .update({
@@ -67,7 +71,7 @@ async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
       price_id: priceId,
       plan,
       current_period_start: periodStart ? new Date(periodStart * 1000).toISOString() : null,
-      current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+      current_period_end: periodEndDate?.toISOString() ?? null,
       cancel_at_period_end: subscription.cancel_at_period_end || false,
       updated_at: new Date().toISOString(),
     })
@@ -76,10 +80,18 @@ async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
 }
 
 async function handleSubscriptionDeleted(subscription: any, env: StripeEnv) {
+  // Preserve plan & period_end so the user keeps Pro until current_period_end.
+  // The useSubscription hook treats canceled+future period_end as Pro.
+  const periodEnd = subscription.items?.data?.[0]?.current_period_end ?? subscription.current_period_end;
+  const periodEndDate = periodEnd ? new Date(periodEnd * 1000) : null;
+  const stillInPeriod = !!(periodEndDate && periodEndDate > new Date());
+
   await subs()
     .update({
       status: 'canceled',
-      plan: 'free',
+      plan: stillInPeriod ? 'pro' : 'free',
+      ...(periodEndDate && { current_period_end: periodEndDate.toISOString() }),
+      cancel_at_period_end: true,
       updated_at: new Date().toISOString(),
     })
     .eq('stripe_subscription_id', subscription.id)
