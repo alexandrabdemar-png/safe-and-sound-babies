@@ -57,22 +57,17 @@ function HomePage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // Honor active child selection
+      let activeId: string | null = null;
+      try { activeId = localStorage.getItem('safesound.activeChildId'); } catch {}
       const { data: kids, error } = await supabase
         .from("children")
         .select("id, name, date_of_birth")
-        .order("created_at", { ascending: true })
-        .limit(1);
+        .order("created_at", { ascending: true });
       if (cancelled) return;
-      if (error) {
-        toast.error(error.message);
-        setLoading(false);
-        return;
-      }
-      if (!kids || kids.length === 0) {
-        navigate({ to: "/onboarding" });
-        return;
-      }
-      const c = kids[0] as Child;
+      if (error) { toast.error(error.message); setLoading(false); return; }
+      if (!kids || kids.length === 0) { navigate({ to: "/onboarding" }); return; }
+      const c = (kids.find((k) => k.id === activeId) ?? kids[0]) as Child;
       setChild(c);
 
       const horizon = new Date();
@@ -112,9 +107,7 @@ function HomePage() {
       });
       setLoading(false);
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [navigate]);
 
   const age = useMemo(() => calcAge(child?.date_of_birth ?? null), [child]);
