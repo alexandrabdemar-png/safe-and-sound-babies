@@ -64,16 +64,17 @@ function HomePage() {
   const [child, setChild] = useState<Child | null>(null);
   const [moments, setMoments] = useState<Moment[]>([]);
   const [alerts, setAlerts] = useState<AlertSummary>({ recalls: 0, replace: 0, sizeUp: 0 });
+  const [products, setProducts] = useState<ProductInput[]>([]);
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      // Honor active child selection
       let activeId: string | null = null;
       try { activeId = localStorage.getItem('safesound.activeChildId'); } catch {}
       const { data: kids, error } = await supabase
         .from("children")
-        .select("id, name, date_of_birth")
+        .select("id, name, date_of_birth, height_cm, weight_kg, measurements_updated_at")
         .order("created_at", { ascending: true });
       if (cancelled) return;
       if (error) { toast.error(error.message); setLoading(false); return; }
@@ -85,28 +86,15 @@ function HomePage() {
       horizon.setDate(horizon.getDate() + 30);
       const todayStr = new Date().toISOString().slice(0, 10);
       const horizonStr = horizon.toISOString().slice(0, 10);
+      const nowIso = new Date().toISOString();
 
-      const [mRes, recallRes, replaceRes, sizeRes] = await Promise.all([
-        supabase
-          .from("milestones")
-          .select("id, title, logged_at, notes")
-          .eq("child_id", c.id)
-          .order("logged_at", { ascending: false })
-          .limit(5),
-        supabase
-          .from("product_recalls")
-          .select("id", { count: "exact", head: true })
-          .eq("acknowledged", false),
-        supabase
-          .from("products")
-          .select("id", { count: "exact", head: true })
-          .gte("replace_at", todayStr)
-          .lte("replace_at", horizonStr),
-        supabase
-          .from("products")
-          .select("id", { count: "exact", head: true })
-          .gte("next_size_at", todayStr)
-          .lte("next_size_at", horizonStr),
+      const [mRes, recallRes, replaceRes, sizeRes, productRes, dismRes] = await Promise.all([
+        supabase.from("milestones").select("id, title, logged_at, notes").eq("child_id", c.id).order("logged_at", { ascending: false }).limit(5),
+        supabase.from("product_recalls").select("id", { count: "exact", head: true }).eq("acknowledged", false),
+        supabase.from("products").select("id", { count: "exact", head: true }).gte("replace_at", todayStr).lte("replace_at", horizonStr),
+        supabase.from("products").select("id", { count: "exact", head: true }).gte("next_size_at", todayStr).lte("next_size_at", horizonStr),
+        supabase.from("products").select("id, category, purchased_at, size").or(`child_id.eq.${c.id},child_id.is.null`),
+        supabase.from("insight_dismissals").select("rule_id, action, until").eq("child_id", c.id),
       ]);
 
       if (cancelled) return;
@@ -116,6 +104,13 @@ function HomePage() {
         replace: replaceRes.count ?? 0,
         sizeUp: sizeRes.count ?? 0,
       });
+      setProducts((productRes.data ?? []) as ProductInput[]);
+      const blocked = new Set<string>();
+      for (const d of (dismRes.data ?? []) as { rule_id: string; action: string; until: string | null }[]) {
+        if (d.action === 'done' || d.action === 'dismissed') blocked.add(d.rule_id);
+        else if (d.action === 'snoozed' && d.until && d.until > nowIso) blocked.add(d.rule_id);
+      }
+      setDismissedIds(blocked);
       setLoading(false);
     })();
     return () => { cancelled = true; };
@@ -123,6 +118,11 @@ function HomePage() {
 
   const age = useMemo(() => calcAge(child?.date_of_birth ?? null), [child]);
   const totalAlerts = alerts.recalls + alerts.replace + alerts.sizeUp;
+  const upNext: Insight[] = useMemo(() => {
+    const all = evaluateInsights(child, products);
+    return all.filter((i) => !dismissedIds.has(i.id)).slice(0, 3);
+  }, [child, products, dismissedIds]);
+
 
   if (loading) {
     return (
