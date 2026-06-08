@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Baby, Bed, Milk, ShieldCheck, Sparkles, Wind, Brush, ScanLine, Tent, Armchair, Music, Search, X } from "lucide-react";
+import { ArrowLeft, Loader2, Baby, Bed, ShieldCheck, Sparkles, Wind, ScanLine, Tent, Armchair, Music, Search, X, Moon, Footprints, Utensils, Grid3x3, DoorClosed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
