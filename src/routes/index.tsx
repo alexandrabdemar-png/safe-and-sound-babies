@@ -43,7 +43,7 @@ const categories = [
   { name: "Formula", image: catFormula },
   { name: "Baby food", image: catBabyfood },
   { name: "Swaddles", image: catSwaddle },
-  { name: "Toothbrush", image: catToothbrush },
+  { name: "Strollers", image: catStroller },
   { name: "Baby gates", image: catGate },
 ];
 
@@ -92,7 +92,7 @@ function Index() {
 
               <p className="mt-6 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
                 Add a car seat, pacifier, crib, breast milk, formula, baby food,
-                swaddle, toothbrush, or baby gate — Safe & Sound tells you
+                swaddle, stroller, or baby gate — Safe & Sound tells you
                 exactly when to replace it, size it up, or check the fit. Quiet,
                 kind reminders. No noise.
               </p>
