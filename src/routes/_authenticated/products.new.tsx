@@ -269,6 +269,12 @@ function NewProductPage() {
           </Button>
         </form>
       </main>
+
+      <BarcodeScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onDetected={(code) => { setBarcode(code); toast.success(`Scanned ${code}`); }}
+      />
     </div>
   );
 }
