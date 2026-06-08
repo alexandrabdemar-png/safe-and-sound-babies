@@ -10,7 +10,7 @@ import catBreastmilk from "@/assets/cat-breastmilk.png";
 import catFormula from "@/assets/cat-formula.png";
 import catBabyfood from "@/assets/cat-babyfood.png";
 import catSwaddle from "@/assets/cat-swaddle.png";
-import catToothbrush from "@/assets/cat-toothbrush.png";
+import catStroller from "@/assets/cat-stroller.png";
 import catGate from "@/assets/cat-gate.png";
 
 export const Route = createFileRoute("/")({
@@ -43,7 +43,7 @@ const categories = [
   { name: "Formula", image: catFormula },
   { name: "Baby food", image: catBabyfood },
   { name: "Swaddles", image: catSwaddle },
-  { name: "Toothbrush", image: catToothbrush },
+  { name: "Strollers", image: catStroller },
   { name: "Baby gates", image: catGate },
 ];
 
@@ -85,14 +85,14 @@ function Index() {
 
               <h1 className="font-display text-5xl font-semibold leading-[1.1] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
                 Never miss a{" "}
-                <span className="font-display-italic italic text-accent">safety</span>
+                <span className="font-display-italic italic text-primary">safety</span>
                 <br />
                 milestone again.
               </h1>
 
               <p className="mt-6 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
                 Add a car seat, pacifier, crib, breast milk, formula, baby food,
-                swaddle, toothbrush, or baby gate — Safe & Sound tells you
+                swaddle, stroller, or baby gate — Safe & Sound tells you
                 exactly when to replace it, size it up, or check the fit. Quiet,
                 kind reminders. No noise.
               </p>
