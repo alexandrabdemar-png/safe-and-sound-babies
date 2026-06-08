@@ -26,6 +26,7 @@ import { Route as AuthenticatedMomentsNewRouteImport } from './routes/_authentic
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksProductAlertsCheckRouteImport } from './routes/api/public/hooks/product-alerts-check'
 import { Route as ApiPublicHooksCpscSyncRouteImport } from './routes/api/public/hooks/cpsc-sync'
+import { Route as ApiPublicHooksCheckRecallsRouteImport } from './routes/api/public/hooks/check-recalls'
 
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
@@ -115,6 +116,12 @@ const ApiPublicHooksCpscSyncRoute = ApiPublicHooksCpscSyncRouteImport.update({
   path: '/api/public/hooks/cpsc-sync',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksCheckRecallsRoute =
+  ApiPublicHooksCheckRecallsRouteImport.update({
+    id: '/api/public/hooks/check-recalls',
+    path: '/api/public/hooks/check-recalls',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/moments/new': typeof AuthenticatedMomentsNewRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/scan': typeof AuthenticatedProductsScanRoute
+  '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -148,6 +156,7 @@ export interface FileRoutesByTo {
   '/moments/new': typeof AuthenticatedMomentsNewRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/scan': typeof AuthenticatedProductsScanRoute
+  '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -168,6 +177,7 @@ export interface FileRoutesById {
   '/_authenticated/moments/new': typeof AuthenticatedMomentsNewRoute
   '/_authenticated/products/new': typeof AuthenticatedProductsNewRoute
   '/_authenticated/products/scan': typeof AuthenticatedProductsScanRoute
+  '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/moments/new'
     | '/products/new'
     | '/products/scan'
+    | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
     | '/api/public/hooks/product-alerts-check'
     | '/api/public/payments/webhook'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/moments/new'
     | '/products/new'
     | '/products/scan'
+    | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
     | '/api/public/hooks/product-alerts-check'
     | '/api/public/payments/webhook'
@@ -225,6 +237,7 @@ export interface FileRouteTypes {
     | '/_authenticated/moments/new'
     | '/_authenticated/products/new'
     | '/_authenticated/products/scan'
+    | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
     | '/api/public/hooks/product-alerts-check'
     | '/api/public/payments/webhook'
@@ -235,6 +248,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   OnboardingRoute: typeof OnboardingRoute
+  ApiPublicHooksCheckRecallsRoute: typeof ApiPublicHooksCheckRecallsRoute
   ApiPublicHooksCpscSyncRoute: typeof ApiPublicHooksCpscSyncRoute
   ApiPublicHooksProductAlertsCheckRoute: typeof ApiPublicHooksProductAlertsCheckRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -361,6 +375,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksCpscSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/check-recalls': {
+      id: '/api/public/hooks/check-recalls'
+      path: '/api/public/hooks/check-recalls'
+      fullPath: '/api/public/hooks/check-recalls'
+      preLoaderRoute: typeof ApiPublicHooksCheckRecallsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -409,6 +430,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   OnboardingRoute: OnboardingRoute,
+  ApiPublicHooksCheckRecallsRoute: ApiPublicHooksCheckRecallsRoute,
   ApiPublicHooksCpscSyncRoute: ApiPublicHooksCpscSyncRoute,
   ApiPublicHooksProductAlertsCheckRoute: ApiPublicHooksProductAlertsCheckRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
