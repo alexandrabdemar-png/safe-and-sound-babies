@@ -73,9 +73,14 @@ function computeReplaceAt(category: CategoryKey | "", purchasedAt: string, carSe
 
 function NewProductPage() {
   const navigate = useNavigate();
+  const { requirePro } = useProGate();
+  const { activeChildId } = useActiveChild();
   const [saving, setSaving] = useState(false);
   const [category, setCategory] = useState<CategoryKey | "">("");
   const [name, setName] = useState("");
+  const [barcode, setBarcode] = useState("");
+  const [photoPath, setPhotoPath] = useState<string | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [purchasedAt, setPurchasedAt] = useState(toISODate(new Date()));
   const [carSeatExpiry, setCarSeatExpiry] = useState("");
   const [swaddleSize, setSwaddleSize] = useState("");
@@ -87,28 +92,31 @@ function NewProductPage() {
 
   const activeCategory = CATEGORIES.find((c) => c.key === category);
 
+  function openScanner() {
+    if (!requirePro('Barcode scanner', 'Scan UPC/EAN barcodes to fill in product details instantly.')) return;
+    setScannerOpen(true);
+  }
+
+  function openPhoto(): boolean {
+    return requirePro('Photo attachments', 'Attach a photo so you can recognize the exact product later.');
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!category) {
-      toast.error("Pick a category");
-      return;
-    }
-    if (!name.trim()) {
-      toast.error("Give your product a name");
-      return;
-    }
-    if (category === "car_seat" && !carSeatExpiry) {
-      toast.error("Add the car seat's manufacturer expiry date");
-      return;
-    }
+    if (!category) { toast.error("Pick a category"); return; }
+    if (!name.trim()) { toast.error("Give your product a name"); return; }
+    if (category === "car_seat" && !carSeatExpiry) { toast.error("Add the car seat's manufacturer expiry date"); return; }
     setSaving(true);
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Not signed in");
       const { error } = await supabase.from("products").insert({
         user_id: u.user.id,
+        child_id: activeChildId,
         name: name.trim(),
         category: activeCategory?.label ?? category,
+        barcode: barcode.trim() || null,
+        photo_url: photoPath,
         purchased_at: purchasedAt ? new Date(purchasedAt).toISOString() : null,
         replace_at: computedReplaceAt || null,
         size: category === "swaddle" ? swaddleSize.trim() || null : null,
@@ -118,10 +126,9 @@ function NewProductPage() {
       navigate({ to: "/products" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't save");
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   }
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-16">
