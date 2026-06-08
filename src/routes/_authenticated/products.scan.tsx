@@ -468,7 +468,7 @@ function ScanView({ onDetected }: { onDetected: (code: string) => void }) {
     paused,
     onDecodeResult(result) {
       setPaused(true);
-      onDetected(result.getText());
+      onDetected(result.rawValue);
     },
     onError(e) {
       const msg = e instanceof Error ? e.message : String(e);
