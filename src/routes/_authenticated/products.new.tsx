@@ -2,10 +2,15 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Baby, Bed, Milk, Shield, ShieldCheck, Sparkles, Wind, Brush } from "lucide-react";
+import { ArrowLeft, Loader2, Baby, Bed, Milk, Shield, ShieldCheck, Sparkles, Wind, Brush, ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BarcodeScanner } from "@/components/BarcodeScanner";
+import { PhotoUpload } from "@/components/PhotoUpload";
+import { useProGate } from "@/hooks/useProGate";
+import { useActiveChild } from "@/hooks/useActiveChild";
+
 
 export const Route = createFileRoute("/_authenticated/products/new")({
   component: NewProductPage,
