@@ -233,7 +233,7 @@ function NewProductPage() {
             </Field>
           )}
 
-          {category === "swaddle" && (
+          {category === "sleep_sack" && (
             <Field label="Current size / weight">
               <Input
                 value={swaddleSize}
