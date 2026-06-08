@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AlertTriangle, ArrowRight, Loader2, Package, Plus, RefreshCw, Ruler, Sparkles } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
+import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 
@@ -57,22 +58,17 @@ function HomePage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // Honor active child selection
+      let activeId: string | null = null;
+      try { activeId = localStorage.getItem('safesound.activeChildId'); } catch {}
       const { data: kids, error } = await supabase
         .from("children")
         .select("id, name, date_of_birth")
-        .order("created_at", { ascending: true })
-        .limit(1);
+        .order("created_at", { ascending: true });
       if (cancelled) return;
-      if (error) {
-        toast.error(error.message);
-        setLoading(false);
-        return;
-      }
-      if (!kids || kids.length === 0) {
-        navigate({ to: "/onboarding" });
-        return;
-      }
-      const c = kids[0] as Child;
+      if (error) { toast.error(error.message); setLoading(false); return; }
+      if (!kids || kids.length === 0) { navigate({ to: "/onboarding" }); return; }
+      const c = (kids.find((k) => k.id === activeId) ?? kids[0]) as Child;
       setChild(c);
 
       const horizon = new Date();
@@ -112,9 +108,7 @@ function HomePage() {
       });
       setLoading(false);
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [navigate]);
 
   const age = useMemo(() => calcAge(child?.date_of_birth ?? null), [child]);
@@ -139,10 +133,13 @@ function HomePage() {
               </div>
               <span className="font-display text-base font-semibold tracking-tight">Safe & Sound</span>
             </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 font-body text-[11px] font-medium text-muted-foreground shadow-sm">
-              <Sparkles className="h-3 w-3 text-accent" />
-              {totalAlerts === 0 ? "All quiet" : `${totalAlerts} to look at`}
-            </span>
+            <div className="flex items-center gap-2">
+              <ChildSwitcher />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 font-body text-[11px] font-medium text-muted-foreground shadow-sm">
+                <Sparkles className="h-3 w-3 text-accent" />
+                {totalAlerts === 0 ? "All quiet" : `${totalAlerts} to look at`}
+              </span>
+            </div>
           </div>
 
           <p className="font-body text-sm font-medium uppercase tracking-[0.2em] text-accent">

@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { PhotoUpload } from "@/components/PhotoUpload";
+import { useProGate } from "@/hooks/useProGate";
+import { useActiveChild } from "@/hooks/useActiveChild";
 
 export const Route = createFileRoute("/_authenticated/moments/new")({
   component: NewMomentPage,
@@ -24,49 +27,37 @@ const PROMPTS = [
 
 function NewMomentPage() {
   const navigate = useNavigate();
+  const { activeChildId } = useActiveChild();
+  const { requirePro } = useProGate();
   const [saving, setSaving] = useState(false);
-  const [childId, setChildId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [loggedAt, setLoggedAt] = useState(new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState("");
-
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from("children")
-        .select("id")
-        .order("created_at", { ascending: true })
-        .limit(1);
-      if (data && data[0]) setChildId(data[0].id);
-    })();
-  }, []);
+  const [photoPath, setPhotoPath] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim()) {
-      toast.error("Give the moment a title");
-      return;
-    }
-    if (!childId) {
-      toast.error("Add a child first");
-      return;
-    }
+    if (!title.trim()) { toast.error("Give the moment a title"); return; }
+    if (!activeChildId) { toast.error("Add a child first"); return; }
     setSaving(true);
     const { error } = await supabase.from("milestones").insert({
-      child_id: childId,
+      child_id: activeChildId,
       title: title.trim(),
       logged_at: loggedAt,
       notes: notes.trim() || null,
+      photo_url: photoPath,
       completed: true,
-    });
+    } as never);
     setSaving(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
+    if (error) { toast.error(error.message); return; }
     toast.success("Saved that moment 💛");
     navigate({ to: "/home" });
   }
+
+  function gatePhoto(): boolean {
+    return requirePro('Photo attachments', 'Attach a photo to each moment so you remember the exact day.');
+  }
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-16">
@@ -137,6 +128,14 @@ function NewMomentPage() {
               className="rounded-2xl bg-card px-4 py-3 font-body text-base"
             />
           </div>
+
+          <div className="space-y-2">
+            <Label className="font-body text-sm">Photo (optional)</Label>
+            <div onClickCapture={(e) => { if (!photoPath && !gatePhoto()) { e.stopPropagation(); e.preventDefault(); } }}>
+              <PhotoUpload value={photoPath} onChange={setPhotoPath} prefix="moment" />
+            </div>
+          </div>
+
 
           <Button
             type="submit"
