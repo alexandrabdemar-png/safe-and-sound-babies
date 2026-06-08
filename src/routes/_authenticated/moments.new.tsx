@@ -129,6 +129,14 @@ function NewMomentPage() {
             />
           </div>
 
+          <div className="space-y-2">
+            <Label className="font-body text-sm">Photo (optional)</Label>
+            <div onClickCapture={(e) => { if (!photoPath && !gatePhoto()) { e.stopPropagation(); e.preventDefault(); } }}>
+              <PhotoUpload value={photoPath} onChange={setPhotoPath} prefix="moment" />
+            </div>
+          </div>
+
+
           <Button
             type="submit"
             disabled={saving}
