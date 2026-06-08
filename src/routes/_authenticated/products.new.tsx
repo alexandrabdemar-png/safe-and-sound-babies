@@ -120,7 +120,7 @@ function NewProductPage() {
         purchased_at: purchasedAt ? new Date(purchasedAt).toISOString() : null,
         replace_at: computedReplaceAt || null,
         size: category === "swaddle" ? swaddleSize.trim() || null : null,
-      });
+      } as never);
       if (error) throw error;
       toast.success("Saved — we'll remind you 🌙");
       navigate({ to: "/products" });
