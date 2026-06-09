@@ -24,6 +24,7 @@ import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
 import { Route as AuthenticatedProductsScanRouteImport } from './routes/_authenticated/products.scan'
 import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products.new'
+import { Route as AuthenticatedProductsIdRouteImport } from './routes/_authenticated/products.$id'
 import { Route as AuthenticatedMomentsNewRouteImport } from './routes/_authenticated/moments.new'
 import { Route as AuthenticatedBottlesNewRouteImport } from './routes/_authenticated/bottles.new'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -107,6 +108,11 @@ const AuthenticatedProductsNewRoute =
     path: '/new',
     getParentRoute: () => AuthenticatedProductsRoute,
   } as any)
+const AuthenticatedProductsIdRoute = AuthenticatedProductsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedProductsRoute,
+} as any)
 const AuthenticatedMomentsNewRoute = AuthenticatedMomentsNewRouteImport.update({
   id: '/moments/new',
   path: '/moments/new',
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
+  '/products/$id': typeof AuthenticatedProductsIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/scan': typeof AuthenticatedProductsScanRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
+  '/products/$id': typeof AuthenticatedProductsIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/scan': typeof AuthenticatedProductsScanRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
@@ -202,6 +210,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/_authenticated/moments/new': typeof AuthenticatedMomentsNewRoute
+  '/_authenticated/products/$id': typeof AuthenticatedProductsIdRoute
   '/_authenticated/products/new': typeof AuthenticatedProductsNewRoute
   '/_authenticated/products/scan': typeof AuthenticatedProductsScanRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
@@ -226,6 +235,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/bottles/new'
     | '/moments/new'
+    | '/products/$id'
     | '/products/new'
     | '/products/scan'
     | '/api/public/hooks/check-recalls'
@@ -248,6 +258,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/bottles/new'
     | '/moments/new'
+    | '/products/$id'
     | '/products/new'
     | '/products/scan'
     | '/api/public/hooks/check-recalls'
@@ -271,6 +282,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/bottles/new'
     | '/_authenticated/moments/new'
+    | '/_authenticated/products/$id'
     | '/_authenticated/products/new'
     | '/_authenticated/products/scan'
     | '/api/public/hooks/check-recalls'
@@ -398,6 +410,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProductsNewRouteImport
       parentRoute: typeof AuthenticatedProductsRoute
     }
+    '/_authenticated/products/$id': {
+      id: '/_authenticated/products/$id'
+      path: '/$id'
+      fullPath: '/products/$id'
+      preLoaderRoute: typeof AuthenticatedProductsIdRouteImport
+      parentRoute: typeof AuthenticatedProductsRoute
+    }
     '/_authenticated/moments/new': {
       id: '/_authenticated/moments/new'
       path: '/moments/new'
@@ -455,11 +474,13 @@ const AuthenticatedBottlesRouteWithChildren =
   AuthenticatedBottlesRoute._addFileChildren(AuthenticatedBottlesRouteChildren)
 
 interface AuthenticatedProductsRouteChildren {
+  AuthenticatedProductsIdRoute: typeof AuthenticatedProductsIdRoute
   AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
   AuthenticatedProductsScanRoute: typeof AuthenticatedProductsScanRoute
 }
 
 const AuthenticatedProductsRouteChildren: AuthenticatedProductsRouteChildren = {
+  AuthenticatedProductsIdRoute: AuthenticatedProductsIdRoute,
   AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
   AuthenticatedProductsScanRoute: AuthenticatedProductsScanRoute,
 }
