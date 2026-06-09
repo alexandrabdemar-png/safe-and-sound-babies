@@ -40,8 +40,6 @@ const CATEGORIES: { key: string; name: string; icon: React.ComponentType<{ class
   { key: "baby_gate",       name: "Baby gates",       icon: DoorClosed },
 ];
 
-const LB_PER_KG = 2.20462;
-const IN_PER_CM = 0.393701;
 
 function OnboardingPage() {
   const navigate = useNavigate();
@@ -89,36 +87,48 @@ function OnboardingPage() {
     return false;
   }
 
-  function parseMeasurements(): { height_cm: number | null; weight_kg: number | null } {
+  function parseMeasurements(): { height_inches: number | null; weight_lbs: number | null } {
     const h = parseFloat(heightStr);
     const w = parseFloat(weightStr);
-    const height_cm = Number.isFinite(h) && h > 0
-      ? (units === "imperial" ? h / IN_PER_CM : h)
+    const height_inches = Number.isFinite(h) && h > 0
+      ? (units === "imperial" ? h : h * 0.393701)
       : null;
-    const weight_kg = Number.isFinite(w) && w > 0
-      ? (units === "imperial" ? w / LB_PER_KG : w)
+    const weight_lbs = Number.isFinite(w) && w > 0
+      ? (units === "imperial" ? w : w * 2.20462)
       : null;
-    return { height_cm, weight_kg };
+    return { height_inches, weight_lbs };
   }
 
   async function handleFinish() {
     if (!userId) return;
     setSaving(true);
     try {
-      const { height_cm, weight_kg } = parseMeasurements();
-      const hasMeas = height_cm !== null || weight_kg !== null;
-      const { error: childError } = await supabase
+      const { height_inches, weight_lbs } = parseMeasurements();
+      const hasMeas = height_inches !== null || weight_lbs !== null;
+      const nowIso = new Date().toISOString();
+      const { data: childRow, error: childError } = await supabase
         .from("children")
         .insert({
           user_id: userId,
           name: name.trim(),
           date_of_birth: dob,
-          height_cm,
-          weight_kg,
-          measurements_updated_at: hasMeas ? new Date().toISOString() : null,
-        } as never);
+          height_inches,
+          weight_lbs,
+          measurements_updated_at: hasMeas ? nowIso : null,
+        } as never)
+        .select("id")
+        .single();
 
       if (childError) throw childError;
+      if (hasMeas && childRow) {
+        await supabase.from("child_measurements").insert({
+          user_id: userId,
+          child_id: (childRow as { id: string }).id,
+          height_inches,
+          weight_lbs,
+          recorded_at: nowIso,
+        } as never);
+      }
 
       toast.success(`All set — welcome, ${name.trim()}! 🌙`);
       navigate({ to: "/home" });

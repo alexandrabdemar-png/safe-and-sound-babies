@@ -215,30 +215,25 @@ function ProfilePage() {
   );
 }
 
-const LB_PER_KG = 2.20462;
-const IN_PER_CM = 0.393701;
-
 function ChildRow({
   child,
   onRemove,
   disableRemove,
   onUpdated,
 }: {
-  child: { id: string; name: string; date_of_birth: string | null; height_cm: number | null; weight_kg: number | null; measurements_updated_at: string | null };
+  child: { id: string; name: string; date_of_birth: string | null; height_inches: number | null; weight_lbs: number | null; measurements_updated_at: string | null };
   onRemove: () => void;
   disableRemove: boolean;
   onUpdated: () => Promise<void> | void;
 }) {
   const [editing, setEditing] = useState(false);
-  const [units, setUnits] = useState<"imperial" | "metric">("imperial");
   const [heightStr, setHeightStr] = useState("");
   const [weightStr, setWeightStr] = useState("");
   const [saving, setSaving] = useState(false);
 
   function open() {
-    setUnits("imperial");
-    setHeightStr(child.height_cm != null ? (child.height_cm * IN_PER_CM).toFixed(1) : "");
-    setWeightStr(child.weight_kg != null ? (child.weight_kg * LB_PER_KG).toFixed(1) : "");
+    setHeightStr(child.height_inches != null ? child.height_inches.toFixed(1) : "");
+    setWeightStr(child.weight_lbs != null ? child.weight_lbs.toFixed(1) : "");
     setEditing(true);
   }
 
@@ -246,16 +241,29 @@ function ChildRow({
     setSaving(true);
     const h = parseFloat(heightStr);
     const w = parseFloat(weightStr);
-    const height_cm = Number.isFinite(h) && h > 0 ? (units === "imperial" ? h / IN_PER_CM : h) : null;
-    const weight_kg = Number.isFinite(w) && w > 0 ? (units === "imperial" ? w / LB_PER_KG : w) : null;
+    const height_inches = Number.isFinite(h) && h > 0 ? h : null;
+    const weight_lbs = Number.isFinite(w) && w > 0 ? w : null;
+    const nowIso = new Date().toISOString();
     const { error } = await supabase
       .from("children")
       .update({
-        height_cm,
-        weight_kg,
-        measurements_updated_at: (height_cm !== null || weight_kg !== null) ? new Date().toISOString() : null,
+        height_inches,
+        weight_lbs,
+        measurements_updated_at: (height_inches !== null || weight_lbs !== null) ? nowIso : null,
       } as never)
       .eq("id", child.id);
+    if (!error && (height_inches !== null || weight_lbs !== null)) {
+      const { data: u } = await supabase.auth.getUser();
+      if (u.user) {
+        await supabase.from("child_measurements").insert({
+          user_id: u.user.id,
+          child_id: child.id,
+          height_inches,
+          weight_lbs,
+          recorded_at: nowIso,
+        } as never);
+      }
+    }
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Measurements updated");
@@ -263,14 +271,8 @@ function ChildRow({
     await onUpdated();
   }
 
-  const displayHeight =
-    child.height_cm != null
-      ? `${(child.height_cm * IN_PER_CM).toFixed(1)}" / ${child.height_cm.toFixed(0)} cm`
-      : null;
-  const displayWeight =
-    child.weight_kg != null
-      ? `${(child.weight_kg * LB_PER_KG).toFixed(1)} lb / ${child.weight_kg.toFixed(1)} kg`
-      : null;
+  const displayHeight = child.height_inches != null ? `${child.height_inches.toFixed(1)}"` : null;
+  const displayWeight = child.weight_lbs != null ? `${child.weight_lbs.toFixed(1)} lb` : null;
 
   return (
     <li className="rounded-2xl bg-muted/40 px-3 py-2.5 space-y-2">
@@ -297,24 +299,12 @@ function ChildRow({
         </Button>
       ) : (
         <div className="space-y-2 rounded-xl border border-border bg-background p-3">
-          <div className="inline-flex rounded-full border border-border p-1">
-            <button
-              type="button"
-              onClick={() => setUnits("imperial")}
-              className={`px-3 py-1 rounded-full text-xs font-semibold ${units === "imperial" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-            >lb / in</button>
-            <button
-              type="button"
-              onClick={() => setUnits("metric")}
-              className={`px-3 py-1 rounded-full text-xs font-semibold ${units === "metric" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-            >kg / cm</button>
-          </div>
           <div className="grid grid-cols-2 gap-2">
             <Input
               type="number"
               step="0.1"
               min="0"
-              placeholder={units === "imperial" ? "Height (in)" : "Height (cm)"}
+              placeholder="Height (in)"
               value={heightStr}
               onChange={(e) => setHeightStr(e.target.value)}
               className="h-10 rounded-xl"
@@ -323,7 +313,7 @@ function ChildRow({
               type="number"
               step="0.1"
               min="0"
-              placeholder={units === "imperial" ? "Weight (lb)" : "Weight (kg)"}
+              placeholder="Weight (lb)"
               value={weightStr}
               onChange={(e) => setWeightStr(e.target.value)}
               className="h-10 rounded-xl"
