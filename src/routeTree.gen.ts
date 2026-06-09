@@ -24,12 +24,14 @@ import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
 import { Route as AuthenticatedProductsScanRouteImport } from './routes/_authenticated/products.scan'
 import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products.new'
+import { Route as AuthenticatedProductsIdRouteImport } from './routes/_authenticated/products.$id'
 import { Route as AuthenticatedMomentsNewRouteImport } from './routes/_authenticated/moments.new'
 import { Route as AuthenticatedBottlesNewRouteImport } from './routes/_authenticated/bottles.new'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksProductAlertsCheckRouteImport } from './routes/api/public/hooks/product-alerts-check'
 import { Route as ApiPublicHooksCpscSyncRouteImport } from './routes/api/public/hooks/cpsc-sync'
 import { Route as ApiPublicHooksCheckRecallsRouteImport } from './routes/api/public/hooks/check-recalls'
+import { Route as ApiPublicHooksCheckProductAlertsRouteImport } from './routes/api/public/hooks/check-product-alerts'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -107,6 +109,11 @@ const AuthenticatedProductsNewRoute =
     path: '/new',
     getParentRoute: () => AuthenticatedProductsRoute,
   } as any)
+const AuthenticatedProductsIdRoute = AuthenticatedProductsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedProductsRoute,
+} as any)
 const AuthenticatedMomentsNewRoute = AuthenticatedMomentsNewRouteImport.update({
   id: '/moments/new',
   path: '/moments/new',
@@ -140,6 +147,12 @@ const ApiPublicHooksCheckRecallsRoute =
     path: '/api/public/hooks/check-recalls',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksCheckProductAlertsRoute =
+  ApiPublicHooksCheckProductAlertsRouteImport.update({
+    id: '/api/public/hooks/check-product-alerts',
+    path: '/api/public/hooks/check-product-alerts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -156,8 +169,10 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
+  '/products/$id': typeof AuthenticatedProductsIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/scan': typeof AuthenticatedProductsScanRoute
+  '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
@@ -178,8 +193,10 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
+  '/products/$id': typeof AuthenticatedProductsIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/scan': typeof AuthenticatedProductsScanRoute
+  '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
@@ -202,8 +219,10 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/_authenticated/moments/new': typeof AuthenticatedMomentsNewRoute
+  '/_authenticated/products/$id': typeof AuthenticatedProductsIdRoute
   '/_authenticated/products/new': typeof AuthenticatedProductsNewRoute
   '/_authenticated/products/scan': typeof AuthenticatedProductsScanRoute
+  '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
@@ -226,8 +245,10 @@ export interface FileRouteTypes {
     | '/profile'
     | '/bottles/new'
     | '/moments/new'
+    | '/products/$id'
     | '/products/new'
     | '/products/scan'
+    | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
     | '/api/public/hooks/product-alerts-check'
@@ -248,8 +269,10 @@ export interface FileRouteTypes {
     | '/profile'
     | '/bottles/new'
     | '/moments/new'
+    | '/products/$id'
     | '/products/new'
     | '/products/scan'
+    | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
     | '/api/public/hooks/product-alerts-check'
@@ -271,8 +294,10 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/bottles/new'
     | '/_authenticated/moments/new'
+    | '/_authenticated/products/$id'
     | '/_authenticated/products/new'
     | '/_authenticated/products/scan'
+    | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
     | '/api/public/hooks/product-alerts-check'
@@ -285,6 +310,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   OnboardingRoute: typeof OnboardingRoute
   TermsRoute: typeof TermsRoute
+  ApiPublicHooksCheckProductAlertsRoute: typeof ApiPublicHooksCheckProductAlertsRoute
   ApiPublicHooksCheckRecallsRoute: typeof ApiPublicHooksCheckRecallsRoute
   ApiPublicHooksCpscSyncRoute: typeof ApiPublicHooksCpscSyncRoute
   ApiPublicHooksProductAlertsCheckRoute: typeof ApiPublicHooksProductAlertsCheckRoute
@@ -398,6 +424,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProductsNewRouteImport
       parentRoute: typeof AuthenticatedProductsRoute
     }
+    '/_authenticated/products/$id': {
+      id: '/_authenticated/products/$id'
+      path: '/$id'
+      fullPath: '/products/$id'
+      preLoaderRoute: typeof AuthenticatedProductsIdRouteImport
+      parentRoute: typeof AuthenticatedProductsRoute
+    }
     '/_authenticated/moments/new': {
       id: '/_authenticated/moments/new'
       path: '/moments/new'
@@ -440,6 +473,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksCheckRecallsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/check-product-alerts': {
+      id: '/api/public/hooks/check-product-alerts'
+      path: '/api/public/hooks/check-product-alerts'
+      fullPath: '/api/public/hooks/check-product-alerts'
+      preLoaderRoute: typeof ApiPublicHooksCheckProductAlertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -455,11 +495,13 @@ const AuthenticatedBottlesRouteWithChildren =
   AuthenticatedBottlesRoute._addFileChildren(AuthenticatedBottlesRouteChildren)
 
 interface AuthenticatedProductsRouteChildren {
+  AuthenticatedProductsIdRoute: typeof AuthenticatedProductsIdRoute
   AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
   AuthenticatedProductsScanRoute: typeof AuthenticatedProductsScanRoute
 }
 
 const AuthenticatedProductsRouteChildren: AuthenticatedProductsRouteChildren = {
+  AuthenticatedProductsIdRoute: AuthenticatedProductsIdRoute,
   AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
   AuthenticatedProductsScanRoute: AuthenticatedProductsScanRoute,
 }
@@ -502,6 +544,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   OnboardingRoute: OnboardingRoute,
   TermsRoute: TermsRoute,
+  ApiPublicHooksCheckProductAlertsRoute: ApiPublicHooksCheckProductAlertsRoute,
   ApiPublicHooksCheckRecallsRoute: ApiPublicHooksCheckRecallsRoute,
   ApiPublicHooksCpscSyncRoute: ApiPublicHooksCpscSyncRoute,
   ApiPublicHooksProductAlertsCheckRoute: ApiPublicHooksProductAlertsCheckRoute,
@@ -510,13 +553,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

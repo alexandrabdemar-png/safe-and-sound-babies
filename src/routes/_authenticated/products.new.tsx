@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Bed, ShieldCheck, Sparkles, Wind, ScanLine, Armchair, Music, Search, X, Moon, Footprints, Utensils, Grid3x3, DoorClosed } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, ScanLine, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,8 @@ import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { useProGate } from "@/hooks/useProGate";
 import { useActiveChild } from "@/hooks/useActiveChild";
+import { CATEGORIES, type CategoryKey, guessCategoryFromText } from "@/lib/productCategories";
+import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
 
 
 export const Route = createFileRoute("/_authenticated/products/new")({
@@ -17,30 +19,6 @@ export const Route = createFileRoute("/_authenticated/products/new")({
   head: () => ({ meta: [{ title: "Add product — Safe & Sound" }] }),
 });
 
-type CategoryKey =
-  | "car_seat"
-  | "crib"
-  | "bassinet"
-  | "stroller"
-  | "high_chair"
-  | "swing"
-  | "bouncer"
-  | "activity_center"
-  | "sleep_sack"
-  | "baby_gate";
-
-const CATEGORIES: { key: CategoryKey; label: string; icon: React.ComponentType<{ className?: string }>; hint: string }[] = [
-  { key: "car_seat",        label: "Car seat",        icon: ShieldCheck, hint: "We'll use the manufacturer expiry date" },
-  { key: "crib",            label: "Crib",            icon: Bed,         hint: "We'll remind you when to lower the mattress" },
-  { key: "bassinet",        label: "Bassinet",        icon: Moon,        hint: "Outgrown around 4–6 months — we'll flag the transition" },
-  { key: "stroller",        label: "Stroller",        icon: Footprints,  hint: "Tracked for recalls" },
-  { key: "high_chair",      label: "High chair",      icon: Utensils,    hint: "Tracked for recalls" },
-  { key: "swing",           label: "Swing",           icon: Music,       hint: "Usually outgrown around 6 months" },
-  { key: "bouncer",         label: "Bouncer",         icon: Armchair,    hint: "We'll flag the weight limit" },
-  { key: "activity_center", label: "Activity center", icon: Grid3x3,     hint: "Best between 4–10 months" },
-  { key: "sleep_sack",      label: "Sleep sack",      icon: Wind,        hint: "We'll prompt size-ups based on weight" },
-  { key: "baby_gate",       label: "Baby gate",       icon: DoorClosed,  hint: "Hardware-mount at the top of stairs" },
-];
 
 
 function toISODate(d: Date) {
@@ -83,7 +61,7 @@ function NewProductPage() {
     return requirePro('Photo attachments', 'Attach a photo so you can recognize the exact product later.');
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!category) { toast.error("Pick a category"); return; }
     if (!name.trim()) { toast.error("Give your product a name"); return; }
@@ -92,7 +70,8 @@ function NewProductPage() {
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Not signed in");
-      const { error } = await supabase.from("products").insert({
+      const nowIso = new Date().toISOString();
+      const { data: inserted, error } = await supabase.from("products").insert({
         user_id: u.user.id,
         child_id: activeChildId,
         name: name.trim(),
@@ -100,11 +79,19 @@ function NewProductPage() {
         barcode: barcode.trim() || null,
         photo_url: photoPath,
         purchased_at: purchasedAt ? new Date(purchasedAt).toISOString() : null,
+        added_at: nowIso,
         replace_at: computedReplaceAt || null,
         size: category === "sleep_sack" ? swaddleSize.trim() || null : null,
-      } as never);
+      } as never).select("id").single();
       if (error) throw error;
-      toast.success("Saved — we'll remind you 🌙");
+      const productId = (inserted as { id: string } | null)?.id;
+      // Fire AI guideline lookup in background; don't block save
+      if (productId) {
+        lookupAndSaveGuidelines({ data: { productId } }).catch((err) => {
+          console.warn("Guideline lookup failed:", err);
+        });
+      }
+      toast.success("Saved — fetching safety guidelines 🌙");
       navigate({ to: "/products" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't save");
@@ -290,20 +277,6 @@ type SearchResult = {
   category: CategoryKey | "";
 };
 
-function guessCategoryFromText(text: string): CategoryKey | "" {
-  const hay = text.toLowerCase();
-  if (/car ?seat/.test(hay)) return "car_seat";
-  if (/bassinet/.test(hay)) return "bassinet";
-  if (/crib|cot\b/.test(hay)) return "crib";
-  if (/stroller|pram|buggy/.test(hay)) return "stroller";
-  if (/high ?chair/.test(hay)) return "high_chair";
-  if (/baby swing|infant swing|\bswing\b/.test(hay)) return "swing";
-  if (/bouncer/.test(hay)) return "bouncer";
-  if (/activity ?center|jumperoo|exersaucer/.test(hay)) return "activity_center";
-  if (/sleep ?sack|swaddle|wearable blanket/.test(hay)) return "sleep_sack";
-  if (/baby ?gate|safety gate/.test(hay)) return "baby_gate";
-  return "";
-}
 
 
 function ProductSearch({ onPick }: { onPick: (r: SearchResult) => void }) {

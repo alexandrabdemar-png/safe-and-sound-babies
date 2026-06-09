@@ -16,8 +16,8 @@ export type ChildInput = {
   id: string;
   name: string;
   date_of_birth: string | null;
-  height_cm?: number | null;
-  weight_kg?: number | null;
+  height_inches?: number | null;
+  weight_lbs?: number | null;
   measurements_updated_at?: string | null;
 };
 
@@ -70,8 +70,8 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
   if (!child) return [];
   const out: Insight[] = [];
   const months = ageInMonths(child.date_of_birth);
-  const height = child.height_cm ?? null;
-  const weight = child.weight_kg ?? null;
+  const height = child.height_inches ?? null;
+  const weight = child.weight_lbs ?? null;
   const name = child.name || "Your baby";
 
   // ── Stale measurement nudge ──────────────────────────────────────────────
@@ -146,7 +146,7 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
 
   // ── Product + age rules ──────────────────────────────────────────────────
   const carSeat = hasCategory(products, "car_seat");
-  if (carSeat && (months !== null && months >= 9 || (height !== null && height >= 75))) {
+  if (carSeat && (months !== null && months >= 9 || (height !== null && height >= 29.5))) {
     out.push({
       id: "infant_carseat_outgrow",
       title: "Approaching infant car seat limit",
@@ -178,7 +178,7 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
   const sleepSack = hasCategory(products, "sleep_sack");
   if (sleepSack) {
     const purchased = daysSince(sleepSack.purchased_at ?? null);
-    if ((purchased !== null && purchased >= 90) || (weight !== null && weight >= 8)) {
+    if ((purchased !== null && purchased >= 90) || (weight !== null && weight >= 17.6)) {
       out.push({
         id: "sleep_sack_size_up",
         title: "Sleep sack likely needs sizing up",
@@ -198,7 +198,7 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
       category: "swing",
     });
   }
-  if (hasCategory(products, "bouncer") && (months !== null && months >= 6 || (weight !== null && weight >= 9))) {
+  if (hasCategory(products, "bouncer") && (months !== null && months >= 6 || (weight !== null && weight >= 20))) {
     out.push({
       id: "bouncer_outgrow",
       title: "Approaching bouncer weight limit",

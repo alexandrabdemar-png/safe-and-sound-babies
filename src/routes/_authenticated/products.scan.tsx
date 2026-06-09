@@ -23,46 +23,10 @@ export const Route = createFileRoute("/_authenticated/products/scan")({
   head: () => ({ meta: [{ title: "Scan a barcode — Safe & Sound" }] }),
 });
 
-type CategoryKey =
-  | "car_seat"
-  | "crib"
-  | "bassinet"
-  | "stroller"
-  | "high_chair"
-  | "swing"
-  | "bouncer"
-  | "activity_center"
-  | "sleep_sack"
-  | "baby_gate"
-  | "other";
+import { CATEGORIES, CATEGORY_BY_KEY, guessCategoryFromText, type CategoryKey } from "@/lib/productCategories";
+import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
 
-const CATEGORY_LABELS: Record<CategoryKey, string> = {
-  car_seat: "Car seat",
-  crib: "Crib",
-  bassinet: "Bassinet",
-  stroller: "Stroller",
-  high_chair: "High chair",
-  swing: "Swing",
-  bouncer: "Bouncer",
-  activity_center: "Activity center",
-  sleep_sack: "Sleep sack",
-  baby_gate: "Baby gate",
-  other: "Other",
-};
-
-const CATEGORY_ORDER: CategoryKey[] = [
-  "car_seat",
-  "crib",
-  "bassinet",
-  "stroller",
-  "high_chair",
-  "swing",
-  "bouncer",
-  "activity_center",
-  "sleep_sack",
-  "baby_gate",
-  "other",
-];
+const CATEGORY_ORDER: CategoryKey[] = CATEGORIES.map((c) => c.key);
 
 function toISODate(d: Date) {
   return d.toISOString().slice(0, 10);
@@ -79,20 +43,8 @@ function guessCategory(off: OffProduct): CategoryKey {
     off.categories ?? "",
     off.product_name ?? "",
     off.generic_name ?? "",
-  ]
-    .join(" ")
-    .toLowerCase();
-  if (/car ?seat/.test(hay)) return "car_seat";
-  if (/bassinet/.test(hay)) return "bassinet";
-  if (/crib|cot\b/.test(hay)) return "crib";
-  if (/stroller|pram|buggy/.test(hay)) return "stroller";
-  if (/high ?chair/.test(hay)) return "high_chair";
-  if (/baby swing|infant swing|\bswing\b/.test(hay)) return "swing";
-  if (/bouncer/.test(hay)) return "bouncer";
-  if (/activity ?center|jumperoo|exersaucer/.test(hay)) return "activity_center";
-  if (/sleep ?sack|swaddle|wearable blanket/.test(hay)) return "sleep_sack";
-  if (/baby ?gate|safety gate/.test(hay)) return "baby_gate";
-  return "other";
+  ].join(" ");
+  return (guessCategoryFromText(hay) || "other") as CategoryKey;
 }
 
 
@@ -171,17 +123,23 @@ function ScanPage() {
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Not signed in");
-      const { error } = await supabase.from("products").insert({
+      const nowIso = new Date().toISOString();
+      const { data: inserted, error } = await supabase.from("products").insert({
         user_id: u.user.id,
         child_id: activeChildId,
         name: name.trim(),
         brand: brand.trim() || null,
-        category: CATEGORY_LABELS[category],
+        category: CATEGORY_BY_KEY[category].label,
         barcode: barcode || null,
         purchased_at: purchasedAt ? new Date(purchasedAt).toISOString() : null,
+        added_at: nowIso,
         replace_at: computedReplaceAt || null,
-      } as never);
+      } as never).select("id").single();
       if (error) throw error;
+      const productId = (inserted as { id: string } | null)?.id;
+      if (productId) {
+        lookupAndSaveGuidelines({ data: { productId } }).catch((err) => console.warn("Guideline lookup failed:", err));
+      }
       setSavedReplaceAt(computedReplaceAt || null);
       setStep("success");
     } catch (err) {
@@ -318,7 +276,7 @@ function ScanPage() {
                             : "rounded-2xl border border-border bg-card px-3 py-2.5 text-left font-body text-sm text-foreground"
                         }
                       >
-                        {CATEGORY_LABELS[k]}
+                        {CATEGORY_BY_KEY[k].label}
                       </button>
                     );
                   })}
