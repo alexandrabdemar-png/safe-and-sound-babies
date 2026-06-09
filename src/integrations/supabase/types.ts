@@ -73,42 +73,80 @@ export type Database = {
           },
         ]
       }
+      child_measurements: {
+        Row: {
+          child_id: string
+          created_at: string
+          height_inches: number | null
+          id: string
+          recorded_at: string
+          user_id: string
+          weight_lbs: number | null
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          height_inches?: number | null
+          id?: string
+          recorded_at?: string
+          user_id: string
+          weight_lbs?: number | null
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          height_inches?: number | null
+          id?: string
+          recorded_at?: string
+          user_id?: string
+          weight_lbs?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "child_measurements_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       children: {
         Row: {
           birth_week: number | null
           created_at: string
           date_of_birth: string | null
-          height_cm: number | null
+          height_inches: number | null
           id: string
           measurements_updated_at: string | null
           name: string
           updated_at: string
           user_id: string
-          weight_kg: number | null
+          weight_lbs: number | null
         }
         Insert: {
           birth_week?: number | null
           created_at?: string
           date_of_birth?: string | null
-          height_cm?: number | null
+          height_inches?: number | null
           id?: string
           measurements_updated_at?: string | null
           name: string
           updated_at?: string
           user_id: string
-          weight_kg?: number | null
+          weight_lbs?: number | null
         }
         Update: {
           birth_week?: number | null
           created_at?: string
           date_of_birth?: string | null
-          height_cm?: number | null
+          height_inches?: number | null
           id?: string
           measurements_updated_at?: string | null
           name?: string
           updated_at?: string
           user_id?: string
-          weight_kg?: number | null
+          weight_lbs?: number | null
         }
         Relationships: []
       }
@@ -203,6 +241,125 @@ export type Database = {
           },
         ]
       }
+      product_alerts: {
+        Row: {
+          alert_type: string
+          body: string | null
+          child_id: string | null
+          created_at: string
+          id: string
+          product_id: string
+          read_at: string | null
+          sent_at: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          alert_type: string
+          body?: string | null
+          child_id?: string | null
+          created_at?: string
+          id?: string
+          product_id: string
+          read_at?: string | null
+          sent_at?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          alert_type?: string
+          body?: string | null
+          child_id?: string | null
+          created_at?: string
+          id?: string
+          product_id?: string
+          read_at?: string | null
+          sent_at?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_alerts_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_alerts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_guidelines: {
+        Row: {
+          average_use_months: number | null
+          category: string | null
+          created_at: string
+          id: string
+          max_height_inches: number | null
+          max_weight_lbs: number | null
+          min_height_inches: number | null
+          min_weight_lbs: number | null
+          product_id: string
+          recall_check_needed: boolean
+          replacement_interval_months: number | null
+          replacement_trigger: string | null
+          size_up_trigger: string | null
+          source: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          average_use_months?: number | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          max_height_inches?: number | null
+          max_weight_lbs?: number | null
+          min_height_inches?: number | null
+          min_weight_lbs?: number | null
+          product_id: string
+          recall_check_needed?: boolean
+          replacement_interval_months?: number | null
+          replacement_trigger?: string | null
+          size_up_trigger?: string | null
+          source?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          average_use_months?: number | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          max_height_inches?: number | null
+          max_weight_lbs?: number | null
+          min_height_inches?: number | null
+          min_weight_lbs?: number | null
+          product_id?: string
+          recall_check_needed?: boolean
+          replacement_interval_months?: number | null
+          replacement_trigger?: string | null
+          size_up_trigger?: string | null
+          source?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_guidelines_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_recalls: {
         Row: {
           acknowledged: boolean
@@ -250,6 +407,7 @@ export type Database = {
       }
       products: {
         Row: {
+          added_at: string
           barcode: string | null
           brand: string | null
           category: string | null
@@ -260,6 +418,8 @@ export type Database = {
           name: string
           next_size_at: string | null
           notes: string | null
+          predicted_replacement_date: string | null
+          predicted_sizeup_date: string | null
           purchased_at: string | null
           recalled: boolean
           replace_at: string | null
@@ -268,6 +428,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          added_at?: string
           barcode?: string | null
           brand?: string | null
           category?: string | null
@@ -278,6 +439,8 @@ export type Database = {
           name: string
           next_size_at?: string | null
           notes?: string | null
+          predicted_replacement_date?: string | null
+          predicted_sizeup_date?: string | null
           purchased_at?: string | null
           recalled?: boolean
           replace_at?: string | null
@@ -286,6 +449,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          added_at?: string
           barcode?: string | null
           brand?: string | null
           category?: string | null
@@ -296,6 +460,8 @@ export type Database = {
           name?: string
           next_size_at?: string | null
           notes?: string | null
+          predicted_replacement_date?: string | null
+          predicted_sizeup_date?: string | null
           purchased_at?: string | null
           recalled?: boolean
           replace_at?: string | null
