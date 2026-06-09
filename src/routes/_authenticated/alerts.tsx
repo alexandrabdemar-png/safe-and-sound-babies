@@ -18,6 +18,8 @@ type Product = {
   size: string | null;
   replace_at: string | null;
   next_size_at: string | null;
+  predicted_sizeup_date: string | null;
+  predicted_replacement_date: string | null;
 };
 
 type RecallMatch = {
@@ -65,8 +67,8 @@ function AlertsPage() {
     const [pRes, rRes] = await Promise.all([
       supabase
         .from("products")
-        .select("id, name, brand, size, replace_at, next_size_at")
-        .or("replace_at.not.is.null,next_size_at.not.is.null"),
+        .select("id, name, brand, size, replace_at, next_size_at, predicted_sizeup_date, predicted_replacement_date")
+        .or("replace_at.not.is.null,next_size_at.not.is.null,predicted_sizeup_date.not.is.null,predicted_replacement_date.not.is.null"),
       supabase
         .from("product_recalls")
         .select(
@@ -85,16 +87,16 @@ function AlertsPage() {
   const replaceDue = useMemo(
     () =>
       products
-        .filter((p) => p.replace_at)
-        .map((p) => ({ ...p, when: p.replace_at! }))
+        .map((p) => ({ ...p, when: p.predicted_replacement_date ?? p.replace_at }))
+        .filter((p): p is Product & { when: string } => !!p.when)
         .sort((a, b) => a.when.localeCompare(b.when)),
     [products],
   );
   const sizeUpDue = useMemo(
     () =>
       products
-        .filter((p) => p.next_size_at)
-        .map((p) => ({ ...p, when: p.next_size_at! }))
+        .map((p) => ({ ...p, when: p.predicted_sizeup_date ?? p.next_size_at }))
+        .filter((p): p is Product & { when: string } => !!p.when)
         .sort((a, b) => a.when.localeCompare(b.when)),
     [products],
   );
