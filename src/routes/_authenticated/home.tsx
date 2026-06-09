@@ -19,8 +19,8 @@ type Child = {
   id: string;
   name: string;
   date_of_birth: string | null;
-  height_cm: number | null;
-  weight_kg: number | null;
+  height_inches: number | null;
+  weight_lbs: number | null;
   measurements_updated_at: string | null;
 };
 
@@ -74,7 +74,7 @@ function HomePage() {
       try { activeId = localStorage.getItem('safesound.activeChildId'); } catch {}
       const { data: kids, error } = await supabase
         .from("children")
-        .select("id, name, date_of_birth, height_cm, weight_kg, measurements_updated_at")
+        .select("id, name, date_of_birth, height_inches, weight_lbs, measurements_updated_at")
         .order("created_at", { ascending: true });
       if (cancelled) return;
       if (error) { toast.error(error.message); setLoading(false); return; }
