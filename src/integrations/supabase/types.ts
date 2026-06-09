@@ -418,6 +418,7 @@ export type Database = {
           name: string
           next_size_at: string | null
           notes: string | null
+          photo_url: string | null
           predicted_replacement_date: string | null
           predicted_sizeup_date: string | null
           purchased_at: string | null
@@ -439,6 +440,7 @@ export type Database = {
           name: string
           next_size_at?: string | null
           notes?: string | null
+          photo_url?: string | null
           predicted_replacement_date?: string | null
           predicted_sizeup_date?: string | null
           purchased_at?: string | null
@@ -460,6 +462,7 @@ export type Database = {
           name?: string
           next_size_at?: string | null
           notes?: string | null
+          photo_url?: string | null
           predicted_replacement_date?: string | null
           predicted_sizeup_date?: string | null
           purchased_at?: string | null
