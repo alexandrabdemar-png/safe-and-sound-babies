@@ -123,7 +123,8 @@ function ScanPage() {
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Not signed in");
-      const { error } = await supabase.from("products").insert({
+      const nowIso = new Date().toISOString();
+      const { data: inserted, error } = await supabase.from("products").insert({
         user_id: u.user.id,
         child_id: activeChildId,
         name: name.trim(),
@@ -131,9 +132,14 @@ function ScanPage() {
         category: CATEGORY_BY_KEY[category].label,
         barcode: barcode || null,
         purchased_at: purchasedAt ? new Date(purchasedAt).toISOString() : null,
+        added_at: nowIso,
         replace_at: computedReplaceAt || null,
-      } as never);
+      } as never).select("id").single();
       if (error) throw error;
+      const productId = (inserted as { id: string } | null)?.id;
+      if (productId) {
+        lookupAndSaveGuidelines({ data: { productId } }).catch((err) => console.warn("Guideline lookup failed:", err));
+      }
       setSavedReplaceAt(computedReplaceAt || null);
       setStep("success");
     } catch (err) {
