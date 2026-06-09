@@ -128,7 +128,7 @@ function ScanPage() {
         child_id: activeChildId,
         name: name.trim(),
         brand: brand.trim() || null,
-        category: CATEGORY_LABELS[category],
+        category: CATEGORY_BY_KEY[category].label,
         barcode: barcode || null,
         purchased_at: purchasedAt ? new Date(purchasedAt).toISOString() : null,
         replace_at: computedReplaceAt || null,
@@ -270,7 +270,7 @@ function ScanPage() {
                             : "rounded-2xl border border-border bg-card px-3 py-2.5 text-left font-body text-sm text-foreground"
                         }
                       >
-                        {CATEGORY_LABELS[k]}
+                        {CATEGORY_BY_KEY[k].label}
                       </button>
                     );
                   })}
