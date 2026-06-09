@@ -8,6 +8,8 @@ import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Button } from "@/components/ui/button";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { usePhotoUrl } from "@/components/PhotoUpload";
+import { formatMonthYear, daysBetween } from "@/lib/predictions";
+import { CATEGORY_BY_KEY, categoryFromLabel, type CategoryKey } from "@/lib/productCategories";
 
 export const Route = createFileRoute("/_authenticated/products")({
   component: ProductsPage,
@@ -20,17 +22,15 @@ type Product = {
   brand: string | null;
   size: string | null;
   category: string | null;
+  added_at: string | null;
   replace_at: string | null;
   next_size_at: string | null;
+  predicted_sizeup_date: string | null;
+  predicted_replacement_date: string | null;
   recalled: boolean;
   photo_url: string | null;
   child_id: string | null;
 };
-
-function fmt(d: string | null): string | null {
-  if (!d) return null;
-  return new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-}
 
 function ProductsPage() {
   const { activeChildId } = useActiveChild();
@@ -42,7 +42,9 @@ function ProductsPage() {
     (async () => {
       let q: any = supabase
         .from("products")
-        .select("id, name, brand, size, category, replace_at, next_size_at, recalled, photo_url, child_id")
+        .select(
+          "id, name, brand, size, category, added_at, replace_at, next_size_at, predicted_sizeup_date, predicted_replacement_date, recalled, photo_url, child_id",
+        )
         .order("created_at", { ascending: false });
       if (activeChildId) q = q.or(`child_id.eq.${activeChildId},child_id.is.null`);
       const { data, error } = await q;
@@ -98,48 +100,78 @@ function ProductsPage() {
 }
 
 function ProductCard({ product }: { product: Product }) {
-  const meta = [product.brand, product.size, product.category].filter(Boolean).join(" · ");
+  const cat = categoryFromLabel(product.category);
+  const Icon = cat?.icon ?? CATEGORY_BY_KEY.other.icon;
+  const meta = [product.brand, product.size, cat?.label ?? product.category].filter(Boolean).join(" · ");
   const photoUrl = usePhotoUrl(product.photo_url);
+
+  const sizeUpDate = product.predicted_sizeup_date ?? product.next_size_at;
+  const replaceDate = product.predicted_replacement_date ?? product.replace_at;
+
   return (
-    <li className="rounded-3xl border border-border/60 bg-card p-4">
-      <div className="flex items-start gap-3">
-        {photoUrl ? (
-          <img src={photoUrl} alt="" className="h-14 w-14 rounded-xl object-cover shrink-0" />
-        ) : (
-          <div className="h-14 w-14 rounded-xl bg-sand/50 flex items-center justify-center shrink-0">
-            <Package className="h-5 w-5 text-accent" />
+    <li>
+      <Link
+        to="/products/$id"
+        params={{ id: product.id }}
+        className="block rounded-3xl border border-border/60 bg-card p-4 hover:border-primary/40 transition-colors"
+      >
+        {product.recalled && (
+          <div className="mb-3 flex items-center gap-2 rounded-2xl bg-destructive/15 px-3 py-2 font-body text-xs font-semibold text-destructive">
+            <AlertTriangle className="h-3.5 w-3.5" /> RECALL — tap to review
           </div>
         )}
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate font-display text-base font-semibold tracking-tight">{product.name}</p>
-              {meta && <p className="mt-0.5 truncate font-body text-xs text-muted-foreground">{meta}</p>}
+        <div className="flex items-start gap-3">
+          {photoUrl ? (
+            <img src={photoUrl} alt="" className="h-14 w-14 rounded-xl object-cover shrink-0" />
+          ) : (
+            <div className="h-14 w-14 rounded-xl bg-sand/50 flex items-center justify-center shrink-0">
+              <Icon className="h-5 w-5 text-accent" />
             </div>
-            {product.recalled && (
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-destructive/15 px-2.5 py-1 font-body text-[11px] font-semibold text-destructive">
-                <AlertTriangle className="h-3 w-3" /> Recalled
-              </span>
-            )}
-          </div>
-          <div className="mt-2 flex flex-wrap gap-2 font-body text-[11px]">
-            {product.replace_at && (
-              <span className="rounded-full bg-sand/60 px-2.5 py-1 text-foreground/70">
-                Replace · {fmt(product.replace_at)}
-              </span>
-            )}
-            {product.next_size_at && (
-              <span className="rounded-full bg-sand/60 px-2.5 py-1 text-foreground/70">
-                Size up · {fmt(product.next_size_at)}
-              </span>
-            )}
-            {!product.replace_at && !product.next_size_at && (
-              <span className="font-body text-[11px] text-muted-foreground/70">No reminders set</span>
-            )}
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-display text-base font-semibold tracking-tight">{product.name}</p>
+            {meta && <p className="mt-0.5 truncate font-body text-xs text-muted-foreground">{meta}</p>}
+            <SizeTimeline addedAt={product.added_at} sizeUpDate={sizeUpDate} />
+            <div className="mt-2 flex flex-wrap gap-2 font-body text-[11px]">
+              {sizeUpDate && (
+                <span className="rounded-full bg-sand/60 px-2.5 py-1 text-foreground/70">
+                  Size-up · {formatMonthYear(sizeUpDate)}
+                </span>
+              )}
+              {replaceDate && (
+                <span className="rounded-full bg-sand/60 px-2.5 py-1 text-foreground/70">
+                  Replace · {formatMonthYear(replaceDate)}
+                </span>
+              )}
+              {!sizeUpDate && !replaceDate && (
+                <span className="font-body text-[11px] text-muted-foreground/70">Fetching guidelines…</span>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </Link>
     </li>
+  );
+}
+
+function SizeTimeline({ addedAt, sizeUpDate }: { addedAt: string | null; sizeUpDate: string | null }) {
+  if (!addedAt || !sizeUpDate) return null;
+  const start = new Date(addedAt);
+  const end = new Date(sizeUpDate);
+  const now = new Date();
+  const total = Math.max(1, daysBetween(start, end));
+  const elapsed = Math.max(0, Math.min(total, daysBetween(start, now)));
+  const pct = Math.round((elapsed / total) * 100);
+  const remaining = daysBetween(now, end);
+  let barClass = "bg-emerald-500";
+  if (remaining <= 14) barClass = "bg-destructive";
+  else if (remaining <= 30) barClass = "bg-amber-500";
+  return (
+    <div className="mt-2.5">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div className={`h-full ${barClass} transition-all`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
   );
 }
 
@@ -159,3 +191,6 @@ function EmptyProducts() {
     </div>
   );
 }
+
+// satisfy unused import warning when type-only used
+export type _CK = CategoryKey;
