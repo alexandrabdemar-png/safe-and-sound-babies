@@ -185,9 +185,12 @@ function EmptyProducts() {
       <p className="mx-auto mt-1 max-w-xs font-body text-sm text-muted-foreground">
         Add the gear you use — car seats, swaddles, pacifiers — and we'll keep an eye out for recalls and replacements.
       </p>
-      <Button asChild className="mt-5 rounded-full bg-primary px-5 font-body text-xs font-semibold">
-        <Link to="/products/new"><Plus className="mr-1 h-3.5 w-3.5" /> Add your first product</Link>
-      </Button>
+     <Button 
+  className="mt-5 rounded-full bg-primary px-5 font-body text-xs font-semibold"
+  onClick={() => window.location.href = '/products/new'}
+>
+  <Plus className="mr-1 h-3.5 w-3.5" /> Add your first product
+</Button>
     </div>
   );
 }
