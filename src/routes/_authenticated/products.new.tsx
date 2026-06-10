@@ -76,7 +76,7 @@ async function handleSubmit(e: React.FormEvent) {
         name: name.trim(),
         category: activeCategory?.label ?? category,
         barcode: barcode.trim() || null,
-        photo_url: photoPath,
+        
         purchased_at: purchasedAt ? new Date(purchasedAt).toISOString() : null,
         added_at: nowIso,
         replace_at: computedReplaceAt || null,
