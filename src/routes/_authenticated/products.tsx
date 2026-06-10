@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -32,6 +32,9 @@ type Product = {
 }; type _PhotoRemoved = never;
 
 function ProductsPage() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  if (pathname !== "/products") return <Outlet />;
+
   const { activeChildId } = useActiveChild();
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
