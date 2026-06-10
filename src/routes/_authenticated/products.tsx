@@ -106,7 +106,6 @@ function ProductCard({ product }: { product: Product }) {
   const cat = categoryFromLabel(product.category);
   const Icon = cat?.icon ?? CATEGORY_BY_KEY.other.icon;
   const meta = [product.brand, product.size, cat?.label ?? product.category].filter(Boolean).join(" · ");
-  const photoUrl = usePhotoUrl(product.photo_url);
 
   const sizeUpDate = product.predicted_sizeup_date ?? product.next_size_at;
   const replaceDate = product.predicted_replacement_date ?? product.replace_at;
@@ -124,13 +123,9 @@ function ProductCard({ product }: { product: Product }) {
           </div>
         )}
         <div className="flex items-start gap-3">
-          {photoUrl ? (
-            <img src={photoUrl} alt="" className="h-14 w-14 rounded-xl object-cover shrink-0" />
-          ) : (
-            <div className="h-14 w-14 rounded-xl bg-sand/50 flex items-center justify-center shrink-0">
-              <Icon className="h-5 w-5 text-accent" />
-            </div>
-          )}
+          <div className="h-14 w-14 rounded-xl bg-sand/50 flex items-center justify-center shrink-0">
+            <Icon className="h-5 w-5 text-accent" />
+          </div>
           <div className="min-w-0 flex-1">
             <p className="truncate font-display text-base font-semibold tracking-tight">{product.name}</p>
             {meta && <p className="mt-0.5 truncate font-body text-xs text-muted-foreground">{meta}</p>}
