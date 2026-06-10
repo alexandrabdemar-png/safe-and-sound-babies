@@ -11,7 +11,7 @@ import { usePhotoUrl } from "@/components/PhotoUpload";
 import { formatMonthYear, daysBetween } from "@/lib/predictions";
 import { CATEGORY_BY_KEY, categoryFromLabel, type CategoryKey } from "@/lib/productCategories";
 
-export const Route = createFileRoute("/_authenticated/products.new")({
+export const Route = createFileRoute("/_authenticated/products")({
   component: ProductsPage,
   head: () => ({ meta: [{ title: "Products — Safe & Sound" }] }),
 });
