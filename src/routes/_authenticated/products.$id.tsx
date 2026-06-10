@@ -12,11 +12,9 @@ import { formatMonthYear, daysBetween } from "@/lib/predictions";
 import { lookupAndSaveGuidelines, recomputePredictions } from "@/lib/guidelines.functions";
 
 export const Route = createFileRoute("/_authenticated/products/$id")({
-export const Route = createFileRoute("/products.$id")({
-
+  component: ProductDetailPage
   head: () => ({ meta: [{ title: "Product — Safe & Sound" }] }),
 });
-
 type Product = {
   id: string;
   name: string;
