@@ -7,7 +7,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Button } from "@/components/ui/button";
 import { useActiveChild } from "@/hooks/useActiveChild";
-import { usePhotoUrl } from "@/components/PhotoUpload";
+
 import { formatMonthYear, daysBetween } from "@/lib/predictions";
 import { CATEGORY_BY_KEY, categoryFromLabel, type CategoryKey } from "@/lib/productCategories";
 
