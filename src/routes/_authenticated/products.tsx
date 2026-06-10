@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -32,6 +32,7 @@ type Product = {
 }; type _PhotoRemoved = never;
 
 function ProductsPage() {
+  const navigate = useNavigate();
   const { activeChildId } = useActiveChild();
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
@@ -67,11 +68,22 @@ function ProductsPage() {
           </div>
           <div className="flex items-center gap-2">
             <ChildSwitcher />
-            <Button asChild size="sm" variant="outline" className="rounded-full px-3 font-body text-xs font-semibold">
-              <Link to="/products/scan"><ScanLine className="mr-1 h-3.5 w-3.5" /> Scan</Link>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="rounded-full px-3 font-body text-xs font-semibold"
+              onClick={() => navigate({ to: "/products/scan" })}
+            >
+              <ScanLine className="mr-1 h-3.5 w-3.5" /> Scan
             </Button>
-            <Button asChild size="sm" className="rounded-full bg-primary px-4 font-body text-xs font-semibold">
-              <Link to="/products/new"><Plus className="mr-1 h-3.5 w-3.5" /> Add</Link>
+            <Button
+              type="button"
+              size="sm"
+              className="rounded-full bg-primary px-4 font-body text-xs font-semibold"
+              onClick={() => navigate({ to: "/products/new" })}
+            >
+              <Plus className="mr-1 h-3.5 w-3.5" /> Add
             </Button>
           </div>
         </div>
@@ -84,7 +96,7 @@ function ProductsPage() {
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           ) : products.length === 0 ? (
-            <EmptyProducts />
+            <EmptyProducts onAdd={() => navigate({ to: "/products/new" })} />
           ) : (
             <ul className="space-y-3">
               {products.map((p) => <ProductCard key={p.id} product={p} />)}
@@ -169,7 +181,7 @@ function SizeTimeline({ addedAt, sizeUpDate }: { addedAt: string | null; sizeUpD
   );
 }
 
-function EmptyProducts() {
+function EmptyProducts({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="rounded-3xl border border-dashed border-border bg-card/40 px-6 py-12 text-center">
       <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-sand/50 text-accent">
@@ -179,8 +191,12 @@ function EmptyProducts() {
       <p className="mx-auto mt-1 max-w-xs font-body text-sm text-muted-foreground">
         Add the gear you use — car seats, swaddles, pacifiers — and we'll keep an eye out for recalls and replacements.
       </p>
-      <Button asChild className="mt-5 rounded-full bg-primary px-5 font-body text-xs font-semibold">
-        <Link to="/products/new"><Plus className="mr-1 h-3.5 w-3.5" /> Add your first product</Link>
+      <Button
+        type="button"
+        className="mt-5 rounded-full bg-primary px-5 font-body text-xs font-semibold"
+        onClick={onAdd}
+      >
+        <Plus className="mr-1 h-3.5 w-3.5" /> Add your first product
       </Button>
     </div>
   );

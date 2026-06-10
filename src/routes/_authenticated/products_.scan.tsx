@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useActiveChild } from "@/hooks/useActiveChild";
 
-export const Route = createFileRoute("/_authenticated/products/scan")({
+export const Route = createFileRoute("/_authenticated/products_/scan")({
   component: ScanPage,
   head: () => ({ meta: [{ title: "Scan a barcode — Safe & Sound" }] }),
 });

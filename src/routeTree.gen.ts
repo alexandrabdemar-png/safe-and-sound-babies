@@ -22,9 +22,9 @@ import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/h
 import { Route as AuthenticatedBottlesRouteImport } from './routes/_authenticated/bottles'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
-import { Route as AuthenticatedProductsScanRouteImport } from './routes/_authenticated/products.scan'
-import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products.new'
-import { Route as AuthenticatedProductsIdRouteImport } from './routes/_authenticated/products.$id'
+import { Route as AuthenticatedProductsScanRouteImport } from './routes/_authenticated/products_.scan'
+import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products_.new'
+import { Route as AuthenticatedProductsIdRouteImport } from './routes/_authenticated/products_.$id'
 import { Route as AuthenticatedMomentsNewRouteImport } from './routes/_authenticated/moments.new'
 import { Route as AuthenticatedBottlesNewRouteImport } from './routes/_authenticated/bottles.new'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -99,20 +99,20 @@ const AuthenticatedAddRoute = AuthenticatedAddRouteImport.update({
 } as any)
 const AuthenticatedProductsScanRoute =
   AuthenticatedProductsScanRouteImport.update({
-    id: '/scan',
-    path: '/scan',
-    getParentRoute: () => AuthenticatedProductsRoute,
+    id: '/products/scan',
+    path: '/products/scan',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedProductsNewRoute =
   AuthenticatedProductsNewRouteImport.update({
-    id: '/new',
-    path: '/new',
-    getParentRoute: () => AuthenticatedProductsRoute,
+    id: '/products/new',
+    path: '/products/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedProductsIdRoute = AuthenticatedProductsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AuthenticatedProductsRoute,
+  id: '/products/$id',
+  path: '/products/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMomentsNewRoute = AuthenticatedMomentsNewRouteImport.update({
   id: '/moments/new',
@@ -165,7 +165,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof AuthenticatedHomeRoute
   '/insights': typeof AuthenticatedInsightsRoute
   '/pricing': typeof AuthenticatedPricingRoute
-  '/products': typeof AuthenticatedProductsRouteWithChildren
+  '/products': typeof AuthenticatedProductsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
@@ -189,7 +189,7 @@ export interface FileRoutesByTo {
   '/home': typeof AuthenticatedHomeRoute
   '/insights': typeof AuthenticatedInsightsRoute
   '/pricing': typeof AuthenticatedPricingRoute
-  '/products': typeof AuthenticatedProductsRouteWithChildren
+  '/products': typeof AuthenticatedProductsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
@@ -215,13 +215,13 @@ export interface FileRoutesById {
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/insights': typeof AuthenticatedInsightsRoute
   '/_authenticated/pricing': typeof AuthenticatedPricingRoute
-  '/_authenticated/products': typeof AuthenticatedProductsRouteWithChildren
+  '/_authenticated/products': typeof AuthenticatedProductsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/_authenticated/moments/new': typeof AuthenticatedMomentsNewRoute
-  '/_authenticated/products/$id': typeof AuthenticatedProductsIdRoute
-  '/_authenticated/products/new': typeof AuthenticatedProductsNewRoute
-  '/_authenticated/products/scan': typeof AuthenticatedProductsScanRoute
+  '/_authenticated/products_/$id': typeof AuthenticatedProductsIdRoute
+  '/_authenticated/products_/new': typeof AuthenticatedProductsNewRoute
+  '/_authenticated/products_/scan': typeof AuthenticatedProductsScanRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
@@ -294,9 +294,9 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/bottles/new'
     | '/_authenticated/moments/new'
-    | '/_authenticated/products/$id'
-    | '/_authenticated/products/new'
-    | '/_authenticated/products/scan'
+    | '/_authenticated/products_/$id'
+    | '/_authenticated/products_/new'
+    | '/_authenticated/products_/scan'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
@@ -410,26 +410,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAddRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/products/scan': {
-      id: '/_authenticated/products/scan'
-      path: '/scan'
+    '/_authenticated/products_/scan': {
+      id: '/_authenticated/products_/scan'
+      path: '/products/scan'
       fullPath: '/products/scan'
       preLoaderRoute: typeof AuthenticatedProductsScanRouteImport
-      parentRoute: typeof AuthenticatedProductsRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/products/new': {
-      id: '/_authenticated/products/new'
-      path: '/new'
+    '/_authenticated/products_/new': {
+      id: '/_authenticated/products_/new'
+      path: '/products/new'
       fullPath: '/products/new'
       preLoaderRoute: typeof AuthenticatedProductsNewRouteImport
-      parentRoute: typeof AuthenticatedProductsRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/products/$id': {
-      id: '/_authenticated/products/$id'
-      path: '/$id'
+    '/_authenticated/products_/$id': {
+      id: '/_authenticated/products_/$id'
+      path: '/products/$id'
       fullPath: '/products/$id'
       preLoaderRoute: typeof AuthenticatedProductsIdRouteImport
-      parentRoute: typeof AuthenticatedProductsRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/moments/new': {
       id: '/_authenticated/moments/new'
@@ -494,23 +494,6 @@ const AuthenticatedBottlesRouteChildren: AuthenticatedBottlesRouteChildren = {
 const AuthenticatedBottlesRouteWithChildren =
   AuthenticatedBottlesRoute._addFileChildren(AuthenticatedBottlesRouteChildren)
 
-interface AuthenticatedProductsRouteChildren {
-  AuthenticatedProductsIdRoute: typeof AuthenticatedProductsIdRoute
-  AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
-  AuthenticatedProductsScanRoute: typeof AuthenticatedProductsScanRoute
-}
-
-const AuthenticatedProductsRouteChildren: AuthenticatedProductsRouteChildren = {
-  AuthenticatedProductsIdRoute: AuthenticatedProductsIdRoute,
-  AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
-  AuthenticatedProductsScanRoute: AuthenticatedProductsScanRoute,
-}
-
-const AuthenticatedProductsRouteWithChildren =
-  AuthenticatedProductsRoute._addFileChildren(
-    AuthenticatedProductsRouteChildren,
-  )
-
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAddRoute: typeof AuthenticatedAddRoute
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
@@ -518,9 +501,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedInsightsRoute: typeof AuthenticatedInsightsRoute
   AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
-  AuthenticatedProductsRoute: typeof AuthenticatedProductsRouteWithChildren
+  AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedMomentsNewRoute: typeof AuthenticatedMomentsNewRoute
+  AuthenticatedProductsIdRoute: typeof AuthenticatedProductsIdRoute
+  AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
+  AuthenticatedProductsScanRoute: typeof AuthenticatedProductsScanRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -530,9 +516,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedInsightsRoute: AuthenticatedInsightsRoute,
   AuthenticatedPricingRoute: AuthenticatedPricingRoute,
-  AuthenticatedProductsRoute: AuthenticatedProductsRouteWithChildren,
+  AuthenticatedProductsRoute: AuthenticatedProductsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedMomentsNewRoute: AuthenticatedMomentsNewRoute,
+  AuthenticatedProductsIdRoute: AuthenticatedProductsIdRoute,
+  AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
+  AuthenticatedProductsScanRoute: AuthenticatedProductsScanRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
