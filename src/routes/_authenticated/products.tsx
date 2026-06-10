@@ -42,7 +42,7 @@ function ProductsPage() {
       let q: any = supabase
         .from("products")
         .select(
-          "id, name, brand, size, category, added_at, replace_at, next_size_at, predicted_sizeup_date, predicted_replacement_date, recalled, photo_url, child_id",
+          "id, name, brand, size, category, added_at, replace_at, next_size_at, predicted_sizeup_date, predicted_replacement_date, recalled, child_id",
         )
         .order("created_at", { ascending: false });
       if (activeChildId) q = q.or(`child_id.eq.${activeChildId},child_id.is.null`);
