@@ -6,7 +6,7 @@ import { ArrowLeft, Loader2, AlertTriangle, Ruler, RefreshCw, Trash2 } from "luc
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { usePhotoUrl } from "@/components/PhotoUpload";
+
 import { CATEGORY_BY_KEY, categoryFromLabel } from "@/lib/productCategories";
 import { formatMonthYear, daysBetween } from "@/lib/predictions";
 import { lookupAndSaveGuidelines, recomputePredictions } from "@/lib/guidelines.functions";
