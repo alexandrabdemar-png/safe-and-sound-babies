@@ -64,7 +64,7 @@ async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!category) { toast.error("Pick a category"); return; }
     if (!name.trim()) { toast.error("Give your product a name"); return; }
-    if (category === "car_seat" && !carSeatExpiry) { toast.error("Add the car seat's manufacturer expiry date"); return; }
+
     setSaving(true);
     try {
       const { data: u } = await supabase.auth.getUser();
@@ -196,7 +196,7 @@ async function handleSubmit(e: React.FormEvent) {
           </Field>
 
           {category === "car_seat" && (
-            <Field label="Manufacturer expiry date" required>
+            <Field label="Manufacturer expiry date">
               <Input
                 type="date"
                 value={carSeatExpiry}
