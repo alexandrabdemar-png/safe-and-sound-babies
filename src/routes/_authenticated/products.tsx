@@ -71,9 +71,13 @@ function ProductsPage() {
             <Button asChild size="sm" variant="outline" className="rounded-full px-3 font-body text-xs font-semibold">
               <Link to="/products/scan"><ScanLine className="mr-1 h-3.5 w-3.5" /> Scan</Link>
             </Button>
-            <Button asChild size="sm" className="rounded-full bg-primary px-4 font-body text-xs font-semibold">
-              <Link to="/products/new"><Plus className="mr-1 h-3.5 w-3.5" /> Add</Link>
-            </Button>
+           <Button 
+  size="sm" 
+  className="rounded-full bg-primary px-4 font-body text-xs font-semibold"
+  onClick={() => window.location.href = '/products/new'}
+>
+  <Plus className="mr-1 h-3.5 w-3.5" /> Add
+</Button>
           </div>
         </div>
       </header>
