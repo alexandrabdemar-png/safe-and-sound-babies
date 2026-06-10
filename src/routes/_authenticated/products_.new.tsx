@@ -284,8 +284,7 @@ function ProductSearch({ onPick }: { onPick: (r: SearchResult) => void }) {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
-  async function runSearch(e: React.FormEvent) {
-    e.preventDefault();
+  async function runSearch() {
     const q = query.trim();
     if (!q) return;
     setLoading(true);
@@ -335,12 +334,13 @@ function ProductSearch({ onPick }: { onPick: (r: SearchResult) => void }) {
           Find a product by name and we'll fill in the details.
         </p>
       </div>
-      <form onSubmit={runSearch} className="flex gap-2">
+      <div className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); runSearch(); } }}
             placeholder="e.g. Avent Soothie, Enfamil, Nuna Pipa"
             className="h-11 rounded-2xl bg-background pl-9 pr-9 font-body text-base"
             maxLength={80}
@@ -355,10 +355,10 @@ function ProductSearch({ onPick }: { onPick: (r: SearchResult) => void }) {
             </button>
           )}
         </div>
-        <Button type="submit" disabled={loading || !query.trim()} className="h-11 rounded-2xl px-4">
+        <Button type="button" onClick={runSearch} disabled={loading || !query.trim()} className="h-11 rounded-2xl px-4">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Search"}
         </Button>
-      </form>
+      </div>
 
       {searched && !loading && results.length === 0 && (
         <p className="font-body text-xs text-muted-foreground">
