@@ -12,7 +12,7 @@ import {
   PackageSearch,
   RefreshCw,
 } from "lucide-react";
-export const Route = createFileRoute("/_authenticated/products.scan")({
+export const Route = createFileRoute("/products.scan")({
 
 
 import { Input } from "@/components/ui/input";
