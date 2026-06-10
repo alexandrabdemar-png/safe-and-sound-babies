@@ -281,7 +281,7 @@ function ChildRow({
           <p className="font-body text-sm font-medium">{child.name}</p>
           {child.date_of_birth && (
             <p className="font-body text-xs text-muted-foreground">
-              Born {new Date(child.date_of_birth).toLocaleDateString()}
+              Born {(() => { const [y,m,d] = child.date_of_birth.split('-').map(Number); return new Date(y, (m||1)-1, d||1).toLocaleDateString(); })()}
             </p>
           )}
           <p className="font-body text-xs text-muted-foreground mt-0.5">
