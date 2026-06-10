@@ -6,13 +6,13 @@ import { ArrowLeft, Loader2, AlertTriangle, Ruler, RefreshCw, Trash2 } from "luc
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { usePhotoUrl } from "@/components/PhotoUpload";
+
 import { CATEGORY_BY_KEY, categoryFromLabel } from "@/lib/productCategories";
 import { formatMonthYear, daysBetween } from "@/lib/predictions";
 import { lookupAndSaveGuidelines, recomputePredictions } from "@/lib/guidelines.functions";
 
 export const Route = createFileRoute("/_authenticated/products/$id")({
-  component: ProductDetailPage
+  component: ProductDetailPage,
   head: () => ({ meta: [{ title: "Product — Safe & Sound" }] }),
 });
 type Product = {
@@ -26,9 +26,8 @@ type Product = {
   predicted_sizeup_date: string | null;
   predicted_replacement_date: string | null;
   recalled: boolean;
-  photo_url: string | null;
   child_id: string | null;
-};
+}; type _u = never; // photo_url removed
 
 type Guideline = {
   max_weight_lbs: number | null;
@@ -62,7 +61,7 @@ function ProductDetailPage() {
     setLoading(true);
     const { data: p, error } = await supabase
       .from("products")
-      .select("id, name, brand, size, category, added_at, purchased_at, predicted_sizeup_date, predicted_replacement_date, recalled, photo_url, child_id")
+      .select("id, name, brand, size, category, added_at, purchased_at, predicted_sizeup_date, predicted_replacement_date, recalled, child_id")
       .eq("id", id)
       .maybeSingle();
     if (error || !p) {
@@ -117,7 +116,6 @@ function ProductDetailPage() {
 
   const cat = categoryFromLabel(product.category);
   const Icon = cat?.icon ?? CATEGORY_BY_KEY.other.icon;
-  const photoUrl = usePhotoUrl(product.photo_url);
   const added = product.added_at ? new Date(product.added_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : null;
 
   return (
@@ -147,13 +145,9 @@ function ProductDetailPage() {
 
           {/* Header */}
           <div className="flex items-start gap-3">
-            {photoUrl ? (
-              <img src={photoUrl} alt="" className="h-20 w-20 rounded-2xl object-cover" />
-            ) : (
-              <div className="h-20 w-20 rounded-2xl bg-sand/50 flex items-center justify-center">
-                <Icon className="h-7 w-7 text-accent" />
-              </div>
-            )}
+            <div className="h-20 w-20 rounded-2xl bg-sand/50 flex items-center justify-center">
+              <Icon className="h-7 w-7 text-accent" />
+            </div>
             <div className="min-w-0 flex-1">
               <h1 className="font-display text-2xl font-semibold tracking-tight">{product.name}</h1>
               <p className="font-body text-sm text-muted-foreground">{[product.brand, cat?.label ?? product.category].filter(Boolean).join(" · ")}</p>
