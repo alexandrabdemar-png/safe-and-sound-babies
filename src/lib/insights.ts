@@ -106,22 +106,22 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
         category: "crib",
       });
     }
-    if (months >= 8) {
-      out.push({
-        id: "babyproof_low_cabinets",
-        title: "Babyproof lower cabinets",
-        body: `${name} is likely pulling to stand soon. Latch any cabinet under hip-height — especially anything with cleaning supplies.`,
-        urgency: "now",
-        category: "safety",
-      });
-    }
-    if (months >= 9) {
+    if (months >= 7) {
       out.push({
         id: "install_baby_gates",
         title: "Install baby gates at stairs",
         body: "Crawling and cruising are right around the corner. Top-of-stairs gates should be hardware-mounted.",
         urgency: "now",
         category: "baby_gate",
+      });
+    }
+    if (months >= 9) {
+      out.push({
+        id: "babyproof_low_cabinets",
+        title: "Babyproof lower cabinets",
+        body: `${name} is likely pulling to stand soon. Latch any cabinet under hip-height — especially anything with cleaning supplies.`,
+        urgency: "now",
+        category: "safety",
       });
     }
     if (months >= 12) {
