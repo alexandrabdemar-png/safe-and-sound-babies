@@ -34,7 +34,10 @@ type Product = {
 function ProductsPage() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   if (pathname !== "/products") return <Outlet />;
+  return <ProductsList />;
+}
 
+function ProductsList() {
   const { activeChildId } = useActiveChild();
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
