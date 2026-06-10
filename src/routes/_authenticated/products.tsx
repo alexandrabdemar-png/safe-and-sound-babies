@@ -72,7 +72,7 @@ function ProductsPage() {
               <Link to="/products/scan"><ScanLine className="mr-1 h-3.5 w-3.5" /> Scan</Link>
             </Button>
             <Button asChild size="sm" className="rounded-full bg-primary px-4 font-body text-xs font-semibold">
-              <Link to="/products.new"><Plus className="mr-1 h-3.5 w-3.5" /> Add</Link>
+              <Link to="/products/new"><Plus className="mr-1 h-3.5 w-3.5" /> Add</Link>
             </Button>
           </div>
         </div>
