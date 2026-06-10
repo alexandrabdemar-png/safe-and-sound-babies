@@ -61,7 +61,7 @@ function ProductDetailPage() {
     setLoading(true);
     const { data: p, error } = await supabase
       .from("products")
-      .select("id, name, brand, size, category, added_at, purchased_at, predicted_sizeup_date, predicted_replacement_date, recalled, photo_url, child_id")
+      .select("id, name, brand, size, category, added_at, purchased_at, predicted_sizeup_date, predicted_replacement_date, recalled, child_id")
       .eq("id", id)
       .maybeSingle();
     if (error || !p) {
