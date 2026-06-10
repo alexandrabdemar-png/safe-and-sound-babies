@@ -26,9 +26,8 @@ type Product = {
   predicted_sizeup_date: string | null;
   predicted_replacement_date: string | null;
   recalled: boolean;
-  photo_url: string | null;
   child_id: string | null;
-};
+}; type _u = never; // photo_url removed
 
 type Guideline = {
   max_weight_lbs: number | null;
