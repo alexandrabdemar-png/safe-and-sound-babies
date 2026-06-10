@@ -15,7 +15,6 @@ import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
 export const Route = createFileRoute("/_authenticated/products/new")({
 
 
-
 export const Route = createFileRoute("/_authenticated/products/new")({
   component: NewProductPage,
   head: () => ({ meta: [{ title: "Add product — Safe & Sound" }] }),
