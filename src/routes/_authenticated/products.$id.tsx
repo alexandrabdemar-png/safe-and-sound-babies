@@ -116,7 +116,6 @@ function ProductDetailPage() {
 
   const cat = categoryFromLabel(product.category);
   const Icon = cat?.icon ?? CATEGORY_BY_KEY.other.icon;
-  const photoUrl = usePhotoUrl(product.photo_url);
   const added = product.added_at ? new Date(product.added_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : null;
 
   return (
@@ -146,13 +145,9 @@ function ProductDetailPage() {
 
           {/* Header */}
           <div className="flex items-start gap-3">
-            {photoUrl ? (
-              <img src={photoUrl} alt="" className="h-20 w-20 rounded-2xl object-cover" />
-            ) : (
-              <div className="h-20 w-20 rounded-2xl bg-sand/50 flex items-center justify-center">
-                <Icon className="h-7 w-7 text-accent" />
-              </div>
-            )}
+            <div className="h-20 w-20 rounded-2xl bg-sand/50 flex items-center justify-center">
+              <Icon className="h-7 w-7 text-accent" />
+            </div>
             <div className="min-w-0 flex-1">
               <h1 className="font-display text-2xl font-semibold tracking-tight">{product.name}</h1>
               <p className="font-body text-sm text-muted-foreground">{[product.brand, cat?.label ?? product.category].filter(Boolean).join(" · ")}</p>
