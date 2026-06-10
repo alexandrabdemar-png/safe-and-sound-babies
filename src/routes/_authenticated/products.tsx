@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -32,12 +32,6 @@ type Product = {
 }; type _PhotoRemoved = never;
 
 function ProductsPage() {
-  const { pathname } = useLocation();
-  if (pathname !== "/products") return <Outlet />;
-  return <ProductsList />;
-}
-
-function ProductsList() {
   const navigate = useNavigate();
   const { activeChildId } = useActiveChild();
   const [loading, setLoading] = useState(true);
