@@ -12,8 +12,6 @@ import { useProGate } from "@/hooks/useProGate";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { CATEGORIES, type CategoryKey, guessCategoryFromText } from "@/lib/productCategories";
 import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
-export const Route = createFileRoute("/_authenticated/products/new")({
-
 
 export const Route = createFileRoute("/_authenticated/products/new")({
   component: NewProductPage,
