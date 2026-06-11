@@ -16,19 +16,23 @@ export function BottomNav() {
   const { pathname } = useLocation();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/95 backdrop-blur-md">
+    <nav
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/96 backdrop-blur-md"
+      style={{ boxShadow: "0 -1px 24px 0 rgba(60, 40, 20, 0.05)" }}
+    >
       <div className="mx-auto flex max-w-md items-end justify-between px-6 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-2">
         {tabs.map((t) => (
           <TabItem key={t.to} {...t} active={pathname === t.to} />
         ))}
 
-        {/* Center Add button */}
+        {/* Center Add FAB — sage with warm shadow */}
         <Link
           to="/add"
-          className="relative -mt-8 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 ring-4 ring-background transition-transform hover:scale-105 active:scale-95"
+          className="relative -mt-8 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground ring-4 ring-background transition-transform hover:scale-105 active:scale-95"
+          style={{ boxShadow: "0 4px 20px 0 rgba(60, 40, 20, 0.18)" }}
           aria-label="Add"
         >
-          <Plus className="h-6 w-6" strokeWidth={2.5} />
+          <Plus className="h-6 w-6" strokeWidth={2} />
         </Link>
 
         {rightTabs.map((t) => (
@@ -58,7 +62,12 @@ function TabItem({
         active ? "text-primary" : "text-muted-foreground hover:text-foreground",
       )}
     >
-      <Icon className={cn("h-5 w-5", active && "fill-primary/10")} />
+      <Icon
+        className={cn(
+          "h-5 w-5 transition-colors",
+          active ? "text-primary" : "text-muted-foreground",
+        )}
+      />
       <span>{label}</span>
     </Link>
   );

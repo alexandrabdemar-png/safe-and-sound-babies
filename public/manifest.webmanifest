@@ -4,8 +4,8 @@
   "description": "Never miss a safety milestone again. Track car seats, pacifiers, cribs, and more with quiet, kind reminders.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F7F4EF",
-  "theme_color": "#B7C1B0",
+  "background_color": "#F5F0E8",
+  "theme_color": "#A3B899",
   "orientation": "portrait",
   "icons": [
     {
