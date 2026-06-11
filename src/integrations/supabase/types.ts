@@ -476,6 +476,36 @@ export type Database = {
           },
         ]
       }
+      user_notification_settings: {
+        Row: {
+          id: string
+          user_id: string
+          recalls_enabled: boolean
+          size_up_enabled: boolean
+          replacement_enabled: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          recalls_enabled?: boolean
+          size_up_enabled?: boolean
+          replacement_enabled?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          recalls_enabled?: boolean
+          size_up_enabled?: boolean
+          replacement_enabled?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { predictSizeUpDate, predictReplacementDate } from "@/lib/predictions";
 
 export type GuidelineFields = {
@@ -66,8 +66,8 @@ export const lookupAndSaveGuidelines = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not configured");
 
     // Load product
     const { data: product, error: pErr } = await supabase
@@ -79,10 +79,10 @@ export const lookupAndSaveGuidelines = createServerFn({ method: "POST" })
     if (pErr) throw pErr;
     if (!product) throw new Error("Product not found");
 
-    // Call Lovable AI for guidelines
-    const gateway = createLovableAiGatewayProvider(apiKey);
+    // Call Anthropic for guidelines
+    const anthropic = createAnthropic({ apiKey });
     const { text } = await generateText({
-      model: gateway("google/gemini-3-flash-preview"),
+      model: anthropic("claude-sonnet-4-20250514"),
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         {
@@ -96,7 +96,7 @@ export const lookupAndSaveGuidelines = createServerFn({ method: "POST" })
     try {
       parsed = JSON.parse(stripCodeFence(text));
     } catch {
-      throw new Error("AI returned invalid JSON");
+      return { needsManualEntry: true } as unknown as { guideline: GuidelineFields; predicted_sizeup_date: string | null; predicted_replacement_date: string | null };
     }
     const g = normalize(parsed);
 
@@ -210,4 +210,79 @@ export const recomputePredictions = createServerFn({ method: "POST" })
       updated++;
     }
     return { updated };
+  });
+
+/**
+ * Save manually-entered guidelines when the AI lookup fails or returns invalid JSON.
+ */
+export const saveManualGuidelines = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: {
+    productId: string;
+    maxWeightLbs: number | null;
+    maxHeightInches: number | null;
+    replacementIntervalMonths: number | null;
+  }) => {
+    if (!input?.productId) throw new Error("productId required");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: product, error: pErr } = await supabase
+      .from("products")
+      .select("id, name, category, added_at, child_id")
+      .eq("id", data.productId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (pErr) throw pErr;
+    if (!product) throw new Error("Product not found");
+
+    const { error: gErr } = await supabase
+      .from("product_guidelines")
+      .upsert(
+        {
+          product_id: product.id,
+          user_id: userId,
+          category: product.category ?? "",
+          max_weight_lbs: data.maxWeightLbs,
+          max_height_inches: data.maxHeightInches,
+          replacement_interval_months: data.replacementIntervalMonths,
+          source: "Manual entry",
+        } as never,
+        { onConflict: "product_id" },
+      );
+    if (gErr) throw gErr;
+
+    let predicted_sizeup_date: string | null = null;
+    const predicted_replacement_date = predictReplacementDate(
+      product.added_at ?? new Date(),
+      data.replacementIntervalMonths,
+    );
+
+    if (product.child_id) {
+      const { data: child } = await supabase
+        .from("children")
+        .select("date_of_birth, height_inches, weight_lbs, measurements_updated_at")
+        .eq("id", product.child_id)
+        .maybeSingle();
+      if (child) {
+        predicted_sizeup_date = predictSizeUpDate(
+          {
+            date_of_birth: child.date_of_birth,
+            height_inches: child.height_inches,
+            weight_lbs: child.weight_lbs,
+            measurements_recorded_at: child.measurements_updated_at,
+          },
+          { max_weight_lbs: data.maxWeightLbs, max_height_inches: data.maxHeightInches },
+        );
+      }
+    }
+
+    await supabase
+      .from("products")
+      .update({ predicted_sizeup_date, predicted_replacement_date } as never)
+      .eq("id", product.id);
+
+    return { predicted_sizeup_date, predicted_replacement_date };
   });

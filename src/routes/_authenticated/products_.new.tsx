@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
-import { PhotoUpload } from "@/components/PhotoUpload";
-import { useProGate } from "@/hooks/useProGate";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { CATEGORIES, type CategoryKey, guessCategoryFromText } from "@/lib/productCategories";
 import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
@@ -32,13 +30,11 @@ function computeReplaceAt(category: CategoryKey | "", _purchasedAt: string, carS
 
 function NewProductPage() {
   const navigate = useNavigate();
-  const { requirePro } = useProGate();
   const { activeChildId } = useActiveChild();
   const [saving, setSaving] = useState(false);
   const [category, setCategory] = useState<CategoryKey | "">("");
   const [name, setName] = useState("");
   const [barcode, setBarcode] = useState("");
-  const [photoPath, setPhotoPath] = useState<string | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [purchasedAt, setPurchasedAt] = useState(toISODate(new Date()));
   const [carSeatExpiry, setCarSeatExpiry] = useState("");
@@ -56,11 +52,7 @@ function NewProductPage() {
   }
 
 
-  function openPhoto(): boolean {
-    return requirePro('Photo attachments', 'Attach a photo so you can recognize the exact product later.');
-  }
-
-async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!category) { toast.error("Pick a category"); return; }
     if (!name.trim()) { toast.error("Give your product a name"); return; }
@@ -178,13 +170,6 @@ async function handleSubmit(e: React.FormEvent) {
               </Button>
             </div>
           </Field>
-
-          <Field label="Photo">
-            <div onClickCapture={(e) => { if (!photoPath && !openPhoto()) { e.stopPropagation(); e.preventDefault(); } }}>
-              <PhotoUpload value={photoPath} onChange={setPhotoPath} prefix="product" />
-            </div>
-          </Field>
-
 
           <Field label="Purchase date" required>
             <Input
