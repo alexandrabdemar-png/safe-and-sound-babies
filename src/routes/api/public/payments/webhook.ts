@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { createClient } from '@supabase/supabase-js';
 import { type StripeEnv, verifyWebhook } from '@/lib/stripe.server';
+import { sanitizeError } from '@/lib/sanitize-error';
 
 let _supabase: ReturnType<typeof createClient> | null = null;
 function getSupabase() {
@@ -130,7 +131,7 @@ export const Route = createFileRoute('/api/public/payments/webhook')({
           await handleWebhook(request, env);
           return Response.json({ received: true });
         } catch (e) {
-          console.error('Webhook error:', e);
+          console.error('[webhook] error:', sanitizeError(e));
           return new Response('Webhook error', { status: 400 });
         }
       },

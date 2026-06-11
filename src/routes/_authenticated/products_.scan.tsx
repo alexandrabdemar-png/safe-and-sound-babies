@@ -138,7 +138,7 @@ function ScanPage() {
       if (error) throw error;
       const productId = (inserted as { id: string } | null)?.id;
       if (productId) {
-        lookupAndSaveGuidelines({ data: { productId } }).catch((err) => console.warn("Guideline lookup failed:", err));
+        lookupAndSaveGuidelines({ data: { productId } }).catch((err) => console.warn("[guidelines] lookup failed:", err instanceof Error ? err.message : "unknown"));
       }
       setSavedReplaceAt(computedReplaceAt || null);
       setStep("success");

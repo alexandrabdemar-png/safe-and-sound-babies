@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { sanitizeError } from "@/lib/sanitize-error";
 
 export const Route = createFileRoute("/api/public/hooks/check-recalls")({
   server: {
@@ -176,7 +177,7 @@ async function runCheck(): Promise<Response> {
       duration_ms: Date.now() - startedAt,
     });
   } catch (e) {
-    console.error("check-recalls failed", e);
+    console.error("[check-recalls] failed:", sanitizeError(e));
     return Response.json(
       { ok: false, error: e instanceof Error ? e.message : String(e) },
       { status: 500 },

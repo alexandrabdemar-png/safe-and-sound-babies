@@ -87,7 +87,7 @@ async function handleSubmit(e: React.FormEvent) {
       // Fire AI guideline lookup in background; don't block save
       if (productId) {
         lookupAndSaveGuidelines({ data: { productId } }).catch((err) => {
-          console.warn("Guideline lookup failed:", err);
+          console.warn("[guidelines] lookup failed:", err instanceof Error ? err.message : "unknown");
         });
       }
       toast.success("Saved — fetching safety guidelines 🌙");
