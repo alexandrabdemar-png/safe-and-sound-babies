@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -48,6 +49,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -171,6 +177,7 @@ const ApiPublicHooksCheckProductAlertsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/onboarding': typeof OnboardingRoute
   '/terms': typeof TermsRoute
   '/add': typeof AuthenticatedAddRoute
@@ -197,6 +204,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/onboarding': typeof OnboardingRoute
   '/terms': typeof TermsRoute
   '/add': typeof AuthenticatedAddRoute
@@ -225,6 +233,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/onboarding': typeof OnboardingRoute
   '/terms': typeof TermsRoute
   '/_authenticated/add': typeof AuthenticatedAddRoute
@@ -253,6 +262,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/auth/callback'
     | '/onboarding'
     | '/terms'
     | '/add'
@@ -279,6 +289,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/auth/callback'
     | '/onboarding'
     | '/terms'
     | '/add'
@@ -306,6 +317,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/auth/callback'
     | '/onboarding'
     | '/terms'
     | '/_authenticated/add'
@@ -334,6 +346,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   OnboardingRoute: typeof OnboardingRoute
   TermsRoute: typeof TermsRoute
   ApiPublicHooksCheckProductAlertsRoute: typeof ApiPublicHooksCheckProductAlertsRoute
@@ -364,6 +377,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -575,6 +595,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   OnboardingRoute: OnboardingRoute,
   TermsRoute: TermsRoute,
   ApiPublicHooksCheckProductAlertsRoute: ApiPublicHooksCheckProductAlertsRoute,
