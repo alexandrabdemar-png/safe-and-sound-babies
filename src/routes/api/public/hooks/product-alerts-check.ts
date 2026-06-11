@@ -137,7 +137,7 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
               sound: "default",
               title:
                 b.recalls.length > 0
-                  ? "Safety alert from Safe & Sound"
+                  ? "Safety alert from Safe and Sound"
                   : "A gentle reminder 🌙",
               body: parts.join(" · "),
               data: { type: "product-alerts-digest" },

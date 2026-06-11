@@ -48,10 +48,18 @@ function hasCategory(products: ProductInput[], key: keyof typeof CAT_MATCH): Pro
   return products.find((p) => p.category && re.test(p.category));
 }
 
+// Parse a YYYY-MM-DD string as a local-time date to avoid UTC-midnight shift.
+function parseDateLocal(dateStr: string): Date | null {
+  const parts = dateStr.split("-").map(Number);
+  if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+  const [y, m, d] = parts;
+  return new Date(y, m - 1, d);
+}
+
 export function ageInMonths(dob: string | null | undefined): number | null {
   if (!dob) return null;
-  const birth = new Date(dob);
-  if (Number.isNaN(birth.getTime())) return null;
+  const birth = parseDateLocal(dob);
+  if (!birth) return null;
   const now = new Date();
   const months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
   // sub-month adjust by day-of-month

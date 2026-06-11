@@ -1,1 +1,1 @@
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS photo_url text;
+-- photo_url column removed from products; column is dropped in a later migration.

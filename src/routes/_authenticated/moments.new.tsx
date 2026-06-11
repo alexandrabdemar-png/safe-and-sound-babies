@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { PhotoUpload } from "@/components/PhotoUpload";
-import { useProGate } from "@/hooks/useProGate";
 import { useActiveChild } from "@/hooks/useActiveChild";
 
 export const Route = createFileRoute("/_authenticated/moments/new")({
@@ -21,6 +19,8 @@ const PROMPTS = [
   "Rolled over",
   "First tooth",
   "Sat up",
+  "Crawling",
+  "Pulling to stand",
   "First word",
   "First steps",
 ];
@@ -28,13 +28,10 @@ const PROMPTS = [
 function NewMomentPage() {
   const navigate = useNavigate();
   const { activeChildId } = useActiveChild();
-  const { requirePro } = useProGate();
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState("");
   const [loggedAt, setLoggedAt] = useState(new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState("");
-  const [photoPath, setPhotoPath] = useState<string | null>(null);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) { toast.error("Give the moment a title"); return; }
@@ -45,7 +42,6 @@ function NewMomentPage() {
       title: title.trim(),
       logged_at: loggedAt,
       notes: notes.trim() || null,
-      photo_url: photoPath,
       completed: true,
     } as never);
     setSaving(false);
@@ -54,9 +50,6 @@ function NewMomentPage() {
     navigate({ to: "/home" });
   }
 
-  function gatePhoto(): boolean {
-    return requirePro('Photo attachments', 'Attach a photo to each moment so you remember the exact day.');
-  }
 
 
   return (
@@ -128,14 +121,6 @@ function NewMomentPage() {
               className="rounded-2xl bg-card px-4 py-3 font-body text-base"
             />
           </div>
-
-          <div className="space-y-2">
-            <Label className="font-body text-sm">Photo (optional)</Label>
-            <div onClickCapture={(e) => { if (!photoPath && !gatePhoto()) { e.stopPropagation(); e.preventDefault(); } }}>
-              <PhotoUpload value={photoPath} onChange={setPhotoPath} prefix="moment" />
-            </div>
-          </div>
-
 
           <Button
             type="submit"
