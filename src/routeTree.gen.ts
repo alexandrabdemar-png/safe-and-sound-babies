@@ -25,6 +25,7 @@ import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/ad
 import { Route as AuthenticatedProductsScanRouteImport } from './routes/_authenticated/products_.scan'
 import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products_.new'
 import { Route as AuthenticatedProductsIdRouteImport } from './routes/_authenticated/products_.$id'
+import { Route as AuthenticatedProfilePrivacyPolicyRouteImport } from './routes/_authenticated/profile_.privacy-policy'
 import { Route as AuthenticatedMomentsNewRouteImport } from './routes/_authenticated/moments.new'
 import { Route as AuthenticatedBottlesNewRouteImport } from './routes/_authenticated/bottles.new'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -119,6 +120,12 @@ const AuthenticatedMomentsNewRoute = AuthenticatedMomentsNewRouteImport.update({
   path: '/moments/new',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProfilePrivacyPolicyRoute =
+  AuthenticatedProfilePrivacyPolicyRouteImport.update({
+    id: '/profile/privacy-policy',
+    path: '/profile/privacy-policy',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedBottlesNewRoute = AuthenticatedBottlesNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -172,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/products/$id': typeof AuthenticatedProductsIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/scan': typeof AuthenticatedProductsScanRoute
+  '/profile/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
@@ -196,6 +204,7 @@ export interface FileRoutesByTo {
   '/products/$id': typeof AuthenticatedProductsIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/scan': typeof AuthenticatedProductsScanRoute
+  '/profile/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
@@ -222,6 +231,7 @@ export interface FileRoutesById {
   '/_authenticated/products_/$id': typeof AuthenticatedProductsIdRoute
   '/_authenticated/products_/new': typeof AuthenticatedProductsNewRoute
   '/_authenticated/products_/scan': typeof AuthenticatedProductsScanRoute
+  '/_authenticated/profile_/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
@@ -248,6 +258,7 @@ export interface FileRouteTypes {
     | '/products/$id'
     | '/products/new'
     | '/products/scan'
+    | '/profile/privacy-policy'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
@@ -272,6 +283,7 @@ export interface FileRouteTypes {
     | '/products/$id'
     | '/products/new'
     | '/products/scan'
+    | '/profile/privacy-policy'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
@@ -297,6 +309,7 @@ export interface FileRouteTypes {
     | '/_authenticated/products_/$id'
     | '/_authenticated/products_/new'
     | '/_authenticated/products_/scan'
+    | '/_authenticated/profile_/privacy-policy'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
@@ -438,6 +451,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMomentsNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile_/privacy-policy': {
+      id: '/_authenticated/profile_/privacy-policy'
+      path: '/profile/privacy-policy'
+      fullPath: '/profile/privacy-policy'
+      preLoaderRoute: typeof AuthenticatedProfilePrivacyPolicyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/bottles/new': {
       id: '/_authenticated/bottles/new'
       path: '/new'
@@ -507,6 +527,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProductsIdRoute: typeof AuthenticatedProductsIdRoute
   AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
   AuthenticatedProductsScanRoute: typeof AuthenticatedProductsScanRoute
+  AuthenticatedProfilePrivacyPolicyRoute: typeof AuthenticatedProfilePrivacyPolicyRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -522,6 +543,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProductsIdRoute: AuthenticatedProductsIdRoute,
   AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
   AuthenticatedProductsScanRoute: AuthenticatedProductsScanRoute,
+  AuthenticatedProfilePrivacyPolicyRoute: AuthenticatedProfilePrivacyPolicyRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

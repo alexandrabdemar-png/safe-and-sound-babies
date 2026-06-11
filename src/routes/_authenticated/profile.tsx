@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   LogOut, User as UserIcon, Sparkles, Loader2, Plus, Trash2,
-  Download, BarChart3, CreditCard,
+  Download, BarChart3, CreditCard, Shield,
 } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useProGate } from "@/hooks/useProGate";
@@ -190,6 +190,9 @@ function ProfilePage() {
           <Button onClick={handleExport} variant="ghost" className="w-full justify-start rounded-xl" disabled={exporting}>
             {exporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
             Export my data
+          </Button>
+          <Button asChild variant="ghost" className="w-full justify-start rounded-xl">
+            <Link to="/profile/privacy-policy"><Shield className="h-4 w-4 mr-2" /> Privacy Policy</Link>
           </Button>
         </section>
 
