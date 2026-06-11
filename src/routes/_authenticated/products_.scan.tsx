@@ -183,11 +183,10 @@ function ScanPage() {
               Barcode scanner is a Pro feature
             </h2>
             <p className="mt-2 font-body text-sm text-muted-foreground">
-              Upgrade to scan UPC/EAN barcodes, auto-fill product details, and set replacement
-              reminders in seconds.
+              Everything in free, plus expert features, tips and tricks, safety insights, and pediatrician-reviewed guidance. Try free for 7 days.
             </p>
             <Button asChild className="mt-6 h-12 w-full rounded-full font-body text-sm font-semibold">
-              <Link to="/pricing">Upgrade to Pro</Link>
+              <Link to="/pricing">Start free trial</Link>
             </Button>
           </div>
         </main>

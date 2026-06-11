@@ -59,11 +59,12 @@ async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
   const productId = item?.price?.product;
   const periodStart = item?.current_period_start ?? subscription.current_period_start;
   const periodEnd = item?.current_period_end ?? subscription.current_period_end;
-  // Keep plan='pro' while inside the paid period; downgrade only once it lapses.
+  // Keep plan='pro' while inside the paid/trial period; downgrade only once it lapses.
   const periodEndDate = periodEnd ? new Date(periodEnd * 1000) : null;
   const stillInPeriod = !periodEndDate || periodEndDate > new Date();
   const isProPrice = priceId === 'pro_monthly';
-  const plan = isProPrice && stillInPeriod ? 'pro' : 'free';
+  const isTrialing = subscription.status === 'trialing';
+  const plan = (isProPrice || isTrialing) && stillInPeriod ? 'pro' : 'free';
 
   await subs()
     .update({
@@ -99,10 +100,39 @@ async function handleSubscriptionDeleted(subscription: any, env: StripeEnv) {
     .eq('environment', env);
 }
 
+async function handleCheckoutSessionCompleted(session: any, env: StripeEnv) {
+  // Only handle subscription checkouts
+  if (session.mode !== 'subscription') return;
+  const userId = session.metadata?.userId;
+  if (!userId) return;
+
+  // The subscription object may not be expanded here; we record what we have
+  // so the user gets Pro access immediately. customer.subscription.created
+  // will upsert the full record shortly after.
+  const subscriptionId = session.subscription;
+  if (!subscriptionId) return;
+
+  await subs().upsert(
+    {
+      user_id: userId,
+      stripe_subscription_id: subscriptionId,
+      stripe_customer_id: session.customer,
+      plan: 'pro',
+      status: 'trialing',
+      environment: env,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'stripe_subscription_id' },
+  );
+}
+
 async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
 
   switch (event.type) {
+    case 'checkout.session.completed':
+      await handleCheckoutSessionCompleted(event.data.object, env);
+      break;
     case 'customer.subscription.created':
       await handleSubscriptionCreated(event.data.object, env);
       break;
@@ -113,7 +143,7 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       await handleSubscriptionDeleted(event.data.object, env);
       break;
     default:
-      console.log('Unhandled event:', event.type);
+      break;
   }
 }
 

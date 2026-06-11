@@ -22,14 +22,13 @@ const FREE_FEATURES = [
   'Product recall alerts (with push notifications)',
   'Replacement & size-up reminders',
   'Track unlimited baby products',
-  'Log milestones at your own pace',
   'Manual product entry',
+  'All safety notifications',
 ];
 
 const PRO_FEATURES = [
-  'Everything in Free',
+  'Everything in free, plus expert features, tips and tricks, safety insights, and pediatrician-reviewed guidance.',
   'Barcode scanner for instant product entry',
-  'Photo attachments on products & moments',
   'Multi-child support',
   'Export & backup your data',
   'Advanced insights (growth charts, spending)',
@@ -148,11 +147,12 @@ function PricingPage() {
           <div className="flex items-baseline justify-between pt-2">
             <div>
               <h3 className="text-xl font-semibold">Pro</h3>
-              <p className="text-sm text-muted-foreground">Convenience & power</p>
+              <p className="text-sm text-muted-foreground">Expert features & guidance</p>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold">$4.99</div>
+              <div className="text-2xl font-bold">$3.33</div>
               <div className="text-xs text-muted-foreground">per month</div>
+              <div className="text-xs text-primary font-medium">7-day free trial</div>
             </div>
           </div>
           <ul className="space-y-2">
@@ -180,12 +180,15 @@ function PricingPage() {
               </Button>
             </div>
           ) : (
-            <Button onClick={handleUpgrade} className="w-full">Upgrade to Pro</Button>
+            <div className="space-y-1.5">
+              <Button onClick={handleUpgrade} className="w-full">Start free trial</Button>
+              <p className="text-xs text-center text-muted-foreground">7 days free, then $3.33/month. Cancel anytime.</p>
+            </div>
           )}
         </div>
 
         <p className="text-xs text-center text-muted-foreground">
-          Cancel anytime. Your subscription helps keep recall alerts free for every parent.
+          Your subscription helps keep recall alerts free for every parent.
         </p>
       </div>
     </div>

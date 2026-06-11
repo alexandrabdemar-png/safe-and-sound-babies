@@ -18,7 +18,7 @@ export function UpgradePrompt() {
           </div>
           <DialogTitle className="text-center">{req?.feature} is a Pro feature</DialogTitle>
           <DialogDescription className="text-center">
-            {req?.description ?? 'Upgrade to Safe & Sound Pro for $4.99/month to unlock this and more convenience features. Safety features always stay free.'}
+            {req?.description ?? 'Everything in free, plus expert features, tips and tricks, safety insights, and pediatrician-reviewed guidance. Try free for 7 days.'}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex-col gap-2 sm:flex-col">
@@ -26,7 +26,7 @@ export function UpgradePrompt() {
             className="w-full"
             onClick={() => { dismiss(); navigate({ to: '/pricing' }); }}
           >
-            See Pro plan
+            Start free trial
           </Button>
           <Button variant="ghost" className="w-full" onClick={dismiss}>
             Not now
