@@ -80,14 +80,14 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
 
         // Load notification settings for all involved users
         const userIds = Array.from(allUserIds);
-        const { data: settingsRows } = await supabaseAdmin
+        const { data: settingsRows } = await (supabaseAdmin as any)
           .from("user_notification_settings")
           .select("user_id, recalls_enabled, size_up_enabled, replacement_enabled")
           .in("user_id", userIds);
 
         type UserSettings = { recalls_enabled: boolean; size_up_enabled: boolean; replacement_enabled: boolean };
         const settingsMap = new Map<string, UserSettings>();
-        for (const s of (settingsRows ?? []) as Array<{ user_id: string } & UserSettings>) {
+        for (const s of ((settingsRows ?? []) as unknown) as Array<{ user_id: string } & UserSettings>) {
           settingsMap.set(s.user_id, s);
         }
         const getSetting = (uid: string): UserSettings =>
