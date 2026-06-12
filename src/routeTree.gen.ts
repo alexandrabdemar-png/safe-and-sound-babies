@@ -12,9 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
 import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
@@ -23,11 +23,11 @@ import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/h
 import { Route as AuthenticatedBottlesRouteImport } from './routes/_authenticated/bottles'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
+import { Route as AuthenticatedProfilePrivacyPolicyRouteImport } from './routes/_authenticated/profile_.privacy-policy'
+import { Route as AuthenticatedProfileNotificationSettingsRouteImport } from './routes/_authenticated/profile_.notification-settings'
 import { Route as AuthenticatedProductsScanRouteImport } from './routes/_authenticated/products_.scan'
 import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products_.new'
 import { Route as AuthenticatedProductsIdRouteImport } from './routes/_authenticated/products_.$id'
-import { Route as AuthenticatedProfilePrivacyPolicyRouteImport } from './routes/_authenticated/profile_.privacy-policy'
-import { Route as AuthenticatedProfileNotificationSettingsRouteImport } from './routes/_authenticated/profile_.notification-settings'
 import { Route as AuthenticatedMomentsNewRouteImport } from './routes/_authenticated/moments.new'
 import { Route as AuthenticatedBottlesNewRouteImport } from './routes/_authenticated/bottles.new'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -51,11 +51,6 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/auth/callback',
-  path: '/auth/callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -64,6 +59,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
@@ -105,6 +105,18 @@ const AuthenticatedAddRoute = AuthenticatedAddRouteImport.update({
   path: '/add',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProfilePrivacyPolicyRoute =
+  AuthenticatedProfilePrivacyPolicyRouteImport.update({
+    id: '/profile_/privacy-policy',
+    path: '/profile/privacy-policy',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProfileNotificationSettingsRoute =
+  AuthenticatedProfileNotificationSettingsRouteImport.update({
+    id: '/profile_/notification-settings',
+    path: '/profile/notification-settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProductsScanRoute =
   AuthenticatedProductsScanRouteImport.update({
     id: '/products_/scan',
@@ -127,18 +139,6 @@ const AuthenticatedMomentsNewRoute = AuthenticatedMomentsNewRouteImport.update({
   path: '/moments/new',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedProfilePrivacyPolicyRoute =
-  AuthenticatedProfilePrivacyPolicyRouteImport.update({
-    id: '/profile/privacy-policy',
-    path: '/profile/privacy-policy',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedProfileNotificationSettingsRoute =
-  AuthenticatedProfileNotificationSettingsRouteImport.update({
-    id: '/profile/notification-settings',
-    path: '/profile/notification-settings',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedBottlesNewRoute = AuthenticatedBottlesNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -176,8 +176,7 @@ const ApiPublicHooksCheckProductAlertsRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
-  '/auth/callback': typeof AuthCallbackRoute
+  '/auth': typeof AuthRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/terms': typeof TermsRoute
   '/add': typeof AuthenticatedAddRoute
@@ -188,13 +187,14 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof AuthenticatedPricingRoute
   '/products': typeof AuthenticatedProductsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
   '/products/$id': typeof AuthenticatedProductsIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/scan': typeof AuthenticatedProductsScanRoute
-  '/profile/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/profile/notification-settings': typeof AuthenticatedProfileNotificationSettingsRoute
+  '/profile/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
@@ -203,8 +203,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
-  '/auth/callback': typeof AuthCallbackRoute
+  '/auth': typeof AuthRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/terms': typeof TermsRoute
   '/add': typeof AuthenticatedAddRoute
@@ -215,13 +214,14 @@ export interface FileRoutesByTo {
   '/pricing': typeof AuthenticatedPricingRoute
   '/products': typeof AuthenticatedProductsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
   '/products/$id': typeof AuthenticatedProductsIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/scan': typeof AuthenticatedProductsScanRoute
-  '/profile/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/profile/notification-settings': typeof AuthenticatedProfileNotificationSettingsRoute
+  '/profile/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
@@ -232,8 +232,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/auth': typeof AuthRoute
-  '/auth/callback': typeof AuthCallbackRoute
+  '/auth': typeof AuthRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/terms': typeof TermsRoute
   '/_authenticated/add': typeof AuthenticatedAddRoute
@@ -244,13 +243,14 @@ export interface FileRoutesById {
   '/_authenticated/pricing': typeof AuthenticatedPricingRoute
   '/_authenticated/products': typeof AuthenticatedProductsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/_authenticated/moments/new': typeof AuthenticatedMomentsNewRoute
   '/_authenticated/products_/$id': typeof AuthenticatedProductsIdRoute
   '/_authenticated/products_/new': typeof AuthenticatedProductsNewRoute
   '/_authenticated/products_/scan': typeof AuthenticatedProductsScanRoute
-  '/_authenticated/profile_/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/_authenticated/profile_/notification-settings': typeof AuthenticatedProfileNotificationSettingsRoute
+  '/_authenticated/profile_/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
@@ -262,7 +262,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/auth/callback'
     | '/onboarding'
     | '/terms'
     | '/add'
@@ -273,13 +272,14 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/products'
     | '/profile'
+    | '/auth/callback'
     | '/bottles/new'
     | '/moments/new'
     | '/products/$id'
     | '/products/new'
     | '/products/scan'
-    | '/profile/privacy-policy'
     | '/profile/notification-settings'
+    | '/profile/privacy-policy'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
@@ -289,7 +289,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/auth/callback'
     | '/onboarding'
     | '/terms'
     | '/add'
@@ -300,13 +299,14 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/products'
     | '/profile'
+    | '/auth/callback'
     | '/bottles/new'
     | '/moments/new'
     | '/products/$id'
     | '/products/new'
     | '/products/scan'
-    | '/profile/privacy-policy'
     | '/profile/notification-settings'
+    | '/profile/privacy-policy'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
@@ -317,7 +317,6 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/auth/callback'
     | '/onboarding'
     | '/terms'
     | '/_authenticated/add'
@@ -328,13 +327,14 @@ export interface FileRouteTypes {
     | '/_authenticated/pricing'
     | '/_authenticated/products'
     | '/_authenticated/profile'
+    | '/auth/callback'
     | '/_authenticated/bottles/new'
     | '/_authenticated/moments/new'
     | '/_authenticated/products_/$id'
     | '/_authenticated/products_/new'
     | '/_authenticated/products_/scan'
-    | '/_authenticated/profile_/privacy-policy'
     | '/_authenticated/profile_/notification-settings'
+    | '/_authenticated/profile_/privacy-policy'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
@@ -345,8 +345,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AuthRoute: typeof AuthRoute
-  AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthRoute: typeof AuthRouteWithChildren
   OnboardingRoute: typeof OnboardingRoute
   TermsRoute: typeof TermsRoute
   ApiPublicHooksCheckProductAlertsRoute: typeof ApiPublicHooksCheckProductAlertsRoute
@@ -379,13 +378,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/callback': {
-      id: '/auth/callback'
-      path: '/auth/callback'
-      fullPath: '/auth/callback'
-      preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -399,6 +391,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
@@ -456,6 +455,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAddRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile_/privacy-policy': {
+      id: '/_authenticated/profile_/privacy-policy'
+      path: '/profile/privacy-policy'
+      fullPath: '/profile/privacy-policy'
+      preLoaderRoute: typeof AuthenticatedProfilePrivacyPolicyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile_/notification-settings': {
+      id: '/_authenticated/profile_/notification-settings'
+      path: '/profile/notification-settings'
+      fullPath: '/profile/notification-settings'
+      preLoaderRoute: typeof AuthenticatedProfileNotificationSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/products_/scan': {
       id: '/_authenticated/products_/scan'
       path: '/products/scan'
@@ -482,20 +495,6 @@ declare module '@tanstack/react-router' {
       path: '/moments/new'
       fullPath: '/moments/new'
       preLoaderRoute: typeof AuthenticatedMomentsNewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/profile_/privacy-policy': {
-      id: '/_authenticated/profile_/privacy-policy'
-      path: '/profile/privacy-policy'
-      fullPath: '/profile/privacy-policy'
-      preLoaderRoute: typeof AuthenticatedProfilePrivacyPolicyRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/profile_/notification-settings': {
-      id: '/_authenticated/profile_/notification-settings'
-      path: '/profile/notification-settings'
-      fullPath: '/profile/notification-settings'
-      preLoaderRoute: typeof AuthenticatedProfileNotificationSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/bottles/new': {
@@ -567,8 +566,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProductsIdRoute: typeof AuthenticatedProductsIdRoute
   AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
   AuthenticatedProductsScanRoute: typeof AuthenticatedProductsScanRoute
-  AuthenticatedProfilePrivacyPolicyRoute: typeof AuthenticatedProfilePrivacyPolicyRoute
   AuthenticatedProfileNotificationSettingsRoute: typeof AuthenticatedProfileNotificationSettingsRoute
+  AuthenticatedProfilePrivacyPolicyRoute: typeof AuthenticatedProfilePrivacyPolicyRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -584,18 +583,29 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProductsIdRoute: AuthenticatedProductsIdRoute,
   AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
   AuthenticatedProductsScanRoute: AuthenticatedProductsScanRoute,
-  AuthenticatedProfilePrivacyPolicyRoute: AuthenticatedProfilePrivacyPolicyRoute,
-  AuthenticatedProfileNotificationSettingsRoute: AuthenticatedProfileNotificationSettingsRoute,
+  AuthenticatedProfileNotificationSettingsRoute:
+    AuthenticatedProfileNotificationSettingsRoute,
+  AuthenticatedProfilePrivacyPolicyRoute:
+    AuthenticatedProfilePrivacyPolicyRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AuthRouteChildren {
+  AuthCallbackRoute: typeof AuthCallbackRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthCallbackRoute: AuthCallbackRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AuthRoute: AuthRoute,
-  AuthCallbackRoute: AuthCallbackRoute,
+  AuthRoute: AuthRouteWithChildren,
   OnboardingRoute: OnboardingRoute,
   TermsRoute: TermsRoute,
   ApiPublicHooksCheckProductAlertsRoute: ApiPublicHooksCheckProductAlertsRoute,
@@ -607,13 +617,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

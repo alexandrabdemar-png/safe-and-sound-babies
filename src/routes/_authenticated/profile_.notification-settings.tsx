@@ -31,12 +31,12 @@ function NotificationSettingsPage() {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("user_notification_settings")
         .select("recalls_enabled, size_up_enabled, replacement_enabled")
         .eq("user_id", user.id)
         .maybeSingle();
-      if (data) setSettings(data);
+      if (data) setSettings(data as Settings);
       setLoading(false);
     })();
   }, []);
@@ -46,9 +46,9 @@ function NotificationSettingsPage() {
     if (!user) return;
     const next = { ...settings, [field]: !settings[field] };
     setSettings(next);
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("user_notification_settings")
-      .upsert({ user_id: user.id, ...next, updated_at: new Date().toISOString() } as never, {
+      .upsert({ user_id: user.id, ...next, updated_at: new Date().toISOString() }, {
         onConflict: "user_id",
       });
     if (error) {

@@ -18,9 +18,8 @@ export const Route = createFileRoute("/api/public/hooks/cpsc-sync")({
         const apiKey =
           request.headers.get("apikey") ??
           request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-        const expected =
-          process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY;
-        if (!apiKey || !expected || apiKey !== expected) {
+        const expected = process.env.HOOK_SECRET;
+        if (!expected || !apiKey || apiKey !== expected) {
           return new Response(JSON.stringify({ error: "Unauthorized" }), {
             status: 401,
             headers: { "Content-Type": "application/json" },

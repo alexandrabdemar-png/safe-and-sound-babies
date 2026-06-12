@@ -15,9 +15,8 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
         const apiKey =
           request.headers.get("apikey") ??
           request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-        const expected =
-          process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY;
-        if (!apiKey || !expected || apiKey !== expected) {
+        const expected = process.env.HOOK_SECRET;
+        if (!expected || !apiKey || apiKey !== expected) {
           return new Response(JSON.stringify({ error: "Unauthorized" }), {
             status: 401,
             headers: { "Content-Type": "application/json" },
@@ -80,14 +79,14 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
 
         // Load notification settings for all involved users
         const userIds = Array.from(allUserIds);
-        const { data: settingsRows } = await supabaseAdmin
+        const { data: settingsRows } = await (supabaseAdmin as any)
           .from("user_notification_settings")
           .select("user_id, recalls_enabled, size_up_enabled, replacement_enabled")
           .in("user_id", userIds);
 
         type UserSettings = { recalls_enabled: boolean; size_up_enabled: boolean; replacement_enabled: boolean };
         const settingsMap = new Map<string, UserSettings>();
-        for (const s of (settingsRows ?? []) as Array<{ user_id: string } & UserSettings>) {
+        for (const s of ((settingsRows ?? []) as unknown) as Array<{ user_id: string } & UserSettings>) {
           settingsMap.set(s.user_id, s);
         }
         const getSetting = (uid: string): UserSettings =>
