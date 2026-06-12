@@ -13,13 +13,22 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Sign in or create your Safe & Sound account to start tracking your little one's milestones." },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    error: typeof s.error === "string" ? s.error : undefined,
+  }),
 });
 
 type Mode = "signin" | "signup" | "magic";
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { error: authError } = Route.useSearch();
   const [mode, setMode] = useState<Mode>("signin");
+
+  // Show auth callback errors (e.g. expired magic link)
+  useEffect(() => {
+    if (authError) toast.error(authError);
+  }, [authError]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState<null | "email" | "google" | "apple" | "magic">(null);
@@ -43,7 +52,7 @@ function AuthPage() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/onboarding` },
+          options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
         });
         if (error) throw error;
         if (data.session) {
@@ -70,7 +79,7 @@ function AuthPage() {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: window.location.origin },
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
       if (error) throw error;
       toast.success("Magic link sent — check your inbox ✉️");

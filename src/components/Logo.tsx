@@ -5,61 +5,36 @@ interface LogoProps {
 }
 
 /**
- * Delicate wheat sprig — a gentle botanical mark.
- * Uses currentColor so it inherits from text-* classes on the parent.
+ * Primary app icon mark — the overlapping petal "S" (Concept B).
+ * Uses currentColor for the sage petal; blush petal is a fixed warm tone.
+ * Inherits size from className (h-* / w-*).
  */
 export function Logo({ className }: LogoProps) {
   return (
     <svg
-      viewBox="0 0 32 32"
+      viewBox="0 0 40 40"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={cn("h-5 w-5", className)}
       aria-hidden="true"
     >
-      {/* Stem */}
+      {/* Upper petal — sage, inherits currentColor from parent text-* class */}
       <path
-        d="M16 28c0-6 .5-12 3.5-17"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
+        d="M20 5 C13 5 8 10 10 16.5 C12 21.5 17 22.5 20 20 C23 17.5 24.5 12.5 22 9 C21 6.5 20.5 5 20 5Z"
+        fill="currentColor"
         opacity="0.9"
       />
-      {/* Left leaf 1 (top) */}
+      {/* Lower petal — soft blush, fixed brand color */}
       <path
-        d="M16 14c-3-2-5-1.5-6 .5s1 4 3 3.5 3-2 3-4z"
-        fill="currentColor"
+        d="M20 18 C16.5 18 11 21 11 25.5 C11 30 16.5 34 21.5 32.5 C26.5 31 30.5 27 29 22.5 C27.5 19 23.5 18 20 18Z"
+        fill="#DBBFB5"
         opacity="0.85"
       />
-      {/* Right leaf 1 (top) */}
+      {/* Overlap highlight */}
       <path
-        d="M17.5 12c2.5-2 4.5-1.5 5.5 .5s-1 4-3 3.5-3.5-2-2.5-4z"
+        d="M20 18 C18.5 18.5 16 19.5 15 20.5 C15 22 17 23.5 19.5 22.5 C22 21.5 23 19.5 21.5 17.5 C21 17 20.5 17.5 20 18Z"
         fill="currentColor"
-        opacity="0.85"
-      />
-      {/* Left leaf 2 (mid) */}
-      <path
-        d="M15.5 18c-2.5-1.5-4-1-5 .5s.5 3.5 2.5 3 2.5-1.5 2.5-3.5z"
-        fill="currentColor"
-        opacity="0.75"
-      />
-      {/* Right leaf 2 (mid) */}
-      <path
-        d="M17.5 16c2-1.5 3.5-1 4.5 .5s-.5 3.5-2.5 3-2-1.5-2-3.5z"
-        fill="currentColor"
-        opacity="0.75"
-      />
-      {/* Left leaf 3 (lower) */}
-      <path
-        d="M15.5 22c-2-1-3-.5-3.5 .5s.5 2.5 2 2 1.5-1 1.5-2.5z"
-        fill="currentColor"
-        opacity="0.65"
-      />
-      {/* Right leaf 3 (lower) */}
-      <path
-        d="M17.5 20c1.5-1 3-.5 3.5 .5s-.5 2.5-2 2-1.5-1-1.5-2.5z"
-        fill="currentColor"
-        opacity="0.65"
+        opacity="0.22"
       />
     </svg>
   );

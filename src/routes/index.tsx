@@ -41,16 +41,16 @@ export const Route = createFileRoute("/")({
 const categories = [
   { name: "Car seats", image: catCarseat },
   { name: "Pacifiers", image: catPacifier },
-  { name: "Crib heights", image: catCrib },
-  { name: "Breast milk", image: catBreastmilk },
+  { name: "Crib mattress heights", image: catCrib },
+  { name: "Breast Milk", image: catBreastmilk },
   { name: "Formula", image: catFormula },
-  { name: "Baby food", image: catBabyfood },
+  { name: "Baby Food", image: catBabyfood },
   { name: "Swaddles", image: catSwaddle },
   { name: "Strollers", image: catStroller },
   { name: "Pack 'n Plays", image: catPacknplay },
   { name: "Carriers", image: catCarrier },
   { name: "Bouncers", image: catBouncer },
-  { name: "Baby swings", image: catSwing },
+  { name: "Baby Swings", image: catSwing },
 ];
 
 const features = [

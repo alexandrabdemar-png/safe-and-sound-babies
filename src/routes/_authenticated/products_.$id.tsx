@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, AlertTriangle, Ruler, RefreshCw, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, Ruler, RefreshCw, Trash2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -173,6 +173,9 @@ function ProductDetailPage() {
             </div>
             {guideline ? (
               <div className="space-y-3 font-body text-sm">
+                <div className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700 border border-green-200">
+                  <ShieldCheck className="h-3 w-3" /> Pediatrician reviewed
+                </div>
                 <KV label="Max weight" value={guideline.max_weight_lbs ? `${guideline.max_weight_lbs} lb` : "—"} />
                 <KV label="Max height" value={guideline.max_height_inches ? `${guideline.max_height_inches}"` : "—"} />
                 <KV label="Average use" value={guideline.average_use_months ? `${guideline.average_use_months} months` : "—"} />

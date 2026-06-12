@@ -48,10 +48,18 @@ function hasCategory(products: ProductInput[], key: keyof typeof CAT_MATCH): Pro
   return products.find((p) => p.category && re.test(p.category));
 }
 
+// Parse a YYYY-MM-DD string as a local-time date to avoid UTC-midnight shift.
+function parseDateLocal(dateStr: string): Date | null {
+  const parts = dateStr.split("-").map(Number);
+  if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+  const [y, m, d] = parts;
+  return new Date(y, m - 1, d);
+}
+
 export function ageInMonths(dob: string | null | undefined): number | null {
   if (!dob) return null;
-  const birth = new Date(dob);
-  if (Number.isNaN(birth.getTime())) return null;
+  const birth = parseDateLocal(dob);
+  if (!birth) return null;
   const now = new Date();
   const months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
   // sub-month adjust by day-of-month
@@ -100,8 +108,8 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
     if (months >= 6 && months < 12) {
       out.push({
         id: "crib_mattress_middle",
-        title: "Lower the crib mattress",
-        body: "Most babies start pushing up around 6 months. Drop the mattress to the middle setting before they can pull to sit.",
+        title: "Lower the crib mattress height",
+        body: "When your baby begins pushing up or showing signs of increased mobility, lower the mattress to the middle setting before they can pull to sit.",
         urgency: "now",
         category: "crib",
       });
@@ -110,7 +118,7 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
       out.push({
         id: "install_baby_gates",
         title: "Install baby gates at stairs",
-        body: "Crawling and cruising are right around the corner. Top-of-stairs gates should be hardware-mounted.",
+        body: "When your baby begins showing signs of increased mobility, top-of-stairs gates become essential. Hardware-mount these for the best protection.",
         urgency: "now",
         category: "baby_gate",
       });
@@ -119,7 +127,7 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
       out.push({
         id: "babyproof_low_cabinets",
         title: "Babyproof lower cabinets",
-        body: `${name} is likely pulling to stand soon. Latch any cabinet under hip-height — especially anything with cleaning supplies.`,
+        body: `As ${name} becomes more active and starts exploring new movements, consider preparing your space before they begin pulling to stand. Latch any cabinet under hip-height — especially anything with cleaning supplies.`,
         urgency: "now",
         category: "safety",
       });
@@ -127,8 +135,8 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
     if (months >= 12) {
       out.push({
         id: "crib_mattress_lowest",
-        title: "Lower the crib mattress to the lowest setting",
-        body: "Once they can pull to stand, the rail height matters. Drop the mattress all the way down.",
+        title: "Lower the crib mattress height to the lowest setting",
+        body: "Once they can pull to stand, the crib mattress height matters. Drop the mattress all the way down so the rail stays high enough to keep them safe.",
         urgency: "now",
         category: "crib",
       });
@@ -137,7 +145,7 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
       out.push({
         id: "rear_facing_reminder",
         title: "Keep the car seat rear-facing",
-        body: "Pediatricians recommend rear-facing until at least 2 years old (and longer when possible). Don't flip it yet.",
+        body: "Experts recommend keeping your baby rear-facing as long as possible and within the seat's height and weight limits. Don't flip it yet.",
         urgency: "heads_up",
         category: "car_seat",
       });
@@ -169,7 +177,7 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
     out.push({
       id: "bassinet_transition",
       title: "Plan the crib transition",
-      body: "Most bassinets are outgrown by 4–6 months — by weight, length, or when baby can push up. Have the crib ready.",
+      body: "Bassinets are typically outgrown by weight, length, or when your baby begins pushing up. Have the crib ready before that moment arrives.",
       urgency: months >= 5 ? "now" : "soon",
       category: "bassinet",
     });
@@ -192,8 +200,8 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
   if (hasCategory(products, "swing") && months !== null && months >= 6) {
     out.push({
       id: "swing_outgrow",
-      title: "Most babies outgrow the swing around 6 months",
-      body: "Once they can sit up on their own, swings stop being safe. Time to retire it or pass it along.",
+      title: "When your baby can sit up independently, swings are no longer safe",
+      body: "As soon as your baby can sit up on their own, swings stop being safe to use. Time to retire it or pass it along.",
       urgency: "now",
       category: "swing",
     });
@@ -213,7 +221,7 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
     out.push({
       id: "highchair_suggest",
       title: "Time to think about a high chair",
-      body: "Solids usually start around 6 months. Add your high chair to track recalls and replacement.",
+      body: "When your baby begins showing readiness for solids, it's a good time to add your high chair and track it for recalls and replacement.",
       urgency: "soon",
       category: "high_chair",
     });
@@ -222,7 +230,7 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
     out.push({
       id: "gate_suggest",
       title: "Add baby gates to your list",
-      body: "Crawling is around the corner. Hardware-mount at the top of stairs, pressure-mount is fine elsewhere.",
+      body: "When your baby begins showing signs of increased mobility, baby gates become important. Hardware-mount at the top of stairs, pressure-mount is fine elsewhere.",
       urgency: "soon",
       category: "baby_gate",
     });
@@ -230,7 +238,7 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
   if (months !== null && months >= 4 && months <= 10 && !hasCategory(products, "activity_center")) {
     out.push({
       id: "activity_center_suggest",
-      title: "Activity centers shine between 4–10 months",
+      title: "Activity centers are great when your baby can hold their head up but isn't yet walking",
       body: "Optional, but a good way to give your arms a break while they practice standing.",
       urgency: "heads_up",
       category: "activity_center",

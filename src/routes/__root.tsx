@@ -36,7 +36,6 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
@@ -81,7 +80,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Safe & Sound — Baby Safety Tracking" },
       { name: "description", content: "Never miss a safety milestone again. Track car seats, pacifiers, cribs, and more with quiet, kind reminders." },
       { name: "author", content: "Safe & Sound" },
-      { name: "theme-color", content: "#B7C1B0" },
+      { name: "theme-color", content: "#A3B899" },
       { property: "og:title", content: "Safe & Sound — Baby Safety Tracking" },
       { property: "og:description", content: "Never miss a safety milestone again. Track car seats, pacifiers, cribs, and more with quiet, kind reminders." },
       { property: "og:type", content: "website" },
@@ -91,7 +90,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" },
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "apple-touch-icon", sizes: "192x192", href: "/icon-192.png" },

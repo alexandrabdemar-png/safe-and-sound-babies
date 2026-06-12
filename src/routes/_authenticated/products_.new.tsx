@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
-import { PhotoUpload } from "@/components/PhotoUpload";
-import { useProGate } from "@/hooks/useProGate";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { CATEGORIES, type CategoryKey, guessCategoryFromText } from "@/lib/productCategories";
 import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
@@ -32,13 +30,11 @@ function computeReplaceAt(category: CategoryKey | "", _purchasedAt: string, carS
 
 function NewProductPage() {
   const navigate = useNavigate();
-  const { requirePro } = useProGate();
   const { activeChildId } = useActiveChild();
   const [saving, setSaving] = useState(false);
   const [category, setCategory] = useState<CategoryKey | "">("");
   const [name, setName] = useState("");
   const [barcode, setBarcode] = useState("");
-  const [photoPath, setPhotoPath] = useState<string | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [purchasedAt, setPurchasedAt] = useState(toISODate(new Date()));
   const [carSeatExpiry, setCarSeatExpiry] = useState("");
@@ -56,15 +52,11 @@ function NewProductPage() {
   }
 
 
-  function openPhoto(): boolean {
-    return requirePro('Photo attachments', 'Attach a photo so you can recognize the exact product later.');
-  }
-
-async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!category) { toast.error("Pick a category"); return; }
     if (!name.trim()) { toast.error("Give your product a name"); return; }
-    if (category === "car_seat" && !carSeatExpiry) { toast.error("Add the car seat's manufacturer expiry date"); return; }
+
     setSaving(true);
     try {
       const { data: u } = await supabase.auth.getUser();
@@ -87,7 +79,7 @@ async function handleSubmit(e: React.FormEvent) {
       // Fire AI guideline lookup in background; don't block save
       if (productId) {
         lookupAndSaveGuidelines({ data: { productId } }).catch((err) => {
-          console.warn("Guideline lookup failed:", err);
+          console.warn("[guidelines] lookup failed:", err instanceof Error ? err.message : "unknown");
         });
       }
       toast.success("Saved — fetching safety guidelines 🌙");
@@ -179,13 +171,6 @@ async function handleSubmit(e: React.FormEvent) {
             </div>
           </Field>
 
-          <Field label="Photo">
-            <div onClickCapture={(e) => { if (!photoPath && !openPhoto()) { e.stopPropagation(); e.preventDefault(); } }}>
-              <PhotoUpload value={photoPath} onChange={setPhotoPath} prefix="product" />
-            </div>
-          </Field>
-
-
           <Field label="Purchase date" required>
             <Input
               type="date"
@@ -196,7 +181,7 @@ async function handleSubmit(e: React.FormEvent) {
           </Field>
 
           {category === "car_seat" && (
-            <Field label="Manufacturer expiry date" required>
+            <Field label="Manufacturer expiry date">
               <Input
                 type="date"
                 value={carSeatExpiry}
@@ -284,8 +269,7 @@ function ProductSearch({ onPick }: { onPick: (r: SearchResult) => void }) {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
-  async function runSearch(e: React.FormEvent) {
-    e.preventDefault();
+  async function runSearch() {
     const q = query.trim();
     if (!q) return;
     setLoading(true);
@@ -335,12 +319,13 @@ function ProductSearch({ onPick }: { onPick: (r: SearchResult) => void }) {
           Find a product by name and we'll fill in the details.
         </p>
       </div>
-      <form onSubmit={runSearch} className="flex gap-2">
+      <div className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); runSearch(); } }}
             placeholder="e.g. Avent Soothie, Enfamil, Nuna Pipa"
             className="h-11 rounded-2xl bg-background pl-9 pr-9 font-body text-base"
             maxLength={80}
@@ -355,10 +340,10 @@ function ProductSearch({ onPick }: { onPick: (r: SearchResult) => void }) {
             </button>
           )}
         </div>
-        <Button type="submit" disabled={loading || !query.trim()} className="h-11 rounded-2xl px-4">
+        <Button type="button" onClick={runSearch} disabled={loading || !query.trim()} className="h-11 rounded-2xl px-4">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Search"}
         </Button>
-      </form>
+      </div>
 
       {searched && !loading && results.length === 0 && (
         <p className="font-body text-xs text-muted-foreground">

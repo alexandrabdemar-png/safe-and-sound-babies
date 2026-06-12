@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -25,6 +26,8 @@ import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/ad
 import { Route as AuthenticatedProductsScanRouteImport } from './routes/_authenticated/products_.scan'
 import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products_.new'
 import { Route as AuthenticatedProductsIdRouteImport } from './routes/_authenticated/products_.$id'
+import { Route as AuthenticatedProfilePrivacyPolicyRouteImport } from './routes/_authenticated/profile_.privacy-policy'
+import { Route as AuthenticatedProfileNotificationSettingsRouteImport } from './routes/_authenticated/profile_.notification-settings'
 import { Route as AuthenticatedMomentsNewRouteImport } from './routes/_authenticated/moments.new'
 import { Route as AuthenticatedBottlesNewRouteImport } from './routes/_authenticated/bottles.new'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -46,6 +49,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -119,6 +127,18 @@ const AuthenticatedMomentsNewRoute = AuthenticatedMomentsNewRouteImport.update({
   path: '/moments/new',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProfilePrivacyPolicyRoute =
+  AuthenticatedProfilePrivacyPolicyRouteImport.update({
+    id: '/profile/privacy-policy',
+    path: '/profile/privacy-policy',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProfileNotificationSettingsRoute =
+  AuthenticatedProfileNotificationSettingsRouteImport.update({
+    id: '/profile/notification-settings',
+    path: '/profile/notification-settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedBottlesNewRoute = AuthenticatedBottlesNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -157,6 +177,7 @@ const ApiPublicHooksCheckProductAlertsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/onboarding': typeof OnboardingRoute
   '/terms': typeof TermsRoute
   '/add': typeof AuthenticatedAddRoute
@@ -172,6 +193,8 @@ export interface FileRoutesByFullPath {
   '/products/$id': typeof AuthenticatedProductsIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/scan': typeof AuthenticatedProductsScanRoute
+  '/profile/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
+  '/profile/notification-settings': typeof AuthenticatedProfileNotificationSettingsRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
@@ -181,6 +204,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/onboarding': typeof OnboardingRoute
   '/terms': typeof TermsRoute
   '/add': typeof AuthenticatedAddRoute
@@ -196,6 +220,8 @@ export interface FileRoutesByTo {
   '/products/$id': typeof AuthenticatedProductsIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/scan': typeof AuthenticatedProductsScanRoute
+  '/profile/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
+  '/profile/notification-settings': typeof AuthenticatedProfileNotificationSettingsRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
@@ -207,6 +233,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/onboarding': typeof OnboardingRoute
   '/terms': typeof TermsRoute
   '/_authenticated/add': typeof AuthenticatedAddRoute
@@ -222,6 +249,8 @@ export interface FileRoutesById {
   '/_authenticated/products_/$id': typeof AuthenticatedProductsIdRoute
   '/_authenticated/products_/new': typeof AuthenticatedProductsNewRoute
   '/_authenticated/products_/scan': typeof AuthenticatedProductsScanRoute
+  '/_authenticated/profile_/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
+  '/_authenticated/profile_/notification-settings': typeof AuthenticatedProfileNotificationSettingsRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
@@ -233,6 +262,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/auth/callback'
     | '/onboarding'
     | '/terms'
     | '/add'
@@ -248,6 +278,8 @@ export interface FileRouteTypes {
     | '/products/$id'
     | '/products/new'
     | '/products/scan'
+    | '/profile/privacy-policy'
+    | '/profile/notification-settings'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
@@ -257,6 +289,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/auth/callback'
     | '/onboarding'
     | '/terms'
     | '/add'
@@ -272,6 +305,8 @@ export interface FileRouteTypes {
     | '/products/$id'
     | '/products/new'
     | '/products/scan'
+    | '/profile/privacy-policy'
+    | '/profile/notification-settings'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
@@ -282,6 +317,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/auth/callback'
     | '/onboarding'
     | '/terms'
     | '/_authenticated/add'
@@ -297,6 +333,8 @@ export interface FileRouteTypes {
     | '/_authenticated/products_/$id'
     | '/_authenticated/products_/new'
     | '/_authenticated/products_/scan'
+    | '/_authenticated/profile_/privacy-policy'
+    | '/_authenticated/profile_/notification-settings'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
@@ -308,6 +346,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   OnboardingRoute: typeof OnboardingRoute
   TermsRoute: typeof TermsRoute
   ApiPublicHooksCheckProductAlertsRoute: typeof ApiPublicHooksCheckProductAlertsRoute
@@ -338,6 +377,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -438,6 +484,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMomentsNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile_/privacy-policy': {
+      id: '/_authenticated/profile_/privacy-policy'
+      path: '/profile/privacy-policy'
+      fullPath: '/profile/privacy-policy'
+      preLoaderRoute: typeof AuthenticatedProfilePrivacyPolicyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile_/notification-settings': {
+      id: '/_authenticated/profile_/notification-settings'
+      path: '/profile/notification-settings'
+      fullPath: '/profile/notification-settings'
+      preLoaderRoute: typeof AuthenticatedProfileNotificationSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/bottles/new': {
       id: '/_authenticated/bottles/new'
       path: '/new'
@@ -507,6 +567,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProductsIdRoute: typeof AuthenticatedProductsIdRoute
   AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
   AuthenticatedProductsScanRoute: typeof AuthenticatedProductsScanRoute
+  AuthenticatedProfilePrivacyPolicyRoute: typeof AuthenticatedProfilePrivacyPolicyRoute
+  AuthenticatedProfileNotificationSettingsRoute: typeof AuthenticatedProfileNotificationSettingsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -522,6 +584,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProductsIdRoute: AuthenticatedProductsIdRoute,
   AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
   AuthenticatedProductsScanRoute: AuthenticatedProductsScanRoute,
+  AuthenticatedProfilePrivacyPolicyRoute: AuthenticatedProfilePrivacyPolicyRoute,
+  AuthenticatedProfileNotificationSettingsRoute: AuthenticatedProfileNotificationSettingsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -531,6 +595,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   OnboardingRoute: OnboardingRoute,
   TermsRoute: TermsRoute,
   ApiPublicHooksCheckProductAlertsRoute: ApiPublicHooksCheckProductAlertsRoute,

@@ -38,9 +38,14 @@ type AlertSummary = {
   sizeUp: number;
 };
 
+function parseDateLocal(dateStr: string): Date {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
 function calcAge(dob: string | null): { label: string; subtitle: string } {
   if (!dob) return { label: "Little one", subtitle: "Add birth date in profile" };
-  const birth = new Date(dob);
+  const birth = parseDateLocal(dob);
   const days = Math.max(0, Math.floor((Date.now() - birth.getTime()) / 86400000));
   const weeks = Math.floor(days / 7);
   if (weeks < 12) return { label: `${weeks} ${weeks === 1 ? "week" : "weeks"} old`, subtitle: `${days} days of wonder` };

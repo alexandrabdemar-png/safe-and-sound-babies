@@ -1,1 +1,1 @@
-ALTER TABLE public.milestones ADD COLUMN IF NOT EXISTS photo_url TEXT;
+-- photo_url column removed from milestones; column is dropped in a later migration.
