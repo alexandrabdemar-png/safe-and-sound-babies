@@ -99,18 +99,18 @@ const AuthenticatedAddRoute = AuthenticatedAddRouteImport.update({
 } as any)
 const AuthenticatedProductsScanRoute =
   AuthenticatedProductsScanRouteImport.update({
-    id: '/products/scan',
+    id: '/products_/scan',
     path: '/products/scan',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedProductsNewRoute =
   AuthenticatedProductsNewRouteImport.update({
-    id: '/products/new',
+    id: '/products_/new',
     path: '/products/new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedProductsIdRoute = AuthenticatedProductsIdRouteImport.update({
-  id: '/products/$id',
+  id: '/products_/$id',
   path: '/products/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
@@ -542,3 +542,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
