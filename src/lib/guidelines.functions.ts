@@ -4,6 +4,30 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { predictSizeUpDate, predictReplacementDate } from "@/lib/predictions";
 
+/**
+ * Server-side Pro subscription gate. Reads from the subscriptions table via
+ * the authenticated user's client (RLS scopes to their own rows). Throws if
+ * the user has no active/trialing/past_due subscription.
+ */
+async function requireProSubscription(
+  supabase: { from: (t: string) => any },
+  userId: string,
+): Promise<void> {
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select("status, current_period_end")
+    .eq("user_id", userId)
+    .in("status", ["active", "trialing", "past_due"])
+    .order("current_period_end", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error("Subscription check failed");
+  if (!data) throw new Error("Pro subscription required");
+  if (data.current_period_end && new Date(data.current_period_end) < new Date()) {
+    throw new Error("Pro subscription required");
+  }
+}
+
 export type GuidelineFields = {
   category: string;
   minWeightLbs: number | null;
