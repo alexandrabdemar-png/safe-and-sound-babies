@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -103,13 +103,13 @@ function Index() {
                 or check the fit.
               </p>
 
-              <a
-                href="/auth"
+              <Link
+                to="/auth"
                 className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-body text-base font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20"
               >
                 Get started free
                 <ArrowRight className="h-4 w-4" />
-              </a>
+              </Link>
             </div>
 
             {/* Right: Phone Mockup */}
@@ -195,13 +195,13 @@ function Index() {
           <p className="mt-4 font-body text-lg text-muted-foreground">
             Join thousands of parents who never miss a safety milestone.
           </p>
-          <a
-            href="/auth"
+          <Link
+            to="/auth"
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-body text-base font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20"
           >
             Get started free
             <ArrowRight className="h-4 w-4" />
-          </a>
+          </Link>
         </div>
       </section>
 
