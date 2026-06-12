@@ -31,12 +31,12 @@ function NotificationSettingsPage() {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("user_notification_settings")
         .select("recalls_enabled, size_up_enabled, replacement_enabled")
         .eq("user_id", user.id)
         .maybeSingle();
-      if (data) setSettings(data);
+      if (data) setSettings(data as Settings);
       setLoading(false);
     })();
   }, []);
