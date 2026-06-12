@@ -13,7 +13,7 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Sign in or create your Safe & Sound account to start tracking your little one's milestones." },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { error?: string } => ({
     error: typeof s.error === "string" ? s.error : undefined,
   }),
 });
