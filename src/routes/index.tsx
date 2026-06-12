@@ -49,8 +49,8 @@ const categories = [
   { name: "Strollers", image: catStroller },
   { name: "Pack 'n Plays", image: catPacknplay },
   { name: "Carriers", image: catCarrier },
-  { name: "Bouncers", image: catBouncer },
-  { name: "Baby Swings", image: catSwing },
+  { name: "Bouncers", image: catSwing },
+  { name: "Baby Swings", image: catBouncer },
 ];
 
 const features = [
@@ -100,7 +100,7 @@ function Index() {
                 Add a car seat, pacifier, crib, breast milk, formula, baby food,
                 swaddle, stroller, Pack 'n Play, carrier, bouncer, or swing —
                 Safe & Sound tells you exactly when to replace it, size it up,
-                or check the fit. Quiet, kind reminders. No noise.
+                or check the fit.
               </p>
 
               <a
