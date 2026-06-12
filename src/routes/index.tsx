@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -49,8 +49,8 @@ const categories = [
   { name: "Strollers", image: catStroller },
   { name: "Pack 'n Plays", image: catPacknplay },
   { name: "Carriers", image: catCarrier },
-  { name: "Bouncers", image: catBouncer },
-  { name: "Baby Swings", image: catSwing },
+  { name: "Bouncers", image: catSwing },
+  { name: "Baby Swings", image: catBouncer },
 ];
 
 const features = [
@@ -97,19 +97,22 @@ function Index() {
               </h1>
 
               <p className="mt-6 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
-                Add a car seat, pacifier, crib, breast milk, formula, baby food,
-                swaddle, stroller, Pack 'n Play, carrier, bouncer, or swing —
-                Safe & Sound tells you exactly when to replace it, size it up,
-                or check the fit. Quiet, kind reminders. No noise.
+                Add any baby essential—from car seats and cribs to bottles,
+                carriers, and everything in between. Safe &amp; Sound keeps
+                track of the details for you, with reminders when it's time to
+                replace, resize or double-check the fit.
+              </p>
+              <p className="mt-3 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
+                Just the information you need, exactly when you need it.
               </p>
 
-              <a
-                href="/auth"
+              <Link
+                to="/auth"
                 className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-body text-base font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20"
               >
                 Get started free
                 <ArrowRight className="h-4 w-4" />
-              </a>
+              </Link>
             </div>
 
             {/* Right: Phone Mockup */}
@@ -193,15 +196,21 @@ function Index() {
             Ready to breathe easier?
           </h2>
           <p className="mt-4 font-body text-lg text-muted-foreground">
-            Join thousands of parents who never miss a safety milestone.
+            Add any baby essential—from car seats and cribs to bottles,
+            carriers, and everything in between. Safe &amp; Sound keeps track of
+            the details for you, with reminders when it's time to replace,
+            resize or double-check the fit.
           </p>
-          <a
-            href="/auth"
+          <p className="mt-3 font-body text-lg text-muted-foreground">
+            Just the information you need, exactly when you need it.
+          </p>
+          <Link
+            to="/auth"
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-body text-base font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20"
           >
             Get started free
             <ArrowRight className="h-4 w-4" />
-          </a>
+          </Link>
         </div>
       </section>
 
