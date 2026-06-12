@@ -97,10 +97,13 @@ function Index() {
               </h1>
 
               <p className="mt-6 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
-                Add a car seat, pacifier, crib, breast milk, formula, baby food,
-                swaddle, stroller, Pack 'n Play, carrier, bouncer, or swing —
-                Safe &amp; Sound tells you exactly when to replace it, size it
-                up, or check the fit. Quiet, kind reminders. No noise.
+                Add any baby essential—from car seats and cribs to bottles,
+                carriers, and everything in between. Safe &amp; Sound keeps
+                track of the details for you, with reminders when it's time to
+                replace, resize or double-check the fit.
+              </p>
+              <p className="mt-3 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
+                Just the information you need, exactly when you need it.
               </p>
 
               <Link
