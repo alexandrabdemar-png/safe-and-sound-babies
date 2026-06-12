@@ -39,31 +39,30 @@ async function resolveOrCreateCustomer(
 }
 
 export const createCheckoutSession = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: {
     priceId: string;
     quantity?: number;
-    customerEmail?: string;
-    userId?: string;
     returnUrl: string;
     environment: StripeEnv;
   }) => {
     if (!/^[a-zA-Z0-9_-]+$/.test(data.priceId)) throw new Error('Invalid priceId');
     return data;
   })
-  .handler(async ({ data }): Promise<CheckoutSessionResult> => {
+  .handler(async ({ data, context }): Promise<CheckoutSessionResult> => {
     try {
+      const { userId, claims } = context;
+      const customerEmail = (claims as { email?: string } | undefined)?.email;
       const stripe = createStripeClient(data.environment);
       const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
       if (!prices.data.length) throw new Error('Price not found');
       const stripePrice = prices.data[0];
       const isRecurring = stripePrice.type === 'recurring';
 
-      const customerId = (data.customerEmail || data.userId)
-        ? await resolveOrCreateCustomer(stripe, {
-            email: data.customerEmail,
-            userId: data.userId,
-          })
-        : undefined;
+      const customerId = await resolveOrCreateCustomer(stripe, {
+        email: customerEmail,
+        userId,
+      });
 
       const session = await stripe.checkout.sessions.create({
         line_items: [{ price: stripePrice.id, quantity: data.quantity || 1 }],
@@ -71,15 +70,13 @@ export const createCheckoutSession = createServerFn({ method: 'POST' })
         ui_mode: 'embedded_page',
         return_url: data.returnUrl,
         managed_payments: { enabled: true },
-        ...(customerId && { customer: customerId }),
-        ...(data.userId && {
-          metadata: { userId: data.userId, managed_payments: 'true' },
-          ...(isRecurring && {
-            subscription_data: {
-              metadata: { userId: data.userId },
-              trial_period_days: 7,
-            },
-          }),
+        customer: customerId,
+        metadata: { userId, managed_payments: 'true' },
+        ...(isRecurring && {
+          subscription_data: {
+            metadata: { userId },
+            trial_period_days: 7,
+          },
         }),
       } as any);
 
