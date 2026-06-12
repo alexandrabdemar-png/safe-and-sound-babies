@@ -13,35 +13,41 @@ export interface ProductSearchResult {
   cpsc_product_type: string;
 }
 
-const SYSTEM_PROMPT = `You are a baby product safety expert. When given a baby product search query, return structured JSON for matching baby products.
+const SYSTEM_PROMPT = `You are a baby gear and equipment safety database. Your ONLY job is to return baby hardgoods, gear, and equipment — never food, formula, breast milk, or consumables.
 
-Return a JSON array of up to 5 matches. Each object must have exactly:
-- name: string (full product name with model if known)
-- brand: string (manufacturer/brand)
-- category: string (one of: pacifier, car_seat, crib, stroller, carrier, swaddle, bottle, breast_milk, formula, baby_food, bouncer, swing, high_chair, bath, monitor)
-- model: string (model name/number, or "" if generic)
-- safe_use_duration_days: number (days from purchase until replacement needed for safety)
-- safe_use_notes: string (plain-English replacement guidance, e.g. "Replace every 4–6 weeks or at first sign of wear")
-- age_range: string (e.g. "0–6 months", "birth to 30 lb", or "")
-- cpsc_product_type: string (CPSC product category for recall matching)
+You know every major baby gear brand: Nuna (TRVL, MIXX, PIPA strollers/car seats), UPPAbaby, Bugaboo, Chicco, Graco, Doona, Maxi-Cosi, Ergobaby, BabyBjörn, 4moms, Stokke, SNOO by Happiest Baby, Owlet, Nanit, Halo, Aden + Anais, Solly Baby, and more.
+
+When given a search query, return a JSON array of up to 5 matching baby GEAR or EQUIPMENT products (strollers, car seats, carriers, cribs, bassinets, bouncers, swings, high chairs, bath seats, baby monitors, swaddles, pacifiers, bottles).
+
+NEVER return food, formula, breast milk, baby food pouches, or any consumable product.
+If the query is a brand name (e.g. "nuna", "uppababy", "chicco"), return the brand's most popular products.
+If the query doesn't match any baby gear brand or product, return an empty array [].
+
+Each object in the array must have exactly:
+- name: string (full product name, e.g. "Nuna TRVL Stroller")
+- brand: string (brand name, e.g. "Nuna")
+- category: string (one of: stroller, car_seat, carrier, crib, bassinet, bouncer, swing, high_chair, bath, monitor, swaddle, pacifier, bottle, sleep_sack)
+- model: string (model name, e.g. "TRVL", or "" if not applicable)
+- safe_use_duration_days: number (days from purchase until product should be replaced)
+- safe_use_notes: string (plain-English safety guidance)
+- age_range: string (e.g. "birth to 50 lb", "0–6 months", or "")
+- cpsc_product_type: string (CPSC product type for recall matching)
 
 Safe use duration reference:
-- Pacifiers: 42 (4–6 weeks)
-- Infant car seats: 2555 (7 years from manufacture)
-- Convertible car seats: 3285 (9 years)
-- Cribs / crib mattresses: 3650 (10 years)
-- Bottles: 180 (sooner if scratched or cloudy)
-- Breast milk refrigerated: 4 days
-- Breast milk frozen: 182 days
-- Formula opened: 30 days
-- Baby food opened: 2 days
-- Swaddles: 365 or until baby rolls
-- Strollers: 3650
-- Baby carriers: 1825
-- Bouncers / swings: 1825 or at weight limit
+- Strollers: 3650 (10 years)
+- Infant car seats: 2555 (7 years from manufacture date)
+- Convertible car seats: 3285 (9 years from manufacture date)
+- Cribs / bassinets: 3650
+- Baby carriers: 1825 (5 years)
+- Bouncers / swings: 1825 (5 years or weight limit)
+- High chairs: 3650
 - Baby monitors: 3650
+- Swaddles / sleep sacks: 365 or until baby rolls
+- Pacifiers: 42 (replace every 4–6 weeks)
+- Bottles: 180 (replace sooner if scratched or cloudy)
+- Bath seats: 1825
 
-Return ONLY a valid JSON array. No markdown fences, no explanation.`;
+Return ONLY a valid JSON array. No markdown, no explanation, no extra text.`;
 
 export const searchProducts = createServerFn({ method: "POST" })
   .validator((data: { query: string }) => data)
