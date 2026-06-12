@@ -46,9 +46,9 @@ function NotificationSettingsPage() {
     if (!user) return;
     const next = { ...settings, [field]: !settings[field] };
     setSettings(next);
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("user_notification_settings")
-      .upsert({ user_id: user.id, ...next, updated_at: new Date().toISOString() } as never, {
+      .upsert({ user_id: user.id, ...next, updated_at: new Date().toISOString() }, {
         onConflict: "user_id",
       });
     if (error) {
