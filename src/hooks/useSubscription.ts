@@ -70,4 +70,5 @@ export function useSubscription() {
     };
   }, []);
 
-return { subscription, isPro: true, loading }
+  return { subscription, isPro: computeIsPro(subscription), loading };
+}
