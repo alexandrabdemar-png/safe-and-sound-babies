@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -23,11 +23,14 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { useActiveChild } from "@/hooks/useActiveChild";
-import { CATEGORIES, type CategoryKey, guessCategoryFromText } from "@/lib/productCategories";
+import { CATEGORIES, type CategoryKey } from "@/lib/productCategories";
 import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
 import { searchProducts, type ProductSearchResult } from "@/lib/searchProducts.functions";
+
+const BarcodeScanner = lazy(() =>
+  import("@/components/BarcodeScanner").then((m) => ({ default: m.BarcodeScanner }))
+);
 
 export const Route = createFileRoute("/_authenticated/products_/new")({
   component: NewProductPage,
@@ -252,11 +255,13 @@ function NewProductPage() {
         </div>
       </main>
 
-      <BarcodeScanner
-        open={scannerOpen}
-        onClose={() => setScannerOpen(false)}
-        onDetected={(code) => { setBarcode(code); toast.success(`Scanned ${code}`); }}
-      />
+      <Suspense fallback={null}>
+        <BarcodeScanner
+          open={scannerOpen}
+          onClose={() => setScannerOpen(false)}
+          onDetected={(code) => { setBarcode(code); toast.success(`Scanned ${code}`); }}
+        />
+      </Suspense>
 
       {/* Save sheet — opened when user picks an AI result */}
       <SaveProductSheet
