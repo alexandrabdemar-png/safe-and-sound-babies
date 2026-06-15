@@ -49,8 +49,8 @@ const categories = [
   { name: "Strollers", image: catStroller },
   { name: "Pack 'n Plays", image: catPacknplay },
   { name: "Carriers", image: catCarrier },
-  { name: "Bouncers", image: catSwing },
-  { name: "Baby Swings", image: catBouncer },
+  { name: "Bouncers", image: catBouncer },
+  { name: "Baby Swings", image: catSwing },
 ];
 
 const features = [
