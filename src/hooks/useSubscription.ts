@@ -70,5 +70,4 @@ export function useSubscription() {
     };
   }, []);
 
-  return { subscription, isPro: computeIsPro(subscription), loading };
-}
+return { subscription, isPro: true, loading }
