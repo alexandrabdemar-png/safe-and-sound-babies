@@ -55,11 +55,6 @@ const categories = [
 
 const features = [
   {
-    title: "Quiet reminders",
-    description:
-      "No overwhelming notifications. Gentle, timely nudges when something actually needs attention.",
-  },
-  {
     title: "Track everything",
     description:
       "From car seats to pacifiers, cribs to swaddles — one place for every baby product that matters.",
