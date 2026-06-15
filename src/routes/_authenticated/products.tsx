@@ -40,18 +40,23 @@ function ProductsPage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      let q: any = supabase
-        .from("products")
-        .select(
-          "id, name, brand, size, category, added_at, replace_at, next_size_at, predicted_sizeup_date, predicted_replacement_date, recalled, child_id",
-        )
-        .order("created_at", { ascending: false });
-      if (activeChildId) q = q.or(`child_id.eq.${activeChildId},child_id.is.null`);
-      const { data, error } = await q;
-      if (cancelled) return;
-      if (error) toast.error(error.message);
-      else setProducts((data ?? []) as Product[]);
-      setLoading(false);
+      try {
+        let q: any = supabase
+          .from("products")
+          .select(
+            "id, name, brand, size, category, added_at, replace_at, next_size_at, predicted_sizeup_date, predicted_replacement_date, recalled, child_id",
+          )
+          .order("added_at", { ascending: false });
+        if (activeChildId) q = q.or(`child_id.eq.${activeChildId},child_id.is.null`);
+        const { data, error } = await q;
+        if (cancelled) return;
+        if (error) throw error;
+        setProducts((data ?? []) as Product[]);
+      } catch (err) {
+        if (!cancelled) toast.error(err instanceof Error ? err.message : "Couldn't load products");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
     return () => { cancelled = true; };
   }, [activeChildId]);

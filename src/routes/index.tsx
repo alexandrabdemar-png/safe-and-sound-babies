@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import phoneMockup from "@/assets/phone-mockup.png";
 import catCarseat from "@/assets/cat-carseat.png";
 import catPacifier from "@/assets/cat-pacifier.png";
 import catCrib from "@/assets/cat-crib.png";
@@ -55,11 +54,6 @@ const categories = [
 
 const features = [
   {
-    title: "Quiet reminders",
-    description:
-      "No overwhelming notifications. Gentle, timely nudges when something actually needs attention.",
-  },
-  {
     title: "Track everything",
     description:
       "From car seats to pacifiers, cribs to swaddles — one place for every baby product that matters.",
@@ -78,58 +72,38 @@ function Index() {
 
       {/* Hero Section */}
       <section className="relative w-full overflow-hidden px-4 pb-16 pt-12 sm:px-6 lg:px-8 lg:pb-24 lg:pt-20">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-            {/* Left: Copy */}
-            <div className="flex flex-col items-start">
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2">
-                <span className="h-2 w-2 rounded-full bg-accent" />
-                <span className="font-body text-sm font-medium text-foreground">
-                  For the little things that matter
-                </span>
-              </div>
-
-              <h1 className="font-display text-5xl font-semibold leading-[1.1] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
-                Never miss a{" "}
-                <span className="font-display-italic italic text-primary">safety</span>
-                <br />
-                milestone again.
-              </h1>
-
-              <p className="mt-6 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
-                Add any baby essential—from car seats and cribs to bottles,
-                carriers, and everything in between. Safe &amp; Sound keeps
-                track of the details for you, with reminders when it's time to
-                replace, resize or double-check the fit.
-              </p>
-              <p className="mt-3 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
-                Just the information you need, exactly when you need it.
-              </p>
-
-              <Link
-                to="/auth"
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-body text-base font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20"
-              >
-                Get started free
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-
-            {/* Right: Phone Mockup */}
-            <div className="relative flex justify-center lg:justify-end">
-              <div className="relative">
-                <img
-                  src={phoneMockup}
-                  alt="Safe & Sound app preview showing baby safety reminders and milestone tracking"
-                  className="h-auto w-full max-w-[320px] rounded-[2.5rem] shadow-2xl shadow-foreground/5 lg:max-w-[380px]"
-                  width={768}
-                  height={1024}
-                />
-                {/* Decorative blur behind phone */}
-                <div className="absolute -inset-4 -z-10 rounded-full bg-sand/30 blur-3xl" />
-              </div>
-            </div>
+        <div className="mx-auto max-w-3xl text-center">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2">
+            <span className="h-2 w-2 rounded-full bg-accent" />
+            <span className="font-body text-sm font-medium text-foreground">
+              For the little things that matter
+            </span>
           </div>
+
+          <h1 className="font-display text-5xl font-semibold leading-[1.1] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
+            Never miss a{" "}
+            <span className="font-display-italic italic text-primary">safety</span>
+            <br />
+            milestone again.
+          </h1>
+
+          <p className="mx-auto mt-6 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
+            Add any baby essential—from car seats and cribs to bottles,
+            carriers, and everything in between. Safe &amp; Sound keeps
+            track of the details for you, with reminders when it's time to
+            replace, resize or double-check the fit.
+          </p>
+          <p className="mx-auto mt-3 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
+            Just the information you need, exactly when you need it.
+          </p>
+
+          <Link
+            to="/auth"
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-body text-base font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20"
+          >
+            Get started free
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       </section>
 
