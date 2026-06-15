@@ -14,7 +14,7 @@ import catStroller from "@/assets/cat-stroller.png";
 import catPacknplay from "@/assets/cat-packnplay.png";
 import catCarrier from "@/assets/cat-carrier.png";
 import catBouncer from "@/assets/cat-bouncer.png";
-import catSwing from "@/assets/cat-swing.png";
+import catSwing from "@/assets/cat-swing.svg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
