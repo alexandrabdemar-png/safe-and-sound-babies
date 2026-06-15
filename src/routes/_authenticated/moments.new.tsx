@@ -2,13 +2,121 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Sparkles, Lock } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, Lock, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { useProGate } from "@/hooks/useProGate";
+
+type SafetyTip = { title: string; tips: string[] };
+
+const MOMENT_SAFETY_MAP: { pattern: RegExp; safety: SafetyTip }[] = [
+  {
+    pattern: /roll(ed|ing)|tummy time/i,
+    safety: {
+      title: "Rolling over — time to think ahead",
+      tips: [
+        "Never leave them unattended on a raised surface (changing table, sofa, bed).",
+        "Start thinking about outlet covers and cabinet locks — mobility picks up fast from here.",
+        "If you haven't already, lower the crib mattress to the middle setting soon.",
+      ],
+    },
+  },
+  {
+    pattern: /sat up|sitting/i,
+    safety: {
+      title: "Sitting up — babyproofing starts now",
+      tips: [
+        "Lower the crib mattress to the middle setting before they can pull to sit.",
+        "Begin babyproofing: outlet covers, cabinet locks, and anchor tall furniture to the wall.",
+        "Swings and bouncers become unsafe once a baby can sit independently — check weight limits.",
+      ],
+    },
+  },
+  {
+    pattern: /crawl(ing|ed)|crawls/i,
+    safety: {
+      title: "Crawling — time to gate the stairs",
+      tips: [
+        "Install hardware-mounted baby gates at the top of all stairs immediately.",
+        "Latch every cabinet at hip-height or below — especially anything with cleaning supplies.",
+        "Cover all accessible electrical outlets.",
+        "Secure cords (blinds, lamps) out of reach.",
+      ],
+    },
+  },
+  {
+    pattern: /pull(ing|ed|s)? to stand|pulling up|pulls up/i,
+    safety: {
+      title: "Pulling to stand — lower the crib now",
+      tips: [
+        "Drop the crib mattress to its lowest setting today — a standing baby can topple over the rail.",
+        "Anchor all furniture that could tip (bookshelves, dressers, TVs) to the wall.",
+        "Babyproof lower cabinets and cover all outlets if you haven't already.",
+        "Check that baby gates are hardware-mounted at the top of stairs.",
+      ],
+    },
+  },
+  {
+    pattern: /stand(ing|s)\b|first stand/i,
+    safety: {
+      title: "Standing — full babyproofing check",
+      tips: [
+        "Crib mattress should be at the lowest setting now.",
+        "Walk every room at floor level — look for cords, sharp corners, and tip hazards.",
+        "Anchor all tall furniture and TVs to the wall.",
+        "Make sure gates are installed at both top and bottom of stairs.",
+      ],
+    },
+  },
+  {
+    pattern: /first step|walking|took.*step|steps/i,
+    safety: {
+      title: "First steps — your home just got smaller",
+      tips: [
+        "Gate all stairs — hardware-mount at the top, pressure-mount is fine at the bottom.",
+        "Cover outlet covers throughout the house.",
+        "Anchor furniture, TVs, and appliances so nothing can topple when grabbed.",
+        "Move cleaning supplies, medicines, and small objects to high shelves or locked cabinets.",
+        "Check door stoppers and pinch guards on all doors.",
+      ],
+    },
+  },
+  {
+    pattern: /first tooth|teeth|teething/i,
+    safety: {
+      title: "First tooth — a few things to know",
+      tips: [
+        "Avoid teething gels or tablets with benzocaine or belladonna — not safe for infants.",
+        "Skip amber teething necklaces — they're a strangulation and choking hazard.",
+        "Chilled (not frozen) teething rings are a safe option.",
+        "First dentist visit is recommended by age 1 or when the first tooth appears.",
+      ],
+    },
+  },
+  {
+    pattern: /first food|solid|puree|eating/i,
+    safety: {
+      title: "Starting solids — keep it safe",
+      tips: [
+        "Always supervise during meals — never leave them unattended while eating.",
+        "Avoid honey before age 1 (risk of botulism).",
+        "Cut soft foods into pieces no larger than ½ inch.",
+        "Skip whole grapes, raw carrots, nuts, and popcorn until age 4.",
+        "Make sure your high chair has a working harness — use it every time.",
+      ],
+    },
+  },
+];
+
+function getSafetyTip(momentTitle: string): SafetyTip | null {
+  for (const { pattern, safety } of MOMENT_SAFETY_MAP) {
+    if (pattern.test(momentTitle)) return safety;
+  }
+  return null;
+}
 
 export const Route = createFileRoute("/_authenticated/moments/new")({
   component: NewMomentPage,
@@ -34,6 +142,7 @@ function NewMomentPage() {
   const [title, setTitle] = useState("");
   const [loggedAt, setLoggedAt] = useState(new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState("");
+  const [safetyTip, setSafetyTip] = useState<SafetyTip | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,7 +160,12 @@ function NewMomentPage() {
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Saved that moment 💛");
-    navigate({ to: "/home" });
+    const tip = getSafetyTip(title.trim());
+    if (tip) {
+      setSafetyTip(tip);
+    } else {
+      navigate({ to: "/home" });
+    }
   }
 
   if (!proLoading && !isPro) {
@@ -80,6 +194,45 @@ function NewMomentPage() {
             </Button>
             <Button variant="ghost" className="w-full rounded-full" onClick={() => navigate({ to: "/home" })}>
               Not now
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (safetyTip) {
+    return (
+      <div className="flex min-h-screen flex-col bg-background pb-16">
+        <header className="px-5 pt-8 pb-4 sm:px-6">
+          <div className="mx-auto max-w-md">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1">
+              <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+              <span className="font-body text-xs font-semibold uppercase tracking-[0.15em] text-primary">Safety heads-up</span>
+            </div>
+            <h1 className="mt-3 font-display text-2xl font-semibold tracking-tight">
+              {safetyTip.title}
+            </h1>
+            <p className="mt-1 font-body text-sm text-muted-foreground">
+              This milestone comes with a few things worth knowing.
+            </p>
+          </div>
+        </header>
+        <main className="flex-1 px-5 sm:px-6">
+          <div className="mx-auto max-w-md">
+            <ul className="space-y-3">
+              {safetyTip.tips.map((tip, i) => (
+                <li key={i} className="flex gap-3 rounded-2xl border border-border/60 bg-card p-4">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span className="font-body text-sm text-foreground">{tip}</span>
+                </li>
+              ))}
+            </ul>
+            <Button
+              className="mt-6 h-12 w-full rounded-full bg-primary font-body text-sm font-semibold"
+              onClick={() => navigate({ to: "/home" })}
+            >
+              Got it — go home
             </Button>
           </div>
         </main>
