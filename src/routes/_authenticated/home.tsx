@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AlertTriangle, ArrowRight, Loader2, Package, Plus, RefreshCw, Ruler, Sparkles } from "lucide-react";
+import { MomentTimeline } from "@/components/MomentTimeline";
 import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Logo } from "@/components/Logo";
@@ -254,25 +255,7 @@ function HomePage() {
           {moments.length === 0 ? (
             <EmptyMoments />
           ) : (
-            <ul className="space-y-2.5">
-              {moments.map((m) => (
-                <li key={m.id} className="rounded-2xl border border-border/60 bg-card px-4 py-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-display text-sm font-semibold tracking-tight">{m.title}</p>
-                      {m.notes && (
-                        <p className="mt-0.5 line-clamp-2 font-body text-xs text-muted-foreground">{m.notes}</p>
-                      )}
-                    </div>
-                    {m.logged_at && (
-                      <span className="shrink-0 font-body text-[11px] text-muted-foreground/80">
-                        {new Date(m.logged_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                      </span>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <MomentTimeline moments={moments} />
           )}
         </div>
       </section>
