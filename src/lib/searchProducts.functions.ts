@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { createAnthropic } from "@ai-sdk/anthropic";
+import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { generateText } from "ai";
 
 export interface ProductSearchResult {
