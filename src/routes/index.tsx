@@ -2,8 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import phoneMockup from "@/assets/phone-mockup.png";
-import catCarseat from "@/assets/cat-carseat.png";
+import catCarseat from "@/assets/cat-carseat.svg";
 import catPacifier from "@/assets/cat-pacifier.png";
 import catCrib from "@/assets/cat-crib.png";
 import catBreastmilk from "@/assets/cat-breastmilk.png";
@@ -13,8 +12,8 @@ import catSwaddle from "@/assets/cat-swaddle.png";
 import catStroller from "@/assets/cat-stroller.png";
 import catPacknplay from "@/assets/cat-packnplay.png";
 import catCarrier from "@/assets/cat-carrier.png";
-import catBouncer from "@/assets/cat-bouncer.png";
-import catSwing from "@/assets/cat-swing.png";
+import catBouncer from "@/assets/cat-bouncer.svg";
+import catSwing from "@/assets/cat-swing.svg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -49,16 +48,11 @@ const categories = [
   { name: "Strollers", image: catStroller },
   { name: "Pack 'n Plays", image: catPacknplay },
   { name: "Carriers", image: catCarrier },
-  { name: "Bouncers", image: catSwing },
-  { name: "Baby Swings", image: catBouncer },
+  { name: "Bouncers", image: catBouncer },
+  { name: "Baby Swings", image: catSwing },
 ];
 
 const features = [
-  {
-    title: "Quiet reminders",
-    description:
-      "No overwhelming notifications. Gentle, timely nudges when something actually needs attention.",
-  },
   {
     title: "Track everything",
     description:
@@ -115,20 +109,6 @@ function Index() {
               </Link>
             </div>
 
-            {/* Right: Phone Mockup */}
-            <div className="relative flex justify-center lg:justify-end">
-              <div className="relative">
-                <img
-                  src={phoneMockup}
-                  alt="Safe & Sound app preview showing baby safety reminders and milestone tracking"
-                  className="h-auto w-full max-w-[320px] rounded-[2.5rem] shadow-2xl shadow-foreground/5 lg:max-w-[380px]"
-                  width={768}
-                  height={1024}
-                />
-                {/* Decorative blur behind phone */}
-                <div className="absolute -inset-4 -z-10 rounded-full bg-sand/30 blur-3xl" />
-              </div>
-            </div>
           </div>
         </div>
       </section>

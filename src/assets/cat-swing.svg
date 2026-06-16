@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Rocker base curves -->
+  <path d="M10 82 Q25 95 50 90 Q75 95 90 82" stroke="#8B5E3C" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+  <!-- Left side frame leg -->
+  <path d="M22 80 Q20 60 28 42" stroke="#8B5E3C" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <!-- Right side frame leg -->
+  <path d="M78 80 Q80 60 72 42" stroke="#8B5E3C" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Seat platform frame -->
+  <path d="M28 42 Q50 52 72 42" stroke="#8B5E3C" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path d="M25 55 Q50 66 75 55" stroke="#8B5E3C" stroke-width="3" stroke-linecap="round" fill="none"/>
+
+  <!-- Cream quilted seat -->
+  <path d="M29 43 Q50 53 71 43 Q73 54 50 65 Q27 54 29 43Z" fill="#F5F0E8" stroke="#E8E0D0" stroke-width="0.8"/>
+  <!-- Quilt lines -->
+  <path d="M38 45 Q38 58 40 64" stroke="#D4C9B5" stroke-width="0.6" stroke-linecap="round"/>
+  <path d="M50 48 Q50 62 50 65" stroke="#D4C9B5" stroke-width="0.6" stroke-linecap="round"/>
+  <path d="M62 45 Q62 58 60 64" stroke="#D4C9B5" stroke-width="0.6" stroke-linecap="round"/>
+  <path d="M31 50 Q50 59 69 50" stroke="#D4C9B5" stroke-width="0.6"/>
+
+  <!-- Arch uprights -->
+  <path d="M32 44 Q30 28 50 20 Q70 28 68 44" stroke="#8B5E3C" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Horizontal bar at top of arch -->
+  <line x1="36" y1="26" x2="64" y2="26" stroke="#8B5E3C" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Hanging toy: cloud -->
+  <line x1="43" y1="26" x2="43" y2="33" stroke="#C4A882" stroke-width="1"/>
+  <ellipse cx="43" cy="36" rx="4" ry="2.5" fill="#D4B896"/>
+  <circle cx="40.5" cy="35" r="1.8" fill="#D4B896"/>
+  <circle cx="45.5" cy="35" r="1.5" fill="#D4B896"/>
+
+  <!-- Hanging toy: ring -->
+  <line x1="51" y1="26" x2="51" y2="33" stroke="#C4A882" stroke-width="1"/>
+  <circle cx="51" cy="37" r="2.5" stroke="#D4B896" stroke-width="1.5" fill="none"/>
+
+  <!-- Hanging toy: beads -->
+  <line x1="59" y1="26" x2="59" y2="31" stroke="#C4A882" stroke-width="1"/>
+  <circle cx="59" cy="33.5" r="2" fill="#D4B896"/>
+  <circle cx="59" cy="38" r="2" fill="#C9A87A"/>
+  <circle cx="59" cy="42" r="2" fill="#D4B896"/>
+</svg>

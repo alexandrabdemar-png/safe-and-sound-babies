@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Component, lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -23,13 +23,47 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { useActiveChild } from "@/hooks/useActiveChild";
-import { CATEGORIES, type CategoryKey, guessCategoryFromText } from "@/lib/productCategories";
-import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
-import { searchProducts, type ProductSearchResult } from "@/lib/searchProducts.functions";
+import { CATEGORIES, type CategoryKey } from "@/lib/productCategories";
+
+// Server functions are imported dynamically to prevent module-level evaluation
+// crashing the page if the server environment or API keys aren't available.
+type ProductSearchResult = {
+  name: string; brand: string; category: string; model: string;
+  safe_use_duration_days: number; safe_use_notes: string;
+  age_range: string; cpsc_product_type: string;
+};
+
+async function runSearchProducts(query: string): Promise<ProductSearchResult[]> {
+  const { searchProducts } = await import("@/lib/searchProducts.functions");
+  return searchProducts({ data: { query } });
+}
+
+async function runLookupGuidelines(productId: string): Promise<void> {
+  const { lookupAndSaveGuidelines } = await import("@/lib/guidelines.functions");
+  await lookupAndSaveGuidelines({ data: { productId } });
+}
+
+const BarcodeScanner = lazy(() =>
+  import("@/components/BarcodeScanner").then((m) => ({ default: m.BarcodeScanner }))
+);
+
+// ─── Error boundary for AI search ────────────────────────────────────────────
+
+class SearchErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(err: unknown) {
+    console.error("[ProductSearchAI] render error:", err);
+  }
+  render() {
+    if (this.state.failed) return null; // silently hide — manual form still works
+    return this.props.children;
+  }
+}
 
 export const Route = createFileRoute("/_authenticated/products_/new")({
+  ssr: false,
   component: NewProductPage,
   head: () => ({ meta: [{ title: "Add product — Safe & Sound" }] }),
 });
@@ -72,7 +106,7 @@ function NewProductPage() {
   const computedReplaceAt = useMemo(() => {
     if (category === "car_seat") return carSeatExpiry || "";
     return "";
-  }, [category, purchasedAt, carSeatExpiry]);
+  }, [category, carSeatExpiry]);
 
   const activeCategory = CATEGORIES.find((c) => c.key === category);
 
@@ -83,10 +117,10 @@ function NewProductPage() {
 
     setSaving(true);
     try {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("Not signed in");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) throw new Error("Not signed in");
       const { data: inserted, error } = await supabase.from("products").insert({
-        user_id: u.user.id,
+        user_id: session.user.id,
         child_id: activeChildId,
         name: name.trim(),
         category: activeCategory?.label ?? category,
@@ -99,13 +133,14 @@ function NewProductPage() {
       if (error) throw error;
       const productId = (inserted as { id: string } | null)?.id;
       if (productId) {
-        lookupAndSaveGuidelines({ data: { productId } }).catch((err) => {
+        runLookupGuidelines(productId).catch((err) => {
           console.warn("[guidelines] lookup failed:", err instanceof Error ? err.message : "unknown");
         });
       }
       toast.success("Saved — fetching safety guidelines");
       navigate({ to: "/products" });
     } catch (err) {
+      console.error("[products/new] handleSubmit error:", err);
       toast.error(err instanceof Error ? err.message : "Couldn't save");
     } finally { setSaving(false); }
   }
@@ -129,7 +164,9 @@ function NewProductPage() {
       <main className="flex-1 px-5 sm:px-6">
         <div className="mx-auto max-w-md space-y-6">
           {/* AI Product Search — primary flow */}
-          <ProductSearchAI onPick={(r) => setSheetProduct(r)} />
+          <SearchErrorBoundary>
+            <ProductSearchAI onPick={(r) => setSheetProduct(r)} />
+          </SearchErrorBoundary>
 
           {/* Divider */}
           <div className="flex items-center gap-3">
@@ -252,11 +289,13 @@ function NewProductPage() {
         </div>
       </main>
 
-      <BarcodeScanner
-        open={scannerOpen}
-        onClose={() => setScannerOpen(false)}
-        onDetected={(code) => { setBarcode(code); toast.success(`Scanned ${code}`); }}
-      />
+      <Suspense fallback={null}>
+        <BarcodeScanner
+          open={scannerOpen}
+          onClose={() => setScannerOpen(false)}
+          onDetected={(code) => { setBarcode(code); toast.success(`Scanned ${code}`); }}
+        />
+      </Suspense>
 
       {/* Save sheet — opened when user picks an AI result */}
       <SaveProductSheet
@@ -283,7 +322,7 @@ function ProductSearchAI({ onPick }: { onPick: (r: ProductSearchResult) => void 
     setLoading(true);
     setSearched(true);
     try {
-      const data = await searchProducts({ data: { query: q } });
+      const data = await runSearchProducts(q);
       setResults(data);
     } catch {
       toast.error("Search failed — please try again");
@@ -445,15 +484,15 @@ function SaveProductSheet({
     if (!product) return;
     setSaving(true);
     try {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("Not signed in");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) throw new Error("Not signed in");
 
       const replaceDate = addDays(purchasedAt, product.safe_use_duration_days);
 
       const { data: inserted, error } = await supabase
         .from("products")
         .insert({
-          user_id: u.user.id,
+          user_id: session.user.id,
           child_id: childId || null,
           name: product.name,
           brand: product.brand || null,
@@ -471,7 +510,9 @@ function SaveProductSheet({
 
       const productId = (inserted as { id: string } | null)?.id;
       if (productId) {
-        lookupAndSaveGuidelines({ data: { productId } }).catch(() => {});
+        runLookupGuidelines(productId).catch((err) => {
+          console.warn("[guidelines] lookup failed:", err instanceof Error ? err.message : "unknown");
+        });
       }
 
       toast.success(`${product.name} saved`);

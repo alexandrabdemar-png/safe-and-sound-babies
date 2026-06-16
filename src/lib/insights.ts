@@ -84,7 +84,7 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
 
   // ── Stale measurement nudge ──────────────────────────────────────────────
   const measAge = daysSince(child.measurements_updated_at ?? null);
-  if (months !== null && months < 24 && (measAge === null || measAge > 30)) {
+  if (months !== null && months < 24 && (measAge === null || measAge > 60)) {
     out.push({
       id: "measurements_stale",
       title: `Update ${name}'s height & weight`,

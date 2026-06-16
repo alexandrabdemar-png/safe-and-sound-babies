@@ -12,6 +12,7 @@ import { evaluateInsights, type Insight, type ProductInput } from "@/lib/insight
 
 
 export const Route = createFileRoute("/_authenticated/home")({
+  ssr: false,
   component: HomePage,
   head: () => ({ meta: [{ title: "Home — Safe & Sound" }] }),
 });
@@ -293,6 +294,87 @@ function SummaryTile({
       <p className="font-display text-2xl font-semibold tracking-tight">{count}</p>
       <p className="font-body text-[11px] uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
     </Link>
+  );
+}
+
+function MomentsTimeline({ moments }: { moments: Moment[] }) {
+  return (
+    <div className="relative">
+      {/* Vertical spine */}
+      <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/60" />
+
+      <ul className="space-y-0">
+        {moments.map((m, i) => {
+          const isLeft = i % 2 === 0;
+          const date = m.logged_at
+            ? new Date(m.logged_at + "T00:00:00")
+            : null;
+          const dateLabel = date
+            ? date.toLocaleDateString(undefined, { month: "short", day: "numeric" })
+            : null;
+          const yearLabel = date ? date.getFullYear() : null;
+
+          return (
+            <li key={m.id} className="relative flex items-start pb-10 last:pb-0">
+              {/* Dot on spine */}
+              <div className="absolute left-1/2 top-3 h-2.5 w-2.5 -translate-x-1/2 rounded-full border-2 border-primary bg-background" />
+
+              {/* Left side */}
+              <div className={`w-1/2 pr-6 ${isLeft ? "" : "invisible"}`}>
+                {isLeft && (
+                  <div className="text-right">
+                    {yearLabel && (
+                      <p className="font-display text-3xl font-semibold leading-none tracking-tight text-primary/70">
+                        {yearLabel}
+                      </p>
+                    )}
+                    {dateLabel && (
+                      <p className="mt-0.5 font-body text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
+                        {dateLabel}
+                      </p>
+                    )}
+                    <p className="mt-2 font-display text-sm font-semibold leading-snug tracking-tight text-foreground">
+                      {m.title}
+                    </p>
+                    {m.notes && (
+                      <p className="mt-1 font-body text-xs leading-relaxed text-muted-foreground line-clamp-3">
+                        {m.notes}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Right side */}
+              <div className={`w-1/2 pl-6 ${isLeft ? "invisible" : ""}`}>
+                {!isLeft && (
+                  <div className="text-left">
+                    {yearLabel && (
+                      <p className="font-display text-3xl font-semibold leading-none tracking-tight text-primary/70">
+                        {yearLabel}
+                      </p>
+                    )}
+                    {dateLabel && (
+                      <p className="mt-0.5 font-body text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
+                        {dateLabel}
+                      </p>
+                    )}
+                    <p className="mt-2 font-display text-sm font-semibold leading-snug tracking-tight text-foreground">
+                      {m.title}
+                    </p>
+                    {m.notes && (
+                      <p className="mt-1 font-body text-xs leading-relaxed text-muted-foreground line-clamp-3">
+                        {m.notes}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 

@@ -3,6 +3,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { Package, Sparkles, ArrowRight, Milk } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/add")({
+  ssr: false,
   component: AddPage,
   head: () => ({ meta: [{ title: "Add — Safe & Sound" }] }),
 });

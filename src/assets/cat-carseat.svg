@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Base / bottom of seat -->
+  <rect x="22" y="72" width="56" height="10" rx="3" fill="#8B5E3C"/>
+  <rect x="25" y="75" width="50" height="4" rx="1.5" fill="#A0723A"/>
+
+  <!-- Handle bar arc -->
+  <path d="M32 72 Q32 45 50 42 Q68 45 68 72" stroke="#8B5E3C" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+  <!-- Seat shell outer -->
+  <path d="M28 72 Q26 50 32 38 Q50 30 68 38 Q74 50 72 72Z" fill="#C4A882" stroke="#8B5E3C" stroke-width="2"/>
+
+  <!-- Seat shell inner / cushion -->
+  <path d="M33 70 Q31 52 36 42 Q50 35 64 42 Q69 52 67 70Z" fill="#F5F0E8" stroke="#E8E0D0" stroke-width="1"/>
+
+  <!-- Cushion quilt lines -->
+  <path d="M34 55 Q50 51 66 55" stroke="#D4C9B5" stroke-width="0.7"/>
+  <path d="M33 62 Q50 58 67 62" stroke="#D4C9B5" stroke-width="0.7"/>
+  <path d="M34 68 Q50 65 66 68" stroke="#D4C9B5" stroke-width="0.7"/>
+  <path d="M43 38 Q42 60 43 70" stroke="#D4C9B5" stroke-width="0.6" stroke-linecap="round"/>
+  <path d="M50 36 L50 70" stroke="#D4C9B5" stroke-width="0.6" stroke-linecap="round"/>
+  <path d="M57 38 Q58 60 57 70" stroke="#D4C9B5" stroke-width="0.6" stroke-linecap="round"/>
+
+  <!-- Head cushion -->
+  <path d="M38 42 Q50 36 62 42 Q60 35 50 32 Q40 35 38 42Z" fill="#EDE5D5" stroke="#D4C9B5" stroke-width="0.8"/>
+
+  <!-- Harness straps -->
+  <path d="M44 55 L42 70" stroke="#C4785A" stroke-width="2" stroke-linecap="round"/>
+  <path d="M56 55 L58 70" stroke="#C4785A" stroke-width="2" stroke-linecap="round"/>
+  <!-- Chest clip -->
+  <rect x="45" y="57" width="10" height="4" rx="2" fill="#C4785A" stroke="#A05A38" stroke-width="0.5"/>
+
+  <!-- Harness top straps -->
+  <path d="M44 55 Q50 50 56 55" stroke="#C4785A" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Side wings -->
+  <path d="M31 50 Q27 53 28 60 Q30 65 33 66" stroke="#8B5E3C" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  <path d="M69 50 Q73 53 72 60 Q70 65 67 66" stroke="#8B5E3C" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+</svg>

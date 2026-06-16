@@ -14,6 +14,7 @@ import { Loader2 } from "lucide-react";
  * On error we bounce back to /auth with a toast-friendly error param.
  */
 export const Route = createFileRoute("/auth/callback")({
+  ssr: false,
   component: AuthCallbackPage,
 });
 

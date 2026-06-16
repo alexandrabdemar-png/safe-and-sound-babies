@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PRIVACY_POLICY, PRIVACY_POLICY_UPDATED } from "@/lib/privacy-policy";
 
 export const Route = createFileRoute("/_authenticated/profile_/privacy-policy")({
+  ssr: false,
   component: PrivacyPolicyPage,
   head: () => ({ meta: [{ title: "Privacy Policy — Safe & Sound" }] }),
 });

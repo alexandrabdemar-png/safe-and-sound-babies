@@ -21,6 +21,7 @@ import {
 } from "@/lib/bottleRules";
 
 export const Route = createFileRoute("/_authenticated/bottles/new")({
+  ssr: false,
   component: NewBottlePage,
   head: () => ({ meta: [{ title: "Log a bottle — Safe & Sound" }] }),
 });

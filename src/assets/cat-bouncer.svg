@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Rocker base -->
+  <path d="M15 85 Q50 95 85 85" stroke="#8B5E3C" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+  <!-- Left rear leg -->
+  <path d="M22 84 L30 60" stroke="#8B5E3C" stroke-width="3" stroke-linecap="round"/>
+  <!-- Right rear leg -->
+  <path d="M78 84 L70 60" stroke="#8B5E3C" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Seat frame back -->
+  <path d="M30 60 Q50 56 70 60 Q68 42 50 38 Q32 42 30 60Z" stroke="#8B5E3C" stroke-width="2.5" fill="#F5F0E8" stroke-linejoin="round"/>
+
+  <!-- Quilted seat surface -->
+  <path d="M31 60 Q50 57 69 60 Q67 70 50 74 Q33 70 31 60Z" fill="#F5F0E8" stroke="#E8E0D0" stroke-width="0.8"/>
+  <!-- Quilt lines horizontal -->
+  <path d="M33 63 Q50 60 67 63" stroke="#D4C9B5" stroke-width="0.7"/>
+  <path d="M34 67 Q50 64 66 67" stroke="#D4C9B5" stroke-width="0.7"/>
+  <!-- Quilt lines vertical -->
+  <path d="M42 57 Q41 68 42 73" stroke="#D4C9B5" stroke-width="0.6" stroke-linecap="round"/>
+  <path d="M50 57 L50 74" stroke="#D4C9B5" stroke-width="0.6" stroke-linecap="round"/>
+  <path d="M58 57 Q59 68 58 73" stroke="#D4C9B5" stroke-width="0.6" stroke-linecap="round"/>
+
+  <!-- Back cushion -->
+  <path d="M32 42 Q50 38 68 42 Q66 56 50 57 Q34 56 32 42Z" fill="#EDE5D5" stroke="#D4C9B5" stroke-width="0.8"/>
+  <!-- Back cushion lines -->
+  <path d="M34 46 Q50 43 66 46" stroke="#C4B8A4" stroke-width="0.6"/>
+  <path d="M33 50 Q50 47 67 50" stroke="#C4B8A4" stroke-width="0.6"/>
+  <path d="M33 54 Q50 51 67 54" stroke="#C4B8A4" stroke-width="0.6"/>
+
+  <!-- Head support bump -->
+  <path d="M38 38 Q50 34 62 38" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M40 38 Q50 35 60 38 Q58 33 50 31 Q42 33 40 38Z" fill="#EDE5D5" stroke="#D4C9B5" stroke-width="0.8"/>
+
+  <!-- Front leg supports -->
+  <path d="M35 74 L28 84" stroke="#8B5E3C" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M65 74 L72 84" stroke="#8B5E3C" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Toy bar arch -->
+  <path d="M36 44 Q34 25 50 20 Q66 25 64 44" stroke="#8B5E3C" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <line x1="38" y1="26" x2="62" y2="26" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Hanging star -->
+  <line x1="44" y1="26" x2="44" y2="32" stroke="#C4A882" stroke-width="1"/>
+  <polygon points="44,29 45.2,32.5 49,32.5 46.2,34.5 47.4,38 44,36 40.6,38 41.8,34.5 39,32.5 42.8,32.5" fill="#D4B896" transform="scale(0.55) translate(36,28)"/>
+  <circle cx="44" cy="35" r="2.2" fill="#D4B896"/>
+
+  <!-- Hanging ring -->
+  <line x1="51" y1="26" x2="51" y2="32" stroke="#C4A882" stroke-width="1"/>
+  <circle cx="51" cy="36" r="2.5" stroke="#D4B896" stroke-width="1.5" fill="none"/>
+
+  <!-- Hanging moon -->
+  <line x1="58" y1="26" x2="58" y2="32" stroke="#C4A882" stroke-width="1"/>
+  <path d="M56 36 Q56 32 59 32 Q56 33 56.5 36 Q57 39 60 39 Q57 39.5 56 36Z" fill="#D4B896"/>
+</svg>
