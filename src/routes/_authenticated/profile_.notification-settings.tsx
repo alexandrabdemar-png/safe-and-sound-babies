@@ -76,27 +76,27 @@ function NotificationSettingsPage() {
 
       <div className="mx-auto w-full max-w-lg px-4 py-6 space-y-4">
         <p className="font-body text-sm text-muted-foreground px-1">
-          Safe and Sound only sends safety-related alerts. Toggle below to choose which ones reach you.
+          Gentle, timely nudges — only when something needs your attention. Choose what reaches you.
         </p>
 
         <div className="rounded-3xl border border-border/60 bg-card divide-y divide-border/40">
           <SettingRow
             label="Safety recalls"
-            description="Get notified when a product you own is recalled."
+            description="A quiet heads-up if a product you've logged is recalled — so you can act at your own pace."
             checked={settings.recalls_enabled}
             onToggle={() => toggle("recalls_enabled")}
             disabled={loading}
           />
           <SettingRow
             label="Size-up reminders"
-            description="Know when your baby is approaching the size limit for a product."
+            description="A gentle nudge when your baby is getting close to a product's size or weight limit."
             checked={settings.size_up_enabled}
             onToggle={() => toggle("size_up_enabled")}
             disabled={loading}
           />
           <SettingRow
             label="Replacement reminders"
-            description="Be reminded when it's time to replace a product for safety reasons."
+            description="A timely reminder when something you own is approaching the end of its safe use window."
             checked={settings.replacement_enabled}
             onToggle={() => toggle("replacement_enabled")}
             disabled={loading}
@@ -104,7 +104,7 @@ function NotificationSettingsPage() {
         </div>
 
         <p className="font-body text-xs text-muted-foreground px-1 pt-2">
-          You will never receive promotions or marketing messages from Safe and Sound.
+          That's it — no promotions, no marketing, no noise. Just the things that matter.
         </p>
       </div>
     </div>

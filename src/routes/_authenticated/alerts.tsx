@@ -122,7 +122,7 @@ function AlertsPage() {
       <header className="px-5 pt-10 pb-6 sm:px-6">
         <div className="mx-auto max-w-md">
           <p className="font-body text-xs font-semibold uppercase tracking-[0.2em] text-accent">
-            Quiet reminders
+            Your reminders
           </p>
           <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight">Alerts</h1>
           <p className="mt-2 font-body text-sm text-muted-foreground">
@@ -304,9 +304,9 @@ function EmptyState() {
       <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-forest/15 text-forest">
         <Bell className="h-5 w-5" />
       </div>
-      <p className="font-display text-lg font-semibold tracking-tight">All quiet 🌙</p>
+      <p className="font-display text-lg font-semibold tracking-tight">You're all caught up</p>
       <p className="mx-auto mt-1 max-w-xs font-body text-sm text-muted-foreground">
-        No recalls, replacements, or size-ups due. We'll only ping you when something actually needs a look.
+        We'll nudge you when something needs your attention — recalls, replacements, or a size-up coming up.
       </p>
     </div>
   );
