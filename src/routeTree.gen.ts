@@ -23,6 +23,8 @@ import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/h
 import { Route as AuthenticatedBottlesRouteImport } from './routes/_authenticated/bottles'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
+import { Route as AuthenticatedEmergencyRouteImport } from './routes/_authenticated/emergency'
+import { Route as AuthenticatedChecklistsRouteImport } from './routes/_authenticated/checklists'
 import { Route as AuthenticatedProfilePrivacyPolicyRouteImport } from './routes/_authenticated/profile_.privacy-policy'
 import { Route as AuthenticatedProfileNotificationSettingsRouteImport } from './routes/_authenticated/profile_.notification-settings'
 import { Route as AuthenticatedProductsScanRouteImport } from './routes/_authenticated/products_.scan'
@@ -105,6 +107,16 @@ const AuthenticatedAddRoute = AuthenticatedAddRouteImport.update({
   path: '/add',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedEmergencyRoute = AuthenticatedEmergencyRouteImport.update({
+  id: '/emergency',
+  path: '/emergency',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedChecklistsRoute = AuthenticatedChecklistsRouteImport.update({
+  id: '/checklists',
+  path: '/checklists',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProfilePrivacyPolicyRoute =
   AuthenticatedProfilePrivacyPolicyRouteImport.update({
     id: '/profile_/privacy-policy',
@@ -181,6 +193,8 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
+  '/emergency': typeof AuthenticatedEmergencyRoute
+  '/checklists': typeof AuthenticatedChecklistsRoute
   '/bottles': typeof AuthenticatedBottlesRouteWithChildren
   '/home': typeof AuthenticatedHomeRoute
   '/insights': typeof AuthenticatedInsightsRoute
@@ -208,6 +222,8 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
+  '/emergency': typeof AuthenticatedEmergencyRoute
+  '/checklists': typeof AuthenticatedChecklistsRoute
   '/bottles': typeof AuthenticatedBottlesRouteWithChildren
   '/home': typeof AuthenticatedHomeRoute
   '/insights': typeof AuthenticatedInsightsRoute
@@ -237,6 +253,8 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/_authenticated/add': typeof AuthenticatedAddRoute
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
+  '/_authenticated/emergency': typeof AuthenticatedEmergencyRoute
+  '/_authenticated/checklists': typeof AuthenticatedChecklistsRoute
   '/_authenticated/bottles': typeof AuthenticatedBottlesRouteWithChildren
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/insights': typeof AuthenticatedInsightsRoute
@@ -266,6 +284,8 @@ export interface FileRouteTypes {
     | '/terms'
     | '/add'
     | '/alerts'
+    | '/emergency'
+    | '/checklists'
     | '/bottles'
     | '/home'
     | '/insights'
@@ -293,6 +313,8 @@ export interface FileRouteTypes {
     | '/terms'
     | '/add'
     | '/alerts'
+    | '/emergency'
+    | '/checklists'
     | '/bottles'
     | '/home'
     | '/insights'
@@ -321,6 +343,8 @@ export interface FileRouteTypes {
     | '/terms'
     | '/_authenticated/add'
     | '/_authenticated/alerts'
+    | '/_authenticated/emergency'
+    | '/_authenticated/checklists'
     | '/_authenticated/bottles'
     | '/_authenticated/home'
     | '/_authenticated/insights'
@@ -441,6 +465,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBottlesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/emergency': {
+      id: '/_authenticated/emergency'
+      path: '/emergency'
+      fullPath: '/emergency'
+      preLoaderRoute: typeof AuthenticatedEmergencyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/checklists': {
+      id: '/_authenticated/checklists'
+      path: '/checklists'
+      fullPath: '/checklists'
+      preLoaderRoute: typeof AuthenticatedChecklistsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/alerts': {
       id: '/_authenticated/alerts'
       path: '/alerts'
@@ -556,6 +594,8 @@ const AuthenticatedBottlesRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAddRoute: typeof AuthenticatedAddRoute
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
+  AuthenticatedEmergencyRoute: typeof AuthenticatedEmergencyRoute
+  AuthenticatedChecklistsRoute: typeof AuthenticatedChecklistsRoute
   AuthenticatedBottlesRoute: typeof AuthenticatedBottlesRouteWithChildren
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedInsightsRoute: typeof AuthenticatedInsightsRoute
@@ -573,6 +613,8 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAddRoute: AuthenticatedAddRoute,
   AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
+  AuthenticatedEmergencyRoute: AuthenticatedEmergencyRoute,
+  AuthenticatedChecklistsRoute: AuthenticatedChecklistsRoute,
   AuthenticatedBottlesRoute: AuthenticatedBottlesRouteWithChildren,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedInsightsRoute: AuthenticatedInsightsRoute,
