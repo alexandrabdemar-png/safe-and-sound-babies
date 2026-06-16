@@ -202,7 +202,7 @@ export const recomputePredictions = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await requireProSubscription(supabase, userId);
+    if (!(await hasProSubscription(supabase, userId))) return { updated: 0 };
     const { data: child } = await supabase
       .from("children")
       .select("date_of_birth, height_inches, weight_lbs, measurements_updated_at")
