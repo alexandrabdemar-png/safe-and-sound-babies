@@ -91,7 +91,9 @@ export const lookupAndSaveGuidelines = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await requireProSubscription(supabase, userId);
+    if (!(await hasProSubscription(supabase, userId))) {
+      return { skipped: true as const, reason: "pro_required" };
+    }
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not configured");
 
