@@ -10,6 +10,7 @@ import { evaluateInsights, type Insight, type InsightUrgency, type ProductInput,
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/insights")({
+  ssr: false,
   component: InsightsPage,
   head: () => ({ meta: [{ title: "Insights — Safe & Sound" }] }),
 });

@@ -11,6 +11,7 @@ import { getStripeEnvironment } from '@/lib/stripe';
 import { toast } from 'sonner';
 
 export const Route = createFileRoute('/_authenticated/pricing')({
+  ssr: false,
   component: PricingPage,
   head: () => ({ meta: [{ title: 'Pricing — Safe & Sound' }] }),
   validateSearch: (s: Record<string, unknown>): { checkout?: string } => ({

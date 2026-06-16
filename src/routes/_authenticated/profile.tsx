@@ -17,6 +17,7 @@ import { exportUserData } from "@/utils/export.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 
 export const Route = createFileRoute("/_authenticated/profile")({
+  ssr: false,
   component: ProfilePage,
   head: () => ({ meta: [{ title: "Profile — Safe & Sound" }] }),
 });

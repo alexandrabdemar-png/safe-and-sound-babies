@@ -11,6 +11,7 @@ import { evaluateInsights, type Insight, type ProductInput } from "@/lib/insight
 
 
 export const Route = createFileRoute("/_authenticated/home")({
+  ssr: false,
   component: HomePage,
   head: () => ({ meta: [{ title: "Home — Safe & Sound" }] }),
 });

@@ -33,6 +33,7 @@ const BarcodeScanner = lazy(() =>
 );
 
 export const Route = createFileRoute("/_authenticated/products_/new")({
+  ssr: false,
   component: NewProductPage,
   head: () => ({ meta: [{ title: "Add product — Safe & Sound" }] }),
 });

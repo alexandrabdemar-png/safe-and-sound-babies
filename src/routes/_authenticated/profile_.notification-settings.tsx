@@ -8,6 +8,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute(
   "/_authenticated/profile_/notification-settings",
 )({
+  ssr: false,
   component: NotificationSettingsPage,
   head: () => ({ meta: [{ title: "Notification Settings — Safe & Sound" }] }),
 });

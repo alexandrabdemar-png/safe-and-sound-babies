@@ -119,6 +119,7 @@ function getSafetyTip(momentTitle: string): SafetyTip | null {
 }
 
 export const Route = createFileRoute("/_authenticated/moments/new")({
+  ssr: false,
   component: NewMomentPage,
   head: () => ({ meta: [{ title: "Log a moment — Safe & Sound" }] }),
 });
