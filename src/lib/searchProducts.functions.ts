@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { createAnthropic } from "@ai-sdk/anthropic";
+import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { generateText } from "ai";
 
 export interface ProductSearchResult {
@@ -48,12 +48,12 @@ export const searchProducts = createServerFn({ method: "POST" })
   .handler(async ({ data }: { data: { query: string } }): Promise<ProductSearchResult[]> => {
     const { query } = data;
     if (!query || query.trim().length < 2) return [];
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) throw new Error("ANTHROPIC_API_KEY not configured");
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
 
-    const anthropic = createAnthropic({ apiKey });
+    const gateway = createLovableAiGatewayProvider(apiKey);
     const { text } = await generateText({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: gateway("google/gemini-3-flash-preview"),
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: `Baby product search: "${query.trim()}"` },
