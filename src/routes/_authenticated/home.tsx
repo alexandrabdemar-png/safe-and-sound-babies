@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AlertTriangle, ArrowRight, Loader2, Package, Plus, RefreshCw, Ruler, Sparkles } from "lucide-react";
+import { MomentTimeline } from "@/components/MomentTimeline";
 import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Logo } from "@/components/Logo";
