@@ -21,6 +21,22 @@ function computeIsPro(sub: SubscriptionRow | null): boolean {
 }
 
 export function useSubscription() {
+  // DEV ONLY — set VITE_FORCE_PRO=true in .env.local to bypass paywalls
+  if (import.meta.env.VITE_FORCE_PRO === 'true') {
+    return {
+      subscription: {
+        plan: 'pro',
+        status: 'active',
+        price_id: null,
+        current_period_end: null,
+        cancel_at_period_end: false,
+        stripe_customer_id: null,
+      } as SubscriptionRow,
+      isPro: true,
+      loading: false,
+    };
+  }
+
   const [subscription, setSubscription] = useState<SubscriptionRow | null>(null);
   const [loading, setLoading] = useState(true);
 
