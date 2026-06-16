@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import catCarseat from "@/assets/cat-carseat.png";
+import catCarseat from "@/assets/cat-carseat.svg";
 import catPacifier from "@/assets/cat-pacifier.png";
 import catCrib from "@/assets/cat-crib.png";
 import catBreastmilk from "@/assets/cat-breastmilk.png";
@@ -12,7 +12,7 @@ import catSwaddle from "@/assets/cat-swaddle.png";
 import catStroller from "@/assets/cat-stroller.png";
 import catPacknplay from "@/assets/cat-packnplay.png";
 import catCarrier from "@/assets/cat-carrier.png";
-import catBouncer from "@/assets/cat-bouncer.png";
+import catBouncer from "@/assets/cat-bouncer.svg";
 import catSwing from "@/assets/cat-swing.svg";
 
 export const Route = createFileRoute("/")({
