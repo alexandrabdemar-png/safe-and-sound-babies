@@ -2,14 +2,15 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, AlertTriangle, Ruler, RefreshCw, Trash2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, Ruler, RefreshCw, Trash2, ShieldCheck, Lightbulb, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { CATEGORY_BY_KEY, categoryFromLabel } from "@/lib/productCategories";
+import { CATEGORY_BY_KEY, categoryFromLabel, type CategoryKey } from "@/lib/productCategories";
 import { formatMonthYear, daysBetween } from "@/lib/predictions";
 import { lookupAndSaveGuidelines, recomputePredictions } from "@/lib/guidelines.functions";
+import { CARE_TIPS } from "@/lib/careTips";
 
 export const Route = createFileRoute("/_authenticated/products_/$id")({
   component: ProductDetailPage,
@@ -201,6 +202,9 @@ function ProductDetailPage() {
             )}
           </div>
 
+          {/* Care & Longevity Tips */}
+          {cat && <CareTipsCard categoryKey={cat.key} />}
+
           <Button variant="ghost" onClick={deleteProduct} className="w-full rounded-full text-destructive">
             <Trash2 className="h-4 w-4 mr-2" /> Delete product
           </Button>
@@ -259,6 +263,49 @@ function TimelineRow({ label, date, addedAt, variant }: { label: string; date: s
       <p className="mt-1 font-body text-xs text-muted-foreground">
         {remaining > 0 ? `${remaining} days from today` : "Past due — review now"}
       </p>
+    </div>
+  );
+}
+
+function CareTipsCard({ categoryKey }: { categoryKey: CategoryKey }) {
+  const [open, setOpen] = useState(false);
+  const data = CARE_TIPS[categoryKey];
+  if (!data) return null;
+
+  return (
+    <div className="rounded-3xl border border-border bg-card p-5 space-y-3">
+      <button
+        className="flex w-full items-center justify-between"
+        onClick={() => setOpen((o) => !o)}
+      >
+        <div className="flex items-center gap-2">
+          <Lightbulb className="h-4 w-4 text-accent" />
+          <h2 className="font-display text-base font-semibold">Care &amp; Longevity Tips</h2>
+        </div>
+        {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+      </button>
+
+      {open && (
+        <div className="space-y-3 font-body text-sm">
+          <div className="rounded-2xl bg-amber-50 border border-amber-200 px-3 py-2.5 text-xs text-amber-800">
+            These tips are based on manufacturer recommendations. Never use a product beyond its stated lifespan or after a recall, drop, or accident.
+          </div>
+          {data.doNotExtend ? (
+            <div className="rounded-2xl bg-destructive/10 border border-destructive/20 px-3 py-2.5 text-xs text-destructive">
+              {data.doNotExtendReason}
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {data.tips?.map((t, i) => (
+                <li key={i} className="rounded-2xl bg-sand/60 px-3 py-2.5 space-y-1">
+                  <p>{t.tip}</p>
+                  <p className="text-xs text-muted-foreground">{t.source}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 }

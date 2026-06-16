@@ -7,6 +7,9 @@ import { ArrowLeft, BarChart3, Sparkles, Loader2, Check, Clock, X, AlertCircle }
 import { useSubscription } from "@/hooks/useSubscription";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { evaluateInsights, type Insight, type InsightUrgency, type ProductInput, URGENCY_LABEL } from "@/lib/insights";
+import { CARE_TIPS } from "@/lib/careTips";
+import { categoryFromLabel } from "@/lib/productCategories";
+import { Lightbulb } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/insights")({
@@ -106,6 +109,20 @@ function InsightsPage() {
     toast.success(action === 'done' ? 'Marked done' : action === 'snoozed' ? 'Snoozed 1 week' : 'Dismissed');
   }
 
+  const careTipsEntries = useMemo(() => {
+    const seen = new Set<string>();
+    const entries: { categoryLabel: string; tips: NonNullable<typeof CARE_TIPS[keyof typeof CARE_TIPS]> }[] = [];
+    for (const p of products) {
+      const cat = categoryFromLabel(p.category);
+      if (!cat || seen.has(cat.key)) continue;
+      const data = CARE_TIPS[cat.key];
+      if (!data) continue;
+      seen.add(cat.key);
+      entries.push({ categoryLabel: cat.label, tips: data });
+    }
+    return entries;
+  }, [products]);
+
   const momentBuckets = useMemo(() => bucketByMonth(milestones.map((m) => m.logged_at)), [milestones]);
   const productBuckets = useMemo(() => bucketByMonth(products.map((p) => p.created_at)), [products]);
   const categoryBreakdown = useMemo(() => {
@@ -156,6 +173,37 @@ function InsightsPage() {
                 )
               )}
             </section>
+
+            {/* Care & Longevity Tips */}
+            {careTipsEntries.length > 0 && (
+              <section className="space-y-3">
+                <div className="flex items-center gap-2 px-1">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-sand/60 text-accent">
+                    <Lightbulb className="h-3.5 w-3.5" />
+                  </span>
+                  <p className="font-body text-xs font-semibold uppercase tracking-[0.15em] text-accent">Care Tips</p>
+                </div>
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2.5 font-body text-xs text-amber-800">
+                  Tips are based on manufacturer recommendations. Never use a product past its lifespan or after a recall, drop, or accident.
+                </div>
+                {careTipsEntries.map(({ categoryLabel, tips }) => (
+                  <div key={categoryLabel} className="rounded-2xl border border-border/60 bg-card p-4 space-y-2">
+                    <p className="font-display text-sm font-semibold">{categoryLabel}</p>
+                    {tips.doNotExtend ? (
+                      <p className="font-body text-xs text-destructive">{tips.doNotExtendReason}</p>
+                    ) : (
+                      <ul className="space-y-1.5">
+                        {tips.tips?.map((t, i) => (
+                          <li key={i} className="font-body text-sm text-muted-foreground">
+                            · {t.tip} <span className="text-xs italic">({t.source})</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </section>
+            )}
 
             {/* Pro-only charts */}
             {isPro ? (
