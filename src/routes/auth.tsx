@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Mail, Lock, Sparkles, Loader2, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
+  ssr: false,
   component: AuthPage,
   head: () => ({
     meta: [
