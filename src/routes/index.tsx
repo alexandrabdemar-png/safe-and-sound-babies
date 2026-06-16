@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import phoneMockup from "@/assets/phone-mockup.png";
 import catCarseat from "@/assets/cat-carseat.png";
 import catPacifier from "@/assets/cat-pacifier.png";
 import catCrib from "@/assets/cat-crib.png";
@@ -110,20 +109,6 @@ function Index() {
               </Link>
             </div>
 
-            {/* Right: Phone Mockup */}
-            <div className="relative flex justify-center lg:justify-end">
-              <div className="relative">
-                <img
-                  src={phoneMockup}
-                  alt="Safe & Sound app preview showing baby safety reminders and milestone tracking"
-                  className="h-auto w-full max-w-[320px] rounded-[2.5rem] shadow-2xl shadow-foreground/5 lg:max-w-[380px]"
-                  width={768}
-                  height={1024}
-                />
-                {/* Decorative blur behind phone */}
-                <div className="absolute -inset-4 -z-10 rounded-full bg-sand/30 blur-3xl" />
-              </div>
-            </div>
           </div>
         </div>
       </section>
