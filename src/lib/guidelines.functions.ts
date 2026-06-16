@@ -9,10 +9,10 @@ import { predictSizeUpDate, predictReplacementDate } from "@/lib/predictions";
  * the authenticated user's client (RLS scopes to their own rows). Throws if
  * the user has no active/trialing/past_due subscription.
  */
-async function requireProSubscription(
+async function hasProSubscription(
   supabase: { from: (t: string) => any },
   userId: string,
-): Promise<void> {
+): Promise<boolean> {
   const { data, error } = await supabase
     .from("subscriptions")
     .select("status, current_period_end")
@@ -21,11 +21,12 @@ async function requireProSubscription(
     .order("current_period_end", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (error) throw new Error("Subscription check failed");
-  if (!data) throw new Error("Pro subscription required");
+  if (error) return false;
+  if (!data) return false;
   if (data.current_period_end && new Date(data.current_period_end) < new Date()) {
-    throw new Error("Pro subscription required");
+    return false;
   }
+  return true;
 }
 
 export type GuidelineFields = {
