@@ -76,7 +76,7 @@ function NewProductPage() {
   const computedReplaceAt = useMemo(() => {
     if (category === "car_seat") return carSeatExpiry || "";
     return "";
-  }, [category, purchasedAt, carSeatExpiry]);
+  }, [category, carSeatExpiry]);
 
   const activeCategory = CATEGORIES.find((c) => c.key === category);
 
@@ -87,10 +87,10 @@ function NewProductPage() {
 
     setSaving(true);
     try {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("Not signed in");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) throw new Error("Not signed in");
       const { data: inserted, error } = await supabase.from("products").insert({
-        user_id: u.user.id,
+        user_id: session.user.id,
         child_id: activeChildId,
         name: name.trim(),
         category: activeCategory?.label ?? category,
@@ -451,15 +451,15 @@ function SaveProductSheet({
     if (!product) return;
     setSaving(true);
     try {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("Not signed in");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) throw new Error("Not signed in");
 
       const replaceDate = addDays(purchasedAt, product.safe_use_duration_days);
 
       const { data: inserted, error } = await supabase
         .from("products")
         .insert({
-          user_id: u.user.id,
+          user_id: session.user.id,
           child_id: childId || null,
           name: product.name,
           brand: product.brand || null,
@@ -477,7 +477,9 @@ function SaveProductSheet({
 
       const productId = (inserted as { id: string } | null)?.id;
       if (productId) {
-        lookupAndSaveGuidelines({ data: { productId } }).catch(() => {});
+        lookupAndSaveGuidelines({ data: { productId } }).catch((err) => {
+          console.warn("[guidelines] lookup failed:", err instanceof Error ? err.message : "unknown");
+        });
       }
 
       toast.success(`${product.name} saved`);
