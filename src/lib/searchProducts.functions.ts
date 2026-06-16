@@ -44,7 +44,7 @@ Safe use duration reference:
 Return ONLY a valid JSON array. No markdown fences, no explanation.`;
 
 export const searchProducts = createServerFn({ method: "POST" })
-  .validator((data: { query: string }) => data)
+  .inputValidator((data: { query: string }) => data)
   .handler(async ({ data }: { data: { query: string } }): Promise<ProductSearchResult[]> => {
     const { query } = data;
     if (!query || query.trim().length < 2) return [];
