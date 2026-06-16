@@ -50,7 +50,7 @@ function pickIcon(title: string) {
 function formatDate(dateStr: string | null) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 export function MomentTimeline({ moments }: { moments: Moment[] }) {
