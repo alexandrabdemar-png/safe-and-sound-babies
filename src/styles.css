@@ -103,13 +103,13 @@
   --background: oklch(0.952 0.010 82);      /* #F2EFE8 Alabaster Lace        */
   --foreground: oklch(0.245 0.028 42);      /* #3A2E24 deep warm brown       */
 
-  --card: oklch(0.968 0.007 80);            /* lighter alabaster card        */
+  --card: oklch(0.968 0.007 80);            /* lighter alabaster             */
   --card-foreground: oklch(0.245 0.028 42);
   --popover: oklch(0.968 0.007 80);
   --popover-foreground: oklch(0.245 0.028 42);
 
-  /* ── Primary: Withered Mauve ─────────────────────────────────────────── */
-  --primary: oklch(0.598 0.058 8);          /* #A97A82 Withered Mauve        */
+  /* ── Primary: deep sage (readable with white text) ──────────────────── */
+  --primary: oklch(0.520 0.072 138);        /* deep sage — buttons/CTAs      */
   --primary-foreground: oklch(0.985 0 0);   /* white text                    */
 
   /* ── Secondary: Honeyed Light ───────────────────────────────────────── */
@@ -120,9 +120,9 @@
   --muted: oklch(0.910 0.018 88);
   --muted-foreground: oklch(0.530 0.020 55); /* warm medium gray             */
 
-  /* ── Accent: Antique Rose ────────────────────────────────────────────  */
-  --accent: oklch(0.728 0.058 12);          /* #D29A91 Antique Rose          */
-  --accent-foreground: oklch(0.245 0.028 42);
+  /* ── Accent: Sage Whisper ────────────────────────────────────────────  */
+  --accent: oklch(0.668 0.055 135);         /* #9BA488 Sage Whisper          */
+  --accent-foreground: oklch(0.985 0 0);
 
   /* ── Destructive: muted brick (recalls) ─────────────────────────────── */
   --destructive: oklch(0.528 0.105 27);     /* muted brick                   */
@@ -131,38 +131,38 @@
   /* ── Borders & inputs ───────────────────────────────────────────────── */
   --border: oklch(0.898 0.018 88);          /* warm honeyed border           */
   --input: oklch(0.898 0.018 88);
-  --ring: oklch(0.598 0.058 8);             /* mauve focus ring              */
+  --ring: oklch(0.520 0.072 138);           /* deep sage focus ring          */
 
   /* ── Charts ─────────────────────────────────────────────────────────── */
-  --chart-1: oklch(0.598 0.058 8);          /* Withered Mauve                */
-  --chart-2: oklch(0.728 0.058 12);         /* Antique Rose                  */
-  --chart-3: oklch(0.668 0.055 135);        /* Sage Whisper                  */
-  --chart-4: oklch(0.858 0.048 95);         /* Honeyed Light                 */
+  --chart-1: oklch(0.520 0.072 138);        /* deep sage                     */
+  --chart-2: oklch(0.668 0.055 135);        /* Sage Whisper                  */
+  --chart-3: oklch(0.858 0.048 95);         /* Honeyed Light                 */
+  --chart-4: oklch(0.780 0.040 110);        /* sage-honey mid                */
   --chart-5: oklch(0.528 0.105 27);         /* brick                         */
 
   /* ── Sidebar ───────────────────────────────────────────────────────── */
   --sidebar: oklch(0.952 0.010 82);
   --sidebar-foreground: oklch(0.245 0.028 42);
-  --sidebar-primary: oklch(0.598 0.058 8);
+  --sidebar-primary: oklch(0.520 0.072 138);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.728 0.058 12);
-  --sidebar-accent-foreground: oklch(0.245 0.028 42);
+  --sidebar-accent: oklch(0.668 0.055 135);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.898 0.018 88);
-  --sidebar-ring: oklch(0.598 0.058 8);
+  --sidebar-ring: oklch(0.520 0.072 138);
 
   /* ── Extended brand tokens ──────────────────────────────────────────── */
   --cream:       oklch(0.968 0.007 80);       /* alabaster card              */
   --sand:        oklch(0.858 0.048 95);       /* Honeyed Light               */
-  --forest:      oklch(0.540 0.065 140);      /* deeper sage                 */
+  --forest:      oklch(0.420 0.080 140);      /* deeper sage                 */
   --sage:        oklch(0.668 0.055 135);      /* #9BA488 Sage Whisper        */
-  --mist:        oklch(0.840 0.035 12);       /* light antique rose          */
+  --mist:        oklch(0.858 0.048 95);       /* Honeyed Light (light fill)  */
   --butter:      oklch(0.858 0.048 95);       /* Honeyed Light               */
-  --terracotta:  oklch(0.598 0.058 8);        /* = primary (mauve)           */
+  --terracotta:  oklch(0.520 0.072 138);      /* = primary (deep sage now)   */
   --card-surface: oklch(0.968 0.007 80);
 
   /* Named tokens */
-  --blush:  oklch(0.840 0.035 12);            /* light antique rose          */
-  --amber:  oklch(0.858 0.048 95);            /* Honeyed Light               */
+  --blush:  oklch(0.858 0.048 95);            /* Honeyed Light               */
+  --amber:  oklch(0.780 0.040 110);           /* sage-honey mid              */
 }
 
 /* Dark mode — warm charcoal-based inversion */
@@ -173,34 +173,34 @@
   --card-foreground: oklch(0.955 0.008 80);
   --popover: oklch(0.215 0.016 58);
   --popover-foreground: oklch(0.955 0.008 80);
-  --primary: oklch(0.72 0.058 8);
+  --primary: oklch(0.62 0.072 138);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.265 0.015 45);
   --secondary-foreground: oklch(0.955 0.008 80);
   --muted: oklch(0.265 0.015 45);
   --muted-foreground: oklch(0.62 0.016 62);
-  --accent: oklch(0.728 0.058 12);
-  --accent-foreground: oklch(0.955 0.008 80);
+  --accent: oklch(0.668 0.055 135);
+  --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.62 0.12 27);
   --destructive-foreground: oklch(0.955 0.008 80);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.72 0.058 8);
-  --chart-1: oklch(0.72 0.058 8);
-  --chart-2: oklch(0.728 0.058 12);
-  --chart-3: oklch(0.668 0.055 135);
-  --chart-4: oklch(0.858 0.048 95);
+  --ring: oklch(0.62 0.072 138);
+  --chart-1: oklch(0.62 0.072 138);
+  --chart-2: oklch(0.668 0.055 135);
+  --chart-3: oklch(0.858 0.048 95);
+  --chart-4: oklch(0.780 0.040 110);
   --chart-5: oklch(0.62 0.12 27);
   --sidebar: oklch(0.215 0.016 45);
   --sidebar-foreground: oklch(0.955 0.008 80);
-  --sidebar-primary: oklch(0.72 0.058 8);
+  --sidebar-primary: oklch(0.62 0.072 138);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.728 0.058 12);
-  --sidebar-accent-foreground: oklch(0.955 0.008 80);
+  --sidebar-accent: oklch(0.668 0.055 135);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.72 0.058 8);
-  --blush:  oklch(0.42 0.04 12);
-  --amber:  oklch(0.55 0.09 95);
+  --sidebar-ring: oklch(0.62 0.072 138);
+  --blush:  oklch(0.858 0.048 95);
+  --amber:  oklch(0.780 0.040 110);
 }
 
 @layer base {
@@ -212,8 +212,8 @@
     background-color: var(--color-background);
     /* Subtle warm linen grain — very quiet */
     background-image:
-      radial-gradient(oklch(0.598 0.058 8 / 0.04) 1px, transparent 1px),
-      radial-gradient(oklch(0.668 0.055 135 / 0.035) 1px, transparent 1px);
+      radial-gradient(oklch(0.668 0.055 135 / 0.06) 1px, transparent 1px),
+      radial-gradient(oklch(0.858 0.048 95 / 0.05) 1px, transparent 1px);
     background-size: 28px 28px, 42px 42px;
     background-position: 0 0, 14px 21px;
     color: var(--color-foreground);
