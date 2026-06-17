@@ -44,6 +44,54 @@ async function runLookupGuidelines(productId: string): Promise<void> {
   await lookupAndSaveGuidelines({ data: { productId } });
 }
 
+type CpscRecall = {
+  RecallID: string;
+  RecallHeading: string;
+  URL: string;
+  Products?: Array<{ Name: string; Description: string }>;
+};
+
+async function checkCpscRecalls(productId: string, productName: string): Promise<void> {
+  try {
+    const res = await fetch(
+      `https://www.saferproducts.gov/RestWebServices/Recall?format=json&Keyword=${encodeURIComponent(productName)}&limit=5`
+    );
+    if (!res.ok) return;
+    const recalls: CpscRecall[] = await res.json();
+    if (!Array.isArray(recalls) || recalls.length === 0) return;
+
+    toast.error("Recall found for this product — check Alerts");
+
+    for (const recall of recalls.slice(0, 5)) {
+      const { data: catalogEntry } = await supabase
+        .from("recalls")
+        .upsert(
+          {
+            source: "cpsc",
+            source_id: String(recall.RecallID),
+            title: recall.RecallHeading,
+            url: recall.URL,
+          } as never,
+          { onConflict: "source,source_id" }
+        )
+        .select("id")
+        .single();
+
+      const recallId = (catalogEntry as { id: string } | null)?.id;
+      if (!recallId) continue;
+
+      await supabase.from("product_recalls").upsert(
+        { product_id: productId, recall_id: recallId, acknowledged: false } as never,
+        { onConflict: "product_id,recall_id" }
+      );
+    }
+
+    await supabase.from("products").update({ recalled: true } as never).eq("id", productId);
+  } catch (err) {
+    console.warn("[cpsc-recall-check] failed:", err instanceof Error ? err.message : "unknown");
+  }
+}
+
 const BarcodeScanner = lazy(() =>
   import("@/components/BarcodeScanner").then((m) => ({ default: m.BarcodeScanner }))
 );
@@ -135,6 +183,9 @@ function NewProductPage() {
       if (productId) {
         runLookupGuidelines(productId).catch((err) => {
           console.warn("[guidelines] lookup failed:", err instanceof Error ? err.message : "unknown");
+        });
+        checkCpscRecalls(productId, name.trim()).catch((err) => {
+          console.warn("[cpsc] check failed:", err instanceof Error ? err.message : "unknown");
         });
       }
       toast.success("Saved — fetching safety guidelines");
@@ -512,6 +563,9 @@ function SaveProductSheet({
       if (productId) {
         runLookupGuidelines(productId).catch((err) => {
           console.warn("[guidelines] lookup failed:", err instanceof Error ? err.message : "unknown");
+        });
+        checkCpscRecalls(productId, product.name).catch((err) => {
+          console.warn("[cpsc] check failed:", err instanceof Error ? err.message : "unknown");
         });
       }
 

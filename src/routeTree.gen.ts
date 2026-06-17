@@ -23,6 +23,7 @@ import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticated/insights'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedEmergencyRouteImport } from './routes/_authenticated/emergency'
+import { Route as AuthenticatedRecallCheckRouteImport } from './routes/_authenticated/recall-check'
 import { Route as AuthenticatedChecklistsRouteImport } from './routes/_authenticated/checklists'
 import { Route as AuthenticatedBottlesRouteImport } from './routes/_authenticated/bottles'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
@@ -102,6 +103,11 @@ const AuthenticatedSafetyGuidesRoute = AuthenticatedSafetyGuidesRouteImport.upda
 const AuthenticatedCaregiverCardRoute = AuthenticatedCaregiverCardRouteImport.update({
   id: '/caregiver-card',
   path: '/caregiver-card',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRecallCheckRoute = AuthenticatedRecallCheckRouteImport.update({
+  id: '/recall-check',
+  path: '/recall-check',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedEmergencyRoute = AuthenticatedEmergencyRouteImport.update({
@@ -209,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/caregiver-card': typeof AuthenticatedCaregiverCardRoute
   '/checklists': typeof AuthenticatedChecklistsRoute
   '/emergency': typeof AuthenticatedEmergencyRoute
+  '/recall-check': typeof AuthenticatedRecallCheckRoute
   '/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/home': typeof AuthenticatedHomeRoute
   '/insights': typeof AuthenticatedInsightsRoute
@@ -240,6 +247,7 @@ export interface FileRoutesByTo {
   '/caregiver-card': typeof AuthenticatedCaregiverCardRoute
   '/checklists': typeof AuthenticatedChecklistsRoute
   '/emergency': typeof AuthenticatedEmergencyRoute
+  '/recall-check': typeof AuthenticatedRecallCheckRoute
   '/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/home': typeof AuthenticatedHomeRoute
   '/insights': typeof AuthenticatedInsightsRoute
@@ -274,6 +282,7 @@ export interface FileRoutesById {
   '/_authenticated/checklists': typeof AuthenticatedChecklistsRoute
   '/_authenticated/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/_authenticated/emergency': typeof AuthenticatedEmergencyRoute
+  '/_authenticated/recall-check': typeof AuthenticatedRecallCheckRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/insights': typeof AuthenticatedInsightsRoute
   '/_authenticated/pricing': typeof AuthenticatedPricingRoute
@@ -306,6 +315,7 @@ export interface FileRouteTypes {
     | '/caregiver-card'
     | '/checklists'
     | '/emergency'
+    | '/recall-check'
     | '/safety-guides'
     | '/home'
     | '/insights'
@@ -337,6 +347,7 @@ export interface FileRouteTypes {
     | '/caregiver-card'
     | '/checklists'
     | '/emergency'
+    | '/recall-check'
     | '/safety-guides'
     | '/home'
     | '/insights'
@@ -370,6 +381,7 @@ export interface FileRouteTypes {
     | '/_authenticated/checklists'
     | '/_authenticated/safety-guides'
     | '/_authenticated/emergency'
+    | '/_authenticated/recall-check'
     | '/_authenticated/home'
     | '/_authenticated/insights'
     | '/_authenticated/pricing'
@@ -487,6 +499,13 @@ declare module '@tanstack/react-router' {
       path: '/emergency'
       fullPath: '/emergency'
       preLoaderRoute: typeof AuthenticatedEmergencyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/recall-check': {
+      id: '/_authenticated/recall-check'
+      path: '/recall-check'
+      fullPath: '/recall-check'
+      preLoaderRoute: typeof AuthenticatedRecallCheckRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/checklists': {
@@ -621,6 +640,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBottlesRoute: typeof AuthenticatedBottlesRouteWithChildren
   AuthenticatedChecklistsRoute: typeof AuthenticatedChecklistsRoute
   AuthenticatedEmergencyRoute: typeof AuthenticatedEmergencyRoute
+  AuthenticatedRecallCheckRoute: typeof AuthenticatedRecallCheckRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedInsightsRoute: typeof AuthenticatedInsightsRoute
   AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
@@ -641,6 +661,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCaregiverCardRoute: AuthenticatedCaregiverCardRoute,
   AuthenticatedChecklistsRoute: AuthenticatedChecklistsRoute,
   AuthenticatedEmergencyRoute: AuthenticatedEmergencyRoute,
+  AuthenticatedRecallCheckRoute: AuthenticatedRecallCheckRoute,
   AuthenticatedSafetyGuidesRoute: AuthenticatedSafetyGuidesRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedInsightsRoute: AuthenticatedInsightsRoute,

@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowRight, CheckSquare, ClipboardList, Loader2, Package, Plus, RefreshCw, Ruler, Shield, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckSquare, ClipboardList, Loader2, Package, Plus, RefreshCw, Ruler, ScanLine, Shield, Sparkles } from "lucide-react";
 import { MomentTimeline } from "@/components/MomentTimeline";
 import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
@@ -245,6 +245,24 @@ function HomePage() {
       <section className="px-5 pt-8 sm:px-6">
         <div className="mx-auto max-w-md">
           <h2 className="mb-3 font-display text-xl font-semibold tracking-tight">Tools</h2>
+
+          {/* Quick Recall Check — prominent card */}
+          <Link
+            to="/recall-check"
+            className="mb-2.5 flex items-center gap-4 rounded-3xl border border-destructive/25 bg-destructive/8 px-5 py-4 transition-all hover:border-destructive/40"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/15 text-destructive">
+              <ScanLine className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-sm font-semibold tracking-tight text-foreground">Quick Recall Check</p>
+              <p className="mt-0.5 font-body text-xs text-muted-foreground">
+                Search CPSC recalls by name or scan a barcode
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </Link>
+
           <div className="grid grid-cols-2 gap-2.5">
             <ToolCard to="/safety-guides" icon={Shield} label="Safety Milestones" />
             <ToolCard to="/caregiver-card" icon={ClipboardList} label="Caregiver Card" />
