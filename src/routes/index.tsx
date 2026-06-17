@@ -169,30 +169,6 @@ function Index() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="w-full px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-        <div className="mx-auto max-w-3xl text-center">
-          <h2 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            Ready to breathe easier?
-          </h2>
-          <p className="mt-4 font-body text-lg text-muted-foreground">
-            Add any baby essential—from car seats and cribs to bottles,
-            carriers, and everything in between. Safe &amp; Sound keeps track of
-            the details for you, with reminders when it's time to replace,
-            resize or double-check the fit.
-          </p>
-          <p className="mt-3 font-body text-lg text-muted-foreground">
-            Just the information you need, exactly when you need it.
-          </p>
-          <Link
-            to="/auth"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-body text-base font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20"
-          >
-            Get started free
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </section>
 
       <Footer />
     </div>
