@@ -100,69 +100,69 @@
   --radius: 1rem;
 
   /* ── Backgrounds ─────────────────────────────────────────────────────── */
-  --background: oklch(0.922 0.014 75);      /* #EDE8DC warm greige/linen     */
+  --background: oklch(0.952 0.010 82);      /* #F2EFE8 Alabaster Lace        */
   --foreground: oklch(0.245 0.028 42);      /* #3A2E24 deep warm brown       */
 
-  --card: oklch(0.958 0.010 76);            /* #F5F1EB soft linen card       */
+  --card: oklch(0.968 0.007 80);            /* lighter alabaster card        */
   --card-foreground: oklch(0.245 0.028 42);
-  --popover: oklch(0.958 0.010 76);
+  --popover: oklch(0.968 0.007 80);
   --popover-foreground: oklch(0.245 0.028 42);
 
-  /* ── Primary: dusty mauve-rose (Seaside Sand depth) ─────────────────── */
-  --primary: oklch(0.585 0.048 12);         /* #9B827A dusty mauve-rose      */
+  /* ── Primary: Withered Mauve ─────────────────────────────────────────── */
+  --primary: oklch(0.598 0.058 8);          /* #A97A82 Withered Mauve        */
   --primary-foreground: oklch(0.985 0 0);   /* white text                    */
 
-  /* ── Secondary: warm greige swatch ──────────────────────────────────── */
-  --secondary: oklch(0.890 0.014 74);       /* warm greige swatch            */
+  /* ── Secondary: Honeyed Light ───────────────────────────────────────── */
+  --secondary: oklch(0.858 0.048 95);       /* #E0D4A5 Honeyed Light         */
   --secondary-foreground: oklch(0.245 0.028 42);
 
   /* ── Muted ──────────────────────────────────────────────────────────── */
-  --muted: oklch(0.908 0.012 74);
-  --muted-foreground: oklch(0.545 0.018 55); /* #8A8078 warm medium gray     */
+  --muted: oklch(0.910 0.018 88);
+  --muted-foreground: oklch(0.530 0.020 55); /* warm medium gray             */
 
-  /* ── Accent: warm sand/taupe ─────────────────────────────────────────  */
-  --accent: oklch(0.762 0.030 65);          /* #C8B8A2 warm sand             */
+  /* ── Accent: Antique Rose ────────────────────────────────────────────  */
+  --accent: oklch(0.728 0.058 12);          /* #D29A91 Antique Rose          */
   --accent-foreground: oklch(0.245 0.028 42);
 
   /* ── Destructive: muted brick (recalls) ─────────────────────────────── */
-  --destructive: oklch(0.528 0.105 27);     /* #B85C4A muted brick           */
+  --destructive: oklch(0.528 0.105 27);     /* muted brick                   */
   --destructive-foreground: oklch(0.985 0 0);
 
   /* ── Borders & inputs ───────────────────────────────────────────────── */
-  --border: oklch(0.878 0.014 72);          /* #DDD8CF warm linen divider    */
-  --input: oklch(0.878 0.014 72);
-  --ring: oklch(0.585 0.048 12);            /* mauve focus ring              */
+  --border: oklch(0.898 0.018 88);          /* warm honeyed border           */
+  --input: oklch(0.898 0.018 88);
+  --ring: oklch(0.598 0.058 8);             /* mauve focus ring              */
 
   /* ── Charts ─────────────────────────────────────────────────────────── */
-  --chart-1: oklch(0.585 0.048 12);         /* mauve                         */
-  --chart-2: oklch(0.762 0.030 65);         /* warm sand                     */
-  --chart-3: oklch(0.680 0.055 145);        /* sage                          */
-  --chart-4: oklch(0.682 0.092 58);         /* amber                         */
+  --chart-1: oklch(0.598 0.058 8);          /* Withered Mauve                */
+  --chart-2: oklch(0.728 0.058 12);         /* Antique Rose                  */
+  --chart-3: oklch(0.668 0.055 135);        /* Sage Whisper                  */
+  --chart-4: oklch(0.858 0.048 95);         /* Honeyed Light                 */
   --chart-5: oklch(0.528 0.105 27);         /* brick                         */
 
   /* ── Sidebar ───────────────────────────────────────────────────────── */
-  --sidebar: oklch(0.922 0.014 75);
+  --sidebar: oklch(0.952 0.010 82);
   --sidebar-foreground: oklch(0.245 0.028 42);
-  --sidebar-primary: oklch(0.585 0.048 12);
+  --sidebar-primary: oklch(0.598 0.058 8);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.762 0.030 65);
+  --sidebar-accent: oklch(0.728 0.058 12);
   --sidebar-accent-foreground: oklch(0.245 0.028 42);
-  --sidebar-border: oklch(0.878 0.014 72);
-  --sidebar-ring: oklch(0.585 0.048 12);
+  --sidebar-border: oklch(0.898 0.018 88);
+  --sidebar-ring: oklch(0.598 0.058 8);
 
   /* ── Extended brand tokens ──────────────────────────────────────────── */
-  --cream:       oklch(0.958 0.010 76);       /* soft linen card             */
-  --sand:        oklch(0.890 0.014 74);       /* warm greige                 */
-  --forest:      oklch(0.560 0.075 148);      /* deeper sage                 */
-  --sage:        oklch(0.680 0.055 145);      /* muted sage green            */
-  --mist:        oklch(0.840 0.030 18);       /* dusty blush                 */
-  --butter:      oklch(0.682 0.092 58);       /* warm amber                  */
-  --terracotta:  oklch(0.585 0.048 12);       /* = primary (mauve now)       */
-  --card-surface: oklch(0.958 0.010 76);
+  --cream:       oklch(0.968 0.007 80);       /* alabaster card              */
+  --sand:        oklch(0.858 0.048 95);       /* Honeyed Light               */
+  --forest:      oklch(0.540 0.065 140);      /* deeper sage                 */
+  --sage:        oklch(0.668 0.055 135);      /* #9BA488 Sage Whisper        */
+  --mist:        oklch(0.840 0.035 12);       /* light antique rose          */
+  --butter:      oklch(0.858 0.048 95);       /* Honeyed Light               */
+  --terracotta:  oklch(0.598 0.058 8);        /* = primary (mauve)           */
+  --card-surface: oklch(0.968 0.007 80);
 
   /* Named tokens */
-  --blush:  oklch(0.840 0.030 18);            /* #DDCBC8 dusty blush         */
-  --amber:  oklch(0.682 0.092 58);            /* #C9965A warm amber          */
+  --blush:  oklch(0.840 0.035 12);            /* light antique rose          */
+  --amber:  oklch(0.858 0.048 95);            /* Honeyed Light               */
 }
 
 /* Dark mode — warm charcoal-based inversion */
@@ -173,34 +173,34 @@
   --card-foreground: oklch(0.955 0.008 80);
   --popover: oklch(0.215 0.016 58);
   --popover-foreground: oklch(0.955 0.008 80);
-  --primary: oklch(0.68 0.048 12);
+  --primary: oklch(0.72 0.058 8);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.265 0.015 45);
   --secondary-foreground: oklch(0.955 0.008 80);
   --muted: oklch(0.265 0.015 45);
   --muted-foreground: oklch(0.62 0.016 62);
-  --accent: oklch(0.762 0.030 65);
+  --accent: oklch(0.728 0.058 12);
   --accent-foreground: oklch(0.955 0.008 80);
   --destructive: oklch(0.62 0.12 27);
   --destructive-foreground: oklch(0.955 0.008 80);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.68 0.048 12);
-  --chart-1: oklch(0.68 0.048 12);
-  --chart-2: oklch(0.762 0.030 65);
-  --chart-3: oklch(0.680 0.055 145);
-  --chart-4: oklch(0.682 0.092 58);
+  --ring: oklch(0.72 0.058 8);
+  --chart-1: oklch(0.72 0.058 8);
+  --chart-2: oklch(0.728 0.058 12);
+  --chart-3: oklch(0.668 0.055 135);
+  --chart-4: oklch(0.858 0.048 95);
   --chart-5: oklch(0.62 0.12 27);
   --sidebar: oklch(0.215 0.016 45);
   --sidebar-foreground: oklch(0.955 0.008 80);
-  --sidebar-primary: oklch(0.68 0.048 12);
+  --sidebar-primary: oklch(0.72 0.058 8);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.762 0.030 65);
+  --sidebar-accent: oklch(0.728 0.058 12);
   --sidebar-accent-foreground: oklch(0.955 0.008 80);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.68 0.048 12);
+  --sidebar-ring: oklch(0.72 0.058 8);
   --blush:  oklch(0.42 0.04 12);
-  --amber:  oklch(0.55 0.09 58);
+  --amber:  oklch(0.55 0.09 95);
 }
 
 @layer base {
@@ -212,8 +212,8 @@
     background-color: var(--color-background);
     /* Subtle warm linen grain — very quiet */
     background-image:
-      radial-gradient(oklch(0.585 0.048 12 / 0.04) 1px, transparent 1px),
-      radial-gradient(oklch(0.762 0.030 65 / 0.035) 1px, transparent 1px);
+      radial-gradient(oklch(0.598 0.058 8 / 0.04) 1px, transparent 1px),
+      radial-gradient(oklch(0.668 0.055 135 / 0.035) 1px, transparent 1px);
     background-size: 28px 28px, 42px 42px;
     background-position: 0 0, 14px 21px;
     color: var(--color-foreground);
