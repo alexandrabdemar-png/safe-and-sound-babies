@@ -54,13 +54,15 @@ function AuthCallbackPage() {
         });
     });
 
-    // Belt-and-suspenders: also listen for the auth state change event which
-    // fires after the session is persisted to localStorage.
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (done) return;
+      if (event === "PASSWORD_RECOVERY") {
+        done = true;
+        navigate({ to: "/auth", search: { mode: "reset" } } as never);
+        return;
+      }
       if (event === "SIGNED_IN" && session) {
         done = true;
-        // Check profile completion for onboarding routing
         supabase
           .from("profiles")
           .select("display_name")

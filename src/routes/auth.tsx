@@ -14,17 +14,18 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Sign in or create your Safe & Sound account to start tracking your little one's milestones." },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>): { error?: string } => ({
+  validateSearch: (s: Record<string, unknown>): { error?: string; mode?: string } => ({
     error: typeof s.error === "string" ? s.error : undefined,
+    mode: typeof s.mode === "string" ? s.mode : undefined,
   }),
 });
 
-type Mode = "signin" | "signup" | "magic";
+type Mode = "signin" | "signup" | "magic" | "forgot" | "reset";
 
 function AuthPage() {
   const navigate = useNavigate();
-  const { error: authError } = Route.useSearch();
-  const [mode, setMode] = useState<Mode>("signin");
+  const { error: authError, mode: modeParam } = Route.useSearch();
+  const [mode, setMode] = useState<Mode>((modeParam as Mode) ?? "signin");
 
   // Show auth callback errors (e.g. expired magic link)
   useEffect(() => {
@@ -91,6 +92,38 @@ function AuthPage() {
     }
   }
 
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading("email");
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+      });
+      if (error) throw error;
+      toast.success("Password reset email sent — check your inbox");
+      setMode("signin");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send reset email");
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  async function handleResetPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading("email");
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+      toast.success("Password updated — you're signed in!");
+      navigate({ to: "/home" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not update password");
+    } finally {
+      setLoading(null);
+    }
+  }
+
   async function handleOAuth(provider: "google" | "apple") {
     setLoading(provider);
     try {
@@ -126,19 +159,23 @@ function AuthPage() {
               <Sparkles className="h-6 w-6 text-primary" />
             </div>
             <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">
-              {mode === "signup" ? "Create your account" : mode === "magic" ? "Magic link sign-in" : "Welcome back"}
+              {mode === "signup" ? "Create your account"
+                : mode === "magic" ? "Magic link sign-in"
+                : mode === "forgot" ? "Reset your password"
+                : mode === "reset" ? "Set new password"
+                : "Welcome back"}
             </h1>
             <p className="mt-2 font-body text-sm text-muted-foreground">
-              {mode === "signup"
-                ? "Start tracking your little one's journey."
-                : mode === "magic"
-                ? "We'll email you a one-tap sign-in link."
+              {mode === "signup" ? "Start tracking your little one's journey."
+                : mode === "magic" ? "We'll email you a one-tap sign-in link."
+                : mode === "forgot" ? "Enter your email and we'll send a reset link."
+                : mode === "reset" ? "Choose a new password for your account."
                 : "Sign in to continue your journey."}
             </p>
           </div>
 
-          {/* OAuth */}
-          <div className="space-y-2.5">
+          {/* OAuth — hide on forgot/reset */}
+          {mode !== "forgot" && mode !== "reset" && <div className="space-y-2.5">
             <button
               type="button"
               onClick={() => handleOAuth("google")}
@@ -163,29 +200,43 @@ function AuthPage() {
             </button>
           </div>
 
-          {/* Divider */}
-          <div className="my-6 flex items-center gap-3">
+          </div>}
+
+          {/* Divider — hide on forgot/reset */}
+          {mode !== "forgot" && mode !== "reset" && <div className="my-6 flex items-center gap-3">
             <div className="h-px flex-1 bg-border/60" />
             <span className="font-body text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">or</span>
             <div className="h-px flex-1 bg-border/60" />
           </div>
 
-          {/* Email form */}
-          <form onSubmit={mode === "magic" ? handleMagicLink : handleEmailSubmit} className="space-y-3">
-            <div className="relative">
-              <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                autoComplete="email"
-                className="w-full rounded-2xl border border-border/70 bg-background/60 py-3 pl-11 pr-4 font-body text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
+          </div>}
 
-            {mode !== "magic" && (
+          {/* Email form */}
+          <form
+            onSubmit={
+              mode === "magic" ? handleMagicLink
+              : mode === "forgot" ? handleForgotPassword
+              : mode === "reset" ? handleResetPassword
+              : handleEmailSubmit
+            }
+            className="space-y-3"
+          >
+            {mode !== "reset" && (
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  className="w-full rounded-2xl border border-border/70 bg-background/60 py-3 pl-11 pr-4 font-body text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            )}
+
+            {(mode === "signin" || mode === "signup" || mode === "reset") && (
               <div className="relative">
                 <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
@@ -194,8 +245,8 @@ function AuthPage() {
                   minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Your password"
-                  autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                  placeholder={mode === "reset" ? "New password (min 6 characters)" : "Your password"}
+                  autoComplete={mode === "signup" || mode === "reset" ? "new-password" : "current-password"}
                   className="w-full rounded-2xl border border-border/70 bg-background/60 py-3 pl-11 pr-4 font-body text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
@@ -207,17 +258,30 @@ function AuthPage() {
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 font-body text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md disabled:opacity-50"
             >
               {(loading === "email" || loading === "magic") && <Loader2 className="h-4 w-4 animate-spin" />}
-              {mode === "signup" ? "Create account" : mode === "magic" ? "Send magic link" : "Sign in"}
+              {mode === "signup" ? "Create account"
+                : mode === "magic" ? "Send magic link"
+                : mode === "forgot" ? "Send reset link"
+                : mode === "reset" ? "Update password"
+                : "Sign in"}
             </button>
           </form>
 
           {/* Mode toggles */}
           <div className="mt-6 space-y-2 text-center font-body text-sm">
-            {mode !== "magic" && (
+            {mode === "signin" && (
+              <button
+                type="button"
+                onClick={() => setMode("forgot")}
+                className="block w-full text-muted-foreground transition-colors hover:text-primary"
+              >
+                Forgot your password?
+              </button>
+            )}
+            {mode === "signin" && (
               <button
                 type="button"
                 onClick={() => setMode("magic")}
-                className="text-muted-foreground transition-colors hover:text-primary"
+                className="block w-full text-muted-foreground transition-colors hover:text-primary"
               >
                 Email me a magic link instead
               </button>
@@ -231,16 +295,27 @@ function AuthPage() {
                 Use password instead
               </button>
             )}
-            <div className="text-muted-foreground">
-              {mode === "signup" ? "Already have an account?" : "New to Safe & Sound?"}{" "}
+            {(mode === "forgot" || mode === "reset") && (
               <button
                 type="button"
-                onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
-                className="font-semibold text-primary transition-colors hover:text-primary/80"
+                onClick={() => setMode("signin")}
+                className="text-muted-foreground transition-colors hover:text-primary"
               >
-                {mode === "signup" ? "Sign in" : "Create one"}
+                Back to sign in
               </button>
-            </div>
+            )}
+            {(mode === "signin" || mode === "signup") && (
+              <div className="text-muted-foreground">
+                {mode === "signup" ? "Already have an account?" : "New to Safe & Sound?"}{" "}
+                <button
+                  type="button"
+                  onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
+                  className="font-semibold text-primary transition-colors hover:text-primary/80"
+                >
+                  {mode === "signup" ? "Sign in" : "Create one"}
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
