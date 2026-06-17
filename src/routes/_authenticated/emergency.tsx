@@ -109,23 +109,6 @@ function EmergencyPage() {
             <ExternalLink className="h-5 w-5 shrink-0" style={{ color: "#C4785A" }} />
           </a>
 
-          <a
-            href="https://www.nhtsa.gov/vehicle/recalls"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-between rounded-2xl border px-5 py-4 transition-colors hover:bg-white/60"
-            style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}
-          >
-            <div>
-              <p className="font-body font-semibold" style={{ color: "#3D2B1F" }}>
-                NHTSA Vehicle Recalls
-              </p>
-              <p className="font-body text-sm" style={{ color: "#8A8078" }}>
-                National Highway Traffic Safety Administration
-              </p>
-            </div>
-            <ExternalLink className="h-5 w-5 shrink-0" style={{ color: "#C4785A" }} />
-          </a>
         </div>
 
         {/* Emergency Contacts */}
