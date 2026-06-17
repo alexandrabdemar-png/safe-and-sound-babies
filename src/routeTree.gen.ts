@@ -15,16 +15,16 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AuthenticatedSafetyGuidesRouteImport } from './routes/_authenticated/safety-guides'
+import { Route as AuthenticatedRecallCheckRouteImport } from './routes/_authenticated/recall-check'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
-import { Route as AuthenticatedSafetyGuidesRouteImport } from './routes/_authenticated/safety-guides'
-import { Route as AuthenticatedCaregiverCardRouteImport } from './routes/_authenticated/caregiver-card'
 import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
 import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticated/insights'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedEmergencyRouteImport } from './routes/_authenticated/emergency'
-import { Route as AuthenticatedRecallCheckRouteImport } from './routes/_authenticated/recall-check'
 import { Route as AuthenticatedChecklistsRouteImport } from './routes/_authenticated/checklists'
+import { Route as AuthenticatedCaregiverCardRouteImport } from './routes/_authenticated/caregiver-card'
 import { Route as AuthenticatedBottlesRouteImport } from './routes/_authenticated/bottles'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
@@ -70,6 +70,18 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/callback',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthenticatedSafetyGuidesRoute =
+  AuthenticatedSafetyGuidesRouteImport.update({
+    id: '/safety-guides',
+    path: '/safety-guides',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRecallCheckRoute =
+  AuthenticatedRecallCheckRouteImport.update({
+    id: '/recall-check',
+    path: '/recall-check',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -95,21 +107,6 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedSafetyGuidesRoute = AuthenticatedSafetyGuidesRouteImport.update({
-  id: '/safety-guides',
-  path: '/safety-guides',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedCaregiverCardRoute = AuthenticatedCaregiverCardRouteImport.update({
-  id: '/caregiver-card',
-  path: '/caregiver-card',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedRecallCheckRoute = AuthenticatedRecallCheckRouteImport.update({
-  id: '/recall-check',
-  path: '/recall-check',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedEmergencyRoute = AuthenticatedEmergencyRouteImport.update({
   id: '/emergency',
   path: '/emergency',
@@ -120,6 +117,12 @@ const AuthenticatedChecklistsRoute = AuthenticatedChecklistsRouteImport.update({
   path: '/checklists',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCaregiverCardRoute =
+  AuthenticatedCaregiverCardRouteImport.update({
+    id: '/caregiver-card',
+    path: '/caregiver-card',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedBottlesRoute = AuthenticatedBottlesRouteImport.update({
   id: '/bottles',
   path: '/bottles',
@@ -215,13 +218,13 @@ export interface FileRoutesByFullPath {
   '/caregiver-card': typeof AuthenticatedCaregiverCardRoute
   '/checklists': typeof AuthenticatedChecklistsRoute
   '/emergency': typeof AuthenticatedEmergencyRoute
-  '/recall-check': typeof AuthenticatedRecallCheckRoute
-  '/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/home': typeof AuthenticatedHomeRoute
   '/insights': typeof AuthenticatedInsightsRoute
   '/pricing': typeof AuthenticatedPricingRoute
   '/products': typeof AuthenticatedProductsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/recall-check': typeof AuthenticatedRecallCheckRoute
+  '/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
@@ -247,13 +250,13 @@ export interface FileRoutesByTo {
   '/caregiver-card': typeof AuthenticatedCaregiverCardRoute
   '/checklists': typeof AuthenticatedChecklistsRoute
   '/emergency': typeof AuthenticatedEmergencyRoute
-  '/recall-check': typeof AuthenticatedRecallCheckRoute
-  '/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/home': typeof AuthenticatedHomeRoute
   '/insights': typeof AuthenticatedInsightsRoute
   '/pricing': typeof AuthenticatedPricingRoute
   '/products': typeof AuthenticatedProductsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/recall-check': typeof AuthenticatedRecallCheckRoute
+  '/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
@@ -280,14 +283,14 @@ export interface FileRoutesById {
   '/_authenticated/bottles': typeof AuthenticatedBottlesRouteWithChildren
   '/_authenticated/caregiver-card': typeof AuthenticatedCaregiverCardRoute
   '/_authenticated/checklists': typeof AuthenticatedChecklistsRoute
-  '/_authenticated/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/_authenticated/emergency': typeof AuthenticatedEmergencyRoute
-  '/_authenticated/recall-check': typeof AuthenticatedRecallCheckRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/insights': typeof AuthenticatedInsightsRoute
   '/_authenticated/pricing': typeof AuthenticatedPricingRoute
   '/_authenticated/products': typeof AuthenticatedProductsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/recall-check': typeof AuthenticatedRecallCheckRoute
+  '/_authenticated/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/_authenticated/moments/new': typeof AuthenticatedMomentsNewRoute
@@ -315,13 +318,13 @@ export interface FileRouteTypes {
     | '/caregiver-card'
     | '/checklists'
     | '/emergency'
-    | '/recall-check'
-    | '/safety-guides'
     | '/home'
     | '/insights'
     | '/pricing'
     | '/products'
     | '/profile'
+    | '/recall-check'
+    | '/safety-guides'
     | '/auth/callback'
     | '/bottles/new'
     | '/moments/new'
@@ -347,13 +350,13 @@ export interface FileRouteTypes {
     | '/caregiver-card'
     | '/checklists'
     | '/emergency'
-    | '/recall-check'
-    | '/safety-guides'
     | '/home'
     | '/insights'
     | '/pricing'
     | '/products'
     | '/profile'
+    | '/recall-check'
+    | '/safety-guides'
     | '/auth/callback'
     | '/bottles/new'
     | '/moments/new'
@@ -379,14 +382,14 @@ export interface FileRouteTypes {
     | '/_authenticated/bottles'
     | '/_authenticated/caregiver-card'
     | '/_authenticated/checklists'
-    | '/_authenticated/safety-guides'
     | '/_authenticated/emergency'
-    | '/_authenticated/recall-check'
     | '/_authenticated/home'
     | '/_authenticated/insights'
     | '/_authenticated/pricing'
     | '/_authenticated/products'
     | '/_authenticated/profile'
+    | '/_authenticated/recall-check'
+    | '/_authenticated/safety-guides'
     | '/auth/callback'
     | '/_authenticated/bottles/new'
     | '/_authenticated/moments/new'
@@ -459,6 +462,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_authenticated/safety-guides': {
+      id: '/_authenticated/safety-guides'
+      path: '/safety-guides'
+      fullPath: '/safety-guides'
+      preLoaderRoute: typeof AuthenticatedSafetyGuidesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/recall-check': {
+      id: '/_authenticated/recall-check'
+      path: '/recall-check'
+      fullPath: '/recall-check'
+      preLoaderRoute: typeof AuthenticatedRecallCheckRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -501,18 +518,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEmergencyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/recall-check': {
-      id: '/_authenticated/recall-check'
-      path: '/recall-check'
-      fullPath: '/recall-check'
-      preLoaderRoute: typeof AuthenticatedRecallCheckRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/checklists': {
       id: '/_authenticated/checklists'
       path: '/checklists'
       fullPath: '/checklists'
       preLoaderRoute: typeof AuthenticatedChecklistsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/caregiver-card': {
+      id: '/_authenticated/caregiver-card'
+      path: '/caregiver-card'
+      fullPath: '/caregiver-card'
+      preLoaderRoute: typeof AuthenticatedCaregiverCardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/bottles': {
@@ -638,14 +655,16 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAddRoute: typeof AuthenticatedAddRoute
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
   AuthenticatedBottlesRoute: typeof AuthenticatedBottlesRouteWithChildren
+  AuthenticatedCaregiverCardRoute: typeof AuthenticatedCaregiverCardRoute
   AuthenticatedChecklistsRoute: typeof AuthenticatedChecklistsRoute
   AuthenticatedEmergencyRoute: typeof AuthenticatedEmergencyRoute
-  AuthenticatedRecallCheckRoute: typeof AuthenticatedRecallCheckRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedInsightsRoute: typeof AuthenticatedInsightsRoute
   AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedRecallCheckRoute: typeof AuthenticatedRecallCheckRoute
+  AuthenticatedSafetyGuidesRoute: typeof AuthenticatedSafetyGuidesRoute
   AuthenticatedMomentsNewRoute: typeof AuthenticatedMomentsNewRoute
   AuthenticatedProductsIdRoute: typeof AuthenticatedProductsIdRoute
   AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
@@ -661,13 +680,13 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCaregiverCardRoute: AuthenticatedCaregiverCardRoute,
   AuthenticatedChecklistsRoute: AuthenticatedChecklistsRoute,
   AuthenticatedEmergencyRoute: AuthenticatedEmergencyRoute,
-  AuthenticatedRecallCheckRoute: AuthenticatedRecallCheckRoute,
-  AuthenticatedSafetyGuidesRoute: AuthenticatedSafetyGuidesRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedInsightsRoute: AuthenticatedInsightsRoute,
   AuthenticatedPricingRoute: AuthenticatedPricingRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedRecallCheckRoute: AuthenticatedRecallCheckRoute,
+  AuthenticatedSafetyGuidesRoute: AuthenticatedSafetyGuidesRoute,
   AuthenticatedMomentsNewRoute: AuthenticatedMomentsNewRoute,
   AuthenticatedProductsIdRoute: AuthenticatedProductsIdRoute,
   AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
@@ -706,3 +725,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
