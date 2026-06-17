@@ -73,6 +73,27 @@ export type Database = {
           },
         ]
       }
+      checklist_completions: {
+        Row: {
+          created_at: string
+          id: string
+          item_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       child_measurements: {
         Row: {
           child_id: string
@@ -147,6 +168,33 @@ export type Database = {
           updated_at?: string
           user_id?: string
           weight_lbs?: number | null
+        }
+        Relationships: []
+      }
+      emergency_contacts: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          phone: string
+          relationship: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          phone: string
+          relationship?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string
+          relationship?: string
+          user_id?: string
         }
         Relationships: []
       }
