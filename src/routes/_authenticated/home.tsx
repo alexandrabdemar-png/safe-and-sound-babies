@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowRight, Loader2, Package, Plus, RefreshCw, Ruler, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckSquare, ClipboardList, Loader2, Package, Plus, RefreshCw, Ruler, Shield, Sparkles } from "lucide-react";
 import { MomentTimeline } from "@/components/MomentTimeline";
 import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
@@ -241,6 +241,19 @@ function HomePage() {
       </section>
 
 
+      {/* Tools quick links */}
+      <section className="px-5 pt-8 sm:px-6">
+        <div className="mx-auto max-w-md">
+          <h2 className="mb-3 font-display text-xl font-semibold tracking-tight">Tools</h2>
+          <div className="grid grid-cols-2 gap-2.5">
+            <ToolCard to="/safety-guides" icon={Shield} label="Safety Milestones" />
+            <ToolCard to="/caregiver-card" icon={ClipboardList} label="Caregiver Card" />
+            <ToolCard to="/checklists" icon={CheckSquare} label="Room Checklists" />
+            <ToolCard to="/emergency" icon={AlertTriangle} label="Emergency Hub" />
+          </div>
+        </div>
+      </section>
+
       {/* Recent moments */}
       <section className="px-5 pt-10 sm:px-6">
         <div className="mx-auto max-w-md">
@@ -375,6 +388,28 @@ function MomentsTimeline({ moments }: { moments: Moment[] }) {
         })}
       </ul>
     </div>
+  );
+}
+
+function ToolCard({
+  to,
+  icon: Icon,
+  label,
+}: {
+  to: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+}) {
+  return (
+    <Link
+      to={to}
+      className="flex flex-col items-start gap-2 rounded-2xl border border-border/60 bg-card p-4 transition-all hover:border-primary/40"
+    >
+      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-sand/60 text-accent">
+        <Icon className="h-4 w-4" />
+      </span>
+      <p className="font-display text-sm font-semibold tracking-tight leading-snug">{label}</p>
+    </Link>
   );
 }
 

@@ -117,6 +117,9 @@ function AlertsPage() {
 
   const empty = !loading && recalls.length === 0 && replaceDue.length === 0 && sizeUpDue.length === 0;
 
+  // Recalls for products you own (already in `recalls` state — these are product_recalls with acknowledged=false)
+  const ownedRecalls = recalls;
+
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28">
       <header className="px-5 pt-10 pb-6 sm:px-6">
@@ -130,6 +133,62 @@ function AlertsPage() {
           </p>
         </div>
       </header>
+
+      {/* Prominent banner: products you own with active recalls */}
+      {!loading && ownedRecalls.length > 0 && (
+        <div className="px-5 pb-4 sm:px-6">
+          <div className="mx-auto max-w-md">
+            <div className="rounded-3xl border-2 border-destructive/40 bg-destructive/8 p-5" style={{ backgroundColor: "rgba(185, 28, 28, 0.06)" }}>
+              <div className="mb-3 flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-destructive/20 text-destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                </span>
+                <div>
+                  <h2 className="font-display text-base font-semibold text-destructive">
+                    Products You Own With Active Recalls
+                  </h2>
+                  <p className="font-body text-xs text-destructive/80">
+                    {ownedRecalls.length} product{ownedRecalls.length !== 1 ? "s" : ""} need{ownedRecalls.length === 1 ? "s" : ""} your attention
+                  </p>
+                </div>
+              </div>
+              <ul className="space-y-2.5">
+                {ownedRecalls.map((r) => {
+                  const recall = r.recalls;
+                  const product = r.products;
+                  if (!recall) return null;
+                  const snippet = recall.hazard
+                    ? recall.hazard.length > 80
+                      ? recall.hazard.slice(0, 80) + "…"
+                      : recall.hazard
+                    : recall.title;
+                  return (
+                    <li
+                      key={r.id}
+                      className="rounded-2xl border border-destructive/25 bg-white/70 px-4 py-3 dark:bg-destructive/10"
+                    >
+                      <p className="font-display text-sm font-semibold tracking-tight text-foreground">
+                        {product?.name ?? recall.title}
+                      </p>
+                      <p className="mt-0.5 font-body text-xs text-foreground/70 line-clamp-2">{snippet}</p>
+                      {recall.url && (
+                        <a
+                          href={recall.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive hover:underline"
+                        >
+                          View details <ArrowUpRight className="h-3 w-3" />
+                        </a>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="flex-1 px-5 sm:px-6">
         <div className="mx-auto max-w-md space-y-8">

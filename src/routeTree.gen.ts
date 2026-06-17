@@ -25,6 +25,8 @@ import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
 import { Route as AuthenticatedEmergencyRouteImport } from './routes/_authenticated/emergency'
 import { Route as AuthenticatedChecklistsRouteImport } from './routes/_authenticated/checklists'
+import { Route as AuthenticatedCaregiverCardRouteImport } from './routes/_authenticated/caregiver-card'
+import { Route as AuthenticatedSafetyGuidesRouteImport } from './routes/_authenticated/safety-guides'
 import { Route as AuthenticatedProfilePrivacyPolicyRouteImport } from './routes/_authenticated/profile_.privacy-policy'
 import { Route as AuthenticatedProfileNotificationSettingsRouteImport } from './routes/_authenticated/profile_.notification-settings'
 import { Route as AuthenticatedProductsScanRouteImport } from './routes/_authenticated/products_.scan'
@@ -117,6 +119,16 @@ const AuthenticatedChecklistsRoute = AuthenticatedChecklistsRouteImport.update({
   path: '/checklists',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCaregiverCardRoute = AuthenticatedCaregiverCardRouteImport.update({
+  id: '/caregiver-card',
+  path: '/caregiver-card',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSafetyGuidesRoute = AuthenticatedSafetyGuidesRouteImport.update({
+  id: '/safety-guides',
+  path: '/safety-guides',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProfilePrivacyPolicyRoute =
   AuthenticatedProfilePrivacyPolicyRouteImport.update({
     id: '/profile_/privacy-policy',
@@ -195,6 +207,8 @@ export interface FileRoutesByFullPath {
   '/alerts': typeof AuthenticatedAlertsRoute
   '/emergency': typeof AuthenticatedEmergencyRoute
   '/checklists': typeof AuthenticatedChecklistsRoute
+  '/caregiver-card': typeof AuthenticatedCaregiverCardRoute
+  '/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/bottles': typeof AuthenticatedBottlesRouteWithChildren
   '/home': typeof AuthenticatedHomeRoute
   '/insights': typeof AuthenticatedInsightsRoute
@@ -224,6 +238,8 @@ export interface FileRoutesByTo {
   '/alerts': typeof AuthenticatedAlertsRoute
   '/emergency': typeof AuthenticatedEmergencyRoute
   '/checklists': typeof AuthenticatedChecklistsRoute
+  '/caregiver-card': typeof AuthenticatedCaregiverCardRoute
+  '/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/bottles': typeof AuthenticatedBottlesRouteWithChildren
   '/home': typeof AuthenticatedHomeRoute
   '/insights': typeof AuthenticatedInsightsRoute
@@ -255,6 +271,8 @@ export interface FileRoutesById {
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
   '/_authenticated/emergency': typeof AuthenticatedEmergencyRoute
   '/_authenticated/checklists': typeof AuthenticatedChecklistsRoute
+  '/_authenticated/caregiver-card': typeof AuthenticatedCaregiverCardRoute
+  '/_authenticated/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/_authenticated/bottles': typeof AuthenticatedBottlesRouteWithChildren
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/insights': typeof AuthenticatedInsightsRoute
@@ -286,6 +304,8 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/emergency'
     | '/checklists'
+    | '/caregiver-card'
+    | '/safety-guides'
     | '/bottles'
     | '/home'
     | '/insights'
@@ -315,6 +335,8 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/emergency'
     | '/checklists'
+    | '/caregiver-card'
+    | '/safety-guides'
     | '/bottles'
     | '/home'
     | '/insights'
@@ -345,6 +367,8 @@ export interface FileRouteTypes {
     | '/_authenticated/alerts'
     | '/_authenticated/emergency'
     | '/_authenticated/checklists'
+    | '/_authenticated/caregiver-card'
+    | '/_authenticated/safety-guides'
     | '/_authenticated/bottles'
     | '/_authenticated/home'
     | '/_authenticated/insights'
@@ -479,6 +503,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChecklistsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/caregiver-card': {
+      id: '/_authenticated/caregiver-card'
+      path: '/caregiver-card'
+      fullPath: '/caregiver-card'
+      preLoaderRoute: typeof AuthenticatedCaregiverCardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/safety-guides': {
+      id: '/_authenticated/safety-guides'
+      path: '/safety-guides'
+      fullPath: '/safety-guides'
+      preLoaderRoute: typeof AuthenticatedSafetyGuidesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/alerts': {
       id: '/_authenticated/alerts'
       path: '/alerts'
@@ -596,6 +634,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
   AuthenticatedEmergencyRoute: typeof AuthenticatedEmergencyRoute
   AuthenticatedChecklistsRoute: typeof AuthenticatedChecklistsRoute
+  AuthenticatedCaregiverCardRoute: typeof AuthenticatedCaregiverCardRoute
+  AuthenticatedSafetyGuidesRoute: typeof AuthenticatedSafetyGuidesRoute
   AuthenticatedBottlesRoute: typeof AuthenticatedBottlesRouteWithChildren
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedInsightsRoute: typeof AuthenticatedInsightsRoute
@@ -615,6 +655,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
   AuthenticatedEmergencyRoute: AuthenticatedEmergencyRoute,
   AuthenticatedChecklistsRoute: AuthenticatedChecklistsRoute,
+  AuthenticatedCaregiverCardRoute: AuthenticatedCaregiverCardRoute,
+  AuthenticatedSafetyGuidesRoute: AuthenticatedSafetyGuidesRoute,
   AuthenticatedBottlesRoute: AuthenticatedBottlesRouteWithChildren,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedInsightsRoute: AuthenticatedInsightsRoute,
