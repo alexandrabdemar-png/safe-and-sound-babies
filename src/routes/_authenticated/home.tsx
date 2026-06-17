@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowRight, Loader2, Package, Plus, RefreshCw, Ruler, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckSquare, ClipboardList, Loader2, Package, Plus, RefreshCw, Ruler, Shield, Sparkles } from "lucide-react";
 import { MomentTimeline } from "@/components/MomentTimeline";
 import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
@@ -240,6 +240,19 @@ function HomePage() {
         </div>
       </section>
 
+
+      {/* Tools quick links */}
+      <section className="px-5 pt-8 sm:px-6">
+        <div className="mx-auto max-w-md">
+          <h2 className="mb-3 font-display text-xl font-semibold tracking-tight">Tools</h2>
+          <div className="grid grid-cols-2 gap-2.5">
+            <ToolCard to="/safety-guides" icon={Shield} label="Safety Milestones" />
+            <ToolCard to="/caregiver-card" icon={ClipboardList} label="Caregiver Card" />
+            <ToolCard to="/checklists" icon={CheckSquare} label="Room Checklists" />
+            <ToolCard to="/emergency" icon={AlertTriangle} label="Emergency Hub" />
+          </div>
+        </div>
+      </section>
 
       {/* Recent moments */}
       <section className="px-5 pt-10 sm:px-6">

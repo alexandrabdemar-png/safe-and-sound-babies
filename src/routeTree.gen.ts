@@ -17,6 +17,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
+import { Route as AuthenticatedSafetyGuidesRouteImport } from './routes/_authenticated/safety-guides'
+import { Route as AuthenticatedCaregiverCardRouteImport } from './routes/_authenticated/caregiver-card'
 import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
 import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticated/insights'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
@@ -90,6 +92,16 @@ const AuthenticatedInsightsRoute = AuthenticatedInsightsRouteImport.update({
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSafetyGuidesRoute = AuthenticatedSafetyGuidesRouteImport.update({
+  id: '/safety-guides',
+  path: '/safety-guides',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCaregiverCardRoute = AuthenticatedCaregiverCardRouteImport.update({
+  id: '/caregiver-card',
+  path: '/caregiver-card',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedEmergencyRoute = AuthenticatedEmergencyRouteImport.update({
@@ -194,8 +206,10 @@ export interface FileRoutesByFullPath {
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
   '/bottles': typeof AuthenticatedBottlesRouteWithChildren
+  '/caregiver-card': typeof AuthenticatedCaregiverCardRoute
   '/checklists': typeof AuthenticatedChecklistsRoute
   '/emergency': typeof AuthenticatedEmergencyRoute
+  '/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/home': typeof AuthenticatedHomeRoute
   '/insights': typeof AuthenticatedInsightsRoute
   '/pricing': typeof AuthenticatedPricingRoute
@@ -223,8 +237,10 @@ export interface FileRoutesByTo {
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
   '/bottles': typeof AuthenticatedBottlesRouteWithChildren
+  '/caregiver-card': typeof AuthenticatedCaregiverCardRoute
   '/checklists': typeof AuthenticatedChecklistsRoute
   '/emergency': typeof AuthenticatedEmergencyRoute
+  '/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/home': typeof AuthenticatedHomeRoute
   '/insights': typeof AuthenticatedInsightsRoute
   '/pricing': typeof AuthenticatedPricingRoute
@@ -254,7 +270,9 @@ export interface FileRoutesById {
   '/_authenticated/add': typeof AuthenticatedAddRoute
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
   '/_authenticated/bottles': typeof AuthenticatedBottlesRouteWithChildren
+  '/_authenticated/caregiver-card': typeof AuthenticatedCaregiverCardRoute
   '/_authenticated/checklists': typeof AuthenticatedChecklistsRoute
+  '/_authenticated/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/_authenticated/emergency': typeof AuthenticatedEmergencyRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/insights': typeof AuthenticatedInsightsRoute
@@ -285,8 +303,10 @@ export interface FileRouteTypes {
     | '/add'
     | '/alerts'
     | '/bottles'
+    | '/caregiver-card'
     | '/checklists'
     | '/emergency'
+    | '/safety-guides'
     | '/home'
     | '/insights'
     | '/pricing'
@@ -314,8 +334,10 @@ export interface FileRouteTypes {
     | '/add'
     | '/alerts'
     | '/bottles'
+    | '/caregiver-card'
     | '/checklists'
     | '/emergency'
+    | '/safety-guides'
     | '/home'
     | '/insights'
     | '/pricing'
@@ -344,7 +366,9 @@ export interface FileRouteTypes {
     | '/_authenticated/add'
     | '/_authenticated/alerts'
     | '/_authenticated/bottles'
+    | '/_authenticated/caregiver-card'
     | '/_authenticated/checklists'
+    | '/_authenticated/safety-guides'
     | '/_authenticated/emergency'
     | '/_authenticated/home'
     | '/_authenticated/insights'
@@ -614,8 +638,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAddRoute: AuthenticatedAddRoute,
   AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
   AuthenticatedBottlesRoute: AuthenticatedBottlesRouteWithChildren,
+  AuthenticatedCaregiverCardRoute: AuthenticatedCaregiverCardRoute,
   AuthenticatedChecklistsRoute: AuthenticatedChecklistsRoute,
   AuthenticatedEmergencyRoute: AuthenticatedEmergencyRoute,
+  AuthenticatedSafetyGuidesRoute: AuthenticatedSafetyGuidesRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedInsightsRoute: AuthenticatedInsightsRoute,
   AuthenticatedPricingRoute: AuthenticatedPricingRoute,
