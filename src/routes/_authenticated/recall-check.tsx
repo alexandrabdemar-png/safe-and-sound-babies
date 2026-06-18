@@ -24,13 +24,39 @@ type CpscRecall = {
   Inconjunctions?: Array<{ Name: string }>;
 };
 
+const BABY_KEYWORDS = [
+  "baby", "infant", "toddler", "child", "children", "kid", "kids", "nursery",
+  "car seat", "carseat", "stroller", "pram", "bassinet", "crib", "cradle",
+  "pacifier", "soother", "bouncer", "swing", "high chair", "highchair",
+  "carrier", "sling", "wrap", "swaddle", "sleep sack", "monitor",
+  "formula", "breast", "bottle", "nipple", "teether", "teething",
+  "play mat", "playmat", "activity mat", "jumper", "walker", "jolly",
+  "rocker", "boppy", "dock a tot", "dockatot", "snoo", "mamaroo",
+  "graco", "chicco", "evenflo", "britax", "uppababy", "nuna", "doona",
+  "fisher-price", "fisher price", "4moms", "ergobaby", "babybjorn",
+  "baby bjorn", "bumbo", "joovy", "bob", "thule", "cybex",
+  "pack n play", "pack and play", "playard", "playpen",
+  "baby food", "puree", "feeding", "sippy", "diaper", "wipe",
+  "newborn", "preemie", "layette", "onesie", "sleeper",
+];
+
+function isBabyRelated(recall: CpscRecall): boolean {
+  const text = [
+    recall.RecallHeading,
+    ...(recall.Products?.map((p) => `${p.Name} ${p.Description}`) ?? []),
+    ...(recall.Inconjunctions?.map((i) => i.Name) ?? []),
+  ].join(" ").toLowerCase();
+  return BABY_KEYWORDS.some((kw) => text.includes(kw));
+}
+
 async function searchCpsc(query: string): Promise<CpscRecall[]> {
   const res = await fetch(
     `https://www.saferproducts.gov/RestWebServices/Recall?format=json&Keyword=${encodeURIComponent(query)}`
   );
   if (!res.ok) throw new Error(`CPSC API error ${res.status}`);
   const data = await res.json();
-  return Array.isArray(data) ? data : [];
+  const all: CpscRecall[] = Array.isArray(data) ? data : [];
+  return all.filter(isBabyRelated);
 }
 
 async function lookupBarcode(barcode: string): Promise<string | null> {
@@ -196,7 +222,7 @@ function RecallCheckPage() {
                   </div>
                   <p className="font-display text-lg font-semibold tracking-tight">No recalls found</p>
                   <p className="mt-1.5 mx-auto max-w-xs font-body text-sm text-muted-foreground">
-                    Always check the CPSC website for the most up-to-date information.
+                    No baby or kids product recalls found for that search. Always verify at cpsc.gov/Recalls.
                   </p>
                 </div>
               ) : (
