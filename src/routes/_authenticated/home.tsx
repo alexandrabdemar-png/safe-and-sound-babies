@@ -328,6 +328,28 @@ function SummaryTile({
   );
 }
 
+function ToolCard({
+  to,
+  icon: Icon,
+  label,
+}: {
+  to: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+}) {
+  return (
+    <Link
+      to={to}
+      className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card px-4 py-3.5 transition-all hover:border-primary/40"
+    >
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sand/60 text-accent">
+        <Icon className="h-4 w-4" />
+      </span>
+      <span className="font-display text-sm font-semibold tracking-tight">{label}</span>
+    </Link>
+  );
+}
+
 function MomentsTimeline({ moments }: { moments: Moment[] }) {
   return (
     <div className="relative">
