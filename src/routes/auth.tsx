@@ -198,8 +198,6 @@ function AuthPage() {
               {loading === "apple" ? <Loader2 className="h-4 w-4 animate-spin" /> : <AppleIcon />}
               Continue with Apple
             </button>
-          </div>
-
           </div>}
 
           {/* Divider — hide on forgot/reset */}
@@ -207,8 +205,6 @@ function AuthPage() {
             <div className="h-px flex-1 bg-border/60" />
             <span className="font-body text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">or</span>
             <div className="h-px flex-1 bg-border/60" />
-          </div>
-
           </div>}
 
           {/* Email form */}
