@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowRight, CheckSquare, ClipboardList, Loader2, Package, Plus, RefreshCw, Ruler, ScanLine, Shield, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowRight, Loader2, Package, Plus, RefreshCw, Ruler, Sparkles, X } from "lucide-react";
 import { MomentTimeline } from "@/components/MomentTimeline";
 import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
@@ -65,6 +65,10 @@ function greeting() {
   return "Good evening";
 }
 
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 function HomePage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -73,6 +77,16 @@ function HomePage() {
   const [alerts, setAlerts] = useState<AlertSummary>({ recalls: 0, replace: 0, sizeUp: 0 });
   const [products, setProducts] = useState<ProductInput[]>([]);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+
+  // Recall banner dismiss (resets daily)
+  const [recallBannerDismissed, setRecallBannerDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(`safesound.recallBannerDismissed.${todayKey()}`) === "true";
+    } catch { return false; }
+  });
+
+  // Measurements reminder dismiss (resets after 7 days)
+  const [measReminderDismissed, setMeasReminderDismissed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -88,6 +102,19 @@ function HomePage() {
       if (!kids || kids.length === 0) { navigate({ to: "/onboarding" }); return; }
       const c = (kids.find((k) => k.id === activeId) ?? kids[0]) as Child;
       setChild(c);
+
+      // Check measurement reminder dismissal
+      try {
+        const dimKey = `safesound.measReminderDismissed.${c.id}`;
+        const stored = localStorage.getItem(dimKey);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+          if (parsed.ts && parsed.ts > sevenDaysAgo) {
+            setMeasReminderDismissed(true);
+          }
+        }
+      } catch {}
 
       const horizon = new Date();
       horizon.setDate(horizon.getDate() + 30);
@@ -130,6 +157,27 @@ function HomePage() {
     return all.filter((i) => !dismissedIds.has(i.id)).slice(0, 3);
   }, [child, products, dismissedIds]);
 
+  // Show measurements reminder if measurements_updated_at is null or > 28 days ago
+  const showMeasReminder = useMemo(() => {
+    if (!child || measReminderDismissed) return false;
+    if (!child.measurements_updated_at) return true;
+    const updatedAt = new Date(child.measurements_updated_at).getTime();
+    const twentyEightDaysAgo = Date.now() - 28 * 24 * 60 * 60 * 1000;
+    return updatedAt < twentyEightDaysAgo;
+  }, [child, measReminderDismissed]);
+
+  function dismissRecallBanner() {
+    try { localStorage.setItem(`safesound.recallBannerDismissed.${todayKey()}`, "true"); } catch {}
+    setRecallBannerDismissed(true);
+  }
+
+  function dismissMeasReminder() {
+    if (!child) return;
+    try {
+      localStorage.setItem(`safesound.measReminderDismissed.${child.id}`, JSON.stringify({ ts: Date.now() }));
+    } catch {}
+    setMeasReminderDismissed(true);
+  }
 
   if (loading) {
     return (
@@ -167,45 +215,60 @@ function HomePage() {
         </div>
       </header>
 
-      {/* Up next — proactive guidance */}
-      {upNext.length > 0 && (
-        <section className="px-5 pt-4 sm:px-6">
+      {/* Recall banner — shown at top if there are active recalls */}
+      {alerts.recalls > 0 && !recallBannerDismissed && (
+        <div className="px-5 pt-3 sm:px-6">
           <div className="mx-auto max-w-md">
-            <div className="rounded-3xl border border-border/60 bg-card p-5">
-              <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sand/60 text-accent">
-                    <Sparkles className="h-3.5 w-3.5" />
-                  </span>
-                  <p className="font-display text-sm font-semibold tracking-tight">Up next for {child?.name}</p>
-                </div>
-                <Link to="/insights" className="font-body text-[11px] font-semibold text-accent">View all</Link>
-              </div>
-              <ul className="space-y-2.5">
-                {upNext.map((i) => (
-                  <li key={i.id} className="rounded-2xl bg-muted/40 px-3 py-2.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="font-body text-sm font-medium leading-snug">{i.title}</p>
-                      <span className={
-                        i.urgency === 'now'
-                          ? "shrink-0 rounded-full bg-destructive/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-destructive"
-                          : i.urgency === 'soon'
-                            ? "shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-amber-700 dark:text-amber-400"
-                            : "shrink-0 rounded-full bg-sand/60 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-accent"
-                      }>
-                        {i.urgency === 'heads_up' ? 'FYI' : i.urgency}
-                      </span>
-                    </div>
-                    <p className="mt-1 font-body text-xs text-muted-foreground line-clamp-2">{i.body}</p>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <Link
+              to="/alerts"
+              className="flex items-center justify-between rounded-2xl bg-destructive/90 px-4 py-3 text-white"
+            >
+              <span className="font-body text-sm font-semibold">
+                ⚠️ {alerts.recalls} recall{alerts.recalls > 1 ? "s" : ""} affecting your products — tap to review
+              </span>
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); dismissRecallBanner(); }}
+                className="ml-3 shrink-0 rounded-full p-1 hover:bg-white/20"
+                aria-label="Dismiss recall banner"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </Link>
           </div>
-        </section>
+        </div>
       )}
 
-      {/* Alert summary cards */}
+      {/* Measurements reminder card */}
+      {showMeasReminder && child && (
+        <div className="px-5 pt-3 sm:px-6">
+          <div className="mx-auto max-w-md">
+            <div className="flex items-start justify-between gap-3 rounded-2xl border border-[#8FAF8C]/40 bg-[#F2F7F1] px-4 py-3.5">
+              <div className="min-w-0 flex-1">
+                <p className="font-body text-sm leading-snug text-foreground/80">
+                  Time to update {child.name}'s measurements — keeping them current helps predict the right size-ups.
+                </p>
+                <Link
+                  to="/profile"
+                  className="mt-2 inline-block font-body text-xs font-semibold text-[#4A7A47] underline underline-offset-2"
+                >
+                  Update measurements →
+                </Link>
+              </div>
+              <button
+                type="button"
+                onClick={dismissMeasReminder}
+                className="mt-0.5 shrink-0 rounded-full p-1 text-muted-foreground hover:bg-black/10"
+                aria-label="Dismiss"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Alert summary cards — ABOVE "Up next" */}
       <section className="px-5 pt-4 sm:px-6">
         <div className="mx-auto max-w-md">
           {totalAlerts === 0 ? (
@@ -236,37 +299,40 @@ function HomePage() {
         </div>
       </section>
 
-
-      {/* Tools quick links */}
-      <section className="px-5 pt-8 sm:px-6">
-        <div className="mx-auto max-w-md">
-          <h2 className="mb-3 font-display text-xl font-semibold tracking-tight">Tools</h2>
-
-          {/* Quick Recall Check — prominent card */}
-          <Link
-            to="/recall-check"
-            className="mb-2.5 flex items-center gap-4 rounded-3xl border border-destructive/25 bg-destructive/8 px-5 py-4 transition-all hover:border-destructive/40"
-          >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/15 text-destructive">
-              <ScanLine className="h-5 w-5" />
+      {/* Up next — proactive guidance */}
+      {upNext.length > 0 && (
+        <section className="px-5 pt-4 sm:px-6">
+          <div className="mx-auto max-w-md">
+            <div className="rounded-3xl border border-border/60 bg-card p-5">
+              <div className="mb-3 flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sand/60 text-accent">
+                  <Sparkles className="h-3.5 w-3.5" />
+                </span>
+                <p className="font-display text-sm font-semibold tracking-tight">Up next for {child?.name}</p>
+              </div>
+              <ul className="space-y-2.5">
+                {upNext.map((i) => (
+                  <li key={i.id} className="rounded-2xl bg-muted/40 px-3 py-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-body text-sm font-medium leading-snug">{i.title}</p>
+                      <span className={
+                        i.urgency === 'now'
+                          ? "shrink-0 rounded-full bg-destructive/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-destructive"
+                          : i.urgency === 'soon'
+                            ? "shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-amber-700 dark:text-amber-400"
+                            : "shrink-0 rounded-full bg-sand/60 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-accent"
+                      }>
+                        {i.urgency === 'heads_up' ? 'FYI' : i.urgency}
+                      </span>
+                    </div>
+                    <p className="mt-1 font-body text-xs text-muted-foreground line-clamp-2">{i.body}</p>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-display text-sm font-semibold tracking-tight text-foreground">Quick Recall Check</p>
-              <p className="mt-0.5 font-body text-xs text-muted-foreground">
-                Search CPSC recalls by name or scan a barcode
-              </p>
-            </div>
-            <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-          </Link>
-
-          <div className="grid grid-cols-2 gap-2.5">
-            <ToolCard to="/safety-guides" icon={Shield} label="Safety Milestones" />
-            <ToolCard to="/caregiver-card" icon={ClipboardList} label="Caregiver Card" />
-            <ToolCard to="/checklists" icon={CheckSquare} label="Room Checklists" />
-            <ToolCard to="/emergency" icon={AlertTriangle} label="Emergency Hub" />
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Recent moments */}
       <section className="px-5 pt-10 sm:px-6">
@@ -321,109 +387,6 @@ function SummaryTile({
       <p className="font-display text-2xl font-semibold tracking-tight">{count}</p>
       <p className="font-body text-[11px] uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
     </Link>
-  );
-}
-
-function ToolCard({
-  to,
-  icon: Icon,
-  label,
-}: {
-  to: string;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-}) {
-  return (
-    <Link
-      to={to}
-      className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card px-4 py-3.5 transition-all hover:border-primary/40"
-    >
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sand/60 text-accent">
-        <Icon className="h-4 w-4" />
-      </span>
-      <span className="font-display text-sm font-semibold tracking-tight">{label}</span>
-    </Link>
-  );
-}
-
-function MomentsTimeline({ moments }: { moments: Moment[] }) {
-  return (
-    <div className="relative">
-      {/* Vertical spine */}
-      <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border/60" />
-
-      <ul className="space-y-0">
-        {moments.map((m, i) => {
-          const isLeft = i % 2 === 0;
-          const date = m.logged_at
-            ? new Date(m.logged_at + "T00:00:00")
-            : null;
-          const dateLabel = date
-            ? date.toLocaleDateString(undefined, { month: "short", day: "numeric" })
-            : null;
-          const yearLabel = date ? date.getFullYear() : null;
-
-          return (
-            <li key={m.id} className="relative flex items-start pb-10 last:pb-0">
-              {/* Dot on spine */}
-              <div className="absolute left-1/2 top-3 h-2.5 w-2.5 -translate-x-1/2 rounded-full border-2 border-primary bg-background" />
-
-              {/* Left side */}
-              <div className={`w-1/2 pr-6 ${isLeft ? "" : "invisible"}`}>
-                {isLeft && (
-                  <div className="text-right">
-                    {yearLabel && (
-                      <p className="font-display text-3xl font-semibold leading-none tracking-tight text-primary/70">
-                        {yearLabel}
-                      </p>
-                    )}
-                    {dateLabel && (
-                      <p className="mt-0.5 font-body text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
-                        {dateLabel}
-                      </p>
-                    )}
-                    <p className="mt-2 font-display text-sm font-semibold leading-snug tracking-tight text-foreground">
-                      {m.title}
-                    </p>
-                    {m.notes && (
-                      <p className="mt-1 font-body text-xs leading-relaxed text-muted-foreground line-clamp-3">
-                        {m.notes}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Right side */}
-              <div className={`w-1/2 pl-6 ${isLeft ? "invisible" : ""}`}>
-                {!isLeft && (
-                  <div className="text-left">
-                    {yearLabel && (
-                      <p className="font-display text-3xl font-semibold leading-none tracking-tight text-primary/70">
-                        {yearLabel}
-                      </p>
-                    )}
-                    {dateLabel && (
-                      <p className="mt-0.5 font-body text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
-                        {dateLabel}
-                      </p>
-                    )}
-                    <p className="mt-2 font-display text-sm font-semibold leading-snug tracking-tight text-foreground">
-                      {m.title}
-                    </p>
-                    {m.notes && (
-                      <p className="mt-1 font-body text-xs leading-relaxed text-muted-foreground line-clamp-3">
-                        {m.notes}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
   );
 }
 

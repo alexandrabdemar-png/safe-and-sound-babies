@@ -30,7 +30,8 @@ function NotificationSettingsPage() {
 
   useEffect(() => {
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user) return;
       const { data } = await (supabase as any)
         .from("user_notification_settings")
@@ -43,7 +44,8 @@ function NotificationSettingsPage() {
   }, []);
 
   async function toggle(field: keyof Settings) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
     if (!user) return;
     const next = { ...settings, [field]: !settings[field] };
     setSettings(next);
@@ -76,31 +78,46 @@ function NotificationSettingsPage() {
 
       <div className="mx-auto w-full max-w-lg px-4 py-6 space-y-4">
         <p className="font-body text-sm text-muted-foreground px-1">
-          Gentle, timely nudges — only when something needs your attention. Choose what reaches you.
+          Gentle, timely nudges — only when something needs your attention.
         </p>
 
-        <div className="rounded-3xl border border-border/60 bg-card divide-y divide-border/40">
-          <SettingRow
-            label="Safety recalls"
-            description="A quiet heads-up if a product you've logged is recalled — so you can act at your own pace."
-            checked={settings.recalls_enabled}
-            onToggle={() => toggle("recalls_enabled")}
-            disabled={loading}
-          />
-          <SettingRow
-            label="Size-up reminders"
-            description="A gentle nudge when your baby is getting close to a product's size or weight limit."
-            checked={settings.size_up_enabled}
-            onToggle={() => toggle("size_up_enabled")}
-            disabled={loading}
-          />
-          <SettingRow
-            label="Replacement reminders"
-            description="A timely reminder when something you own is approaching the end of its safe use window."
-            checked={settings.replacement_enabled}
-            onToggle={() => toggle("replacement_enabled")}
-            disabled={loading}
-          />
+        {/* Push notifications */}
+        <div>
+          <p className="font-body text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-2">
+            Push notifications
+          </p>
+          <div className="rounded-3xl border border-border/60 bg-card divide-y divide-border/40">
+            <SettingRow
+              label="Safety recalls"
+              description="A push alert if a product you've logged is recalled by the CPSC — so you can act quickly."
+              checked={settings.recalls_enabled}
+              onToggle={() => toggle("recalls_enabled")}
+              disabled={loading}
+            />
+          </div>
+        </div>
+
+        {/* In-app only */}
+        <div>
+          <p className="font-body text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-2">
+            In-app alerts only
+          </p>
+          <div className="rounded-3xl border border-border/60 bg-card divide-y divide-border/40">
+            <SettingRow
+              label="Size-up reminders"
+              description="Shown in the app when your baby is approaching a product's size or weight limit. No push notification."
+              checked={settings.size_up_enabled}
+              onToggle={() => toggle("size_up_enabled")}
+              disabled={loading}
+            />
+            <SettingRow
+              label="Replacement reminders"
+              description="Shown in the app when something you own is approaching the end of its safe use window. No push notification."
+              checked={settings.replacement_enabled}
+              onToggle={() => toggle("replacement_enabled")}
+              disabled={loading}
+            />
+          </div>
         </div>
 
         <p className="font-body text-xs text-muted-foreground px-1 pt-2">

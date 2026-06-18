@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   LogOut, User as UserIcon, Sparkles, Loader2, Plus, Trash2,
-  Download, BarChart3, CreditCard, Shield, Bell,
+  Download, CreditCard, Shield, Bell, Share2,
 } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useProGate } from "@/hooks/useProGate";
@@ -183,11 +183,11 @@ function ProfilePage() {
         </section>
 
 
+        {/* Co-parent invite section */}
+        <CoParentInvite children={children} />
+
         {/* Tools */}
         <section className="rounded-3xl border border-border/60 bg-card p-5 space-y-2">
-          <Button asChild variant="ghost" className="w-full justify-start rounded-xl">
-            <Link to="/insights"><BarChart3 className="h-4 w-4 mr-2" /> Insights</Link>
-          </Button>
           <Button onClick={handleExport} variant="ghost" className="w-full justify-start rounded-xl" disabled={exporting}>
             {exporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
             Export my data
@@ -335,6 +335,78 @@ function ChildRow({
         </div>
       )}
     </li>
+  );
+}
+
+function CoParentInvite({ children }: { children: { id: string; name: string }[] }) {
+  const [email, setEmail] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  async function handleInvite(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setSending(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({ email: email.trim() });
+      if (error) throw error;
+      // Store invite locally so we remember who was invited
+      try {
+        const key = `safesound.coParentInvites`;
+        const existing = JSON.parse(localStorage.getItem(key) ?? "[]");
+        existing.push({ email: email.trim(), childIds: children.map((c) => c.id), ts: Date.now() });
+        localStorage.setItem(key, JSON.stringify(existing));
+      } catch {}
+      setSent(true);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send invite");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  const childNames = children.map((c) => c.name).join(" & ");
+
+  return (
+    <section className="rounded-3xl border border-border/60 bg-card p-5">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sand/50 text-accent">
+          <Share2 className="h-4 w-4" />
+        </div>
+        <div>
+          <p className="font-display text-base font-semibold">Share access with a co-parent</p>
+          <p className="font-body text-xs text-muted-foreground">Invite a partner to join Safe & Sound</p>
+        </div>
+      </div>
+      {sent ? (
+        <div className="rounded-2xl bg-primary/10 px-4 py-3">
+          <p className="font-body text-sm text-foreground">
+            Invite sent to <span className="font-semibold">{email}</span> — they'll receive a magic link to join Safe & Sound.
+          </p>
+          <p className="mt-1 font-body text-xs text-muted-foreground">
+            Once they sign in, contact support to link your accounts. Full automatic co-parent sync coming soon.
+          </p>
+        </div>
+      ) : (
+        <form onSubmit={handleInvite} className="space-y-2">
+          <Input
+            type="email"
+            placeholder="Co-parent's email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="h-10 rounded-xl"
+          />
+          <Button type="submit" disabled={sending || !email.trim()} className="w-full rounded-full">
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send invite"}
+          </Button>
+          {childNames && (
+            <p className="text-xs text-muted-foreground text-center">
+              They'll be invited to co-manage {childNames}'s safety profile.
+            </p>
+          )}
+        </form>
+      )}
+    </section>
   );
 }
 
