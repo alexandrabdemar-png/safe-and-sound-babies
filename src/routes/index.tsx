@@ -13,7 +13,6 @@ import catStroller from "@/assets/cat-stroller.png";
 import catPacknplay from "@/assets/cat-packnplay.png";
 import catCarrier from "@/assets/cat-carrier.png";
 import catBouncer from "@/assets/cat-bouncer.svg";
-import catSwing from "@/assets/cat-swing.svg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -49,7 +48,6 @@ const categories = [
   { name: "Pack 'n Plays", image: catPacknplay },
   { name: "Carriers", image: catCarrier },
   { name: "Bouncers", image: catBouncer },
-  { name: "Baby Swings", image: catSwing },
 ];
 
 const features = [

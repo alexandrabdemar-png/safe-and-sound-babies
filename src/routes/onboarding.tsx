@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   ArrowLeft, ArrowRight, Check, Loader2,
-  ShieldCheck, Bed, Moon, Footprints, Utensils, Music, Armchair, Grid3x3, Wind, DoorClosed,
+  ShieldCheck, Bed, Moon, Footprints, Utensils, Armchair, Grid3x3, Wind, DoorClosed,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,6 @@ const CATEGORIES: { key: string; name: string; icon: React.ComponentType<{ class
   { key: "bassinet",        name: "Bassinets",        icon: Moon },
   { key: "stroller",        name: "Strollers",        icon: Footprints },
   { key: "high_chair",      name: "High chairs",      icon: Utensils },
-  { key: "swing",           name: "Swings",           icon: Music },
   { key: "bouncer",         name: "Bouncers",         icon: Armchair },
   { key: "activity_center", name: "Activity centers", icon: Grid3x3 },
   { key: "sleep_sack",      name: "Sleep sacks",      icon: Wind },
