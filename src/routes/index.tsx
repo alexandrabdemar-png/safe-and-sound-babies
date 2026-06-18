@@ -63,6 +63,11 @@ const features = [
     description:
       "Know exactly when to replace, size up, or check the fit. Because the little things are the big things.",
   },
+  {
+    title: "Always one step ahead",
+    description:
+      "Real-time recall alerts for every product you own — so you hear about safety issues the moment they happen, not months later.",
+  },
 ];
 
 function Index() {
