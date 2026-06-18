@@ -21,7 +21,6 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
 import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
-import { Route as AuthenticatedEmergencyRouteImport } from './routes/_authenticated/emergency'
 import { Route as AuthenticatedChecklistsRouteImport } from './routes/_authenticated/checklists'
 import { Route as AuthenticatedCaregiverCardRouteImport } from './routes/_authenticated/caregiver-card'
 import { Route as AuthenticatedBottlesRouteImport } from './routes/_authenticated/bottles'
@@ -99,11 +98,6 @@ const AuthenticatedPricingRoute = AuthenticatedPricingRouteImport.update({
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedEmergencyRoute = AuthenticatedEmergencyRouteImport.update({
-  id: '/emergency',
-  path: '/emergency',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedChecklistsRoute = AuthenticatedChecklistsRouteImport.update({
@@ -211,7 +205,6 @@ export interface FileRoutesByFullPath {
   '/bottles': typeof AuthenticatedBottlesRouteWithChildren
   '/caregiver-card': typeof AuthenticatedCaregiverCardRoute
   '/checklists': typeof AuthenticatedChecklistsRoute
-  '/emergency': typeof AuthenticatedEmergencyRoute
   '/home': typeof AuthenticatedHomeRoute
   '/pricing': typeof AuthenticatedPricingRoute
   '/products': typeof AuthenticatedProductsRoute
@@ -242,7 +235,6 @@ export interface FileRoutesByTo {
   '/bottles': typeof AuthenticatedBottlesRouteWithChildren
   '/caregiver-card': typeof AuthenticatedCaregiverCardRoute
   '/checklists': typeof AuthenticatedChecklistsRoute
-  '/emergency': typeof AuthenticatedEmergencyRoute
   '/home': typeof AuthenticatedHomeRoute
   '/pricing': typeof AuthenticatedPricingRoute
   '/products': typeof AuthenticatedProductsRoute
@@ -308,7 +300,6 @@ export interface FileRouteTypes {
     | '/bottles'
     | '/caregiver-card'
     | '/checklists'
-    | '/emergency'
     | '/home'
     | '/pricing'
     | '/products'
@@ -339,7 +330,6 @@ export interface FileRouteTypes {
     | '/bottles'
     | '/caregiver-card'
     | '/checklists'
-    | '/emergency'
     | '/home'
     | '/pricing'
     | '/products'
@@ -371,7 +361,6 @@ export interface FileRouteTypes {
     | '/_authenticated/bottles'
     | '/_authenticated/caregiver-card'
     | '/_authenticated/checklists'
-    | '/_authenticated/emergency'
     | '/_authenticated/home'
     | '/_authenticated/pricing'
     | '/_authenticated/products'
@@ -490,13 +479,6 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/emergency': {
-      id: '/_authenticated/emergency'
-      path: '/emergency'
-      fullPath: '/emergency'
-      preLoaderRoute: typeof AuthenticatedEmergencyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/checklists': {
@@ -638,7 +620,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBottlesRoute: typeof AuthenticatedBottlesRouteWithChildren
   AuthenticatedCaregiverCardRoute: typeof AuthenticatedCaregiverCardRoute
   AuthenticatedChecklistsRoute: typeof AuthenticatedChecklistsRoute
-  AuthenticatedEmergencyRoute: typeof AuthenticatedEmergencyRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
@@ -659,7 +640,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBottlesRoute: AuthenticatedBottlesRouteWithChildren,
   AuthenticatedCaregiverCardRoute: AuthenticatedCaregiverCardRoute,
   AuthenticatedChecklistsRoute: AuthenticatedChecklistsRoute,
-  AuthenticatedEmergencyRoute: AuthenticatedEmergencyRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedPricingRoute: AuthenticatedPricingRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRoute,

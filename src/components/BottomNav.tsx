@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Package, User, Plus, ClipboardList, Shield } from "lucide-react";
+import { Home, Package, User, Plus, ClipboardList } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
@@ -8,7 +8,7 @@ const tabs = [
 ] as const;
 
 const rightTabs = [
-  { to: "/emergency", label: "Emergency", icon: Shield },
+  { to: "/products", label: "Products", icon: Package },
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
