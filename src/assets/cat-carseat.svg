@@ -1,38 +1,45 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-  <!-- Base / bottom of seat -->
-  <rect x="22" y="72" width="56" height="10" rx="3" fill="#8B5E3C"/>
-  <rect x="25" y="75" width="50" height="4" rx="1.5" fill="#A0723A"/>
+  <!-- Base / LATCH base - dark charcoal -->
+  <rect x="18" y="72" width="64" height="16" rx="5" fill="#2C2C2C"/>
+  <rect x="22" y="75" width="56" height="10" rx="3" fill="#3A3A3A"/>
+  <!-- Base detail lines -->
+  <line x1="30" y1="75" x2="30" y2="85" stroke="#222" stroke-width="0.8"/>
+  <line x1="70" y1="75" x2="70" y2="85" stroke="#222" stroke-width="0.8"/>
+  <!-- Red release button on base -->
+  <rect x="47" y="84" width="6" height="3" rx="1.5" fill="#CC2222"/>
 
-  <!-- Handle bar arc -->
-  <path d="M32 72 Q32 45 50 42 Q68 45 68 72" stroke="#8B5E3C" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <!-- Seat shell body - taupe/sand -->
+  <path d="M24 72 Q22 55 25 42 Q28 30 50 26 Q72 30 75 42 Q78 55 76 72Z" fill="#C4B5A0"/>
 
-  <!-- Seat shell outer -->
-  <path d="M28 72 Q26 50 32 38 Q50 30 68 38 Q74 50 72 72Z" fill="#C4A882" stroke="#8B5E3C" stroke-width="2"/>
+  <!-- Inner seat cavity -->
+  <path d="M30 70 Q28 56 31 45 Q34 35 50 32 Q66 35 69 45 Q72 56 70 70Z" fill="#B8A88E"/>
 
-  <!-- Seat shell inner / cushion -->
-  <path d="M33 70 Q31 52 36 42 Q50 35 64 42 Q69 52 67 70Z" fill="#F5F0E8" stroke="#E8E0D0" stroke-width="1"/>
-
-  <!-- Cushion quilt lines -->
-  <path d="M34 55 Q50 51 66 55" stroke="#D4C9B5" stroke-width="0.7"/>
-  <path d="M33 62 Q50 58 67 62" stroke="#D4C9B5" stroke-width="0.7"/>
-  <path d="M34 68 Q50 65 66 68" stroke="#D4C9B5" stroke-width="0.7"/>
-  <path d="M43 38 Q42 60 43 70" stroke="#D4C9B5" stroke-width="0.6" stroke-linecap="round"/>
-  <path d="M50 36 L50 70" stroke="#D4C9B5" stroke-width="0.6" stroke-linecap="round"/>
-  <path d="M57 38 Q58 60 57 70" stroke="#D4C9B5" stroke-width="0.6" stroke-linecap="round"/>
-
-  <!-- Head cushion -->
-  <path d="M38 42 Q50 36 62 42 Q60 35 50 32 Q40 35 38 42Z" fill="#EDE5D5" stroke="#D4C9B5" stroke-width="0.8"/>
+  <!-- Seat pad / upholstery - lighter tan -->
+  <path d="M33 69 Q31 57 34 47 Q37 38 50 35 Q63 38 66 47 Q69 57 67 69Z" fill="#D4C4AC"/>
 
   <!-- Harness straps -->
-  <path d="M44 55 L42 70" stroke="#C4785A" stroke-width="2" stroke-linecap="round"/>
-  <path d="M56 55 L58 70" stroke="#C4785A" stroke-width="2" stroke-linecap="round"/>
-  <!-- Chest clip -->
-  <rect x="45" y="57" width="10" height="4" rx="2" fill="#C4785A" stroke="#A05A38" stroke-width="0.5"/>
+  <path d="M44 42 L42 68" stroke="#8B7355" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M56 42 L58 68" stroke="#8B7355" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Chest clip - red -->
+  <rect x="44" y="52" width="12" height="5" rx="2" fill="#CC2222"/>
+  <line x1="50" y1="52" x2="50" y2="57" stroke="#AA1111" stroke-width="0.8"/>
+  <!-- Crotch buckle -->
+  <rect x="46" y="63" width="8" height="4" rx="1.5" fill="#8B7355"/>
 
-  <!-- Harness top straps -->
-  <path d="M44 55 Q50 50 56 55" stroke="#C4785A" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  <!-- Canopy - large curved shade -->
+  <path d="M26 42 Q24 28 50 22 Q76 28 74 42 Q66 36 50 34 Q34 36 26 42Z" fill="#C4B5A0"/>
+  <!-- Canopy underside shadow -->
+  <path d="M28 42 Q26 30 50 24 Q74 30 72 42 Q66 38 50 36 Q34 38 28 42Z" fill="#B8A88E"/>
+  <!-- Canopy front edge -->
+  <path d="M26 42 Q50 48 74 42" stroke="#A89880" stroke-width="1.5" stroke-linecap="round" fill="none"/>
 
-  <!-- Side wings -->
-  <path d="M31 50 Q27 53 28 60 Q30 65 33 66" stroke="#8B5E3C" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-  <path d="M69 50 Q73 53 72 60 Q70 65 67 66" stroke="#8B5E3C" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  <!-- Carry handle - dark arc over top -->
+  <path d="M34 36 Q34 10 50 8 Q66 10 66 36" stroke="#1A1A1A" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <!-- Handle grip wrap -->
+  <path d="M38 26 Q38 14 50 12 Q62 14 62 26" stroke="#3A3A3A" stroke-width="3" stroke-linecap="round" fill="none"/>
+
+  <!-- Side shell left -->
+  <path d="M24 72 Q20 65 22 50 Q23 42 26 38" stroke="#A89880" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <!-- Side shell right -->
+  <path d="M76 72 Q80 65 78 50 Q77 42 74 38" stroke="#A89880" stroke-width="1.5" fill="none" stroke-linecap="round"/>
 </svg>
