@@ -7,13 +7,8 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
           {/* Brand mark */}
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Logo className="h-4 w-4" />
-            </div>
-            <span className="font-display text-base font-normal tracking-wide text-foreground">
-              Safe &amp; Sound
-            </span>
+          <div className="flex items-center">
+            <Logo />
           </div>
 
           <div className="flex items-center gap-5">

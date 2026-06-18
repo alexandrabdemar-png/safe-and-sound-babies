@@ -5,14 +5,8 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link to="/" className="flex items-center gap-2.5">
-          {/* Petal mark on parchment circle — no harsh shadow */}
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Logo className="h-5 w-5" />
-          </div>
-          <span className="font-display text-lg font-normal leading-none tracking-wide text-foreground">
-            Safe &amp; Sound
-          </span>
+        <Link to="/" className="flex items-center">
+          <Logo />
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex">

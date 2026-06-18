@@ -151,13 +151,8 @@ function OnboardingPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="w-full px-4 py-6 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-2xl items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <Logo className="h-5 w-5" />
-            </div>
-            <span className="font-display text-lg font-semibold tracking-tight">
-              Safe & Sound
-            </span>
+          <Link to="/" className="flex items-center">
+            <Logo />
           </Link>
           <span className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
             Step {step + 1} of {totalSteps}

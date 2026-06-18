@@ -145,11 +145,7 @@ function HomePage() {
         <div className="mx-auto max-w-md">
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                <Logo className="h-4 w-4" />
-              </div>
-              <span className="font-display text-base font-semibold tracking-tight">Safe & Sound</span>
-            </div>
+              <Logo /></div>
             <div className="flex items-center gap-2">
               <ChildSwitcher />
               <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 font-body text-[11px] font-medium text-muted-foreground shadow-sm">
