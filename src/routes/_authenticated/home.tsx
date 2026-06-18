@@ -396,9 +396,9 @@ function EmptyMoments() {
       <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-forest/15 text-forest">
         <Package className="h-5 w-5" />
       </div>
-      <p className="font-display text-lg font-semibold tracking-tight">No moments yet</p>
+      <p className="font-display text-lg font-semibold tracking-tight">A new milestone</p>
       <p className="mx-auto mt-1 max-w-xs font-body text-sm text-muted-foreground">
-        Log whatever feels worth remembering — your baby's pace is the only one that matters.
+        Right on time.
       </p>
       <Button asChild className="mt-5 rounded-full bg-primary px-5 font-body text-xs font-semibold">
         <Link to="/moments/new">
