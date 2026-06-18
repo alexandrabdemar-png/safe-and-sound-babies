@@ -3,7 +3,7 @@ import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import catCarseat from "@/assets/cat-carseat.svg";
-import catPacifier from "@/assets/cat-pacifier.png";
+import catPacifier from "@/assets/cat-pacifier.svg";
 import catCrib from "@/assets/cat-crib.png";
 import catBreastmilk from "@/assets/cat-breastmilk.png";
 import catFormula from "@/assets/cat-formula.png";

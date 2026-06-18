@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Daisy / scalloped shield - 10 petal flower shape -->
+  <circle cx="50" cy="42" r="28" fill="#D4BFB0"/>
+  <!-- Scallop petals around edge -->
+  <circle cx="50" cy="14" r="8" fill="#D4BFB0"/>
+  <circle cx="64" cy="17" r="8" fill="#D4BFB0"/>
+  <circle cx="74" cy="28" r="8" fill="#D4BFB0"/>
+  <circle cx="78" cy="42" r="8" fill="#D4BFB0"/>
+  <circle cx="74" cy="56" r="8" fill="#D4BFB0"/>
+  <circle cx="64" cy="67" r="8" fill="#D4BFB0"/>
+  <circle cx="50" cy="70" r="8" fill="#D4BFB0"/>
+  <circle cx="36" cy="67" r="8" fill="#D4BFB0"/>
+  <circle cx="26" cy="56" r="8" fill="#D4BFB0"/>
+  <circle cx="22" cy="42" r="8" fill="#D4BFB0"/>
+  <circle cx="26" cy="28" r="8" fill="#D4BFB0"/>
+  <circle cx="36" cy="17" r="8" fill="#D4BFB0"/>
+
+  <!-- Shield fill centre -->
+  <circle cx="50" cy="42" r="24" fill="#C8B0A0"/>
+
+  <!-- Ventilation holes -->
+  <circle cx="40" cy="38" r="3.5" fill="#B8A090"/>
+  <circle cx="60" cy="38" r="3.5" fill="#B8A090"/>
+
+  <!-- Centre button / nipple base knob -->
+  <circle cx="50" cy="48" r="7" fill="#C8B0A0" stroke="#B09080" stroke-width="1"/>
+  <circle cx="50" cy="48" r="5" fill="#D4BFB0"/>
+
+  <!-- Nipple teat -->
+  <ellipse cx="50" cy="34" rx="5" ry="8" fill="#C8B0A0"/>
+  <ellipse cx="50" cy="30" rx="3.5" ry="5" fill="#D4BFB0"/>
+
+  <!-- Ring handle -->
+  <circle cx="50" cy="76" r="12" stroke="#C8B0A0" stroke-width="5" fill="none"/>
+</svg>
