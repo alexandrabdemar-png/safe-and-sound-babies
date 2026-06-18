@@ -11,18 +11,18 @@ export const Route = createFileRoute("/_authenticated/safety-guides")({
 });
 
 const SAFETY_MILESTONES = [
-  { ageMonths: 0, title: "Newborn safe sleep", items: ["Back to sleep every time", "Firm flat surface only", "No loose bedding, bumpers, or toys", "Room-share without bed-sharing for 6 months", "Avoid overheating"] },
-  { ageMonths: 2, title: "Tummy time safety", items: ["Always supervised", "On firm surface", "Stop if baby falls asleep"] },
-  { ageMonths: 4, title: "Rolling & positioning", items: ["Lower crib mattress now", "Remove mobiles within reach", "Never leave unattended on elevated surfaces"] },
-  { ageMonths: 6, title: "Starting solids safety", items: ["No honey under 12 months", "Avoid choking hazards — grapes, nuts, raw veggies", "Watch for allergic reactions with new foods", "No cow's milk as main drink under 12 months"] },
-  { ageMonths: 9, title: "Crawling & exploring", items: ["Install baby gates at stairs", "Cover electrical outlets", "Lock lower cabinets with chemicals", "Pad sharp furniture corners", "Check floor for small objects daily"] },
-  { ageMonths: 12, title: "Walking & climbing", items: ["Anchor all tall furniture to walls", "Move cleaning products to high shelves", "Install toilet locks", "Check window stops and screens", "Remove crib bumpers and large stuffed animals"] },
-  { ageMonths: 18, title: "Toddler proofing", items: ["Stair gates still needed", "Discourage climbing on furniture", "Hot beverage awareness — keep out of reach", "Parking lot hand-holding rule starts now"] },
-  { ageMonths: 24, title: "Transition to forward-facing car seat", items: ["Keep rear-facing as long as possible (check seat weight limit)", "Forward-facing minimum: 2 years old AND at weight limit", "Harness must be at or above shoulders", "No puffy coats in car seat"] },
-  { ageMonths: 36, title: "Preschool age safety", items: ["Teach body safety and consent", "Practice name, address, and 911", "Helmet for all wheeled activities", "Pool: arm floaties are NOT life jackets", "Stranger safety basics"] },
-  { ageMonths: 48, title: "Bike & outdoor safety", items: ["Properly fitted bike helmet every ride", "Teach road safety — stop at driveways", "Sunscreen SPF 30+ daily outdoors", "Know your child's friends and parents"] },
-  { ageMonths: 60, title: "School age safety", items: ["Bus and walking route safety", "Backpack under 10-15% of body weight", "Internet and screen safety basics", "What to do if lost or approached by stranger", "Life jacket for all water activities"] },
-  { ageMonths: 84, title: "Booster seat transition", items: ["Move from harness to booster when at weight/height limit", "Booster until seat belt fits correctly (usually 4'9\")", "Back seat until 13 years old", "Teach bike lane and pedestrian rules"] },
+  { ageMonths: 0, stage: "Before baby arrives", title: "Safe sleep setup", items: ["Back to sleep every time", "Firm flat surface only", "No loose bedding, bumpers, or toys", "Room-share without bed-sharing for first 6 months", "Avoid overheating — one more layer than you'd wear"] },
+  { ageMonths: 2, stage: "Newborn", title: "Tummy time safety", items: ["Always supervised during tummy time", "On a firm surface only", "Stop if baby falls asleep — move to back"] },
+  { ageMonths: 4, stage: "Newborn", title: "Starting to move", items: ["Lower crib mattress before they can push up", "Remove mobiles and toys within reach", "Never leave unattended on elevated surfaces"] },
+  { ageMonths: 6, stage: "Starting to move", title: "First foods safety", items: ["No honey until after first birthday", "Avoid choking hazards — whole grapes, nuts, raw hard veggies", "Introduce one new food at a time and watch for reactions", "No cow's milk as a main drink yet"] },
+  { ageMonths: 9, stage: "On the go", title: "Crawling & exploring", items: ["Install baby gates at top and bottom of stairs", "Cover electrical outlets", "Lock lower cabinets with cleaning products", "Pad sharp furniture corners", "Scan the floor daily for small objects"] },
+  { ageMonths: 12, stage: "On the go", title: "Pulling up & walking", items: ["Anchor all tall furniture and TVs to walls", "Move cleaning products to high shelves", "Install toilet locks", "Check window guards and stops", "Remove large stuffed animals from crib"] },
+  { ageMonths: 18, stage: "Exploring everything", title: "Toddler proofing", items: ["Keep stair gates up — they still fall", "Hot drinks are a real burn risk now — keep far out of reach", "Parking lot hand-holding starts now", "Discourage climbing on furniture"] },
+  { ageMonths: 24, stage: "Exploring everything", title: "Car seat transition", items: ["Keep rear-facing as long as possible — check your seat's weight limit", "Only move forward-facing when they've outgrown the rear-facing limits", "Harness straps must be at or above shoulders", "No puffy coats in the car seat — use a blanket over the harness instead"] },
+  { ageMonths: 36, stage: "Big kid basics", title: "Preschool safety", items: ["Teach body safety and the difference between safe and unsafe touch", "Practice their full name, your phone number, and how to call 911", "Helmet for every ride — bikes, scooters, balance bikes", "Floaties and water wings are NOT life jackets", "Stranger safety basics in age-appropriate language"] },
+  { ageMonths: 48, stage: "Big kid basics", title: "Outdoor & bike safety", items: ["Properly fitted helmet — replace after any impact", "Teach road rules — stop at every driveway", "Sunscreen SPF 30+ when outdoors", "Know your child's friends and where they live"] },
+  { ageMonths: 60, stage: "Big kid basics", title: "School age safety", items: ["Walk or bus route safety — practice it together", "Backpack should be under 10–15% of body weight", "Screen time and basic internet safety", "What to do if lost or approached by a stranger", "Life jacket for all open water activities"] },
+  { ageMonths: 84, stage: "Big kid basics", title: "Booster seat transition", items: ["Move from harness to booster only when they've outgrown the harness limits", "Stay in a booster until the seat belt fits correctly across chest and hips (usually around 4'9\")", "Back seat until 13 years old", "Teach cycling lane rules and pedestrian safety"] },
 ];
 
 const VISIT_PREP = [
@@ -126,11 +126,9 @@ function SafetyGuidesPage() {
             <Shield className="h-7 w-7 text-accent" />
             <h1 className="font-display text-3xl font-semibold tracking-tight">Safety Guides</h1>
           </div>
-          {ageMonths !== null && (
-            <p className="mt-2 font-body text-sm text-muted-foreground">
-              Your baby is <span className="font-semibold text-foreground">{ageMonths} months old</span>
-            </p>
-          )}
+          <p className="mt-2 font-body text-sm text-muted-foreground">
+            Guides organized by developmental stage — every child grows at their own pace.
+          </p>
         </div>
       </header>
 
@@ -241,10 +239,10 @@ function MilestonesTab({
                     {m.title}
                   </p>
                   <p className="font-body text-xs text-muted-foreground">
-                    {m.ageMonths === 0 ? "Birth" : `${m.ageMonths} months`}
+                    {m.stage}
                     {isUpcoming && (
                       <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
-                        Coming up
+                        Up next
                       </span>
                     )}
                   </p>
