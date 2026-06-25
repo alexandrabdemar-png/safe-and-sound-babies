@@ -5,6 +5,9 @@ import { BottomNav } from "@/components/BottomNav";
 import { AlertTriangle, ArrowLeft, ArrowUpRight, Bell, Check, ChevronDown, ChevronUp, Clock, Loader2, Plus, RefreshCw, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { hapticSuccess, hapticDismiss } from "@/lib/haptic";
+import { friendlyError } from "@/lib/errors";
+import { BellIllustration } from "@/components/EmptyIllustration";
 
 export const Route = createFileRoute("/_authenticated/alerts")({
   ssr: false,
@@ -107,7 +110,7 @@ function AlertsPage() {
       .order("recall_date", { ascending: false })
       .limit(100);
 
-    if (error) { toast.error(error.message); setHistoryLoading(false); return; }
+    if (error) { toast.error(friendlyError(error.message)); setHistoryLoading(false); return; }
 
     // If user has product categories, prefer matching ones; otherwise show all
     const items = (data ?? []) as RecallHistoryItem[];
@@ -144,17 +147,17 @@ function AlertsPage() {
         .eq("acknowledged", false),
     ]);
 
-    if (pRes.error) toast.error(pRes.error.message);
+    if (pRes.error) toast.error(friendlyError(pRes.error.message));
     else setProducts((pRes.data ?? []) as Product[]);
-    if (rRes.error) toast.error(rRes.error.message);
+    if (rRes.error) toast.error(friendlyError(rRes.error.message));
     else setRecalls((rRes.data ?? []) as unknown as RecallMatch[]);
     setLoading(false);
   }
 
   async function markInsightDone(ruleId: string) {
     if (!activeChildId) return;
-    // Optimistic removal
     setDismissedRuleIds((prev) => new Set([...prev, ruleId]));
+    hapticSuccess();
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) return;
@@ -163,10 +166,8 @@ function AlertsPage() {
       { onConflict: "child_id,rule_id" }
     );
     if (error) {
-      console.error("insight_dismissals upsert error:", error);
-      // Rollback
       setDismissedRuleIds((prev) => { const next = new Set(prev); next.delete(ruleId); return next; });
-      toast.error(error.message);
+      toast.error(friendlyError(error.message));
     }
   }
 
@@ -190,13 +191,14 @@ function AlertsPage() {
   async function dismissRecall(id: string) {
     const prev = recalls;
     setRecalls((r) => r.filter((x) => x.id !== id));
+    hapticDismiss();
     const { error } = await supabase
       .from("product_recalls")
       .update({ acknowledged: true })
       .eq("id", id);
     if (error) {
       setRecalls(prev);
-      toast.error(error.message);
+      toast.error(friendlyError(error.message));
     }
   }
 
@@ -552,13 +554,11 @@ function BannerRecallItem({ item }: { item: RecallMatch }) {
 
 function EmptyState() {
   return (
-    <div className="rounded-3xl border border-dashed border-border bg-card/40 px-6 py-12 text-center">
-      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-forest/15 text-forest">
-        <Bell className="h-5 w-5" />
-      </div>
-      <p className="font-display text-lg font-semibold tracking-tight">You're all caught up</p>
+    <div className="rounded-3xl border border-dashed border-border bg-card/40 px-6 py-12 text-center animate-scale-in">
+      <BellIllustration className="mx-auto mb-2 h-24 w-24" />
+      <p className="font-display text-lg font-semibold tracking-tight">Nothing on your radar right now</p>
       <p className="mx-auto mt-1 max-w-xs font-body text-sm text-muted-foreground">
-        This screen shows recall alerts, replacement reminders, and size-up notices for every product you're tracking.
+        When something needs your attention — a recall, a replacement, a size-up — it'll show up here. Add a product to get started.
       </p>
       <Link to="/products/new">
         <Button className="mt-5 rounded-full font-body text-xs font-semibold" size="sm">

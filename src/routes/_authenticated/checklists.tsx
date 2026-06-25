@@ -4,6 +4,7 @@ import { CheckCircle2, Circle, ClipboardList, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+import { hapticSuccess, hapticLight } from "@/lib/haptic";
 
 export const ssr = false;
 
@@ -121,12 +122,14 @@ function ChecklistsPage() {
     });
 
     if (wasCompleted) {
+      hapticLight();
       await supabase
         .from("checklist_completions")
         .delete()
         .eq("user_id", userId)
         .eq("item_key", key);
     } else {
+      hapticSuccess();
       await supabase
         .from("checklist_completions")
         .upsert({ user_id: userId, item_key: key });

@@ -3,6 +3,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Check, Loader2, Milk, Plus, Trash2 } from "lucide-react";
+import { BottleIllustration } from "@/components/EmptyIllustration";
+import { hapticSuccess, hapticDismiss } from "@/lib/haptic";
+import { friendlyError } from "@/lib/errors";
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -94,14 +97,16 @@ function BottlesPage() {
       .from("bottles")
       .update({ finished_at: new Date().toISOString() })
       .eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error.message)); return; }
+    hapticSuccess();
     setBottles((prev) => prev.filter((b) => b.id !== id));
-    toast.success("Marked as used");
+    toast.success("All done — nice work staying on top of it.");
   }
 
   async function discard(id: string) {
     const { error } = await supabase.from("bottles").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error.message)); return; }
+    hapticDismiss();
     setBottles((prev) => prev.filter((b) => b.id !== id));
   }
 
@@ -109,7 +114,7 @@ function BottlesPage() {
     new Date(a.expires_at).getTime() - new Date(b.expires_at).getTime()), [bottles]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background pb-28">
+    <div className="flex min-h-screen flex-col bg-background pb-28 animate-fade-in">
       <header className="px-5 pt-10 pb-4 sm:px-6">
         <div className="mx-auto flex max-w-md items-end justify-between">
           <div>
@@ -201,11 +206,11 @@ function BottleCard({ bottle, now, onFinish, onDiscard }: {
 
 function EmptyState() {
   return (
-    <div className="rounded-3xl border border-dashed border-border bg-sand/30 p-8 text-center">
-      <Milk className="mx-auto h-8 w-8 text-muted-foreground" />
-      <p className="mt-3 font-display text-base font-semibold">No active bottles</p>
+    <div className="rounded-3xl border border-dashed border-border bg-sand/30 p-8 text-center animate-scale-in">
+      <BottleIllustration className="mx-auto mb-1 h-24 w-24" />
+      <p className="font-display text-base font-semibold">No bottles on the clock</p>
       <p className="mt-1 font-body text-xs text-muted-foreground">
-        Log a bottle and we'll tell you when it expires.
+        Log a bottle and we'll count down exactly when it needs to be used — no more guessing.
       </p>
       <Button asChild className="mt-4 rounded-2xl" size="sm">
         <Link to="/bottles/new"><Plus className="mr-1 h-4 w-4" /> Log a bottle</Link>

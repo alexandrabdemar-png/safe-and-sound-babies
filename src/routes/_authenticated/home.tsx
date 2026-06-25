@@ -4,11 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AlertTriangle, ArrowRight, Calendar, ChevronDown, ChevronUp, Loader2, Package, Plus, RefreshCw, Ruler, Sparkles, X } from "lucide-react";
 import { MomentTimeline } from "@/components/MomentTimeline";
+import { SparkleIllustration } from "@/components/EmptyIllustration";
 import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { evaluateInsights, type Insight, type ProductInput } from "@/lib/insights";
+import { friendlyError } from "@/lib/errors";
 
 
 export const Route = createFileRoute("/_authenticated/home")({
@@ -90,10 +92,13 @@ function calcAge(dob: string | null): { label: string; subtitle: string } {
 
 function greeting() {
   const h = new Date().getHours();
-  if (h < 5) return "Hello, night owl";
+  if (h < 5) return "Still up?";
+  if (h < 7) return "Early start today";
   if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
+  if (h < 14) return "Good afternoon";
+  if (h < 18) return "How's the day going";
+  if (h < 21) return "Good evening";
+  return "Winding down?";
 }
 
 function todayKey() {
@@ -136,7 +141,7 @@ function HomePage() {
         .select("id, name, date_of_birth, height_inches, weight_lbs, measurements_updated_at")
         .order("created_at", { ascending: true });
       if (cancelled) return;
-      if (error) { toast.error(error.message); setLoading(false); return; }
+      if (error) { toast.error(friendlyError(error.message)); setLoading(false); return; }
       if (!kids || kids.length === 0) { navigate({ to: "/onboarding" }); return; }
       const c = (kids.find((k) => k.id === activeId) ?? kids[0]) as Child;
       setChild(c);
@@ -255,7 +260,7 @@ function HomePage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background pb-28">
+    <div className="flex min-h-screen flex-col bg-background pb-28 animate-fade-in">
       <header className="px-5 pt-10 pb-4 sm:px-6">
         <div className="mx-auto max-w-md">
           <div className="mb-6 flex items-center justify-between">
@@ -351,7 +356,7 @@ function HomePage() {
       )}
 
       {/* Alert summary cards — ABOVE "Up next" */}
-      <section className="px-5 pt-4 sm:px-6">
+      <section className="px-5 pt-4 sm:px-6 animate-fade-up stagger-1">
         <div className="mx-auto max-w-md">
           {totalAlerts === 0 ? (
             <Link
@@ -383,7 +388,7 @@ function HomePage() {
 
       {/* Coming up — product date countdown */}
       {!loading && comingUp.length > 0 && (
-        <section className="px-5 pt-4 sm:px-6">
+        <section className="px-5 pt-4 sm:px-6 animate-fade-up stagger-2">
           <div className="mx-auto max-w-md">
             <div className="rounded-3xl border border-border/60 bg-card p-5">
               <div className="mb-3 flex items-center gap-2">
@@ -418,7 +423,7 @@ function HomePage() {
 
       {/* Up next — proactive guidance */}
       {upNext.length > 0 && (
-        <section className="px-5 pt-4 sm:px-6">
+        <section className="px-5 pt-4 sm:px-6 animate-fade-up stagger-3">
           <div className="mx-auto max-w-md">
             <div className="rounded-3xl border border-border/60 bg-card p-5">
               <div className="mb-3 flex items-center gap-2">
@@ -438,7 +443,7 @@ function HomePage() {
       )}
 
       {/* Recent moments */}
-      <section className="px-5 pt-10 sm:px-6">
+      <section className="px-5 pt-10 sm:px-6 animate-fade-up stagger-4">
         <div className="mx-auto max-w-md">
           <div className="mb-4 flex items-baseline justify-between">
             <h2 className="font-display text-xl font-semibold tracking-tight">Moments</h2>
@@ -597,13 +602,11 @@ function WeeklyDigestCard({
 
 function EmptyMoments() {
   return (
-    <div className="rounded-3xl border border-dashed border-border bg-card/40 px-6 py-10 text-center">
-      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-forest/15 text-forest">
-        <Package className="h-5 w-5" />
-      </div>
-      <p className="font-display text-lg font-semibold tracking-tight">A new milestone</p>
-      <p className="mx-auto mt-1 max-w-xs font-body text-sm text-muted-foreground">
-        Log milestones as they happen — rolling over, first steps, first tooth — and we'll surface safety tips relevant to each one.
+    <div className="rounded-3xl border border-dashed border-border bg-card/40 px-6 py-10 text-center animate-scale-in">
+      <SparkleIllustration className="mx-auto mb-2 h-24 w-24" />
+      <p className="font-display text-lg font-semibold tracking-tight">Every first is worth remembering</p>
+      <p className="mx-auto mt-1.5 max-w-xs font-body text-sm text-muted-foreground">
+        Log a milestone and we'll surface safety tips that are actually relevant to where your child is right now.
       </p>
       <Button asChild className="mt-5 rounded-full bg-primary px-5 font-body text-xs font-semibold">
         <Link to="/moments/new">
