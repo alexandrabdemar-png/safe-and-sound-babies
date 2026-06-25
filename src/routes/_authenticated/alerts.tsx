@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
-import { AlertTriangle, ArrowUpRight, Bell, Check, Loader2, RefreshCw, Ruler } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, Bell, Check, ChevronDown, ChevronUp, Loader2, RefreshCw, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -38,8 +38,16 @@ type RecallMatch = {
   } | null;
 };
 
+type InsightAlert = {
+  id: string;
+  rule_id: string;
+  child_id: string;
+  title: string;
+  body: string;
+};
+
 function daysFromNow(dateStr: string): number {
-  const d = new Date(dateStr).getTime();
+  const d = new Date(dateStr + "T00:00:00").getTime();
   const now = Date.now();
   return Math.round((d - now) / (1000 * 60 * 60 * 24));
 }
@@ -51,13 +59,16 @@ function relative(dateStr: string): string {
   if (days === 1) return "tomorrow";
   if (days < 7) return `in ${days} days`;
   if (days < 14) return "next week";
-  return new Date(dateStr).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return new Date(dateStr + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 function AlertsPage() {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [recalls, setRecalls] = useState<RecallMatch[]>([]);
+  const [activeChildId, setActiveChildIdState] = useState<string | null>(null);
+  // Insight alerts dismissed optimistically
+  const [dismissedRuleIds, setDismissedRuleIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     void loadData();
@@ -65,6 +76,16 @@ function AlertsPage() {
 
   async function loadData() {
     setLoading(true);
+
+    // Get active child id
+    let childId: string | null = null;
+    try { childId = localStorage.getItem("safesound.activeChildId"); } catch {}
+    if (!childId) {
+      const { data: kids } = await supabase.from("children").select("id").order("created_at", { ascending: true }).limit(1);
+      childId = kids?.[0]?.id ?? null;
+    }
+    setActiveChildIdState(childId);
+
     const [pRes, rRes] = await Promise.all([
       supabase
         .from("products")
@@ -83,6 +104,25 @@ function AlertsPage() {
     if (rRes.error) toast.error(rRes.error.message);
     else setRecalls((rRes.data ?? []) as unknown as RecallMatch[]);
     setLoading(false);
+  }
+
+  async function markInsightDone(ruleId: string) {
+    if (!activeChildId) return;
+    // Optimistic removal
+    setDismissedRuleIds((prev) => new Set([...prev, ruleId]));
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+    if (!userId) return;
+    const { error } = await supabase.from("insight_dismissals").upsert(
+      { user_id: userId, child_id: activeChildId, rule_id: ruleId, action: "done", until: null },
+      { onConflict: "child_id,rule_id" }
+    );
+    if (error) {
+      console.error("insight_dismissals upsert error:", error);
+      // Rollback
+      setDismissedRuleIds((prev) => { const next = new Set(prev); next.delete(ruleId); return next; });
+      toast.error(error.message);
+    }
   }
 
   const replaceDue = useMemo(
@@ -115,7 +155,10 @@ function AlertsPage() {
     }
   }
 
-  const empty = !loading && recalls.length === 0 && replaceDue.length === 0 && sizeUpDue.length === 0;
+  const visibleReplace = useMemo(() => replaceDue.filter((p) => !dismissedRuleIds.has(`replace:${p.id}`)), [replaceDue, dismissedRuleIds]);
+  const visibleSizeUp = useMemo(() => sizeUpDue.filter((p) => !dismissedRuleIds.has(`sizeup:${p.id}`)), [sizeUpDue, dismissedRuleIds]);
+
+  const empty = !loading && recalls.length === 0 && visibleReplace.length === 0 && visibleSizeUp.length === 0;
 
   // Recalls for products you own (already in `recalls` state — these are product_recalls with acknowledged=false)
   const ownedRecalls = recalls;
@@ -153,37 +196,9 @@ function AlertsPage() {
                 </div>
               </div>
               <ul className="space-y-2.5">
-                {ownedRecalls.map((r) => {
-                  const recall = r.recalls;
-                  const product = r.products;
-                  if (!recall) return null;
-                  const snippet = recall.hazard
-                    ? recall.hazard.length > 80
-                      ? recall.hazard.slice(0, 80) + "…"
-                      : recall.hazard
-                    : recall.title;
-                  return (
-                    <li
-                      key={r.id}
-                      className="rounded-2xl border border-destructive/25 bg-white/70 px-4 py-3 dark:bg-destructive/10"
-                    >
-                      <p className="font-display text-sm font-semibold tracking-tight text-foreground">
-                        {product?.name ?? recall.title}
-                      </p>
-                      <p className="mt-0.5 font-body text-xs text-foreground/70 line-clamp-2">{snippet}</p>
-                      {recall.url && (
-                        <a
-                          href={recall.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-2 inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive hover:underline"
-                        >
-                          View details <ArrowUpRight className="h-3 w-3" />
-                        </a>
-                      )}
-                    </li>
-                  );
-                })}
+                {ownedRecalls.map((r) => (
+                  <BannerRecallItem key={r.id} item={r} />
+                ))}
               </ul>
             </div>
           </div>
@@ -210,32 +225,34 @@ function AlertsPage() {
                 </Section>
               )}
 
-              {replaceDue.length > 0 && (
+              {visibleReplace.length > 0 && (
                 <Section title="Time to replace" icon={RefreshCw}>
                   <ul className="space-y-2.5">
-                    {replaceDue.map((p) => (
+                    {visibleReplace.map((p) => (
                       <ProductRow
                         key={p.id}
                         name={p.name}
                         meta={[p.brand, p.size].filter(Boolean).join(" · ")}
                         when={relative(p.when)}
                         overdue={daysFromNow(p.when) < 0}
+                        onDone={() => markInsightDone(`replace:${p.id}`)}
                       />
                     ))}
                   </ul>
                 </Section>
               )}
 
-              {sizeUpDue.length > 0 && (
+              {visibleSizeUp.length > 0 && (
                 <Section title="Ready for the next size" icon={Ruler}>
                   <ul className="space-y-2.5">
-                    {sizeUpDue.map((p) => (
+                    {visibleSizeUp.map((p) => (
                       <ProductRow
                         key={p.id}
                         name={p.name}
                         meta={[p.brand, p.size].filter(Boolean).join(" · ")}
                         when={relative(p.when)}
                         overdue={daysFromNow(p.when) < 0}
+                        onDone={() => markInsightDone(`sizeup:${p.id}`)}
                       />
                     ))}
                   </ul>
@@ -332,27 +349,72 @@ function ProductRow({
   meta,
   when,
   overdue,
+  onDone,
 }: {
   name: string;
   meta: string;
   when: string;
   overdue: boolean;
+  onDone?: () => void;
 }) {
   return (
-    <li className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3">
-      <div className="min-w-0">
-        <p className="truncate font-display text-sm font-semibold tracking-tight">{name}</p>
-        {meta && <p className="truncate font-body text-xs text-muted-foreground">{meta}</p>}
+    <li className="rounded-2xl border border-border/60 bg-card px-4 py-3">
+      <div className="flex items-center justify-between">
+        <div className="min-w-0">
+          <p className="truncate font-display text-sm font-semibold tracking-tight">{name}</p>
+          {meta && <p className="truncate font-body text-xs text-muted-foreground">{meta}</p>}
+        </div>
+        <span
+          className={
+            overdue
+              ? "shrink-0 rounded-full bg-destructive/15 px-2.5 py-1 font-body text-[11px] font-semibold text-destructive"
+              : "shrink-0 rounded-full bg-sand/60 px-2.5 py-1 font-body text-[11px] font-semibold text-foreground/70"
+          }
+        >
+          {when}
+        </span>
       </div>
-      <span
-        className={
-          overdue
-            ? "shrink-0 rounded-full bg-destructive/15 px-2.5 py-1 font-body text-[11px] font-semibold text-destructive"
-            : "shrink-0 rounded-full bg-sand/60 px-2.5 py-1 font-body text-[11px] font-semibold text-foreground/70"
-        }
-      >
-        {when}
-      </span>
+      {onDone && (
+        <Button size="sm" variant="ghost" onClick={onDone} className="mt-2 rounded-full font-body text-xs">
+          <Check className="mr-1 h-3.5 w-3.5" /> Mark as done
+        </Button>
+      )}
+    </li>
+  );
+}
+
+function BannerRecallItem({ item }: { item: RecallMatch }) {
+  const [expanded, setExpanded] = useState(false);
+  const recall = item.recalls;
+  const product = item.products;
+  if (!recall) return null;
+  const snippet = recall.hazard ?? recall.title;
+  const isLong = snippet.length > 80;
+  return (
+    <li className="rounded-2xl border border-destructive/25 bg-white/70 px-4 py-3 dark:bg-destructive/10">
+      <p className="font-display text-sm font-semibold tracking-tight text-foreground">
+        {product?.name ?? recall.title}
+      </p>
+      <p className={`mt-0.5 font-body text-xs text-foreground/70 ${!expanded && isLong ? "line-clamp-2" : ""}`}>{snippet}</p>
+      {isLong && (
+        <button
+          type="button"
+          onClick={() => setExpanded((e) => !e)}
+          className="mt-1 inline-flex items-center gap-0.5 font-body text-xs font-semibold text-destructive/80 hover:underline"
+        >
+          {expanded ? <><ChevronUp className="h-3 w-3" /> Show less</> : <><ChevronDown className="h-3 w-3" /> Show more</>}
+        </button>
+      )}
+      {recall.url && (
+        <a
+          href={recall.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive hover:underline"
+        >
+          View details <ArrowUpRight className="h-3 w-3" />
+        </a>
+      )}
     </li>
   );
 }

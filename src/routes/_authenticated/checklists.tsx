@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { CheckCircle2, Circle, ClipboardList } from "lucide-react";
+import { CheckCircle2, Circle, ClipboardList, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
 
 export const ssr = false;
 
@@ -141,6 +143,12 @@ function ChecklistsPage() {
   return (
     <div className="min-h-screen pb-28" style={{ backgroundColor: "#FAF7F2" }}>
       <div className="mx-auto max-w-md px-4 pt-8">
+        {/* Back to Home */}
+        <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2 rounded-full font-body text-xs">
+          <Link to="/home">
+            <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Home
+          </Link>
+        </Button>
         {/* Header */}
         <div className="mb-2 flex items-center gap-3">
           <ClipboardList className="h-7 w-7" style={{ color: "#C4785A" }} />

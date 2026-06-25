@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowRight, Loader2, Package, Plus, RefreshCw, Ruler, Sparkles, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, ChevronDown, ChevronUp, Loader2, Package, Plus, RefreshCw, Ruler, Sparkles, X } from "lucide-react";
 import { MomentTimeline } from "@/components/MomentTimeline";
 import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
