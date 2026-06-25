@@ -164,7 +164,7 @@ function ProductCard({ product }: { product: Product }) {
 function SizeTimeline({ addedAt, sizeUpDate }: { addedAt: string | null; sizeUpDate: string | null }) {
   if (!addedAt || !sizeUpDate) return null;
   const start = new Date(addedAt);
-  const end = new Date(sizeUpDate);
+  const end = new Date(sizeUpDate + "T00:00:00");
   const now = new Date();
   const total = Math.max(1, daysBetween(start, end));
   const elapsed = Math.max(0, Math.min(total, daysBetween(start, now)));

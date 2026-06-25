@@ -237,7 +237,7 @@ function DetailTimeline({ addedAt, sizeUpDate, replacementDate }: { addedAt: str
 
 function TimelineRow({ label, date, addedAt, variant }: { label: string; date: string; addedAt: string; variant?: "replace" }) {
   const start = new Date(addedAt);
-  const end = new Date(date);
+  const end = new Date(date + "T00:00:00");
   const now = new Date();
   const total = Math.max(1, daysBetween(start, end));
   const elapsed = Math.max(0, Math.min(total, daysBetween(start, now)));
