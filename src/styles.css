@@ -103,12 +103,12 @@
 
   /* ── Backgrounds ─────────────────────────────────────────────────────── */
   --background: oklch(0.969 0.005 85);      /* #F8F5F0 warm cream            */
-  --foreground: oklch(0.245 0.028 42);      /* #3A2E24 deep warm brown       */
+  --foreground: oklch(0.255 0.018 50);      /* #3D3935 Espresso              */
 
   --card: oklch(0.980 0.003 85);            /* #FDFBF8 soft linen            */
-  --card-foreground: oklch(0.245 0.028 42);
+  --card-foreground: oklch(0.255 0.018 50);
   --popover: oklch(0.980 0.003 85);
-  --popover-foreground: oklch(0.245 0.028 42);
+  --popover-foreground: oklch(0.255 0.018 50);
 
   /* ── Primary: #AAB7A0 sage ───────────────────────────────────────────── */
   --primary: oklch(0.720 0.045 140);        /* #AAB7A0 sage — buttons/CTAs   */
@@ -116,7 +116,7 @@
 
   /* ── Secondary: soft sage tint ──────────────────────────────────────── */
   --secondary: oklch(0.900 0.022 135);      /* very pale sage                */
-  --secondary-foreground: oklch(0.245 0.028 42);
+  --secondary-foreground: oklch(0.255 0.018 50);
 
   /* ── Muted ──────────────────────────────────────────────────────────── */
   --muted: oklch(0.930 0.010 88);
@@ -126,8 +126,8 @@
   --accent: oklch(0.620 0.060 140);         /* deeper sage accent            */
   --accent-foreground: oklch(0.985 0 0);
 
-  /* ── Destructive: soft terracotta — Action Needed ───────────────────── */
-  --destructive: oklch(0.600 0.095 38);     /* soft terracotta               */
+  /* ── Destructive: #C8523A safety alert — warnings, recalls, urgent ──── */
+  --destructive: oklch(0.545 0.130 35);     /* #C8523A safety alert red-orange */
   --destructive-foreground: oklch(0.985 0 0);
 
   /* ── Borders & inputs ───────────────────────────────────────────────── */
@@ -138,13 +138,13 @@
   /* ── Charts ─────────────────────────────────────────────────────────── */
   --chart-1: oklch(0.560 0.110 145);        /* green — Good                  */
   --chart-2: oklch(0.700 0.115 70);         /* amber — Check Soon            */
-  --chart-3: oklch(0.600 0.095 38);         /* terracotta — Action Needed    */
+  --chart-3: oklch(0.545 0.130 35);         /* #C8523A — Action Needed      */
   --chart-4: oklch(0.720 0.045 140);        /* sage primary                  */
   --chart-5: oklch(0.620 0.060 140);        /* deep sage accent              */
 
   /* ── Sidebar ───────────────────────────────────────────────────────── */
   --sidebar: oklch(0.969 0.005 85);
-  --sidebar-foreground: oklch(0.245 0.028 42);
+  --sidebar-foreground: oklch(0.255 0.018 50);
   --sidebar-primary: oklch(0.720 0.045 140);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.620 0.060 140);
@@ -159,7 +159,7 @@
   --sage:        oklch(0.720 0.045 140);      /* #AAB7A0 sage primary        */
   --mist:        oklch(0.900 0.022 135);      /* pale sage fill              */
   --butter:      oklch(0.900 0.022 135);      /* pale sage                   */
-  --terracotta:  oklch(0.600 0.095 38);       /* soft terracotta             */
+  --terracotta:  oklch(0.545 0.130 35);       /* #C8523A safety alert        */
   --card-surface: oklch(0.980 0.003 85);
 
   /* Status semantic tokens */

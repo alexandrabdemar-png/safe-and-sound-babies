@@ -374,36 +374,41 @@ function CoParentInvite({ children }: { children: { id: string; name: string }[]
           <Share2 className="h-4 w-4" />
         </div>
         <div>
-          <p className="font-display text-base font-semibold">Share access with a co-parent</p>
-          <p className="font-body text-xs text-muted-foreground">Invite a partner to join Safe & Sound</p>
+          <p className="font-display text-base font-semibold">Share access with a co-parent or caregiver</p>
+          <p className="font-body text-xs text-muted-foreground">Works for partners, grandparents, nannies, or any caregiver</p>
         </div>
       </div>
+      <p className="mb-3 font-body text-xs text-muted-foreground leading-relaxed">
+        Enter their email and they'll receive a magic link giving them full access to view and edit{childNames ? ` ${childNames}'s` : ""} child profiles, products, milestones, and alerts — under your shared subscription.
+      </p>
       {sent ? (
         <div className="rounded-2xl bg-primary/10 px-4 py-3">
           <p className="font-body text-sm text-foreground">
-            Invite sent to <span className="font-semibold">{email}</span> — they'll receive a magic link to join Safe & Sound.
+            Invite sent to <span className="font-semibold">{email}</span>. They'll get a magic link to sign in — no password needed.
           </p>
           <p className="mt-1 font-body text-xs text-muted-foreground">
-            Once they sign in, contact support to link your accounts. Full automatic co-parent sync coming soon.
+            Once they sign in, contact us to link your accounts. Full automatic sync coming soon.
           </p>
+          <button
+            type="button"
+            onClick={() => { setSent(false); setEmail(""); }}
+            className="mt-2 font-body text-xs font-semibold text-primary underline underline-offset-2"
+          >
+            Invite another caregiver
+          </button>
         </div>
       ) : (
         <form onSubmit={handleInvite} className="space-y-2">
           <Input
             type="email"
-            placeholder="Co-parent's email address"
+            placeholder="Co-parent or caregiver's email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="h-10 rounded-xl"
           />
           <Button type="submit" disabled={sending || !email.trim()} className="w-full rounded-full">
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send invite"}
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Share2 className="mr-2 h-4 w-4" /> Send access invite</>}
           </Button>
-          {childNames && (
-            <p className="text-xs text-muted-foreground text-center">
-              They'll be invited to co-manage {childNames}'s safety profile.
-            </p>
-          )}
         </form>
       )}
     </section>

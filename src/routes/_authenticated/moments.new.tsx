@@ -85,6 +85,15 @@ const MOMENT_SAFETY_MAP: { pattern: RegExp; safety: SafetyTip }[] = [
     },
   },
   {
+    pattern: /lower(ed|ing)? (the )?crib|crib.*lower|mattress.*lower|lower.*mattress/i,
+    safety: {
+      title: "Lowering the crib mattress — one more safety step",
+      tips: [
+        "When repositioning your crib mattress, make sure to move the crib away from electrical outlets and any camera or monitor cords to keep your baby safe.",
+      ],
+    },
+  },
+  {
     pattern: /first tooth|teeth|teething/i,
     safety: {
       title: "First tooth — a few things to know",
