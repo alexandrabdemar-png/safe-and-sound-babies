@@ -116,6 +116,9 @@ function PricingPage() {
           <p className="text-muted-foreground">
             Recall alerts and replacement reminders never go behind a paywall. Pro unlocks convenience features for power users.
           </p>
+          <p className="font-body text-xs text-muted-foreground/70">
+            Safety guidelines based on AAP recommendations.
+          </p>
         </div>
 
         {/* Free plan */}

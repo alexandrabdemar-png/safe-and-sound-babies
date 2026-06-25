@@ -415,7 +415,7 @@ function BannerRecallItem({ item }: { item: RecallMatch }) {
           rel="noopener noreferrer"
           className="mt-2 inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive hover:underline"
         >
-          View details <ArrowUpRight className="h-3 w-3" />
+          Verify on CPSC.gov <ArrowUpRight className="h-3 w-3" />
         </a>
       )}
     </li>

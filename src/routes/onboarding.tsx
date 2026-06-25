@@ -290,7 +290,11 @@ function OnboardingPage() {
             </StepShell>
           )}
 
-          <div className="mt-10 flex items-center justify-between">
+          <p className="mt-8 text-center font-body text-[11px] text-muted-foreground">
+            Safety guidelines based on AAP recommendations.
+          </p>
+
+          <div className="mt-4 flex items-center justify-between">
             <Button
               type="button"
               variant="ghost"

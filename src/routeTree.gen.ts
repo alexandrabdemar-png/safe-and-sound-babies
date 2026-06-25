@@ -26,6 +26,7 @@ import { Route as AuthenticatedCaregiverCardRouteImport } from './routes/_authen
 import { Route as AuthenticatedBottlesRouteImport } from './routes/_authenticated/bottles'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
+import { Route as AuthenticatedProfilePrivacyPromiseRouteImport } from './routes/_authenticated/profile_/privacy-promise'
 import { Route as AuthenticatedProfilePrivacyPolicyRouteImport } from './routes/_authenticated/profile_.privacy-policy'
 import { Route as AuthenticatedProfileNotificationSettingsRouteImport } from './routes/_authenticated/profile_.notification-settings'
 import { Route as AuthenticatedProductsScanRouteImport } from './routes/_authenticated/products_.scan'
@@ -126,6 +127,12 @@ const AuthenticatedAddRoute = AuthenticatedAddRouteImport.update({
   path: '/add',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProfilePrivacyPromiseRoute =
+  AuthenticatedProfilePrivacyPromiseRouteImport.update({
+    id: '/profile_/privacy-promise',
+    path: '/profile/privacy-promise',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProfilePrivacyPolicyRoute =
   AuthenticatedProfilePrivacyPolicyRouteImport.update({
     id: '/profile_/privacy-policy',
@@ -219,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/products/scan': typeof AuthenticatedProductsScanRoute
   '/profile/notification-settings': typeof AuthenticatedProfileNotificationSettingsRoute
   '/profile/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
+  '/profile/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
@@ -249,6 +257,7 @@ export interface FileRoutesByTo {
   '/products/scan': typeof AuthenticatedProductsScanRoute
   '/profile/notification-settings': typeof AuthenticatedProfileNotificationSettingsRoute
   '/profile/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
+  '/profile/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
@@ -281,6 +290,7 @@ export interface FileRoutesById {
   '/_authenticated/products_/scan': typeof AuthenticatedProductsScanRoute
   '/_authenticated/profile_/notification-settings': typeof AuthenticatedProfileNotificationSettingsRoute
   '/_authenticated/profile_/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
+  '/_authenticated/profile_/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
@@ -313,6 +323,7 @@ export interface FileRouteTypes {
     | '/products/scan'
     | '/profile/notification-settings'
     | '/profile/privacy-policy'
+    | '/profile/privacy-promise'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
@@ -343,6 +354,7 @@ export interface FileRouteTypes {
     | '/products/scan'
     | '/profile/notification-settings'
     | '/profile/privacy-policy'
+    | '/profile/privacy-promise'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
@@ -374,6 +386,7 @@ export interface FileRouteTypes {
     | '/_authenticated/products_/scan'
     | '/_authenticated/profile_/notification-settings'
     | '/_authenticated/profile_/privacy-policy'
+    | '/_authenticated/profile_/privacy-promise'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
@@ -515,6 +528,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAddRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile_/privacy-promise': {
+      id: '/_authenticated/profile_/privacy-promise'
+      path: '/profile/privacy-promise'
+      fullPath: '/profile/privacy-promise'
+      preLoaderRoute: typeof AuthenticatedProfilePrivacyPromiseRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile_/privacy-policy': {
       id: '/_authenticated/profile_/privacy-policy'
       path: '/profile/privacy-policy'
@@ -631,6 +651,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProductsScanRoute: typeof AuthenticatedProductsScanRoute
   AuthenticatedProfileNotificationSettingsRoute: typeof AuthenticatedProfileNotificationSettingsRoute
   AuthenticatedProfilePrivacyPolicyRoute: typeof AuthenticatedProfilePrivacyPolicyRoute
+  AuthenticatedProfilePrivacyPromiseRoute: typeof AuthenticatedProfilePrivacyPromiseRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -653,6 +674,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedProfileNotificationSettingsRoute,
   AuthenticatedProfilePrivacyPolicyRoute:
     AuthenticatedProfilePrivacyPolicyRoute,
+  AuthenticatedProfilePrivacyPromiseRoute:
+    AuthenticatedProfilePrivacyPromiseRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

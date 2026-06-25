@@ -211,9 +211,16 @@ function ProfilePage() {
               <p className="font-body text-xs text-muted-foreground">{email ?? ""}</p>
             </div>
           </div>
-          <Button onClick={signOut} variant="outline" className="mt-4 w-full rounded-full">
-            <LogOut className="mr-2 h-4 w-4" /> Sign out
-          </Button>
+          <div className="mt-4 flex flex-col gap-2">
+            <Button asChild variant="outline" className="w-full rounded-full">
+              <Link to="/profile/privacy-promise">
+                <Shield className="mr-2 h-4 w-4" /> Privacy Promise
+              </Link>
+            </Button>
+            <Button onClick={signOut} variant="outline" className="w-full rounded-full">
+              <LogOut className="mr-2 h-4 w-4" /> Sign out
+            </Button>
+          </div>
         </section>
       </div>
 

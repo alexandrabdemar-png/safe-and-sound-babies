@@ -11,76 +11,76 @@ export const Route = createFileRoute("/_authenticated/safety-guides")({
 });
 
 const SAFETY_MILESTONES = [
-  { ageMonths: 0, stage: "Before baby arrives", title: "Safe sleep setup", items: [
+  { ageMonths: 0, stage: "Before baby arrives", title: "Safe sleep setup", source: "AAP", lastUpdated: "May 2025", items: [
     "Place your baby on their back for every single sleep — naps and nighttime.",
     "Use only a firm, flat crib mattress with a fitted sheet and nothing else in the sleep space.",
     "Remove all loose bedding, bumpers, pillows, and stuffed animals from the crib.",
     "Room-share with your baby in a separate sleep surface for at least the first 6 months.",
     "Dress baby in one more layer than you would wear and keep the room between 68–72°F.",
   ]},
-  { ageMonths: 2, stage: "Newborn", title: "Tummy time safety", items: [
+  { ageMonths: 2, stage: "Newborn", title: "Tummy time safety", source: "AAP", lastUpdated: "May 2025", items: [
     "Do supervised tummy time on a firm surface for short sessions several times each day.",
     "Stay within arm's reach whenever your baby is on their tummy.",
     "If your baby falls asleep during tummy time, immediately move them to their back in the crib.",
   ]},
-  { ageMonths: 4, stage: "Newborn", title: "Starting to move", items: [
+  { ageMonths: 4, stage: "Newborn", title: "Starting to move", source: "AAP", lastUpdated: "May 2025", items: [
     "Lower the crib mattress to the lowest setting before your baby can push up on hands and knees.",
     "Remove hanging mobiles and any toys clipped to the crib rail before baby can grab them.",
     "Never leave your baby unattended on a changing table, sofa, or any elevated surface — even for a second.",
   ]},
-  { ageMonths: 6, stage: "Starting to move", title: "First foods safety", items: [
+  { ageMonths: 6, stage: "Starting to move", title: "First foods safety", source: "AAP", lastUpdated: "May 2025", items: [
     "Do not give honey in any form until after your baby's first birthday — it can cause infant botulism.",
     "Cut grapes, cherry tomatoes, and hot dogs lengthwise into quarters to eliminate choking hazards.",
     "Introduce one new food at a time and wait 3–5 days before adding another to identify any allergic reactions.",
     "Do not give cow's milk as a main drink until 12 months — breast milk or formula should remain the primary liquid.",
   ]},
-  { ageMonths: 9, stage: "On the go", title: "Crawling & exploring", items: [
+  { ageMonths: 9, stage: "On the go", title: "Crawling & exploring", source: "AAP · CPSC", lastUpdated: "May 2025", items: [
     "Install a hardware-mounted (not pressure-mounted) baby gate at the top and bottom of every staircase.",
     "Cover all electrical outlets with sliding safety covers or outlet plates throughout your home.",
     "Install cabinet locks on every lower cabinet that contains cleaning products, medications, or sharp items.",
     "Apply corner and edge guards to sharp coffee table corners and other low furniture edges.",
     "Do a floor-level scan of each room daily to pick up small objects, batteries, and coins that could be swallowed.",
   ]},
-  { ageMonths: 12, stage: "On the go", title: "Pulling up & walking", items: [
+  { ageMonths: 12, stage: "On the go", title: "Pulling up & walking", source: "AAP · CPSC", lastUpdated: "May 2025", items: [
     "Anchor every bookshelf, dresser, and TV stand to wall studs using anti-tip straps.",
     "Move all cleaning products, laundry pods, and medications to high shelves or locked cabinets.",
     "Install a toilet lid lock on every toilet your toddler can access.",
     "Install window stops or guards on all windows above the first floor so they open no more than 4 inches.",
     "Remove large stuffed animals and crib bumpers from the crib — they are now a climbing hazard.",
   ]},
-  { ageMonths: 18, stage: "Exploring everything", title: "Toddler proofing", items: [
+  { ageMonths: 18, stage: "Exploring everything", title: "Toddler proofing", source: "AAP", lastUpdated: "May 2025", items: [
     "Keep stair gates in place — toddlers who can climb stairs can still fall down them.",
     "Keep all hot drinks at least 3 feet away from the table edge and never hold a hot drink while holding your toddler.",
     "Hold your toddler's hand in every parking lot — make this a non-negotiable rule from day one.",
     "Actively discourage climbing on furniture and redirect to safe climbing alternatives like foam play sets.",
   ]},
-  { ageMonths: 24, stage: "Exploring everything", title: "Car seat transition", items: [
+  { ageMonths: 24, stage: "Exploring everything", title: "Car seat transition", source: "AAP · NHTSA", lastUpdated: "May 2025", items: [
     "Keep your child rear-facing until they reach the maximum height or weight limit printed on their car seat.",
     "Only move your child to a forward-facing seat after they have outgrown the rear-facing limits — not by age.",
     "Position harness straps at or just above your child's shoulders when forward-facing.",
     "Remove puffy coats before buckling the car seat harness and place a blanket over the buckled harness instead.",
   ]},
-  { ageMonths: 36, stage: "Big kid basics", title: "Preschool safety", items: [
+  { ageMonths: 36, stage: "Big kid basics", title: "Preschool safety", source: "AAP", lastUpdated: "May 2025", items: [
     "Teach your child the difference between safe and unsafe touch, using correct anatomical names for body parts.",
     "Practice your child saying their full name, your phone number, and how to dial 911 until they can do it confidently.",
     "Put a properly fitted helmet on your child for every bike, scooter, or balance bike ride — no exceptions.",
     "Clearly explain that floaties and water wings are toys, not life jackets, and must never be used as flotation devices.",
     "Teach age-appropriate stranger safety rules, including how to identify a safe adult to ask for help.",
   ]},
-  { ageMonths: 48, stage: "Big kid basics", title: "Outdoor & bike safety", items: [
+  { ageMonths: 48, stage: "Big kid basics", title: "Outdoor & bike safety", source: "AAP · CPSC", lastUpdated: "May 2025", items: [
     "Replace your child's bike helmet after any impact, even if it looks undamaged — the foam may be compromised.",
     "Walk your child's bike route with them and practice stopping and looking at every driveway and intersection.",
     "Apply SPF 30 or higher broad-spectrum sunscreen to all exposed skin whenever your child is outdoors.",
     "Know the names and addresses of your child's closest friends and their parents' phone numbers.",
   ]},
-  { ageMonths: 60, stage: "Big kid basics", title: "School age safety", items: [
+  { ageMonths: 60, stage: "Big kid basics", title: "School age safety", source: "AAP", lastUpdated: "May 2025", items: [
     "Walk or ride the bus route with your child before the first day of school so they know exactly where to go.",
     "Keep your child's backpack weight under 10–15% of their body weight to protect their back and posture.",
     "Set clear screen time rules and review the content your child is watching or playing regularly.",
     "Role-play what to do if they get lost or are approached by a stranger, including running to a store or trusted adult.",
     "Ensure your child wears a properly fitted life jacket for all open water activities, every time without exception.",
   ]},
-  { ageMonths: 84, stage: "Big kid basics", title: "Booster seat transition", items: [
+  { ageMonths: 84, stage: "Big kid basics", title: "Booster seat transition", source: "AAP · NHTSA", lastUpdated: "May 2025", items: [
     "Keep your child in a harnessed car seat until they have outgrown its height or weight limit — not by age.",
     "Transition to a booster only when the vehicle seat belt sits flat across the chest and low on the hips, typically around 4'9\" tall.",
     "Keep your child in the back seat until they are 13 years old — airbags pose a serious risk to younger children.",
@@ -360,14 +360,24 @@ function MilestonesTab({
               )}
             </div>
             {isExpanded && (
-              <ul className="mt-3 space-y-1.5 border-t border-border/40 pt-3">
-                {m.items.map((item) => (
-                  <li key={item} className="flex items-start gap-2 font-body text-sm text-foreground/80">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
+              <div className="mt-3 border-t border-border/40 pt-3">
+                <ul className="space-y-1.5">
+                  {m.items.map((item) => (
+                    <li key={item} className="flex items-start gap-2 font-body text-sm text-foreground/80">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-3 flex items-center justify-between border-t border-border/30 pt-2">
+                  <span className="font-body text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                    Source: {m.source}
+                  </span>
+                  <span className="font-body text-[10px] text-muted-foreground/50">
+                    Updated {m.lastUpdated}
+                  </span>
+                </div>
+              </div>
             )}
           </button>
         );
