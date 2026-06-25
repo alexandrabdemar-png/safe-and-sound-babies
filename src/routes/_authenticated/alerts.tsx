@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
-import { AlertTriangle, ArrowLeft, ArrowUpRight, Bell, Check, ChevronDown, ChevronUp, Loader2, Plus, RefreshCw, Ruler } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowUpRight, Bell, Check, ChevronDown, ChevronUp, Clock, Loader2, Plus, RefreshCw, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -62,17 +62,62 @@ function relative(dateStr: string): string {
   return new Date(dateStr + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+type RecallHistoryItem = {
+  id: string;
+  title: string;
+  hazard: string | null;
+  remedy: string | null;
+  url: string | null;
+  recall_date: string | null;
+  category: string | null;
+};
+
 function AlertsPage() {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [recalls, setRecalls] = useState<RecallMatch[]>([]);
   const [activeChildId, setActiveChildIdState] = useState<string | null>(null);
-  // Insight alerts dismissed optimistically
   const [dismissedRuleIds, setDismissedRuleIds] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState<"alerts" | "history">("alerts");
+  const [history, setHistory] = useState<RecallHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   useEffect(() => {
     void loadData();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "history" && history.length === 0) void loadHistory();
+  }, [activeTab]);
+
+  async function loadHistory() {
+    setHistoryLoading(true);
+    // Get the user's product categories to filter relevant recalls
+    const { data: prods } = await supabase.from("products").select("category");
+    const cats = new Set((prods ?? []).map((p: { category: string | null }) => p.category).filter(Boolean) as string[]);
+
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 90);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+
+    const { data, error } = await supabase
+      .from("recalls")
+      .select("id, title, hazard, remedy, url, recall_date, category")
+      .gte("recall_date", cutoffStr)
+      .order("recall_date", { ascending: false })
+      .limit(100);
+
+    if (error) { toast.error(error.message); setHistoryLoading(false); return; }
+
+    // If user has product categories, prefer matching ones; otherwise show all
+    const items = (data ?? []) as RecallHistoryItem[];
+    const filtered = cats.size > 0
+      ? items.filter((r) => !r.category || cats.has(r.category))
+      : items;
+
+    setHistory(filtered);
+    setHistoryLoading(false);
+  }
 
   async function loadData() {
     setLoading(true);
@@ -180,6 +225,55 @@ function AlertsPage() {
         </div>
       </header>
 
+      {/* Tab switcher */}
+      <div className="px-5 pb-2 sm:px-6">
+        <div className="mx-auto max-w-md">
+          <div className="flex rounded-2xl bg-muted p-1">
+            <button
+              onClick={() => setActiveTab("alerts")}
+              className={`flex-1 rounded-xl py-2 font-body text-sm font-semibold transition-all ${activeTab === "alerts" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+            >
+              My Alerts
+            </button>
+            <button
+              onClick={() => setActiveTab("history")}
+              className={`flex-1 rounded-xl py-2 font-body text-sm font-semibold transition-all ${activeTab === "history" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+            >
+              Recall History
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {activeTab === "history" && (
+        <main className="flex-1 px-5 pb-8 sm:px-6">
+          <div className="mx-auto max-w-md">
+            <p className="mb-4 font-body text-xs text-muted-foreground">
+              Recalls published in the last 90 days in your product categories — whether you own the specific product or not.
+            </p>
+            {historyLoading ? (
+              <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+            ) : history.length === 0 ? (
+              <div className="rounded-3xl border border-dashed border-border bg-card/40 px-6 py-12 text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-forest/15 text-forest">
+                  <Clock className="h-5 w-5" />
+                </div>
+                <p className="font-display text-lg font-semibold tracking-tight">No recalls in the past 90 days</p>
+                <p className="mx-auto mt-1 max-w-xs font-body text-sm text-muted-foreground">
+                  No recalls were issued in your product categories over the last 3 months.
+                </p>
+              </div>
+            ) : (
+              <ul className="space-y-3">
+                {history.map((r) => <RecallHistoryCard key={r.id} item={r} />)}
+              </ul>
+            )}
+          </div>
+        </main>
+      )}
+
+      {activeTab === "alerts" && (
+      <>
       {/* Prominent banner: products you own with active recalls */}
       {!loading && ownedRecalls.length > 0 && (
         <div className="px-5 pb-4 sm:px-6">
@@ -266,8 +360,42 @@ function AlertsPage() {
         </div>
       </main>
 
+      </>
+      )}
+
       <BottomNav />
     </div>
+  );
+}
+
+function RecallHistoryCard({ item }: { item: RecallHistoryItem }) {
+  const [expanded, setExpanded] = useState(false);
+  const snippet = item.hazard ?? item.title;
+  const isLong = snippet.length > 80;
+  const date = item.recall_date ? new Date(item.recall_date + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "";
+  return (
+    <li className="rounded-2xl border border-border/60 bg-card px-4 py-3">
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-display text-sm font-semibold tracking-tight text-foreground">{item.title}</p>
+        {date && <span className="shrink-0 font-body text-[10px] text-muted-foreground">{date}</span>}
+      </div>
+      {item.category && (
+        <span className="mt-1 inline-block rounded-full bg-muted px-2 py-0.5 font-body text-[10px] text-muted-foreground capitalize">{item.category.replace(/_/g, " ")}</span>
+      )}
+      <p className={`mt-1.5 font-body text-xs text-foreground/70 ${!expanded && isLong ? "line-clamp-2" : ""}`}>{snippet}</p>
+      {isLong && (
+        <button type="button" onClick={() => setExpanded((e) => !e)}
+          className="mt-1 inline-flex items-center gap-0.5 font-body text-xs font-semibold text-primary/80 hover:underline">
+          {expanded ? <><ChevronUp className="h-3 w-3" /> Less</> : <><ChevronDown className="h-3 w-3" /> More</>}
+        </button>
+      )}
+      {item.url && (
+        <a href={item.url} target="_blank" rel="noopener noreferrer"
+          className="mt-2 inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive hover:underline">
+          Verify on CPSC.gov <ArrowUpRight className="h-3 w-3" />
+        </a>
+      )}
+    </li>
   );
 }
 

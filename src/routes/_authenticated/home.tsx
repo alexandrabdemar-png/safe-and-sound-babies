@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowRight, ChevronDown, ChevronUp, Loader2, Package, Plus, RefreshCw, Ruler, Sparkles, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, Calendar, ChevronDown, ChevronUp, Loader2, Package, Plus, RefreshCw, Ruler, Sparkles, X } from "lucide-react";
 import { MomentTimeline } from "@/components/MomentTimeline";
 import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
@@ -40,6 +40,37 @@ type AlertSummary = {
   sizeUp: number;
 };
 
+type ComingUpProduct = {
+  id: string;
+  name: string;
+  brand: string | null;
+  when: string;
+  type: "replace" | "sizeup";
+};
+
+// ── Weekly digest helpers ───────────────────────────────────────────────────
+function isoWeekKey(date = new Date()) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const week = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
+}
+
+function isSunday() { return new Date().getDay() === 0; }
+
+function ageSafetyTip(dobStr: string | null): string {
+  if (!dobStr) return "Always place your baby on their back for every sleep — it's the single most important safe sleep rule.";
+  const birth = new Date(dobStr + "T00:00:00");
+  const months = Math.max(0, (new Date().getFullYear() - birth.getFullYear()) * 12 + (new Date().getMonth() - birth.getMonth()));
+  if (months < 4) return "Firm, flat, empty crib — no pillows, bumpers, or loose blankets. Back to sleep, every time.";
+  if (months < 8) return "Before your baby can push up on all fours, lower the crib mattress to the next setting.";
+  if (months < 13) return "Install hardware-mounted gates at the top of every staircase before they start crawling.";
+  if (months < 24) return "Anchor every bookshelf, dresser, and TV stand to the wall — toddlers pull on everything.";
+  if (months < 36) return "Keep cleaning products and laundry pods in a locked cabinet or on the highest shelf.";
+  return "Put a properly fitted helmet on your child for every bike, scooter, or balance bike ride — no exceptions.";
+}
+
 function parseDateLocal(dateStr: string): Date {
   const [y, m, d] = dateStr.split("-").map(Number);
   return new Date(y, m - 1, d);
@@ -76,7 +107,14 @@ function HomePage() {
   const [moments, setMoments] = useState<Moment[]>([]);
   const [alerts, setAlerts] = useState<AlertSummary>({ recalls: 0, replace: 0, sizeUp: 0 });
   const [products, setProducts] = useState<ProductInput[]>([]);
+  const [comingUp, setComingUp] = useState<ComingUpProduct[]>([]);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+
+  // Weekly digest: show on Sundays, dismiss per-week
+  const currentWeekKey = isoWeekKey();
+  const [digestDismissed, setDigestDismissed] = useState(() => {
+    try { return localStorage.getItem(`safesound.weeklyDigest.${currentWeekKey}`) === "true"; } catch { return false; }
+  });
 
   // Recall banner dismiss (resets daily)
   const [recallBannerDismissed, setRecallBannerDismissed] = useState(() => {
@@ -116,19 +154,25 @@ function HomePage() {
         }
       } catch {}
 
-      const horizon = new Date();
-      horizon.setDate(horizon.getDate() + 30);
+      const horizon30 = new Date();
+      horizon30.setDate(horizon30.getDate() + 30);
+      const horizon90 = new Date();
+      horizon90.setDate(horizon90.getDate() + 90);
       const todayStr = new Date().toISOString().slice(0, 10);
-      const horizonStr = horizon.toISOString().slice(0, 10);
+      const horizon30Str = horizon30.toISOString().slice(0, 10);
+      const horizon90Str = horizon90.toISOString().slice(0, 10);
       const nowIso = new Date().toISOString();
 
-      const [mRes, recallRes, replaceRes, sizeRes, productRes, dismRes] = await Promise.all([
+      const [mRes, recallRes, replaceRes, sizeRes, productRes, dismRes, comingUpRes] = await Promise.all([
         supabase.from("milestones").select("id, title, logged_at, notes").eq("child_id", c.id).order("logged_at", { ascending: false }).limit(5),
         supabase.from("product_recalls").select("id", { count: "exact", head: true }).eq("acknowledged", false),
-        supabase.from("products").select("id", { count: "exact", head: true }).gte("replace_at", todayStr).lte("replace_at", horizonStr),
-        supabase.from("products").select("id", { count: "exact", head: true }).gte("next_size_at", todayStr).lte("next_size_at", horizonStr),
+        supabase.from("products").select("id", { count: "exact", head: true }).gte("replace_at", todayStr).lte("replace_at", horizon30Str),
+        supabase.from("products").select("id", { count: "exact", head: true }).gte("next_size_at", todayStr).lte("next_size_at", horizon30Str),
         supabase.from("products").select("id, category, purchased_at, size").or(`child_id.eq.${c.id},child_id.is.null`),
         supabase.from("insight_dismissals").select("rule_id, action, until").eq("child_id", c.id),
+        supabase.from("products").select("id, name, brand, replace_at, next_size_at, predicted_replacement_date, predicted_sizeup_date")
+          .or(`replace_at.gte.${todayStr},next_size_at.gte.${todayStr},predicted_replacement_date.gte.${todayStr},predicted_sizeup_date.gte.${todayStr}`)
+          .lte("replace_at", horizon90Str),
       ]);
 
       if (cancelled) return;
@@ -139,6 +183,24 @@ function HomePage() {
         sizeUp: sizeRes.count ?? 0,
       });
       setProducts((productRes.data ?? []) as ProductInput[]);
+
+      // Build coming-up list: pick the earliest date per product, sort, take top 3
+      if (comingUpRes.data) {
+        type Raw = { id: string; name: string; brand: string | null; replace_at: string | null; next_size_at: string | null; predicted_replacement_date: string | null; predicted_sizeup_date: string | null };
+        const items: ComingUpProduct[] = [];
+        for (const p of comingUpRes.data as Raw[]) {
+          const replaceDate = p.predicted_replacement_date ?? p.replace_at;
+          const sizeDate = p.predicted_sizeup_date ?? p.next_size_at;
+          if (replaceDate && replaceDate >= todayStr && replaceDate <= horizon90Str) {
+            items.push({ id: `replace:${p.id}`, name: p.name, brand: p.brand, when: replaceDate, type: "replace" });
+          }
+          if (sizeDate && sizeDate >= todayStr && sizeDate <= horizon90Str) {
+            items.push({ id: `sizeup:${p.id}`, name: p.name, brand: p.brand, when: sizeDate, type: "sizeup" });
+          }
+        }
+        items.sort((a, b) => a.when.localeCompare(b.when));
+        setComingUp(items.slice(0, 3));
+      }
       const blocked = new Set<string>();
       for (const d of (dismRes.data ?? []) as { rule_id: string; action: string; until: string | null }[]) {
         if (d.action === 'done' || d.action === 'dismissed') blocked.add(d.rule_id);
@@ -169,6 +231,11 @@ function HomePage() {
   function dismissRecallBanner() {
     try { localStorage.setItem(`safesound.recallBannerDismissed.${todayKey()}`, "true"); } catch {}
     setRecallBannerDismissed(true);
+  }
+
+  function dismissDigest() {
+    try { localStorage.setItem(`safesound.weeklyDigest.${currentWeekKey}`, "true"); } catch {}
+    setDigestDismissed(true);
   }
 
   function dismissMeasReminder() {
@@ -268,6 +335,21 @@ function HomePage() {
         </div>
       )}
 
+      {/* Weekly digest — Sundays only, once per week */}
+      {!loading && isSunday() && !digestDismissed && child && (
+        <div className="px-5 pt-3 sm:px-6">
+          <div className="mx-auto max-w-md">
+            <WeeklyDigestCard
+              childName={child.name}
+              recalls={alerts.recalls}
+              comingUp={comingUp}
+              safetyTip={ageSafetyTip(child.date_of_birth)}
+              onDismiss={dismissDigest}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Alert summary cards — ABOVE "Up next" */}
       <section className="px-5 pt-4 sm:px-6">
         <div className="mx-auto max-w-md">
@@ -298,6 +380,41 @@ function HomePage() {
           )}
         </div>
       </section>
+
+      {/* Coming up — product date countdown */}
+      {!loading && comingUp.length > 0 && (
+        <section className="px-5 pt-4 sm:px-6">
+          <div className="mx-auto max-w-md">
+            <div className="rounded-3xl border border-border/60 bg-card p-5">
+              <div className="mb-3 flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sand/60 text-accent">
+                  <Calendar className="h-3.5 w-3.5" />
+                </span>
+                <p className="font-display text-sm font-semibold tracking-tight">Coming up</p>
+              </div>
+              <ul className="space-y-2.5">
+                {comingUp.map((p) => {
+                  const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
+                  const label = days === 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in ${Math.round(days / 7)} weeks`;
+                  const urgency = days <= 7 ? "text-destructive bg-destructive/10" : days <= 21 ? "text-amber-700 bg-amber-100" : "text-accent bg-sand/60";
+                  return (
+                    <li key={p.id} className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-body text-sm font-medium text-foreground">{p.name}</p>
+                        <p className="font-body text-xs text-muted-foreground">{p.type === "replace" ? "Replace" : "Size up"}{p.brand ? ` · ${p.brand}` : ""}</p>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2.5 py-1 font-body text-[11px] font-semibold ${urgency}`}>{label}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+              <Link to="/alerts" className="mt-3 inline-flex items-center gap-1 font-body text-xs font-semibold text-accent hover:underline">
+                View all alerts <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Up next — proactive guidance */}
       {upNext.length > 0 && (
@@ -404,6 +521,77 @@ function SummaryTile({
       <p className="font-display text-2xl font-semibold tracking-tight">{count}</p>
       <p className="font-body text-[11px] uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
     </Link>
+  );
+}
+
+function WeeklyDigestCard({
+  childName,
+  recalls,
+  comingUp,
+  safetyTip,
+  onDismiss,
+}: {
+  childName: string;
+  recalls: number;
+  comingUp: ComingUpProduct[];
+  safetyTip: string;
+  onDismiss: () => void;
+}) {
+  return (
+    <div className="rounded-3xl border border-primary/30 bg-card p-5">
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <Sparkles className="h-3.5 w-3.5" />
+          </span>
+          <div>
+            <p className="font-display text-sm font-semibold tracking-tight">This week for {childName}</p>
+            <p className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">Weekly digest</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="rounded-full p-1 text-muted-foreground hover:bg-muted"
+          aria-label="Dismiss"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      <ul className="space-y-2.5 border-t border-border/40 pt-3">
+        {recalls > 0 ? (
+          <li className="flex items-start gap-2">
+            <span className="mt-0.5 text-sm">⚠️</span>
+            <p className="font-body text-sm text-foreground">
+              <span className="font-semibold text-destructive">{recalls} active recall{recalls > 1 ? "s" : ""}</span> — check the Alerts tab.
+            </p>
+          </li>
+        ) : (
+          <li className="flex items-start gap-2">
+            <span className="mt-0.5 text-sm">✅</span>
+            <p className="font-body text-sm text-foreground">No new recalls this week — all clear.</p>
+          </li>
+        )}
+        {comingUp.length > 0 ? (
+          <li className="flex items-start gap-2">
+            <span className="mt-0.5 text-sm">📅</span>
+            <p className="font-body text-sm text-foreground">
+              <span className="font-semibold">{comingUp.length} product{comingUp.length > 1 ? "s" : ""}</span> coming due soon — {comingUp[0].name}{comingUp.length > 1 ? ` and ${comingUp.length - 1} more` : ""}.
+            </p>
+          </li>
+        ) : (
+          <li className="flex items-start gap-2">
+            <span className="mt-0.5 text-sm">📅</span>
+            <p className="font-body text-sm text-foreground">No replacements or size-ups due in the next 90 days.</p>
+          </li>
+        )}
+        <li className="flex items-start gap-2">
+          <span className="mt-0.5 text-sm">🛡️</span>
+          <p className="font-body text-sm text-foreground">{safetyTip}</p>
+        </li>
+      </ul>
+    </div>
   );
 }
 
