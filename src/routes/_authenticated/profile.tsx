@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   LogOut, User as UserIcon, Sparkles, Loader2, Plus, Trash2,
-  Download, CreditCard, Shield, Bell, Share2,
+  Download, CreditCard, Shield, Bell, Share2, Gift, Copy, Check,
 } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useProGate } from "@/hooks/useProGate";
@@ -183,6 +183,9 @@ function ProfilePage() {
         </section>
 
 
+        {/* Refer a friend */}
+        <ReferFriendSection />
+
         {/* Co-parent invite section */}
         <CoParentInvite children={children} />
 
@@ -342,6 +345,87 @@ function ChildRow({
         </div>
       )}
     </li>
+  );
+}
+
+function ReferFriendSection() {
+  const [code, setCode] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      const user = data.user;
+      if (!user) return;
+      let referralCode: string = user.user_metadata?.referral_code ?? "";
+      if (!referralCode) {
+        referralCode = user.id.replace(/-/g, "").slice(0, 8).toUpperCase();
+        await supabase.auth.updateUser({ data: { referral_code: referralCode } });
+      }
+      setCode(referralCode);
+    })();
+  }, []);
+
+  const referralUrl = code ? `${typeof window !== "undefined" ? window.location.origin : ""}/auth?ref=${code}` : "";
+
+  function copyLink() {
+    if (!referralUrl) return;
+    navigator.clipboard.writeText(referralUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }).catch(() => {
+      toast("Link: " + referralUrl);
+    });
+  }
+
+  async function shareLink() {
+    if (!referralUrl) return;
+    if (typeof navigator !== "undefined" && "share" in navigator) {
+      await navigator.share({
+        title: "Safe & Sound — baby safety app",
+        text: "I've been using Safe & Sound to track recalls and safety milestones for my baby. Try it free:",
+        url: referralUrl,
+      }).catch(() => {});
+    } else {
+      copyLink();
+    }
+  }
+
+  return (
+    <section className="rounded-3xl border border-border/60 bg-card p-5">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+          <Gift className="h-4 w-4" />
+        </div>
+        <div>
+          <p className="font-display text-base font-semibold">Refer a friend</p>
+          <p className="font-body text-xs text-muted-foreground">Both get 1 free month of Pro</p>
+        </div>
+      </div>
+      <p className="mb-4 font-body text-xs text-muted-foreground leading-relaxed">
+        Share Safe & Sound with another parent. When they sign up with your link and subscribe to Pro, you both get one free month added to your account.
+      </p>
+      {code ? (
+        <div className="space-y-3">
+          <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3">
+            <p className="font-body text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Your referral code</p>
+            <p className="font-display text-2xl font-semibold tracking-widest text-foreground">{code}</p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={copyLink} variant="outline" className="flex-1 rounded-full font-body text-xs">
+              {copied ? <><Check className="mr-1.5 h-3.5 w-3.5 text-primary" /> Copied!</> : <><Copy className="mr-1.5 h-3.5 w-3.5" /> Copy link</>}
+            </Button>
+            <Button onClick={shareLink} className="flex-1 rounded-full font-body text-xs">
+              <Share2 className="mr-1.5 h-3.5 w-3.5" /> Share
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex justify-center py-4">
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        </div>
+      )}
+    </section>
   );
 }
 

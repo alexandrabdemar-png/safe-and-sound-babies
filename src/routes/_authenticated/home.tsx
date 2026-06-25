@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowRight, Calendar, ChevronDown, ChevronUp, Gift, Loader2, Package, Plus, Radio, RefreshCw, Ruler, Sparkles, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, Calendar, ChevronDown, ChevronUp, Gift, Loader2, Package, Plus, Radio, RefreshCw, Ruler, Sparkles, Zap, X } from "lucide-react";
 import { MomentTimeline } from "@/components/MomentTimeline";
 import { SparkleIllustration } from "@/components/EmptyIllustration";
 import { BottomNav } from "@/components/BottomNav";
@@ -106,6 +106,30 @@ function todayKey() {
   return new Date().toISOString().slice(0, 10);
 }
 
+// ── What's New ──────────────────────────────────────────────────────────────
+const WHATS_NEW = [
+  {
+    version: "v1.4",
+    date: "June 2025",
+    updates: [
+      "Recall Radar: live CPSC baby recall count right on your home screen",
+      "Hand-Me-Down Checker catches expired and recalled second-hand gear before you use it",
+      "Travel Safety Mode — a full 30-item checklist for traveling with baby",
+    ],
+  },
+  {
+    version: "v1.3",
+    date: "May 2025",
+    updates: [
+      "Age jump alerts when your baby crosses a milestone — with relevant safety actions",
+      "Gift Registry Safety Check: paste any URL to check for recalls before adding to your list",
+      "Haptic feedback and smoother entrance animations throughout",
+    ],
+  },
+];
+
+const LATEST_VERSION = WHATS_NEW[0].version;
+
 // ── Age jump milestones ──────────────────────────────────────────────────────
 const AGE_MILESTONES: { months: number; actions: string[] }[] = [
   {
@@ -171,6 +195,11 @@ function HomePage() {
   const [products, setProducts] = useState<ProductInput[]>([]);
   const [comingUp, setComingUp] = useState<ComingUpProduct[]>([]);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+
+  // What's New card
+  const [whatsNewDismissed, setWhatsNewDismissed] = useState(() => {
+    try { return localStorage.getItem(`safesound.whatsNew.${LATEST_VERSION}`) === "true"; } catch { return false; }
+  });
 
   // Recall radar: live 30-day CPSC count, cached daily
   const [recallRadarCount, setRecallRadarCount] = useState<number | null>(null);
@@ -313,6 +342,11 @@ function HomePage() {
   function dismissDigest() {
     try { localStorage.setItem(`safesound.weeklyDigest.${currentWeekKey}`, "true"); } catch {}
     setDigestDismissed(true);
+  }
+
+  function dismissWhatsNew() {
+    try { localStorage.setItem(`safesound.whatsNew.${LATEST_VERSION}`, "true"); } catch {}
+    setWhatsNewDismissed(true);
   }
 
   function dismissAgeJump() {
@@ -544,9 +578,18 @@ function HomePage() {
         </section>
       )}
 
+      {/* What's New */}
+      {!whatsNewDismissed && (
+        <section className="px-5 pt-4 sm:px-6 animate-fade-up stagger-3">
+          <div className="mx-auto max-w-md">
+            <WhatsNewCard updates={WHATS_NEW.slice(0, 2)} onDismiss={dismissWhatsNew} />
+          </div>
+        </section>
+      )}
+
       {/* Up next — proactive guidance */}
       {upNext.length > 0 && (
-        <section className="px-5 pt-4 sm:px-6 animate-fade-up stagger-3">
+        <section className="px-5 pt-4 sm:px-6 animate-fade-up stagger-4">
           <div className="mx-auto max-w-md">
             <div className="rounded-3xl border border-border/60 bg-card p-5">
               <div className="mb-3 flex items-center gap-2">
@@ -719,6 +762,65 @@ function WeeklyDigestCard({
           <p className="font-body text-sm text-foreground">{safetyTip}</p>
         </li>
       </ul>
+    </div>
+  );
+}
+
+function WhatsNewCard({
+  updates,
+  onDismiss,
+}: {
+  updates: { version: string; date: string; updates: string[] }[];
+  onDismiss: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const latest = updates[0];
+  return (
+    <div className="rounded-3xl border border-border/60 bg-card p-5">
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <Zap className="h-3.5 w-3.5" />
+          </span>
+          <div>
+            <p className="font-display text-sm font-semibold tracking-tight">What's new</p>
+            <p className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">{latest.version} · {latest.date}</p>
+          </div>
+        </div>
+        <button type="button" onClick={onDismiss}
+          className="rounded-full p-1 text-muted-foreground hover:bg-muted" aria-label="Dismiss">
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      <ul className="space-y-1.5">
+        {latest.updates.map((u, i) => (
+          <li key={i} className="flex items-start gap-2">
+            <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+            <p className="font-body text-sm text-foreground/80">{u}</p>
+          </li>
+        ))}
+      </ul>
+      {updates.length > 1 && (
+        <>
+          <button type="button" onClick={() => setExpanded((e) => !e)}
+            className="mt-2 inline-flex items-center gap-1 font-body text-xs font-semibold text-primary/70 hover:underline">
+            {expanded ? <><ChevronUp className="h-3 w-3" /> Hide older updates</> : <><ChevronDown className="h-3 w-3" /> See older updates</>}
+          </button>
+          {expanded && updates.slice(1).map((rel) => (
+            <div key={rel.version} className="mt-3 border-t border-border/30 pt-3">
+              <p className="mb-1.5 font-body text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{rel.version} · {rel.date}</p>
+              <ul className="space-y-1.5">
+                {rel.updates.map((u, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/40" />
+                    <p className="font-body text-xs text-muted-foreground">{u}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </>
+      )}
     </div>
   );
 }

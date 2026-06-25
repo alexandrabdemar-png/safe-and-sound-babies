@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as RecallsRouteImport } from './routes/recalls'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -47,6 +48,11 @@ import { Route as ApiPublicHooksCheckProductAlertsRouteImport } from './routes/a
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecallsRoute = RecallsRouteImport.update({
+  id: '/recalls',
+  path: '/recalls',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -233,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/onboarding': typeof OnboardingRoute
+  '/recalls': typeof RecallsRoute
   '/terms': typeof TermsRoute
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
@@ -268,6 +275,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/onboarding': typeof OnboardingRoute
+  '/recalls': typeof RecallsRoute
   '/terms': typeof TermsRoute
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
@@ -305,6 +313,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
   '/onboarding': typeof OnboardingRoute
+  '/recalls': typeof RecallsRoute
   '/terms': typeof TermsRoute
   '/_authenticated/add': typeof AuthenticatedAddRoute
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
@@ -342,6 +351,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/onboarding'
+    | '/recalls'
     | '/terms'
     | '/add'
     | '/alerts'
@@ -377,6 +387,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/onboarding'
+    | '/recalls'
     | '/terms'
     | '/add'
     | '/alerts'
@@ -413,6 +424,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/onboarding'
+    | '/recalls'
     | '/terms'
     | '/_authenticated/add'
     | '/_authenticated/alerts'
@@ -450,6 +462,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   OnboardingRoute: typeof OnboardingRoute
+  RecallsRoute: typeof RecallsRoute
   TermsRoute: typeof TermsRoute
   ApiPublicHooksCheckProductAlertsRoute: typeof ApiPublicHooksCheckProductAlertsRoute
   ApiPublicHooksCheckRecallsRoute: typeof ApiPublicHooksCheckRecallsRoute
@@ -465,6 +478,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recalls': {
+      id: '/recalls'
+      path: '/recalls'
+      fullPath: '/recalls'
+      preLoaderRoute: typeof RecallsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -783,6 +803,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   OnboardingRoute: OnboardingRoute,
+  RecallsRoute: RecallsRoute,
   TermsRoute: TermsRoute,
   ApiPublicHooksCheckProductAlertsRoute: ApiPublicHooksCheckProductAlertsRoute,
   ApiPublicHooksCheckRecallsRoute: ApiPublicHooksCheckRecallsRoute,
