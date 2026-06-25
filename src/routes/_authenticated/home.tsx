@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowRight, Calendar, ChevronDown, ChevronUp, Loader2, Package, Plus, RefreshCw, Ruler, Sparkles, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, Calendar, ChevronDown, ChevronUp, Gift, Loader2, Package, Plus, Radio, RefreshCw, Ruler, Sparkles, X } from "lucide-react";
 import { MomentTimeline } from "@/components/MomentTimeline";
 import { SparkleIllustration } from "@/components/EmptyIllustration";
 import { BottomNav } from "@/components/BottomNav";
@@ -11,6 +11,7 @@ import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { evaluateInsights, type Insight, type ProductInput } from "@/lib/insights";
 import { friendlyError } from "@/lib/errors";
+import { isBabyRelated, type CpscRecall } from "@/lib/cpscSearch";
 
 
 export const Route = createFileRoute("/_authenticated/home")({
@@ -105,6 +106,62 @@ function todayKey() {
   return new Date().toISOString().slice(0, 10);
 }
 
+// ── Age jump milestones ──────────────────────────────────────────────────────
+const AGE_MILESTONES: { months: number; actions: string[] }[] = [
+  {
+    months: 3,
+    actions: [
+      "Lower the crib mattress to the middle setting — babies this age can push up on their arms.",
+      "Re-check the car seat harness fit: straps should sit at or below the shoulders, snug enough that you can't pinch any webbing.",
+      "Remove all mobiles and hanging toys within arm's reach of the crib.",
+    ],
+  },
+  {
+    months: 6,
+    actions: [
+      "Install hardware-mounted stair gates at the top and bottom of every staircase before they start crawling.",
+      "Lower the crib mattress to the lowest setting — they'll be pulling to stand soon.",
+      "Add cabinet locks to all lower kitchen and bathroom cabinets.",
+    ],
+  },
+  {
+    months: 9,
+    actions: [
+      "Anchor every bookcase, dresser, and TV stand to the wall — babies this age pull on everything to stand up.",
+      "Check your car seat weight limit — some infant seats max out around 9–12 months.",
+      "Remove any baby walkers — they're linked to thousands of ER visits each year and are banned in Canada.",
+    ],
+  },
+  {
+    months: 12,
+    actions: [
+      "Transition to a rear-facing convertible car seat if your infant seat has reached its weight or height limit.",
+      "Lock all lower cabinets and move cleaning products to high shelves or behind a locked door.",
+      "Do a floor-level sweep for small objects — at this age everything goes in the mouth.",
+    ],
+  },
+  {
+    months: 18,
+    actions: [
+      "Add door knob covers — 18-month-olds figure out round knobs quickly.",
+      "Check your stroller's weight limit if your toddler is on the heavier side.",
+      "Assess whether a toddler bed rail is needed, or if it's time to transition to a floor-level toddler bed.",
+    ],
+  },
+];
+
+function getRecentMilestone(dobStr: string | null): { months: number; actions: string[] } | null {
+  if (!dobStr) return null;
+  const birth = parseDateLocal(dobStr);
+  const ageDays = (Date.now() - birth.getTime()) / 86400000;
+  for (const m of AGE_MILESTONES) {
+    const milestoneDays = m.months * 30.44;
+    const daysAfter = ageDays - milestoneDays;
+    if (daysAfter >= 0 && daysAfter <= 14) return m;
+  }
+  return null;
+}
+
 function HomePage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -114,6 +171,12 @@ function HomePage() {
   const [products, setProducts] = useState<ProductInput[]>([]);
   const [comingUp, setComingUp] = useState<ComingUpProduct[]>([]);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+
+  // Recall radar: live 30-day CPSC count, cached daily
+  const [recallRadarCount, setRecallRadarCount] = useState<number | null>(null);
+
+  // Age jump alert
+  const [ageJumpDismissed, setAgeJumpDismissed] = useState(false);
 
   // Weekly digest: show on Sundays, dismiss per-week
   const currentWeekKey = isoWeekKey();
@@ -145,6 +208,15 @@ function HomePage() {
       if (!kids || kids.length === 0) { navigate({ to: "/onboarding" }); return; }
       const c = (kids.find((k) => k.id === activeId) ?? kids[0]) as Child;
       setChild(c);
+
+      // Check age-jump dismissal
+      try {
+        const milestone = getRecentMilestone(c.date_of_birth ?? null);
+        if (milestone) {
+          const dismissed = localStorage.getItem(`safesound.ageJump.${c.id}.${milestone.months}`);
+          if (dismissed) setAgeJumpDismissed(true);
+        }
+      } catch {}
 
       // Check measurement reminder dismissal
       try {
@@ -243,6 +315,12 @@ function HomePage() {
     setDigestDismissed(true);
   }
 
+  function dismissAgeJump() {
+    if (!child || !recentMilestone) return;
+    try { localStorage.setItem(`safesound.ageJump.${child.id}.${recentMilestone.months}`, "1"); } catch {}
+    setAgeJumpDismissed(true);
+  }
+
   function dismissMeasReminder() {
     if (!child) return;
     try {
@@ -251,6 +329,26 @@ function HomePage() {
     setMeasReminderDismissed(true);
   }
 
+  // Recall Radar: fetch 30-day CPSC baby recall count, cached daily
+  useEffect(() => {
+    const key = `safesound.recallRadar.${todayKey()}`;
+    try {
+      const cached = localStorage.getItem(key);
+      if (cached !== null) { setRecallRadarCount(parseInt(cached, 10)); return; }
+    } catch {}
+    const start30 = new Date();
+    start30.setDate(start30.getDate() - 30);
+    const startStr = start30.toISOString().slice(0, 10);
+    fetch(`https://www.saferproducts.gov/RestWebServices/Recall?format=json&RecallDateStart=${startStr}`)
+      .then((r) => r.ok ? r.json() : Promise.reject())
+      .then((data: CpscRecall[]) => {
+        const count = (Array.isArray(data) ? data : []).filter(isBabyRelated).length;
+        try { localStorage.setItem(key, String(count)); } catch {}
+        setRecallRadarCount(count);
+      })
+      .catch(() => setRecallRadarCount(-1));
+  }, []);
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -258,6 +356,8 @@ function HomePage() {
       </div>
     );
   }
+
+  const recentMilestone = getRecentMilestone(child?.date_of_birth ?? null);
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28 animate-fade-in">
@@ -336,6 +436,29 @@ function HomePage() {
                 <X className="h-4 w-4" />
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Age jump alert — shown when child recently crossed a milestone */}
+      {recentMilestone && !ageJumpDismissed && child && (
+        <div className="px-5 pt-3 sm:px-6">
+          <div className="mx-auto max-w-md">
+            <AgeJumpCard
+              childName={child.name}
+              months={recentMilestone.months}
+              actions={recentMilestone.actions}
+              onDismiss={dismissAgeJump}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Recall Radar — live 30-day CPSC count */}
+      {recallRadarCount !== null && recallRadarCount !== -1 && (
+        <div className="px-5 pt-3 sm:px-6">
+          <div className="mx-auto max-w-md">
+            <RecallRadarCard count={recallRadarCount} />
           </div>
         </div>
       )}
@@ -597,6 +720,77 @@ function WeeklyDigestCard({
         </li>
       </ul>
     </div>
+  );
+}
+
+function AgeJumpCard({
+  childName,
+  months,
+  actions,
+  onDismiss,
+}: {
+  childName: string;
+  months: number;
+  actions: string[];
+  onDismiss: () => void;
+}) {
+  const label = months < 12
+    ? `${months} months`
+    : months === 12 ? "1 year" : `${months} months`;
+  return (
+    <div className="rounded-3xl border border-accent/40 bg-card p-5 animate-scale-in">
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent/20 text-accent">
+            <Sparkles className="h-3.5 w-3.5" />
+          </span>
+          <div>
+            <p className="font-display text-sm font-semibold tracking-tight">
+              {childName} just turned {label} 🎉
+            </p>
+            <p className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">Here's what to check now</p>
+          </div>
+        </div>
+        <button type="button" onClick={onDismiss}
+          className="rounded-full p-1 text-muted-foreground hover:bg-muted" aria-label="Dismiss">
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      <ul className="space-y-2 border-t border-border/40 pt-3">
+        {actions.map((action, i) => (
+          <li key={i} className="flex items-start gap-2">
+            <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+            <p className="font-body text-sm text-foreground/80">{action}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function RecallRadarCard({ count }: { count: number }) {
+  return (
+    <Link
+      to="/recall-radar"
+      className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3.5 transition-colors hover:border-primary/40"
+    >
+      <div className="flex items-center gap-3">
+        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${count > 0 ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary"}`}>
+          <Radio className="h-4 w-4" />
+        </span>
+        <div>
+          <p className="font-body text-sm font-semibold">
+            {count > 0
+              ? `${count} baby product recall${count > 1 ? "s" : ""} this month`
+              : "No new baby recalls this month"}
+          </p>
+          <p className="font-body text-[11px] text-muted-foreground">
+            Recall Radar · last 30 days · tap to browse
+          </p>
+        </div>
+      </div>
+      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+    </Link>
   );
 }
 
