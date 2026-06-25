@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   ArrowLeft, ArrowRight, Check, Loader2,
-  ShieldCheck, Bed, Moon, Footprints, Utensils, Armchair, Grid3x3, Wind, DoorClosed,
+  ShieldCheck, Bed, Moon, Footprints, Utensils, Armchair, Grid3x3, DoorClosed, Shield,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -31,29 +31,85 @@ const CATEGORIES: { key: string; name: string; icon: React.ComponentType<{ class
   { key: "car_seat",        name: "Car seats",        icon: ShieldCheck },
   { key: "crib",            name: "Cribs",            icon: Bed },
   { key: "bassinet",        name: "Bassinets",        icon: Moon },
-  { key: "stroller",        name: "Strollers",        icon: Footprints },
+  { key: "stroller",       name: "Strollers",        icon: Footprints },
   { key: "high_chair",      name: "High chairs",      icon: Utensils },
   { key: "bouncer",         name: "Bouncers",         icon: Armchair },
   { key: "activity_center", name: "Activity centers", icon: Grid3x3 },
-  { key: "sleep_sack",      name: "Sleep sacks",      icon: Wind },
+  { key: "sleep_sack",      name: "Sleep sacks",      icon: DoorClosed },
   { key: "baby_gate",       name: "Baby gates",       icon: DoorClosed },
 ];
 
+// Age-appropriate safety first-look content
+type SafetyAction = { icon: string; title: string; body: string };
+
+function getSafetyFirstLook(dobStr: string | null): SafetyAction[] {
+  let ageMonths = 0;
+  if (dobStr) {
+    const birth = new Date(dobStr + "T00:00:00");
+    const now = new Date();
+    ageMonths = Math.max(0, (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth()));
+  }
+
+  if (ageMonths < 3) return [
+    { icon: "🛏️", title: "Always back to sleep", body: "Place your baby on their back for every nap and every night — even when they look comfortable on their side." },
+    { icon: "🚫", title: "Empty the crib", body: "Firm, flat mattress + fitted sheet only. No pillows, bumpers, stuffed animals, or loose blankets in the sleep space." },
+    { icon: "🌡️", title: "Room temperature matters", body: "Keep the room between 68–72°F and dress baby in one more layer than you'd wear to prevent overheating." },
+  ];
+  if (ageMonths < 7) return [
+    { icon: "⏰", title: "Time for tummy time", body: "Short supervised sessions on a firm surface several times a day — this builds strength for rolling and crawling." },
+    { icon: "📐", title: "Lower the crib mattress", body: "Do this before they can push up on hands and knees. Lowering it now prevents a dangerous fall later." },
+    { icon: "🛏️", title: "Still back to sleep", body: "The safe sleep rules don't change until 12 months. Back to sleep, every single time." },
+  ];
+  if (ageMonths < 13) return [
+    { icon: "🚪", title: "Gate every staircase", body: "Install hardware-mounted gates at the top of stairs before your baby starts crawling — it happens fast." },
+    { icon: "🔌", title: "Cover all outlets", body: "Sliding outlet covers are safer than plug-in caps. Do a floor-level sweep of every room." },
+    { icon: "🪑", title: "Anchor tall furniture", body: "Bookshelves, dressers, and TVs tip easily. Use anti-tip straps on everything your baby might grab." },
+  ];
+  if (ageMonths < 24) return [
+    { icon: "🪑", title: "Anchor tall furniture now", body: "Walking toddlers grab everything. Secure bookshelves, dressers, and TVs to wall studs today." },
+    { icon: "🔒", title: "Lock cleaning products away", body: "Move laundry pods, cleaning sprays, and medicines to high shelves or locked cabinets immediately." },
+    { icon: "🚿", title: "Toilet lid lock", body: "A toddler can drown in just a few inches of water. Install toilet lid locks on every bathroom." },
+  ];
+  return [
+    { icon: "🚲", title: "Helmet, every ride", body: "Put a properly fitted helmet on your child for every bike, scooter, or balance bike ride — no exceptions." },
+    { icon: "🚗", title: "Rear-facing as long as possible", body: "Keep your child rear-facing until they reach the height or weight limit on the seat — not by age." },
+    { icon: "🏊", title: "Life jacket, not floaties", body: "Floaties are toys, not safety devices. Use a properly fitted life jacket for all open-water activities." },
+  ];
+}
+
+const STORAGE_KEY = "safesound.onboarding.v1";
+
+function saveProgress(data: object) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+}
+
+function loadProgress(): { step?: number; name?: string; dob?: string; selected?: string[] } {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function clearProgress() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+}
+
+const TOTAL_STEPS = 2;
 
 function OnboardingPage() {
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
-  const [step, setStep] = useState(0);
-  const [name, setName] = useState("");
-  const [dob, setDob] = useState("");
-  const [units, setUnits] = useState<"imperial" | "metric">("imperial");
-  const [heightStr, setHeightStr] = useState("");
-  const [weightStr, setWeightStr] = useState("");
+
+  const saved = loadProgress();
+  const [step, setStep] = useState(saved.step ?? 0);
+  const [name, setName] = useState(saved.name ?? "");
+  const [dob, setDob] = useState(saved.dob ?? "");
   const [selected, setSelected] = useState<Set<string>>(
-    () => new Set(["car_seat", "crib", "stroller"]),
+    () => new Set(saved.selected ?? ["car_seat", "crib", "stroller"]),
   );
   const [saving, setSaving] = useState(false);
+  const [safetyFirstLook, setSafetyFirstLook] = useState<SafetyAction[] | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -66,8 +122,14 @@ function OnboardingPage() {
     });
   }, [navigate]);
 
-  const totalSteps = 4;
-  const progress = ((step + 1) / totalSteps) * 100;
+  // Persist progress whenever state changes
+  useEffect(() => {
+    if (!checking) {
+      saveProgress({ step, name, dob, selected: [...selected] });
+    }
+  }, [step, name, dob, selected, checking]);
+
+  const progress = ((step + 1) / TOTAL_STEPS) * 100;
 
   function toggle(key: string) {
     setSelected((prev) => {
@@ -80,57 +142,57 @@ function OnboardingPage() {
 
   function canAdvance() {
     if (step === 0) return name.trim().length > 0;
-    if (step === 1) return dob.length > 0;
-    if (step === 2) return true; // measurements optional
-    if (step === 3) return selected.size > 0;
-    return false;
+    return true; // categories step always advanceable
   }
 
-  function parseMeasurements(): { height_inches: number | null; weight_lbs: number | null } {
-    const h = parseFloat(heightStr);
-    const w = parseFloat(weightStr);
-    const height_inches = Number.isFinite(h) && h > 0
-      ? (units === "imperial" ? h : h * 0.393701)
-      : null;
-    const weight_lbs = Number.isFinite(w) && w > 0
-      ? (units === "imperial" ? w : w * 2.20462)
-      : null;
-    return { height_inches, weight_lbs };
+  function advanceOrSkip(skip = false) {
+    if (step === 0 && skip) {
+      // Skip child info — go straight to home with no child saved
+      clearProgress();
+      navigate({ to: "/home" });
+      return;
+    }
+    if (step < TOTAL_STEPS - 1) {
+      setStep((s) => s + 1);
+    } else {
+      handleFinish(skip);
+    }
   }
 
-  async function handleFinish() {
+  async function handleFinish(skipCategories = false) {
     if (!userId) return;
     setSaving(true);
     try {
-      const { height_inches, weight_lbs } = parseMeasurements();
-      const hasMeas = height_inches !== null || weight_lbs !== null;
-      const nowIso = new Date().toISOString();
-      const { data: childRow, error: childError } = await supabase
-        .from("children")
-        .insert({
-          user_id: userId,
-          name: name.trim(),
-          date_of_birth: dob,
-          height_inches,
-          weight_lbs,
-          measurements_updated_at: hasMeas ? nowIso : null,
-        } as never)
-        .select("id")
-        .single();
+      const childName = name.trim();
 
-      if (childError) { console.error("children insert error:", childError); throw childError; }
-      if (hasMeas && childRow) {
-        await supabase.from("child_measurements").insert({
-          user_id: userId,
-          child_id: (childRow as { id: string }).id,
-          height_inches,
-          weight_lbs,
-          recorded_at: nowIso,
-        } as never);
+      if (childName) {
+        const { data: childRow, error: childError } = await supabase
+          .from("children")
+          .insert({
+            user_id: userId,
+            name: childName,
+            date_of_birth: dob || null,
+          } as never)
+          .select("id")
+          .single();
+
+        if (childError) throw childError;
+
+        if (!skipCategories && selected.size > 0 && childRow) {
+          const rows = [...selected].map((cat) => ({
+            user_id: userId,
+            child_id: (childRow as { id: string }).id,
+            category: cat,
+            name: CATEGORIES.find((c) => c.key === cat)?.name ?? cat,
+          }));
+          await supabase.from("products").insert(rows as never);
+        }
       }
 
-      toast.success(`All set — welcome, ${name.trim()}! 🌙`);
-      navigate({ to: "/home" });
+      clearProgress();
+
+      const actions = getSafetyFirstLook(dob || null);
+      setSafetyFirstLook(actions);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -146,6 +208,50 @@ function OnboardingPage() {
     );
   }
 
+  // Post-onboarding: safety first look
+  if (safetyFirstLook) {
+    return (
+      <div className="flex min-h-screen flex-col bg-background">
+        <header className="w-full px-4 py-6 sm:px-6">
+          <div className="mx-auto max-w-lg flex items-center gap-2">
+            <Shield className="h-5 w-5 text-primary" />
+            <span className="font-body text-xs font-semibold uppercase tracking-[0.2em] text-primary">Safety first look</span>
+          </div>
+        </header>
+        <main className="flex flex-1 flex-col justify-center px-4 pb-16 pt-2 sm:px-6">
+          <div className="mx-auto w-full max-w-lg">
+            <h1 className="font-display text-3xl font-semibold tracking-tight">
+              {name.trim() ? `Here's what matters most for ${name.trim()} right now.` : "Here's what matters most right now."}
+            </h1>
+            <p className="mt-2 font-body text-sm text-muted-foreground">
+              Based on your child's age — review these before you do anything else.
+            </p>
+            <ul className="mt-6 space-y-3">
+              {safetyFirstLook.map((action) => (
+                <li key={action.title} className="flex gap-4 rounded-2xl border border-border/60 bg-card p-4">
+                  <span className="text-2xl leading-none">{action.icon}</span>
+                  <div>
+                    <p className="font-display text-sm font-semibold">{action.title}</p>
+                    <p className="mt-0.5 font-body text-sm text-muted-foreground">{action.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 text-center font-body text-[11px] text-muted-foreground">
+              Based on AAP recommendations.
+            </p>
+            <Button
+              className="mt-6 h-12 w-full rounded-full bg-primary font-body text-sm font-semibold"
+              onClick={() => navigate({ to: "/home" })}
+            >
+              Go to my dashboard <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="w-full px-4 py-6 sm:px-6 lg:px-8">
@@ -154,7 +260,7 @@ function OnboardingPage() {
             <Logo />
           </Link>
           <span className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            Step {step + 1} of {totalSteps}
+            Step {step + 1} of {TOTAL_STEPS}
           </span>
         </div>
       </header>
@@ -165,96 +271,45 @@ function OnboardingPage() {
 
           {step === 0 && (
             <StepShell
-              eyebrow="Let's start with your little one"
-              title="What's their name?"
-              subtitle="Just a first name — we use it so reminders feel personal, not clinical."
+              eyebrow="Step 1 of 2 — Your little one"
+              title="Tell us about your baby"
+              subtitle="Just a name and birthday — we'll use these to time safety reminders to the right week."
             >
-              <div className="space-y-2">
-                <Label htmlFor="child-name" className="font-body text-sm">Baby's name</Label>
-                <Input
-                  id="child-name"
-                  autoFocus
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Peyton"
-                  maxLength={60}
-                  className="h-14 rounded-2xl bg-card px-5 font-body text-base"
-                />
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="child-name" className="font-body text-sm">Baby's name</Label>
+                  <Input
+                    id="child-name"
+                    autoFocus
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Peyton"
+                    maxLength={60}
+                    className="h-14 rounded-2xl bg-card px-5 font-body text-base"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dob" className="font-body text-sm">
+                    Date of birth <span className="text-muted-foreground">(optional — add later in Profile)</span>
+                  </Label>
+                  <Input
+                    id="dob"
+                    type="date"
+                    value={dob}
+                    max={new Date().toISOString().slice(0, 10)}
+                    onChange={(e) => setDob(e.target.value)}
+                    className="h-14 rounded-2xl bg-card px-5 font-body text-base"
+                  />
+                </div>
               </div>
             </StepShell>
           )}
 
           {step === 1 && (
             <StepShell
-              eyebrow={`Lovely to meet you, ${name.trim() || "little one"}`}
-              title="When were they born?"
-              subtitle="We'll use this to time reminders — babyproofing, mattress lowering, car seat checks — to the right week."
-            >
-              <div className="space-y-2">
-                <Label htmlFor="dob" className="font-body text-sm">Date of birth</Label>
-                <Input
-                  id="dob"
-                  type="date"
-                  value={dob}
-                  max={new Date().toISOString().slice(0, 10)}
-                  onChange={(e) => setDob(e.target.value)}
-                  className="h-14 rounded-2xl bg-card px-5 font-body text-base"
-                />
-              </div>
-            </StepShell>
-          )}
-
-          {step === 2 && (
-            <StepShell
-              eyebrow="Optional, but helpful"
-              title="Height & weight"
-              subtitle="If you know them, these help us flag size-ups (sleep sacks, car seats, bouncers) before you outgrow them. You can skip and add later."
-            >
-              <div className="space-y-4">
-                <div className="inline-flex rounded-full border border-border bg-card p-1">
-                  <UnitToggle active={units === "imperial"} onClick={() => setUnits("imperial")} label="lb / in" />
-                  <UnitToggle active={units === "metric"} onClick={() => setUnits("metric")} label="kg / cm" />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label className="font-body text-sm">Height ({units === "imperial" ? "in" : "cm"})</Label>
-                    <Input
-                      type="number"
-                      inputMode="decimal"
-                      min="0"
-                      step="0.1"
-                      value={heightStr}
-                      onChange={(e) => setHeightStr(e.target.value)}
-                      placeholder={units === "imperial" ? "e.g. 24" : "e.g. 61"}
-                      className="h-14 rounded-2xl bg-card px-5 font-body text-base"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-body text-sm">Weight ({units === "imperial" ? "lb" : "kg"})</Label>
-                    <Input
-                      type="number"
-                      inputMode="decimal"
-                      min="0"
-                      step="0.1"
-                      value={weightStr}
-                      onChange={(e) => setWeightStr(e.target.value)}
-                      placeholder={units === "imperial" ? "e.g. 14" : "e.g. 6.4"}
-                      className="h-14 rounded-2xl bg-card px-5 font-body text-base"
-                    />
-                  </div>
-                </div>
-                <p className="font-body text-xs text-muted-foreground">
-                  Tip: update these after each pediatrician visit for the best size-up alerts.
-                </p>
-              </div>
-            </StepShell>
-          )}
-
-          {step === 3 && (
-            <StepShell
-              eyebrow="Almost there"
-              title="What gear are you using?"
-              subtitle="Pick the categories that apply. We'll watch these for recalls, replacements, and outgrown alerts. Add specific products later."
+              eyebrow="Step 2 of 2 — Your gear"
+              title="What are you tracking?"
+              subtitle="Pick the categories that apply — we'll watch for recalls and replacements. You can change this anytime."
             >
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {CATEGORIES.map((cat) => {
@@ -295,59 +350,60 @@ function OnboardingPage() {
           </p>
 
           <div className="mt-4 flex items-center justify-between">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setStep((s) => Math.max(0, s - 1))}
-              disabled={step === 0 || saving}
-              className="rounded-full font-body"
-            >
-              <ArrowLeft className="mr-1 h-4 w-4" /> Back
-            </Button>
-
-            {step < totalSteps - 1 ? (
+            {step > 0 ? (
               <Button
                 type="button"
-                onClick={() => setStep((s) => s + 1)}
-                disabled={!canAdvance()}
-                className="rounded-full bg-primary px-7 py-6 font-body text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                variant="ghost"
+                onClick={() => setStep((s) => s - 1)}
+                disabled={saving}
+                className="rounded-full font-body"
               >
-                {step === 2 && !heightStr && !weightStr ? "Skip for now" : "Continue"}
-                <ArrowRight className="ml-1 h-4 w-4" />
+                <ArrowLeft className="mr-1 h-4 w-4" /> Back
               </Button>
             ) : (
+              <div />
+            )}
+
+            <div className="flex items-center gap-2">
+              {/* Skip button — every step */}
               <Button
                 type="button"
-                onClick={handleFinish}
-                disabled={!canAdvance() || saving}
-                className="rounded-full bg-primary px-7 py-6 font-body text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                variant="ghost"
+                onClick={() => advanceOrSkip(true)}
+                disabled={saving}
+                className="rounded-full font-body text-muted-foreground"
               >
-                {saving ? (
-                  <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Setting up</>
-                ) : (
-                  <>Finish setup <Check className="ml-1 h-4 w-4" /></>
-                )}
+                {step === 0 ? "Set up later" : "Skip"}
               </Button>
-            )}
+
+              {step < TOTAL_STEPS - 1 ? (
+                <Button
+                  type="button"
+                  onClick={() => advanceOrSkip(false)}
+                  disabled={!canAdvance()}
+                  className="rounded-full bg-primary px-7 py-6 font-body text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                >
+                  Continue <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={() => advanceOrSkip(false)}
+                  disabled={saving}
+                  className="rounded-full bg-primary px-7 py-6 font-body text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                >
+                  {saving ? (
+                    <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Setting up</>
+                  ) : (
+                    <>Finish setup <Check className="ml-1 h-4 w-4" /></>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </main>
     </div>
-  );
-}
-
-function UnitToggle({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "rounded-full px-4 py-1.5 font-body text-xs font-semibold transition-colors",
-        active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-      )}
-    >
-      {label}
-    </button>
   );
 }
 
@@ -363,19 +419,13 @@ function StepShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-8">
-      <div className="space-y-3 text-center sm:text-left">
-        <p className="font-body text-xs font-semibold uppercase tracking-[0.2em] text-accent">
-          {eyebrow}
-        </p>
-        <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl">
-          {title}
-        </h1>
-        <p className="mx-auto max-w-md font-body text-base text-muted-foreground sm:mx-0">
-          {subtitle}
-        </p>
+    <div className="space-y-6">
+      <div>
+        <p className="font-body text-xs font-semibold uppercase tracking-[0.2em] text-accent">{eyebrow}</p>
+        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight">{title}</h1>
+        <p className="mt-2 font-body text-sm text-muted-foreground">{subtitle}</p>
       </div>
-      <div>{children}</div>
+      {children}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
-import { AlertTriangle, ArrowLeft, ArrowUpRight, Bell, Check, ChevronDown, ChevronUp, Loader2, RefreshCw, Ruler } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowUpRight, Bell, Check, ChevronDown, ChevronUp, Loader2, Plus, RefreshCw, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -430,8 +430,13 @@ function EmptyState() {
       </div>
       <p className="font-display text-lg font-semibold tracking-tight">You're all caught up</p>
       <p className="mx-auto mt-1 max-w-xs font-body text-sm text-muted-foreground">
-        We'll nudge you when something needs your attention — recalls, replacements, or a size-up coming up.
+        This screen shows recall alerts, replacement reminders, and size-up notices for every product you're tracking.
       </p>
+      <Link to="/products/new">
+        <Button className="mt-5 rounded-full font-body text-xs font-semibold" size="sm">
+          <Plus className="mr-1 h-3.5 w-3.5" /> Add your first product
+        </Button>
+      </Link>
     </div>
   );
 }

@@ -415,7 +415,7 @@ function EmptyMoments() {
       </div>
       <p className="font-display text-lg font-semibold tracking-tight">A new milestone</p>
       <p className="mx-auto mt-1 max-w-xs font-body text-sm text-muted-foreground">
-        Right on time.
+        Log milestones as they happen — rolling over, first steps, first tooth — and we'll surface safety tips relevant to each one.
       </p>
       <Button asChild className="mt-5 rounded-full bg-primary px-5 font-body text-xs font-semibold">
         <Link to="/moments/new">
