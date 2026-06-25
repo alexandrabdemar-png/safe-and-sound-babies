@@ -73,7 +73,7 @@ function ProfilePage() {
       date_of_birth: newChildDob || null,
     });
     setAddingChild(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { console.error("children insert error:", error); toast.error(error.message); return; }
     setNewChildName(""); setNewChildDob("");
     await refreshChildren();
     toast.success('Child added');

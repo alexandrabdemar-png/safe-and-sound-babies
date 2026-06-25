@@ -118,7 +118,7 @@ function OnboardingPage() {
         .select("id")
         .single();
 
-      if (childError) throw childError;
+      if (childError) { console.error("children insert error:", childError); throw childError; }
       if (hasMeas && childRow) {
         await supabase.from("child_measurements").insert({
           user_id: userId,

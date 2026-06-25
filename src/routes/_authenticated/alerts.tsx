@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
-import { AlertTriangle, ArrowUpRight, Bell, Check, ChevronDown, ChevronUp, Loader2, RefreshCw, Ruler } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowUpRight, Bell, Check, ChevronDown, ChevronUp, Loader2, RefreshCw, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -167,6 +167,9 @@ function AlertsPage() {
     <div className="flex min-h-screen flex-col bg-background pb-28">
       <header className="px-5 pt-10 pb-6 sm:px-6">
         <div className="mx-auto max-w-md">
+          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2 rounded-full font-body text-xs">
+            <Link to="/home"><ArrowLeft className="mr-1 h-3.5 w-3.5" /> Home</Link>
+          </Button>
           <p className="font-body text-xs font-semibold uppercase tracking-[0.2em] text-accent">
             Your reminders
           </p>

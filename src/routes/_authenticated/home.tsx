@@ -312,21 +312,7 @@ function HomePage() {
               </div>
               <ul className="space-y-2.5">
                 {upNext.map((i) => (
-                  <li key={i.id} className="rounded-2xl bg-muted/40 px-3 py-2.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="font-body text-sm font-medium leading-snug">{i.title}</p>
-                      <span className={
-                        i.urgency === 'now'
-                          ? "shrink-0 rounded-full bg-destructive/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-destructive"
-                          : i.urgency === 'soon'
-                            ? "shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-amber-700 dark:text-amber-400"
-                            : "shrink-0 rounded-full bg-sand/60 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-accent"
-                      }>
-                        {i.urgency === 'heads_up' ? 'FYI' : i.urgency}
-                      </span>
-                    </div>
-                    <p className="mt-1 font-body text-xs text-muted-foreground line-clamp-2">{i.body}</p>
-                  </li>
+                  <InsightCard key={i.id} insight={i} />
                 ))}
               </ul>
             </div>
@@ -356,6 +342,37 @@ function HomePage() {
 
       <BottomNav />
     </div>
+  );
+}
+
+function InsightCard({ insight }: { insight: Insight }) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = insight.body.length > 100;
+  return (
+    <li className="rounded-2xl bg-muted/40 px-3 py-2.5">
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-body text-sm font-medium leading-snug">{insight.title}</p>
+        <span className={
+          insight.urgency === 'now'
+            ? "shrink-0 rounded-full bg-destructive/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-destructive"
+            : insight.urgency === 'soon'
+              ? "shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-amber-700 dark:text-amber-400"
+              : "shrink-0 rounded-full bg-sand/60 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-accent"
+        }>
+          {insight.urgency === 'heads_up' ? 'FYI' : insight.urgency}
+        </span>
+      </div>
+      <p className={`mt-1 font-body text-xs text-muted-foreground ${!expanded && isLong ? "line-clamp-2" : ""}`}>{insight.body}</p>
+      {isLong && (
+        <button
+          type="button"
+          onClick={() => setExpanded((e) => !e)}
+          className="mt-1 inline-flex items-center gap-0.5 font-body text-[11px] font-semibold text-accent/80 hover:underline"
+        >
+          {expanded ? <><ChevronUp className="h-3 w-3" /> Show less</> : <><ChevronDown className="h-3 w-3" /> Show more</>}
+        </button>
+      )}
+    </li>
   );
 }
 

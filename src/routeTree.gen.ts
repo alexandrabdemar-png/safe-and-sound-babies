@@ -267,7 +267,6 @@ export interface FileRoutesById {
   '/_authenticated/bottles': typeof AuthenticatedBottlesRouteWithChildren
   '/_authenticated/caregiver-card': typeof AuthenticatedCaregiverCardRoute
   '/_authenticated/checklists': typeof AuthenticatedChecklistsRoute
-  '/_authenticated/emergency': typeof AuthenticatedEmergencyRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/pricing': typeof AuthenticatedPricingRoute
   '/_authenticated/products': typeof AuthenticatedProductsRoute
