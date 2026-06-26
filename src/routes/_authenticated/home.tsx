@@ -13,6 +13,8 @@ import { evaluateInsights, type Insight, type ProductInput } from "@/lib/insight
 import { friendlyError } from "@/lib/errors";
 import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
 import { getDevelopmentBand } from "@/lib/developmentContent";
+import { selectWeeklyTip, getIsoWeekNumber, weekKey as getTipWeekKey } from "@/lib/safetyTips";
+import { CheckCircle2, ShieldCheck } from "lucide-react";
 
 
 export const Route = createFileRoute("/_authenticated/home")({
@@ -208,6 +210,17 @@ function HomePage() {
   // FDA baby recall count (Wednesday only), cached daily
   const [fdaRecallCount, setFdaRecallCount] = useState<number | null>(null);
 
+  // Notification preferences (tip_day, paused_until, expiry_advance_days)
+  const [notifPrefs, setNotifPrefs] = useState<{
+    tip_day: number;
+    paused_until: string | null;
+    expiry_advance_days: number;
+  }>({ tip_day: 1, paused_until: null, expiry_advance_days: 30 });
+
+  // Weekly safety tip
+  const [tipCompleted, setTipCompleted] = useState(false);
+  const [tipSuccess, setTipSuccess] = useState(false);
+
   // Age jump alert
   const [ageJumpDismissed, setAgeJumpDismissed] = useState(false);
 
@@ -317,6 +330,30 @@ function HomePage() {
         else if (d.action === 'snoozed' && d.until && d.until > nowIso) blocked.add(d.rule_id);
       }
       setDismissedIds(blocked);
+
+      // Load notification preferences
+      try {
+        const { data: { session: sess } } = await supabase.auth.getSession();
+        if (sess?.user) {
+          const { data: prefData } = await (supabase as any)
+            .from("notification_preferences")
+            .select("tip_day, paused_until, expiry_advance_days")
+            .eq("user_id", sess.user.id)
+            .maybeSingle();
+          if (prefData) setNotifPrefs(prefData as typeof notifPrefs);
+
+          // Check if this week's tip is already completed
+          const wk = getTipWeekKey();
+          const { data: tipData } = await (supabase as any)
+            .from("completed_tips")
+            .select("id")
+            .eq("user_id", sess.user.id)
+            .eq("week_key", wk)
+            .maybeSingle();
+          if (tipData) setTipCompleted(true);
+        }
+      } catch {}
+
       setLoading(false);
     })();
     return () => { cancelled = true; };
@@ -357,6 +394,27 @@ function HomePage() {
     if (!child || !recentMilestone) return;
     try { localStorage.setItem(`safesound.ageJump.${child.id}.${recentMilestone.months}`, "1"); } catch {}
     setAgeJumpDismissed(true);
+  }
+
+  async function markTipDone() {
+    setTipCompleted(true);
+    setTipSuccess(true);
+    setTimeout(() => setTipSuccess(false), 3000);
+    try {
+      const { data: { session: sess } } = await supabase.auth.getSession();
+      if (!sess?.user) return;
+      const wk = getTipWeekKey();
+      const tip = child ? selectWeeklyTip(
+        Math.floor((Date.now() - new Date(child.date_of_birth ?? new Date().toISOString()).getTime()) / (30.44 * 86400000)),
+        getIsoWeekNumber(),
+      ) : null;
+      await (supabase as any).from("completed_tips").insert({
+        user_id: sess.user.id,
+        child_id: child?.id ?? null,
+        tip_id: tip?.id ?? "unknown",
+        week_key: wk,
+      });
+    } catch {}
   }
 
   function dismissMeasReminder() {
@@ -413,6 +471,15 @@ function HomePage() {
 
   const recentMilestone = getRecentMilestone(child?.date_of_birth ?? null);
 
+  // Weekly safety tip
+  const alertsPaused = notifPrefs.paused_until && new Date(notifPrefs.paused_until) > new Date();
+  const today = new Date().getDay();
+  const showTipCard = !alertsPaused && !tipCompleted && today >= notifPrefs.tip_day;
+  const ageMonthsForTip = child?.date_of_birth
+    ? Math.floor((Date.now() - new Date(child.date_of_birth).getTime()) / (30.44 * 86400000))
+    : 0;
+  const weeklyTip = selectWeeklyTip(ageMonthsForTip, getIsoWeekNumber());
+
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28 animate-fade-in">
       <header className="px-5 pt-10 pb-4 sm:px-6">
@@ -462,6 +529,15 @@ function HomePage() {
         <div className="px-5 pt-3 sm:px-6">
           <div className="mx-auto max-w-md">
             <DevelopmentThisWeekCard dobStr={child.date_of_birth} />
+          </div>
+        </div>
+      )}
+
+      {/* Weekly Safety Tip */}
+      {showTipCard && weeklyTip && (
+        <div className="px-5 pt-3 sm:px-6">
+          <div className="mx-auto max-w-md">
+            <WeeklySafetyTipCard tip={weeklyTip} onDone={markTipDone} showSuccess={tipSuccess} />
           </div>
         </div>
       )}
@@ -1230,6 +1306,50 @@ function DevelopmentThisWeekCard({ dobStr }: { dobStr: string }) {
           <Sun size={12} /> See cognitive & safety notes
         </button>
       )}
+    </div>
+  );
+}
+
+// ── Weekly Safety Tip Card ──────────────────────────────────────────────────
+function WeeklySafetyTipCard({
+  tip,
+  onDone,
+  showSuccess,
+}: {
+  tip: { id: string; text: string };
+  onDone: () => void;
+  showSuccess: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-card px-5 py-4 shadow-sm animate-scale-in">
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+          <ShieldCheck className="h-4 w-4 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-body text-[11px] font-semibold uppercase tracking-widest text-primary mb-1">
+            Safety tip this week
+          </p>
+          <p className="font-body text-sm text-foreground leading-relaxed">{tip.text}</p>
+          <div className="mt-3 flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={onDone}
+              disabled={showSuccess}
+              className="h-8 rounded-full bg-primary px-4 font-body text-xs font-semibold text-primary-foreground"
+            >
+              {showSuccess ? (
+                <>
+                  <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+                  Done!
+                </>
+              ) : (
+                "Mark done"
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
