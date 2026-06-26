@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Package, Plus, AlertTriangle, ScanLine } from "lucide-react";
+import { CribIllustration } from "@/components/EmptyIllustration";
 import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Button } from "@/components/ui/button";
@@ -58,7 +59,7 @@ function ProductsPage() {
   }, [activeChildId]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background pb-28">
+    <div className="flex min-h-screen flex-col bg-background pb-28 animate-fade-in">
       <header className="px-5 pt-10 pb-6 sm:px-6">
         <div className="mx-auto flex max-w-md items-end justify-between">
           <div>
@@ -69,6 +70,15 @@ function ProductsPage() {
           </div>
           <div className="flex items-center gap-2">
             <ChildSwitcher />
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="rounded-full px-3 font-body text-xs font-semibold"
+              onClick={() => navigate({ to: "/handmedown" })}
+            >
+              Hand-me-down?
+            </Button>
             <Button
               type="button"
               size="sm"
@@ -184,13 +194,11 @@ function SizeTimeline({ addedAt, sizeUpDate }: { addedAt: string | null; sizeUpD
 
 function EmptyProducts({ onAdd }: { onAdd: () => void }) {
   return (
-    <div className="rounded-3xl border border-dashed border-border bg-card/40 px-6 py-12 text-center">
-      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-sand/50 text-accent">
-        <Package className="h-5 w-5" />
-      </div>
-      <p className="font-display text-lg font-semibold tracking-tight">No products yet</p>
-      <p className="mx-auto mt-1 max-w-xs font-body text-sm text-muted-foreground">
-        Add the gear you use — car seats, swaddles, pacifiers — and we'll keep an eye out for recalls and replacements.
+    <div className="rounded-3xl border border-dashed border-border bg-card/40 px-6 py-12 text-center animate-scale-in">
+      <CribIllustration className="mx-auto mb-2 h-24 w-24" />
+      <p className="font-display text-lg font-semibold tracking-tight">Your gear lives here</p>
+      <p className="mx-auto mt-1.5 max-w-xs font-body text-sm text-muted-foreground">
+        Add the products you use and we'll quietly watch for recalls, let you know when to replace them, and flag when your little one is ready to size up.
       </p>
       <Button
         type="button"

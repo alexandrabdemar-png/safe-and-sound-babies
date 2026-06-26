@@ -2,9 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import catCarseat from "@/assets/cat-carseat.svg";
-import catPacifier from "@/assets/cat-pacifier.svg";
-import catCrib from "@/assets/cat-crib.png";
+import catCarseat from "@/assets/cat-carseat.png";
+import catPacifier from "@/assets/cat-pacifier.png";
 import catBreastmilk from "@/assets/cat-breastmilk.png";
 import catFormula from "@/assets/cat-formula.png";
 import catBabyfood from "@/assets/cat-babyfood.png";
@@ -12,7 +11,7 @@ import catSwaddle from "@/assets/cat-swaddle.png";
 import catStroller from "@/assets/cat-stroller.png";
 import catPacknplay from "@/assets/cat-packnplay.png";
 import catCarrier from "@/assets/cat-carrier.png";
-import catBouncer from "@/assets/cat-bouncer.svg";
+import catBouncer from "@/assets/cat-bouncer.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -39,7 +38,6 @@ export const Route = createFileRoute("/")({
 const categories = [
   { name: "Car seats", image: catCarseat },
   { name: "Pacifiers", image: catPacifier },
-  { name: "Crib mattress heights", image: catCrib },
   { name: "Breast Milk", image: catBreastmilk },
   { name: "Formula", image: catFormula },
   { name: "Baby Food", image: catBabyfood },

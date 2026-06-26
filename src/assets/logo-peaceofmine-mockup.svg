@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 220" fill="none">
+  <rect width="400" height="220" fill="#faf9f4"/>
+
+  <!-- Dove / bird shape — hand drawn, simple -->
+  <!-- Body -->
+  <path d="M174 108 C168 100 162 96 154 97 C144 98 138 106 140 116 C142 124 152 128 162 125 C168 123 173 118 174 108 Z"
+    stroke="#2d2d8e" stroke-width="2.2" fill="#faf9f4" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Wing sweep -->
+  <path d="M162 104 C168 96 178 88 192 84 C202 81 210 82 210 82 C198 90 190 98 186 108"
+    stroke="#2d2d8e" stroke-width="2.2" fill="#faf9f4" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Second wing layer for sketch depth -->
+  <path d="M164 100 C172 93 184 86 196 83"
+    stroke="#2d2d8e" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.4"/>
+  <!-- Tail feathers -->
+  <path d="M140 116 C132 118 126 114 124 120 C128 124 136 124 140 120"
+    stroke="#2d2d8e" stroke-width="2" fill="#faf9f4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M139 119 C131 124 125 122 122 127"
+    stroke="#2d2d8e" stroke-width="1.4" fill="none" stroke-linecap="round" opacity="0.5"/>
+  <!-- Eye -->
+  <circle cx="156" cy="106" r="2" fill="#2d2d8e"/>
+  <!-- Beak -->
+  <path d="M149 110 C146 109 143 110 144 112" stroke="#2d2d8e" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+  <!-- Small olive branch / leaf twig in beak -->
+  <path d="M144 110 C140 107 136 106 133 108" stroke="#2d2d8e" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+  <path d="M140 107 C139 103 141 100 143 101" stroke="#2d2d8e" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+  <path d="M137 107 C136 111 138 113 140 112" stroke="#2d2d8e" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+
+  <!-- Small stars / sparkles scattered -->
+  <path d="M200 72 L201 68 L202 72 L206 73 L202 74 L201 78 L200 74 L196 73 Z"
+    stroke="#2d2d8e" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M216 95 L216.8 92 L217.6 95 L220 95.8 L217.6 96.6 L216.8 99 L216 96.6 L213.6 95.8 Z"
+    stroke="#2d2d8e" stroke-width="0.9" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+  <path d="M118 88 L118.6 85.5 L119.2 88 L121.5 88.6 L119.2 89.2 L118.6 91.5 L118 89.2 L115.7 88.6 Z"
+    stroke="#2d2d8e" stroke-width="0.9" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+
+  <!-- Decorative arc above text — hand-drawn curve -->
+  <path d="M80 148 C120 138 200 136 320 148"
+    stroke="#2d2d8e" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.3"/>
+
+  <!-- Main wordmark: "peace of mine" in hand-drawn script style -->
+  <!-- Using a text element with a script-like font feel, outlined for the hand-drawn look -->
+
+  <!-- "peace" -->
+  <text x="200" y="170"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="42"
+    font-style="italic"
+    font-weight="400"
+    fill="none"
+    stroke="#2d2d8e"
+    stroke-width="1.2"
+    text-anchor="middle"
+    letter-spacing="1"
+  >peace of mine</text>
+
+  <!-- Slight offset duplicate for hand-drawn depth -->
+  <text x="200.8" y="170.6"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="42"
+    font-style="italic"
+    font-weight="400"
+    fill="none"
+    stroke="#2d2d8e"
+    stroke-width="0.4"
+    text-anchor="middle"
+    letter-spacing="1"
+    opacity="0.25"
+  >peace of mine</text>
+
+  <!-- Tagline -->
+  <text x="200" y="196"
+    font-family="'Helvetica Neue', Arial, sans-serif"
+    font-size="9"
+    font-weight="500"
+    fill="#2d2d8e"
+    text-anchor="middle"
+    letter-spacing="3"
+    opacity="0.7"
+  >BABY SAFETY · SIMPLIFIED</text>
+
+  <!-- Decorative underline squiggle under main text -->
+  <path d="M110 178 C140 174 180 176 220 174 C250 173 280 175 300 178"
+    stroke="#2d2d8e" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.4"/>
+</svg>

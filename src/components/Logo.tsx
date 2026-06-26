@@ -1,24 +1,19 @@
 import { cn } from "@/lib/utils";
+import logoSvg from "@/assets/logo-handdrawn.svg";
 
 interface LogoProps {
   className?: string;
+  size?: number;
 }
 
-export function Logo({ className }: LogoProps) {
+export function Logo({ className, size = 36 }: LogoProps) {
   return (
-    <span
-      className={cn(className)}
-      style={{
-        fontFamily: '"Cormorant Garamond", "Playfair Display", Georgia, serif',
-        fontSize: "1.1rem",
-        fontWeight: 500,
-        color: "#3A2E24",
-        lineHeight: 1,
-        letterSpacing: "0.12em",
-        textTransform: "uppercase",
-      }}
-    >
-      Safe &amp; Sound
-    </span>
+    <img
+      src={logoSvg}
+      alt="Safe & Sound"
+      width={size}
+      height={size}
+      className={cn("select-none", className)}
+    />
   );
 }

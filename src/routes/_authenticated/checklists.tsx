@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { CheckCircle2, Circle, ClipboardList, ArrowLeft } from "lucide-react";
+import { CheckCircle2, Circle, ClipboardList, ArrowLeft, Gift, Luggage } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+import { hapticSuccess, hapticLight } from "@/lib/haptic";
 
 export const ssr = false;
 
@@ -121,12 +122,14 @@ function ChecklistsPage() {
     });
 
     if (wasCompleted) {
+      hapticLight();
       await supabase
         .from("checklist_completions")
         .delete()
         .eq("user_id", userId)
         .eq("item_key", key);
     } else {
+      hapticSuccess();
       await supabase
         .from("checklist_completions")
         .upsert({ user_id: userId, item_key: key });
@@ -172,6 +175,32 @@ function ChecklistsPage() {
             </div>
           </div>
         )}
+
+        {/* Quick links to special checklists */}
+        <div className="mb-6 grid grid-cols-2 gap-3">
+          <Link to="/travel-checklist"
+            className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[#C4785A]/50"
+            style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: "#F5F0E8" }}>
+              <Luggage className="h-5 w-5" style={{ color: "#C4785A" }} />
+            </span>
+            <div>
+              <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>Travel Mode</p>
+              <p className="font-body text-xs" style={{ color: "#8A8078" }}>Packing + hotel safety</p>
+            </div>
+          </Link>
+          <Link to="/registry-check"
+            className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[#C4785A]/50"
+            style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: "#F5F0E8" }}>
+              <Gift className="h-5 w-5" style={{ color: "#C4785A" }} />
+            </span>
+            <div>
+              <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>Registry Check</p>
+              <p className="font-body text-xs" style={{ color: "#8A8078" }}>Recall check before you add</p>
+            </div>
+          </Link>
+        </div>
 
         {loading ? (
           <p className="font-body text-sm" style={{ color: "#8A8078" }}>Loading checklists...</p>

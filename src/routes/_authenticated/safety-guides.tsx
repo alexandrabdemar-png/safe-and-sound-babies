@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
-import { CheckCircle2, ChevronDown, ChevronUp, Clock, Shield, Stethoscope } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronUp, Clock, Download, Share2, Shield, ShieldCheck, Star, Stethoscope, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/safety-guides")({
   ssr: false,
@@ -140,6 +141,125 @@ const VISIT_PREP = [
   ]},
 ];
 
+// ── Canvas share image generator ────────────────────────────────────────────
+function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number): number {
+  const words = text.split(" ");
+  let line = "";
+  let cy = y;
+  for (const word of words) {
+    const test = line ? `${line} ${word}` : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      ctx.fillText(line, x, cy);
+      line = word;
+      cy += lineHeight;
+    } else {
+      line = test;
+    }
+  }
+  if (line) { ctx.fillText(line, x, cy); cy += lineHeight; }
+  return cy;
+}
+
+async function generateShareImage(title: string, items: string[], source: string): Promise<Blob | null> {
+  try {
+    const SIZE = 1080;
+    const canvas = document.createElement("canvas");
+    canvas.width = SIZE; canvas.height = SIZE;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    // Background
+    ctx.fillStyle = "#FAF7F2";
+    ctx.fillRect(0, 0, SIZE, SIZE);
+
+    // Top accent bar
+    ctx.fillStyle = "#A3B899";
+    ctx.fillRect(0, 0, SIZE, 18);
+
+    // Border
+    ctx.strokeStyle = "#E8E2DA";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(40, 40, SIZE - 80, SIZE - 80);
+
+    // Title
+    ctx.fillStyle = "#3D2B1F";
+    ctx.font = "bold 56px 'Georgia', serif";
+    ctx.fillText(title, 80, 148);
+
+    // Divider
+    ctx.fillStyle = "#E8E2DA";
+    ctx.fillRect(80, 175, 920, 3);
+
+    // Items
+    const BULLET = "•";
+    let y = 230;
+    ctx.font = "38px 'Arial', sans-serif";
+    ctx.fillStyle = "#4A3728";
+    for (const item of items) {
+      ctx.fillStyle = "#A3B899";
+      ctx.fillText(BULLET, 80, y);
+      ctx.fillStyle = "#4A3728";
+      y = wrapText(ctx, item, 124, y, 830, 52);
+      y += 16;
+      if (y > 880) break;
+    }
+
+    // Bottom divider
+    ctx.fillStyle = "#E8E2DA";
+    ctx.fillRect(80, SIZE - 140, 920, 2);
+
+    // Branding
+    ctx.fillStyle = "#A3B899";
+    ctx.font = "bold 34px 'Georgia', serif";
+    ctx.fillText("Safe & Sound", 80, SIZE - 88);
+
+    ctx.fillStyle = "#8A8078";
+    ctx.font = "28px 'Arial', sans-serif";
+    ctx.fillText(`Source: ${source}  ·  safeandsound.app`, 80, SIZE - 44);
+
+    return new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
+  } catch {
+    return null;
+  }
+}
+
+async function shareTip(title: string, items: string[], source: string) {
+  const blob = await generateShareImage(title, items, source);
+  if (!blob) return;
+  const file = new File([blob], "safety-tip.png", { type: "image/png" });
+  if (typeof navigator !== "undefined" && "share" in navigator && navigator.canShare?.({ files: [file] })) {
+    await navigator.share({ files: [file], title: `${title} — Safe & Sound`, text: "A safety tip from Safe & Sound" }).catch(() => {});
+  } else {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "safety-tip.png"; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+  }
+}
+
+// ── Review prompt logic ──────────────────────────────────────────────────────
+const REVIEW_MILESTONES_NEEDED = 3;
+const REVIEW_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+function shouldShowReview(): boolean {
+  try {
+    const last = localStorage.getItem("safesound.reviewPrompt.lastShown");
+    if (last && Date.now() - parseInt(last, 10) < REVIEW_COOLDOWN_MS) return false;
+    const seen = JSON.parse(localStorage.getItem("safesound.milestonesRead") ?? "[]") as number[];
+    return new Set(seen).size >= REVIEW_MILESTONES_NEEDED;
+  } catch { return false; }
+}
+
+function recordMilestoneRead(idx: number) {
+  try {
+    const seen: number[] = JSON.parse(localStorage.getItem("safesound.milestonesRead") ?? "[]");
+    if (!seen.includes(idx)) { seen.push(idx); localStorage.setItem("safesound.milestonesRead", JSON.stringify(seen)); }
+  } catch {}
+}
+
+function dismissReview() {
+  try { localStorage.setItem("safesound.reviewPrompt.lastShown", String(Date.now())); } catch {}
+}
+
 function getAgeMonths(dob: string): number {
   const birth = new Date(dob + "T00:00:00");
   const now = new Date();
@@ -154,6 +274,14 @@ function SafetyGuidesPage() {
   const [activeTab, setActiveTab] = useState<"milestones" | "visit-prep">("milestones");
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
   const [checkedQuestions, setCheckedQuestions] = useState<Set<string>>(new Set());
+  const [showReview, setShowReview] = useState(false);
+  const [reviewHelpful, setReviewHelpful] = useState<boolean | null>(null);
+
+  function handleMilestoneExpand(idx: number) {
+    setExpandedIdx(expandedIdx === idx ? null : idx);
+    recordMilestoneRead(idx);
+    if (shouldShowReview()) setShowReview(true);
+  }
 
   useEffect(() => {
     async function init() {
@@ -268,7 +396,7 @@ function SafetyGuidesPage() {
       <main className="flex-1 px-5 pt-4 sm:px-6">
         <div className="mx-auto max-w-md space-y-3">
           {activeTab === "milestones" && ageMonths !== null && (
-            <MilestonesTab ageMonths={ageMonths} expandedIdx={expandedIdx} setExpandedIdx={setExpandedIdx} />
+            <MilestonesTab ageMonths={ageMonths} expandedIdx={expandedIdx} setExpandedIdx={handleMilestoneExpand} />
           )}
           {activeTab === "visit-prep" && (
             <VisitPrepTab
@@ -279,6 +407,59 @@ function SafetyGuidesPage() {
           )}
         </div>
       </main>
+
+      {/* Review prompt overlay */}
+      {showReview && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
+          <div className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl bg-card p-6 animate-scale-in mx-4 mb-0 sm:mb-0">
+            <div className="flex items-start justify-between gap-2 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-primary">
+                <Star className="h-5 w-5" />
+              </div>
+              <button type="button" onClick={() => { setShowReview(false); dismissReview(); }}
+                className="rounded-full p-1 text-muted-foreground hover:bg-muted">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            {reviewHelpful === null ? (
+              <>
+                <p className="font-display text-lg font-semibold tracking-tight">Are you finding Safe & Sound helpful?</p>
+                <p className="mt-1 font-body text-sm text-muted-foreground">We only ask this once. Your honest answer helps us improve.</p>
+                <div className="mt-5 flex gap-3">
+                  <Button className="flex-1 rounded-full" onClick={() => setReviewHelpful(true)}>Yes, it's great</Button>
+                  <Button variant="outline" className="flex-1 rounded-full" onClick={() => { setReviewHelpful(false); dismissReview(); setTimeout(() => setShowReview(false), 2500); }}>Not really</Button>
+                </div>
+              </>
+            ) : reviewHelpful ? (
+              <>
+                <p className="font-display text-lg font-semibold tracking-tight">That means the world to us 🙏</p>
+                <p className="mt-1 font-body text-sm text-muted-foreground">Would you mind leaving a quick review? It takes 30 seconds and helps other parents find us.</p>
+                <div className="mt-5 flex flex-col gap-2">
+                  <Button className="w-full rounded-full" asChild onClick={() => { dismissReview(); setShowReview(false); }}>
+                    <a href="https://apps.apple.com/app/safe-and-sound" target="_blank" rel="noopener noreferrer">
+                      Review on the App Store
+                    </a>
+                  </Button>
+                  <Button variant="outline" className="w-full rounded-full" asChild onClick={() => { dismissReview(); setShowReview(false); }}>
+                    <a href="https://play.google.com/store/apps/safe-and-sound" target="_blank" rel="noopener noreferrer">
+                      Review on Google Play
+                    </a>
+                  </Button>
+                  <button type="button" className="font-body text-xs text-muted-foreground hover:underline mt-1"
+                    onClick={() => { dismissReview(); setShowReview(false); }}>
+                    Maybe later
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="font-display text-lg font-semibold tracking-tight">Thanks for being honest</p>
+                <p className="mt-1 font-body text-sm text-muted-foreground">We're always improving. If there's something we can do better, email us at hello@safeandsound.app.</p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       <BottomNav />
     </div>
@@ -371,11 +552,16 @@ function MilestonesTab({
                 </ul>
                 <div className="mt-3 flex items-center justify-between border-t border-border/30 pt-2">
                   <span className="font-body text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-                    Source: {m.source}
+                    Source: {m.source} · Updated {m.lastUpdated}
                   </span>
-                  <span className="font-body text-[10px] text-muted-foreground/50">
-                    Updated {m.lastUpdated}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); shareTip(m.title, m.items, m.source); }}
+                    className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background px-2.5 py-1 font-body text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                    title="Share this safety tip"
+                  >
+                    <Share2 className="h-3 w-3" /> Share tip
+                  </button>
                 </div>
               </div>
             )}
