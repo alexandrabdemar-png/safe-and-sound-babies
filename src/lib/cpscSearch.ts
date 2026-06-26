@@ -42,7 +42,7 @@ export async function searchCpsc(query: string): Promise<CpscRecall[]> {
   return all.filter(isBabyRelated);
 }
 
-const FDA_BABY_KEYWORDS = ["infant", "baby", "formula", "breast milk", "toddler", "newborn", "child food", "baby food"];
+const FDA_BABY_KEYWORDS = ["infant", "baby", "formula", "breast milk", "toddler", "newborn", "child food", "baby food", "nara", "infant formula", "enfamil", "similac", "gerber", "holle", "hipp", "kendamil"];
 
 export async function fetchFdaBabyRecallCount(daysBack = 30): Promise<number> {
   const end = new Date();

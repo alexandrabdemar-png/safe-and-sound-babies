@@ -445,9 +445,8 @@ function HomePage() {
       .catch(() => setRecallRadarCount(-1));
   }, []);
 
-  // FDA recall count — only fetched on Wednesdays, cached daily
+  // FDA recall count — fetched daily, cached per day
   useEffect(() => {
-    if (new Date().getDay() !== 3) return;
     const key = `safesound.fdaRecalls.${todayKey()}`;
     try {
       const cached = localStorage.getItem(key);
@@ -1264,7 +1263,7 @@ function DevelopmentThisWeekCard({ dobStr }: { dobStr: string }) {
           </span>
           <div>
             <p style={{ fontSize: 12, fontWeight: 700, color: "#4A7A47", margin: 0, textTransform: "uppercase", letterSpacing: "0.1em" }}>Development this week</p>
-            <p style={{ fontSize: 11, color: "#7A9E78", margin: 0 }}>Week {ageWeeks} · every baby is different</p>
+            <p style={{ fontSize: 11, color: "#7A9E78", margin: 0 }}>every baby grows in their own time</p>
           </div>
         </div>
         <button
