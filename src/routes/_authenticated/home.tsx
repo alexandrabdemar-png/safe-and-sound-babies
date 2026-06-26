@@ -1155,10 +1155,10 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
               </p>
               <button
                 type="button"
-                onClick={() => onNavigate({ to: "/profile" })}
+                onClick={() => onNavigate({ to: "/growth" })}
                 style={{ padding: "7px 16px", borderRadius: 999, backgroundColor: "#4A7A47", color: "white", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}
               >
-                Update now →
+                Log measurements →
               </button>
             </>
           ) : (

@@ -1,10 +1,10 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Package, User, Plus, ClipboardList } from "lucide-react";
+import { Home, Package, User, Plus, BarChart2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { to: "/home", label: "Home", icon: Home },
-  { to: "/checklists", label: "Checklists", icon: ClipboardList },
+  { to: "/tracking", label: "Track", icon: BarChart2 },
 ] as const;
 
 const rightTabs = [
@@ -22,7 +22,15 @@ export function BottomNav() {
     >
       <div className="mx-auto flex max-w-md items-end justify-between px-6 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-2">
         {tabs.map((t) => (
-          <TabItem key={t.to} {...t} active={pathname === t.to} />
+          <TabItem
+            key={t.to}
+            {...t}
+            active={
+              t.to === "/tracking"
+                ? pathname === "/tracking" || pathname === "/growth" || pathname === "/first-foods"
+                : pathname === t.to
+            }
+          />
         ))}
 
         {/* Center Add FAB — sage with warm shadow */}

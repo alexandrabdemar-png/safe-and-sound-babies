@@ -16,7 +16,10 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AuthenticatedTrackingRouteImport } from './routes/_authenticated/tracking'
 import { Route as AuthenticatedTravelChecklistRouteImport } from './routes/_authenticated/travel-checklist'
+import { Route as AuthenticatedGrowthRouteImport } from './routes/_authenticated/growth'
+import { Route as AuthenticatedFirstFoodsRouteImport } from './routes/_authenticated/first-foods'
 import { Route as AuthenticatedSafetyGuidesRouteImport } from './routes/_authenticated/safety-guides'
 import { Route as AuthenticatedRegistryCheckRouteImport } from './routes/_authenticated/registry-check'
 import { Route as AuthenticatedRecallRadarRouteImport } from './routes/_authenticated/recall-radar'
@@ -78,6 +81,21 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/callback',
   path: '/callback',
   getParentRoute: () => AuthRoute,
+} as any)
+const AuthenticatedTrackingRoute = AuthenticatedTrackingRouteImport.update({
+  id: '/tracking',
+  path: '/tracking',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGrowthRoute = AuthenticatedGrowthRouteImport.update({
+  id: '/growth',
+  path: '/growth',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFirstFoodsRoute = AuthenticatedFirstFoodsRouteImport.update({
+  id: '/first-foods',
+  path: '/first-foods',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedTravelChecklistRoute =
   AuthenticatedTravelChecklistRouteImport.update({
@@ -255,7 +273,10 @@ export interface FileRoutesByFullPath {
   '/recall-radar': typeof AuthenticatedRecallRadarRoute
   '/registry-check': typeof AuthenticatedRegistryCheckRoute
   '/safety-guides': typeof AuthenticatedSafetyGuidesRoute
+  '/tracking': typeof AuthenticatedTrackingRoute
   '/travel-checklist': typeof AuthenticatedTravelChecklistRoute
+  '/first-foods': typeof AuthenticatedFirstFoodsRoute
+  '/growth': typeof AuthenticatedGrowthRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
@@ -291,7 +312,10 @@ export interface FileRoutesByTo {
   '/recall-radar': typeof AuthenticatedRecallRadarRoute
   '/registry-check': typeof AuthenticatedRegistryCheckRoute
   '/safety-guides': typeof AuthenticatedSafetyGuidesRoute
+  '/tracking': typeof AuthenticatedTrackingRoute
   '/travel-checklist': typeof AuthenticatedTravelChecklistRoute
+  '/first-foods': typeof AuthenticatedFirstFoodsRoute
+  '/growth': typeof AuthenticatedGrowthRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
@@ -329,7 +353,10 @@ export interface FileRoutesById {
   '/_authenticated/recall-radar': typeof AuthenticatedRecallRadarRoute
   '/_authenticated/registry-check': typeof AuthenticatedRegistryCheckRoute
   '/_authenticated/safety-guides': typeof AuthenticatedSafetyGuidesRoute
+  '/_authenticated/tracking': typeof AuthenticatedTrackingRoute
   '/_authenticated/travel-checklist': typeof AuthenticatedTravelChecklistRoute
+  '/_authenticated/first-foods': typeof AuthenticatedFirstFoodsRoute
+  '/_authenticated/growth': typeof AuthenticatedGrowthRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/_authenticated/moments/new': typeof AuthenticatedMomentsNewRoute
@@ -367,7 +394,10 @@ export interface FileRouteTypes {
     | '/recall-radar'
     | '/registry-check'
     | '/safety-guides'
+    | '/tracking'
     | '/travel-checklist'
+    | '/first-foods'
+    | '/growth'
     | '/auth/callback'
     | '/bottles/new'
     | '/moments/new'
@@ -403,7 +433,10 @@ export interface FileRouteTypes {
     | '/recall-radar'
     | '/registry-check'
     | '/safety-guides'
+    | '/tracking'
     | '/travel-checklist'
+    | '/first-foods'
+    | '/growth'
     | '/auth/callback'
     | '/bottles/new'
     | '/moments/new'
@@ -440,7 +473,10 @@ export interface FileRouteTypes {
     | '/_authenticated/recall-radar'
     | '/_authenticated/registry-check'
     | '/_authenticated/safety-guides'
+    | '/_authenticated/tracking'
     | '/_authenticated/travel-checklist'
+    | '/_authenticated/first-foods'
+    | '/_authenticated/growth'
     | '/auth/callback'
     | '/_authenticated/bottles/new'
     | '/_authenticated/moments/new'
@@ -521,6 +557,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/_authenticated/tracking': {
+      id: '/_authenticated/tracking'
+      path: '/tracking'
+      fullPath: '/tracking'
+      preLoaderRoute: typeof AuthenticatedTrackingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/growth': {
+      id: '/_authenticated/growth'
+      path: '/growth'
+      fullPath: '/growth'
+      preLoaderRoute: typeof AuthenticatedGrowthRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/first-foods': {
+      id: '/_authenticated/first-foods'
+      path: '/first-foods'
+      fullPath: '/first-foods'
+      preLoaderRoute: typeof AuthenticatedFirstFoodsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/travel-checklist': {
       id: '/_authenticated/travel-checklist'
@@ -747,7 +804,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRecallRadarRoute: typeof AuthenticatedRecallRadarRoute
   AuthenticatedRegistryCheckRoute: typeof AuthenticatedRegistryCheckRoute
   AuthenticatedSafetyGuidesRoute: typeof AuthenticatedSafetyGuidesRoute
+  AuthenticatedTrackingRoute: typeof AuthenticatedTrackingRoute
   AuthenticatedTravelChecklistRoute: typeof AuthenticatedTravelChecklistRoute
+  AuthenticatedGrowthRoute: typeof AuthenticatedGrowthRoute
+  AuthenticatedFirstFoodsRoute: typeof AuthenticatedFirstFoodsRoute
   AuthenticatedMomentsNewRoute: typeof AuthenticatedMomentsNewRoute
   AuthenticatedProductsIdRoute: typeof AuthenticatedProductsIdRoute
   AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
@@ -772,7 +832,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRecallRadarRoute: AuthenticatedRecallRadarRoute,
   AuthenticatedRegistryCheckRoute: AuthenticatedRegistryCheckRoute,
   AuthenticatedSafetyGuidesRoute: AuthenticatedSafetyGuidesRoute,
+  AuthenticatedTrackingRoute: AuthenticatedTrackingRoute,
   AuthenticatedTravelChecklistRoute: AuthenticatedTravelChecklistRoute,
+  AuthenticatedGrowthRoute: AuthenticatedGrowthRoute,
+  AuthenticatedFirstFoodsRoute: AuthenticatedFirstFoodsRoute,
   AuthenticatedMomentsNewRoute: AuthenticatedMomentsNewRoute,
   AuthenticatedProductsIdRoute: AuthenticatedProductsIdRoute,
   AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
