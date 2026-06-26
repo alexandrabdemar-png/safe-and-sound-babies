@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  <!-- Hand-drawn shield outline with slight wobble -->
+  <path
+    d="M120 18 C120 18 88 22 62 32 C60 32 58 34 58 36
+       C58 80 64 118 82 142 C96 162 108 172 118 178
+       C119 179 121 179 122 178
+       C132 172 144 162 158 142
+       C176 118 182 80 182 36
+       C182 34 180 32 178 32
+       C152 22 120 18 120 18 Z"
+    stroke="#2d2d8e"
+    stroke-width="2.4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="#f5f5e8"
+    style="filter: none"
+  />
+  <!-- Second wobbly shield stroke for sketch depth -->
+  <path
+    d="M120 22 C120 22 90 26 65 35 C63 36 62 37 62 39
+       C62 81 68 117 85 140"
+    stroke="#2d2d8e"
+    stroke-width="0.8"
+    stroke-linecap="round"
+    opacity="0.3"
+    fill="none"
+  />
+
+  <!-- Baby face — round head -->
+  <ellipse cx="120" cy="90" rx="30" ry="32"
+    stroke="#2d2d8e" stroke-width="2" fill="#f5f5e8"
+    stroke-linecap="round"
+  />
+
+  <!-- Baby hair tuft — sketchy wisps -->
+  <path d="M108 62 C106 54 110 48 115 52" stroke="#2d2d8e" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M120 59 C119 51 123 47 125 51" stroke="#2d2d8e" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M130 62 C132 54 128 49 125 53" stroke="#2d2d8e" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+  <!-- Eyes — simple curved lines -->
+  <path d="M109 86 C110 84 112 84 113 86" stroke="#2d2d8e" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M127 86 C128 84 130 84 131 86" stroke="#2d2d8e" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+  <!-- Rosy cheeks — small sketchy circles -->
+  <circle cx="104" cy="93" r="4" stroke="#2d2d8e" stroke-width="1" fill="none" opacity="0.4"/>
+  <circle cx="136" cy="93" r="4" stroke="#2d2d8e" stroke-width="1" fill="none" opacity="0.4"/>
+
+  <!-- Little smile -->
+  <path d="M113 100 C116 104 124 104 127 100" stroke="#2d2d8e" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+
+  <!-- Body / onesie shape -->
+  <path d="M94 118 C90 126 88 136 90 148 C98 152 110 154 120 154 C130 154 142 152 150 148 C152 136 150 126 146 118"
+    stroke="#2d2d8e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="#f5f5e8"/>
+
+  <!-- Onesie neckline -->
+  <path d="M107 118 C110 112 114 110 120 110 C126 110 130 112 133 118"
+    stroke="#2d2d8e" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+
+  <!-- Snap dot at bottom of onesie -->
+  <circle cx="120" cy="150" r="2.5" stroke="#2d2d8e" stroke-width="1.4" fill="none"/>
+
+  <!-- Little arms -->
+  <path d="M94 122 C86 118 80 122 82 128" stroke="#2d2d8e" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M146 122 C154 118 160 122 158 128" stroke="#2d2d8e" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+  <!-- Stars around shield — hand-drawn asterisk style -->
+  <path d="M68 90 L72 90 M70 88 L70 92 M68.5 88.5 L71.5 91.5 M71.5 88.5 L68.5 91.5"
+    stroke="#2d2d8e" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M168 90 L172 90 M170 88 L170 92 M168.5 88.5 L171.5 91.5 M171.5 88.5 L168.5 91.5"
+    stroke="#2d2d8e" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M90 165 L93 165 M91.5 163.5 L91.5 166.5 M90 163.5 L93 166.5 M93 163.5 L90 166.5"
+    stroke="#2d2d8e" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M147 165 L150 165 M148.5 163.5 L148.5 166.5 M147 163.5 L150 166.5 M150 163.5 L147 166.5"
+    stroke="#2d2d8e" stroke-width="1.2" stroke-linecap="round"/>
+
+  <!-- Small heart on onesie chest -->
+  <path d="M116 130 C116 128 118 126 120 128 C122 126 124 128 124 130 C124 133 120 137 120 137 C120 137 116 133 116 130 Z"
+    stroke="#2d2d8e" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Shield bottom decorative squiggle -->
+  <path d="M105 186 C110 183 115 185 120 183 C125 181 130 183 135 186"
+    stroke="#2d2d8e" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+</svg>
