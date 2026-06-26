@@ -42,6 +42,24 @@ export async function searchCpsc(query: string): Promise<CpscRecall[]> {
   return all.filter(isBabyRelated);
 }
 
+const FDA_BABY_KEYWORDS = ["infant", "baby", "formula", "breast milk", "toddler", "newborn", "child food", "baby food"];
+
+export async function fetchFdaBabyRecallCount(daysBack = 30): Promise<number> {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - daysBack);
+  const fmt = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, "");
+  const url = `https://api.fda.gov/food/enforcement.json?search=recall_initiation_date:[${fmt(start)}+TO+${fmt(end)}]&limit=100`;
+  const res = await fetch(url);
+  if (!res.ok) return 0;
+  const data = await res.json();
+  const results: Array<{ product_description?: string; reason_for_recall?: string }> = data?.results ?? [];
+  return results.filter((r) => {
+    const text = `${r.product_description ?? ""} ${r.reason_for_recall ?? ""}`.toLowerCase();
+    return FDA_BABY_KEYWORDS.some((kw) => text.includes(kw));
+  }).length;
+}
+
 export async function fetchRecentBabyRecalls(daysBack = 30): Promise<CpscRecall[]> {
   const start = new Date();
   start.setDate(start.getDate() - daysBack);

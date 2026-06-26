@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowRight, Calendar, ChevronDown, ChevronUp, Gift, Loader2, Package, Plus, Radio, RefreshCw, Ruler, Sparkles, Zap, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, BookOpen, Calendar, ChevronDown, ChevronUp, Gift, Loader2, Package, Plus, Radio, RefreshCw, Ruler, Sparkles, Sun, Zap, X } from "lucide-react";
 import { MomentTimeline } from "@/components/MomentTimeline";
 import { SparkleIllustration } from "@/components/EmptyIllustration";
 import { BottomNav } from "@/components/BottomNav";
@@ -11,7 +11,8 @@ import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { evaluateInsights, type Insight, type ProductInput } from "@/lib/insights";
 import { friendlyError } from "@/lib/errors";
-import { isBabyRelated, type CpscRecall } from "@/lib/cpscSearch";
+import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
+import { getDevelopmentBand } from "@/lib/developmentContent";
 
 
 export const Route = createFileRoute("/_authenticated/home")({
@@ -204,6 +205,9 @@ function HomePage() {
   // Recall radar: live 30-day CPSC count, cached daily
   const [recallRadarCount, setRecallRadarCount] = useState<number | null>(null);
 
+  // FDA baby recall count (Wednesday only), cached daily
+  const [fdaRecallCount, setFdaRecallCount] = useState<number | null>(null);
+
   // Age jump alert
   const [ageJumpDismissed, setAgeJumpDismissed] = useState(false);
 
@@ -383,6 +387,22 @@ function HomePage() {
       .catch(() => setRecallRadarCount(-1));
   }, []);
 
+  // FDA recall count — only fetched on Wednesdays, cached daily
+  useEffect(() => {
+    if (new Date().getDay() !== 3) return;
+    const key = `safesound.fdaRecalls.${todayKey()}`;
+    try {
+      const cached = localStorage.getItem(key);
+      if (cached !== null) { setFdaRecallCount(parseInt(cached, 10)); return; }
+    } catch {}
+    fetchFdaBabyRecallCount(30)
+      .then((count) => {
+        try { localStorage.setItem(key, String(count)); } catch {}
+        setFdaRecallCount(count);
+      })
+      .catch(() => setFdaRecallCount(0));
+  }, []);
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -420,6 +440,31 @@ function HomePage() {
           </p>
         </div>
       </header>
+
+      {/* Today Section — day-of-week rotating card */}
+      <div className="px-5 pt-4 sm:px-6">
+        <div className="mx-auto max-w-md">
+          <TodayCard
+            child={child}
+            comingUp={comingUp}
+            cpscCount={recallRadarCount}
+            fdaCount={fdaRecallCount}
+            showMeasReminder={showMeasReminder}
+            recalls={alerts.recalls}
+            safetyTip={ageSafetyTip(child?.date_of_birth ?? null)}
+            onNavigate={navigate}
+          />
+        </div>
+      </div>
+
+      {/* Development This Week — below Today card */}
+      {child?.date_of_birth && (
+        <div className="px-5 pt-3 sm:px-6">
+          <div className="mx-auto max-w-md">
+            <DevelopmentThisWeekCard dobStr={child.date_of_birth} />
+          </div>
+        </div>
+      )}
 
       {/* Recall banner — shown at top if there are active recalls */}
       {alerts.recalls > 0 && !recallBannerDismissed && (
@@ -893,6 +938,299 @@ function RecallRadarCard({ count }: { count: number }) {
       </div>
       <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
     </Link>
+  );
+}
+
+// ── Today card ──────────────────────────────────────────────────────────────
+
+function weekendReminder(dobStr: string | null): string {
+  if (!dobStr) return "Weekends are a great time for a quick home safety walk-through — five minutes, room by room.";
+  const birth = parseDateLocal(dobStr);
+  const months = Math.max(0, Math.floor((Date.now() - birth.getTime()) / (30.44 * 86400000)));
+  if (months < 6) return "If you're heading out this weekend, double-check that the car seat is rear-facing and installed at the correct angle.";
+  if (months < 12) return "Planning an outing? Babies over 6 months need SPF 30+ sunscreen on exposed skin — and it's always worth packing more wipes than you think you'll need.";
+  if (months < 18) return "Visiting family or friends this weekend? A quick baby-proofing scan of the space — stairs, cabinets, small objects at floor level — takes about two minutes.";
+  if (months < 30) return "Any outdoor time this weekend means helmet time for balance bikes or ride-ons — the habit is much easier to build before they're old enough to argue about it.";
+  return "If you're planning outdoor play this weekend, sunscreen, water, and shade are the essentials — toddlers dehydrate faster than adults.";
+}
+
+type TodayCardProps = {
+  child: Child | null;
+  comingUp: ComingUpProduct[];
+  cpscCount: number | null;
+  fdaCount: number | null;
+  showMeasReminder: boolean;
+  recalls: number;
+  safetyTip: string;
+  onNavigate: ReturnType<typeof useNavigate>;
+};
+
+function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, recalls, safetyTip, onNavigate }: TodayCardProps) {
+  const day = new Date().getDay(); // 0=Sun … 6=Sat
+  const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const dayName = DAY_NAMES[day];
+
+  const cardBase: React.CSSProperties = {
+    borderRadius: 20,
+    backgroundColor: "#F5F1EB",
+    border: "1px solid #E2DAD0",
+    padding: "16px 18px",
+  };
+  const label = (
+    <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>
+      Today · {dayName}
+    </p>
+  );
+
+  // No child
+  if (!child) {
+    return (
+      <div style={cardBase}>
+        {label}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 24 }}>👶</span>
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 600, color: "#3D3935", margin: 0 }}>Add your first child to get started</p>
+            <p style={{ fontSize: 12, color: "#8A8078", marginTop: 2 }}>Safe & Sound personalises every tip, alert, and insight to your baby's age.</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => onNavigate({ to: "/onboarding" })}
+          style={{ marginTop: 12, padding: "8px 18px", borderRadius: 999, backgroundColor: "#4A7A47", color: "white", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}
+        >
+          Add a child →
+        </button>
+      </div>
+    );
+  }
+
+  const ageWeeks = Math.floor(Math.max(0, Date.now() - parseDateLocal(child.date_of_birth ?? "").getTime()) / (7 * 86400000));
+  const devBand = getDevelopmentBand(ageWeeks);
+
+  // Sunday: digest snapshot
+  if (day === 0) {
+    return (
+      <div style={cardBase}>
+        {label}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <span style={{ fontSize: 22, marginTop: 2 }}>✨</span>
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 600, color: "#3D3935", margin: "0 0 8px" }}>Your week in review, {child.name}</p>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 5 }}>
+              <li style={{ fontSize: 13, color: "#5C5248" }}>{recalls > 0 ? `⚠️ ${recalls} active recall${recalls > 1 ? "s" : ""} — check the Alerts tab` : "✅ No recalls affecting your products this week"}</li>
+              <li style={{ fontSize: 13, color: "#5C5248" }}>{comingUp.length > 0 ? `📅 ${comingUp[0].name} is coming due soon` : "📅 No replacements or size-ups due in the next 90 days"}</li>
+              <li style={{ fontSize: 13, color: "#5C5248" }}>🛡️ {safetyTip}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Monday: development observation
+  if (day === 1) {
+    return (
+      <div style={cardBase}>
+        {label}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <span style={{ fontSize: 22, marginTop: 2 }}>🌱</span>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#4A7A47", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Development this week</p>
+            <p style={{ fontSize: 14, color: "#3D3935", lineHeight: 1.55, margin: 0 }}>{devBand.physical}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Tuesday: age-relevant safety tip
+  if (day === 2) {
+    return (
+      <div style={cardBase}>
+        {label}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <span style={{ fontSize: 22, marginTop: 2 }}>🛡️</span>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#4A7A47", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Quick safety tip</p>
+            <p style={{ fontSize: 14, color: "#3D3935", lineHeight: 1.55, margin: 0 }}>{safetyTip}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Wednesday: combined CPSC + FDA recall count
+  if (day === 3) {
+    const cpsc = cpscCount ?? 0;
+    const fda = fdaCount ?? 0;
+    const total = cpsc + fda;
+    const loading = cpscCount === null || fdaCount === null;
+    return (
+      <button
+        type="button"
+        onClick={() => onNavigate({ to: "/recall-radar" })}
+        style={{ ...cardBase, width: "100%", textAlign: "left", cursor: "pointer" }}
+      >
+        {label}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <span style={{ fontSize: 22, marginTop: 2 }}>📡</span>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#4A7A47", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Recall Radar · last 30 days</p>
+            {loading ? (
+              <p style={{ fontSize: 14, color: "#8A8078", margin: 0 }}>Checking CPSC and FDA databases…</p>
+            ) : (
+              <>
+                <p style={{ fontSize: 14, color: "#3D3935", fontWeight: 600, margin: "0 0 2px" }}>
+                  {total === 0 ? "No baby or infant product recalls this month" : `${total} baby & infant recall${total > 1 ? "s" : ""} this month`}
+                </p>
+                <p style={{ fontSize: 12, color: "#8A8078", margin: 0 }}>{cpsc} consumer products (CPSC) · {fda} food & formula (FDA) · tap to browse</p>
+              </>
+            )}
+          </div>
+        </div>
+      </button>
+    );
+  }
+
+  // Thursday: next product closest to size-up or replacement
+  if (day === 4) {
+    const next = comingUp[0] ?? null;
+    return (
+      <div style={cardBase}>
+        {label}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <span style={{ fontSize: 22, marginTop: 2 }}>📅</span>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#4A7A47", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Coming up</p>
+            {next ? (
+              <>
+                <p style={{ fontSize: 14, color: "#3D3935", fontWeight: 600, margin: "0 0 2px" }}>{next.name}</p>
+                <p style={{ fontSize: 12, color: "#8A8078", margin: 0 }}>
+                  {next.type === "replace" ? "Replacement" : "Size-up"} · {
+                    (() => {
+                      const d = Math.round((new Date(next.when + "T00:00:00").getTime() - Date.now()) / 86400000);
+                      return d <= 0 ? "today" : d === 1 ? "tomorrow" : d < 14 ? `in ${d} days` : `in about ${Math.round(d / 7)} weeks`;
+                    })()
+                  }
+                </p>
+              </>
+            ) : (
+              <p style={{ fontSize: 14, color: "#3D3935", margin: 0 }}>No size-ups or replacements coming up in the next 90 days.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Friday: weekend safety reminder
+  if (day === 5) {
+    return (
+      <div style={cardBase}>
+        {label}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <span style={{ fontSize: 22, marginTop: 2 }}>🌤️</span>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#4A7A47", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Weekend heads-up</p>
+            <p style={{ fontSize: 14, color: "#3D3935", lineHeight: 1.55, margin: 0 }}>{weekendReminder(child.date_of_birth ?? null)}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Saturday: measurements update prompt
+  return (
+    <div style={cardBase}>
+      {label}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+        <span style={{ fontSize: 22, marginTop: 2 }}>📏</span>
+        <div style={{ flex: 1 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: "#4A7A47", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Measurements check-in</p>
+          {showMeasReminder ? (
+            <>
+              <p style={{ fontSize: 14, color: "#3D3935", lineHeight: 1.55, margin: "0 0 10px" }}>
+                It's been a while since you updated {child.name}'s height and weight. Fresh measurements help predict size-ups more accurately.
+              </p>
+              <button
+                type="button"
+                onClick={() => onNavigate({ to: "/profile" })}
+                style={{ padding: "7px 16px", borderRadius: 999, backgroundColor: "#4A7A47", color: "white", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}
+              >
+                Update now →
+              </button>
+            </>
+          ) : (
+            <p style={{ fontSize: 14, color: "#3D3935", lineHeight: 1.55, margin: 0 }}>
+              {child.name}'s measurements are up to date — nice work. We'll remind you again in about a month.
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Development This Week card ───────────────────────────────────────────────
+
+function DevelopmentThisWeekCard({ dobStr }: { dobStr: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const ageWeeks = Math.floor(Math.max(0, Date.now() - parseDateLocal(dobStr).getTime()) / (7 * 86400000));
+  const band = getDevelopmentBand(ageWeeks);
+
+  return (
+    <div style={{ borderRadius: 20, backgroundColor: "#EDF4EC", border: "1px solid #C8DEC6", padding: "16px 18px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: "50%", backgroundColor: "#C8DEC6", color: "#4A7A47" }}>
+            <BookOpen size={13} />
+          </span>
+          <div>
+            <p style={{ fontSize: 12, fontWeight: 700, color: "#4A7A47", margin: 0, textTransform: "uppercase", letterSpacing: "0.1em" }}>Development this week</p>
+            <p style={{ fontSize: 11, color: "#7A9E78", margin: 0 }}>Week {ageWeeks} · every baby is different</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setExpanded((e) => !e)}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "#7A9E78", padding: 4 }}
+          aria-label={expanded ? "Show less" : "Show more"}
+        >
+          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
+      </div>
+
+      {/* Physical — always visible */}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+        <span style={{ fontSize: 15, marginTop: 1 }}>🌱</span>
+        <p style={{ fontSize: 13, color: "#3D3935", lineHeight: 1.6, margin: 0 }}>{band.physical}</p>
+      </div>
+
+      {/* Cognitive + Safety — shown when expanded */}
+      {expanded && (
+        <>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginTop: 10, paddingTop: 10, borderTop: "1px solid #C8DEC6" }}>
+            <span style={{ fontSize: 15, marginTop: 1 }}>💡</span>
+            <p style={{ fontSize: 13, color: "#3D3935", lineHeight: 1.6, margin: 0 }}>{band.cognitive}</p>
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginTop: 10, paddingTop: 10, borderTop: "1px solid #C8DEC6" }}>
+            <span style={{ fontSize: 15, marginTop: 1 }}>🛡️</span>
+            <p style={{ fontSize: 13, color: "#3D3935", lineHeight: 1.6, margin: 0 }}>{band.safety}</p>
+          </div>
+        </>
+      )}
+
+      {!expanded && (
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          style={{ marginTop: 8, background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#4A7A47", padding: 0, display: "flex", alignItems: "center", gap: 3 }}
+        >
+          <Sun size={12} /> See cognitive & safety notes
+        </button>
+      )}
+    </div>
   );
 }
 
