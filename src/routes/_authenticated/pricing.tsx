@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 export const Route = createFileRoute('/_authenticated/pricing')({
   ssr: false,
   component: PricingPage,
-  head: () => ({ meta: [{ title: 'Pricing — Safe & Sound' }] }),
+  head: () => ({ meta: [{ title: 'Pricing — Peace of Mine' }] }),
   validateSearch: (s: Record<string, unknown>): { checkout?: string } => ({
     checkout: typeof s.checkout === 'string' ? s.checkout : undefined,
   }),

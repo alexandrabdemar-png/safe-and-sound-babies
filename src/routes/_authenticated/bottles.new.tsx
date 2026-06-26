@@ -23,7 +23,7 @@ import {
 export const Route = createFileRoute("/_authenticated/bottles/new")({
   ssr: false,
   component: NewBottlePage,
-  head: () => ({ meta: [{ title: "Log a bottle — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "Log a bottle — Peace of Mine" }] }),
 });
 
 function NewBottlePage() {

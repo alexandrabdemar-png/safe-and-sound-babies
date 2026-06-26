@@ -8,7 +8,7 @@ import { fetchRecentBabyRecalls, type CpscRecall } from "@/lib/cpscSearch";
 export const Route = createFileRoute("/_authenticated/recall-radar")({
   ssr: false,
   component: RecallRadarPage,
-  head: () => ({ meta: [{ title: "Recall Radar — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "Recall Radar — Peace of Mine" }] }),
 });
 
 function RecallRadarPage() {

@@ -5,7 +5,7 @@ import { Package, Sparkles, ArrowRight, Milk } from "lucide-react";
 export const Route = createFileRoute("/_authenticated/add")({
   ssr: false,
   component: AddPage,
-  head: () => ({ meta: [{ title: "Add — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "Add — Peace of Mine" }] }),
 });
 
 function AddPage() {

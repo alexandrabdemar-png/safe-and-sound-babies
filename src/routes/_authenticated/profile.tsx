@@ -19,7 +19,7 @@ import { getStripeEnvironment } from "@/lib/stripe";
 export const Route = createFileRoute("/_authenticated/profile")({
   ssr: false,
   component: ProfilePage,
-  head: () => ({ meta: [{ title: "Profile — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "Profile — Peace of Mine" }] }),
 });
 
 function ProfilePage() {
@@ -128,7 +128,7 @@ function ProfilePage() {
               </div>
               <div>
                 <p className="font-display text-base font-semibold">
-                  {subLoading ? '…' : isPro ? 'Safe & Sound Pro' : 'Free plan'}
+                  {subLoading ? '…' : isPro ? 'Peace of Mine Pro' : 'Free plan'}
                 </p>
                 {isPro && subscription?.current_period_end && (
                   <p className="font-body text-xs text-muted-foreground">
@@ -382,8 +382,8 @@ function ReferFriendSection() {
     if (!referralUrl) return;
     if (typeof navigator !== "undefined" && "share" in navigator) {
       await navigator.share({
-        title: "Safe & Sound — baby safety app",
-        text: "I've been using Safe & Sound to track recalls and safety milestones for my baby. Try it free:",
+        title: "Peace of Mine — baby safety app",
+        text: "I've been using Peace of Mine to track recalls and safety milestones for my baby. Try it free:",
         url: referralUrl,
       }).catch(() => {});
     } else {
@@ -403,7 +403,7 @@ function ReferFriendSection() {
         </div>
       </div>
       <p className="mb-4 font-body text-xs text-muted-foreground leading-relaxed">
-        Share Safe & Sound with another parent. When they sign up with your link and subscribe to Pro, you both get one free month added to your account.
+        Share Peace of Mine with another parent. When they sign up with your link and subscribe to Pro, you both get one free month added to your account.
       </p>
       {code ? (
         <div className="space-y-3">

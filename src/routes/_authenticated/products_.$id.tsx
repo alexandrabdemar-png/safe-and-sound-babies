@@ -14,7 +14,7 @@ import { lookupAndSaveGuidelines, recomputePredictions } from "@/lib/guidelines.
 export const Route = createFileRoute("/_authenticated/products_/$id")({
   ssr: false,
   component: ProductDetailPage,
-  head: () => ({ meta: [{ title: "Product — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "Product — Peace of Mine" }] }),
 });
 type Product = {
   id: string;

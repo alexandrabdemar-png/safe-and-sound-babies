@@ -20,7 +20,7 @@ import { friendlyError } from "@/lib/errors";
 export const Route = createFileRoute("/_authenticated/growth")({
   ssr: false,
   component: GrowthPage,
-  head: () => ({ meta: [{ title: "Growth Tracker — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "Growth Tracker — Peace of Mine" }] }),
 });
 
 type Child = {

@@ -8,7 +8,7 @@ import { hapticSuccess, hapticLight } from "@/lib/haptic";
 export const Route = createFileRoute("/_authenticated/travel-checklist")({
   ssr: false,
   component: TravelChecklistPage,
-  head: () => ({ meta: [{ title: "Travel Checklist — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "Travel Checklist — Peace of Mine" }] }),
 });
 
 interface TravelItem {

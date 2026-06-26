@@ -12,7 +12,7 @@ import { searchCpsc, type CpscRecall } from "@/lib/cpscSearch";
 export const Route = createFileRoute("/_authenticated/handmedown")({
   ssr: false,
   component: HandmedownPage,
-  head: () => ({ meta: [{ title: "Hand-Me-Down Checker — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "Hand-Me-Down Checker — Peace of Mine" }] }),
 });
 
 const BarcodeScanner = React.lazy(() =>

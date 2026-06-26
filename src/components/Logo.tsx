@@ -10,7 +10,7 @@ export function Logo({ className, size = 36 }: LogoProps) {
   return (
     <img
       src={logoSvg}
-      alt="Safe & Sound"
+      alt="Peace of Mine"
       width={size}
       height={size}
       className={cn("select-none", className)}

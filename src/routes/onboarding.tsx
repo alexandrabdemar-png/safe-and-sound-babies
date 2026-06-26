@@ -17,11 +17,11 @@ export const Route = createFileRoute("/onboarding")({
   component: OnboardingPage,
   head: () => ({
     meta: [
-      { title: "Welcome — Safe & Sound" },
+      { title: "Welcome — Peace of Mine" },
       {
         name: "description",
         content:
-          "Set up your little one's profile so Safe & Sound can send the right reminders at the right time.",
+          "Set up your little one's profile so Peace of Mine can send the right reminders at the right time.",
       },
     ],
   }),

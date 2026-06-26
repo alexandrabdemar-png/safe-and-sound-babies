@@ -5,7 +5,7 @@
  *   3 geometric lines — roof triangle, rectangle body, tiny door.
  * A single leaf or stem grows from the peak of the roof.
  * Feels hand-drawn but stays geometric.
- * Wordmark "Safe & Sound" in DM Serif Display sits beside the icon.
+ * Wordmark "Peace of Mine" in DM Serif Display sits beside the icon.
  */
 
 interface LogoConceptCProps {
@@ -33,7 +33,7 @@ export function LogoConceptC({
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
-      aria-label="Safe & Sound"
+      aria-label="Peace of Mine"
       role="img"
     >
       {/* ── Cottage icon ─────────────────────────────────────────── */}

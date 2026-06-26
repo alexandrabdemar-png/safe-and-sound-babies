@@ -20,7 +20,7 @@ import { CheckCircle2, ShieldCheck } from "lucide-react";
 export const Route = createFileRoute("/_authenticated/home")({
   ssr: false,
   component: HomePage,
-  head: () => ({ meta: [{ title: "Home — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "Home — Peace of Mine" }] }),
 });
 
 type Child = {
@@ -1066,7 +1066,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
           <span style={{ fontSize: 24 }}>👶</span>
           <div>
             <p style={{ fontSize: 14, fontWeight: 600, color: "#3D3935", margin: 0 }}>Add your first child to get started</p>
-            <p style={{ fontSize: 12, color: "#8A8078", marginTop: 2 }}>Safe & Sound personalises every tip, alert, and insight to your baby's age.</p>
+            <p style={{ fontSize: 12, color: "#8A8078", marginTop: 2 }}>Peace of Mine personalises every tip, alert, and insight to your baby's age.</p>
           </div>
         </div>
         <button

@@ -8,7 +8,7 @@ import { BottomNav } from "@/components/BottomNav";
 export const Route = createFileRoute("/_authenticated/recall-check")({
   ssr: false,
   component: RecallCheckPage,
-  head: () => ({ meta: [{ title: "Recall Check — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "Recall Check — Peace of Mine" }] }),
 });
 
 const BarcodeScanner = React.lazy(() =>

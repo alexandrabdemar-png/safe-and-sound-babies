@@ -15,7 +15,7 @@ import { CATEGORY_BY_KEY, categoryFromLabel, type CategoryKey } from "@/lib/prod
 export const Route = createFileRoute("/_authenticated/products")({
   ssr: false,
   component: ProductsPage,
-  head: () => ({ meta: [{ title: "Products — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "Products — Peace of Mine" }] }),
 });
 
 type Product = {

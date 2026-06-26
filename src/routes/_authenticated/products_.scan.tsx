@@ -21,7 +21,7 @@ import { useActiveChild } from "@/hooks/useActiveChild";
 export const Route = createFileRoute("/_authenticated/products_/scan")({
   ssr: false,
   component: ScanPage,
-  head: () => ({ meta: [{ title: "Scan a barcode — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "Scan a barcode — Peace of Mine" }] }),
 });
 
 import { CATEGORIES, CATEGORY_BY_KEY, guessCategoryFromText, type CategoryKey } from "@/lib/productCategories";

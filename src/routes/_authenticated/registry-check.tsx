@@ -11,7 +11,7 @@ import { searchCpsc, type CpscRecall } from "@/lib/cpscSearch";
 export const Route = createFileRoute("/_authenticated/registry-check")({
   ssr: false,
   component: RegistryCheckPage,
-  head: () => ({ meta: [{ title: "Registry Safety Check — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "Registry Safety Check — Peace of Mine" }] }),
 });
 
 // Extract a usable product name from a URL by taking the last meaningful path segment
