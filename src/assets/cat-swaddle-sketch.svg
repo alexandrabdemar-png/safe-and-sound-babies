@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <g stroke="#2C3560" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Swaddle body wrap -->
+    <path d="M70 95 Q60 80 64 64 Q68 48 100 44 Q132 48 136 64 Q140 80 130 95 Q120 115 118 160 Q116 178 100 178 Q84 178 82 160 Q80 115 70 95 Z" stroke-width="2"/>
+    <!-- Head/face circle -->
+    <circle cx="100" cy="58" r="22" stroke-width="2"/>
+    <!-- Face features -->
+    <circle cx="93" cy="55" r="2.5" fill="#2C3560"/>
+    <circle cx="107" cy="55" r="2.5" fill="#2C3560"/>
+    <path d="M94 65 Q100 70 106 65" stroke-width="1.6"/>
+    <!-- Wrap fold left -->
+    <path d="M70 95 Q76 108 80 130" stroke-width="1.5"/>
+    <!-- Wrap fold right -->
+    <path d="M130 95 Q124 108 120 130" stroke-width="1.5"/>
+    <!-- Swaddle tuck/fold at bottom -->
+    <path d="M82 160 Q90 155 100 155 Q110 155 118 160" stroke-width="1.5"/>
+    <!-- Left wing of swaddle -->
+    <path d="M64 80 Q52 85 46 95 Q48 108 64 104 Q70 95 72 88" stroke-width="1.8"/>
+    <!-- Right wing -->
+    <path d="M136 80 Q148 85 154 95 Q152 108 136 104 Q130 95 128 88" stroke-width="1.8"/>
+    <!-- Small star doodle -->
+    <path d="M155 58 L157 64 L151 60 L161 60 L155 64 Z" stroke-width="1.3"/>
+    <path d="M42 120 L44 126 L38 122 L48 122 L42 126 Z" stroke-width="1.3"/>
+  </g>
+</svg>

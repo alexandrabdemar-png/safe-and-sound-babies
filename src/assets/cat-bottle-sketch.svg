@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <g stroke="#2C3560" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Nipple top -->
+    <path d="M92 42 Q92 32 100 30 Q108 32 108 42" stroke-width="1.8"/>
+    <line x1="92" y1="42" x2="92" y2="50" stroke-width="1.8"/>
+    <line x1="108" y1="42" x2="108" y2="50" stroke-width="1.8"/>
+    <!-- Collar ring -->
+    <rect x="86" y="50" width="28" height="10" rx="4" stroke-width="1.8"/>
+    <!-- Bottle body -->
+    <path d="M82 60 Q72 72 70 90 L70 148 Q70 164 100 164 Q130 164 130 148 L130 90 Q128 72 118 60 Z" stroke-width="2"/>
+    <!-- Measurement lines -->
+    <line x1="82" y1="110" x2="90" y2="110" stroke-width="1.4"/>
+    <line x1="82" y1="122" x2="90" y2="122" stroke-width="1.4"/>
+    <line x1="82" y1="134" x2="90" y2="134" stroke-width="1.4"/>
+    <line x1="82" y1="146" x2="90" y2="146" stroke-width="1.4"/>
+    <!-- Cloud decoration -->
+    <path d="M90 88 Q90 82 95 82 Q97 78 101 78 Q106 78 108 82 Q112 82 112 88 Q112 93 90 93 Z" stroke-width="1.5"/>
+  </g>
+</svg>
