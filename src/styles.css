@@ -78,8 +78,8 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   /* Typography */
-  --font-display: "DM Serif Display", "Playfair Display", Georgia, serif;
-  --font-body: "DM Sans", "Jost", system-ui, sans-serif;
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "DM Sans", system-ui, sans-serif;
 
   /* Project semantic tokens (keep names for back-compat) */
   --color-sand: var(--sand);
@@ -102,28 +102,28 @@
   --radius: 1rem;
 
   /* ── Backgrounds ─────────────────────────────────────────────────────── */
-  --background: oklch(0.969 0.005 85);      /* #F8F5F0 warm cream            */
-  --foreground: oklch(0.255 0.018 50);      /* #3D3935 Espresso              */
+  --background: oklch(0.973 0.008 75);      /* warm parchment                */
+  --foreground: oklch(0.248 0.020 48);      /* deep warm charcoal            */
 
-  --card: oklch(0.980 0.003 85);            /* #FDFBF8 soft linen            */
-  --card-foreground: oklch(0.255 0.018 50);
-  --popover: oklch(0.980 0.003 85);
-  --popover-foreground: oklch(0.255 0.018 50);
+  --card: oklch(0.983 0.004 78);            /* soft ivory linen              */
+  --card-foreground: oklch(0.248 0.020 48);
+  --popover: oklch(0.983 0.004 78);
+  --popover-foreground: oklch(0.248 0.020 48);
 
-  /* ── Primary: #AAB7A0 sage ───────────────────────────────────────────── */
-  --primary: oklch(0.720 0.045 140);        /* #AAB7A0 sage — buttons/CTAs   */
+  /* ── Primary: warm caramel/terracotta ───────────────────────────────── */
+  --primary: oklch(0.585 0.088 42);         /* warm caramel-terracotta       */
   --primary-foreground: oklch(0.985 0 0);   /* white text                    */
 
-  /* ── Secondary: soft sage tint ──────────────────────────────────────── */
-  --secondary: oklch(0.900 0.022 135);      /* very pale sage                */
-  --secondary-foreground: oklch(0.255 0.018 50);
+  /* ── Secondary: soft warm sand ─────────────────────────────────────── */
+  --secondary: oklch(0.915 0.018 75);       /* warm sand tint                */
+  --secondary-foreground: oklch(0.248 0.020 48);
 
   /* ── Muted ──────────────────────────────────────────────────────────── */
-  --muted: oklch(0.930 0.010 88);
-  --muted-foreground: oklch(0.530 0.020 55); /* warm medium gray             */
+  --muted: oklch(0.932 0.010 78);
+  --muted-foreground: oklch(0.525 0.022 52); /* warm medium brown-gray       */
 
-  /* ── Accent: deeper sage ─────────────────────────────────────────────  */
-  --accent: oklch(0.620 0.060 140);         /* deeper sage accent            */
+  /* ── Accent: deeper warm brown ──────────────────────────────────────── */
+  --accent: oklch(0.500 0.075 42);          /* deep caramel accent           */
   --accent-foreground: oklch(0.985 0 0);
 
   /* ── Destructive: #C8523A safety alert — warnings, recalls, urgent ──── */
@@ -131,9 +131,9 @@
   --destructive-foreground: oklch(0.985 0 0);
 
   /* ── Borders & inputs ───────────────────────────────────────────────── */
-  --border: oklch(0.910 0.012 88);          /* warm cream border             */
-  --input: oklch(0.910 0.012 88);
-  --ring: oklch(0.720 0.045 140);           /* sage focus ring               */
+  --border: oklch(0.912 0.014 75);          /* warm parchment border         */
+  --input: oklch(0.912 0.014 75);
+  --ring: oklch(0.585 0.088 42);            /* caramel focus ring            */
 
   /* ── Charts ─────────────────────────────────────────────────────────── */
   --chart-1: oklch(0.560 0.110 145);        /* green — Good                  */
@@ -143,24 +143,24 @@
   --chart-5: oklch(0.620 0.060 140);        /* deep sage accent              */
 
   /* ── Sidebar ───────────────────────────────────────────────────────── */
-  --sidebar: oklch(0.969 0.005 85);
-  --sidebar-foreground: oklch(0.255 0.018 50);
-  --sidebar-primary: oklch(0.720 0.045 140);
+  --sidebar: oklch(0.973 0.008 75);
+  --sidebar-foreground: oklch(0.248 0.020 48);
+  --sidebar-primary: oklch(0.585 0.088 42);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.620 0.060 140);
+  --sidebar-accent: oklch(0.500 0.075 42);
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.910 0.012 88);
-  --sidebar-ring: oklch(0.720 0.045 140);
+  --sidebar-border: oklch(0.912 0.014 75);
+  --sidebar-ring: oklch(0.585 0.088 42);
 
   /* ── Extended brand tokens ──────────────────────────────────────────── */
-  --cream:       oklch(0.980 0.003 85);       /* soft linen card             */
-  --sand:        oklch(0.900 0.022 135);      /* pale sage tint              */
-  --forest:      oklch(0.450 0.080 142);      /* deeper sage                 */
-  --sage:        oklch(0.720 0.045 140);      /* #AAB7A0 sage primary        */
-  --mist:        oklch(0.900 0.022 135);      /* pale sage fill              */
-  --butter:      oklch(0.900 0.022 135);      /* pale sage                   */
-  --terracotta:  oklch(0.545 0.130 35);       /* #C8523A safety alert        */
-  --card-surface: oklch(0.980 0.003 85);
+  --cream:       oklch(0.983 0.004 78);       /* soft ivory linen            */
+  --sand:        oklch(0.915 0.018 75);       /* warm sand tint              */
+  --forest:      oklch(0.450 0.080 142);      /* deeper sage (status use)    */
+  --sage:        oklch(0.700 0.042 140);      /* muted sage (secondary use)  */
+  --mist:        oklch(0.938 0.012 78);       /* pale warm mist fill         */
+  --butter:      oklch(0.920 0.022 80);       /* warm butter                 */
+  --terracotta:  oklch(0.585 0.088 42);       /* warm caramel primary        */
+  --card-surface: oklch(0.983 0.004 78);
 
   /* Status semantic tokens */
   --status-good:   oklch(0.560 0.110 145);   /* green — Good / all clear     */
@@ -217,10 +217,10 @@
 
   body {
     background-color: var(--color-background);
-    /* Subtle warm linen grain — very quiet */
+    /* Subtle warm parchment grain — very quiet */
     background-image:
-      radial-gradient(oklch(0.720 0.045 140 / 0.06) 1px, transparent 1px),
-      radial-gradient(oklch(0.900 0.022 135 / 0.05) 1px, transparent 1px);
+      radial-gradient(oklch(0.585 0.088 42 / 0.04) 1px, transparent 1px),
+      radial-gradient(oklch(0.915 0.018 75 / 0.06) 1px, transparent 1px);
     background-size: 28px 28px, 42px 42px;
     background-position: 0 0, 14px 21px;
     color: var(--color-foreground);
@@ -232,7 +232,8 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
+    font-weight: 400;
+    letter-spacing: 0.03em;
   }
 
   .font-display-italic {
@@ -279,10 +280,10 @@
   }
 
   /* Type scale utilities */
-  .text-display { font-size: 2rem;    line-height: 1.15; font-family: var(--font-display); }  /* 32px */
-  .text-h1      { font-size: 1.625rem; line-height: 1.2;  font-family: var(--font-display); }  /* 26px */
-  .text-h2      { font-size: 1.375rem; line-height: 1.25; font-family: var(--font-display); }  /* 22px */
-  .text-h3      { font-size: 1.125rem; line-height: 1.3;  font-family: var(--font-display); }  /* 18px */
-  .text-body    { font-size: 0.9375rem; line-height: 1.55; font-family: var(--font-body); }    /* 15px */
-  .text-caption { font-size: 0.75rem;  line-height: 1.5;  font-family: var(--font-body); }    /* 12px */
+  .text-display { font-size: 2.25rem;  line-height: 1.1;  font-family: var(--font-display); font-weight: 400; letter-spacing: 0.04em; }  /* 36px */
+  .text-h1      { font-size: 1.875rem; line-height: 1.15; font-family: var(--font-display); font-weight: 400; letter-spacing: 0.03em; }  /* 30px */
+  .text-h2      { font-size: 1.5rem;   line-height: 1.2;  font-family: var(--font-display); font-weight: 400; letter-spacing: 0.03em; }  /* 24px */
+  .text-h3      { font-size: 1.25rem;  line-height: 1.3;  font-family: var(--font-display); font-weight: 400; letter-spacing: 0.02em; }  /* 20px */
+  .text-body    { font-size: 0.9375rem; line-height: 1.6;  font-family: var(--font-body); }    /* 15px */
+  .text-caption { font-size: 0.75rem;  line-height: 1.5;  font-family: var(--font-body);  letter-spacing: 0.06em; }    /* 12px */
 }
