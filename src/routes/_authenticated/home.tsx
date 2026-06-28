@@ -726,20 +726,6 @@ function HomePage() {
         </div>
       )}
 
-      {/* Weekly digest — Sundays only, once per week */}
-      {!loading && isSunday() && !digestDismissed && child && (
-        <div className="px-5 pt-3 sm:px-6">
-          <div className="mx-auto max-w-md">
-            <WeeklyDigestCard
-              childName={child.name}
-              recalls={alerts.recalls}
-              comingUp={comingUp}
-              safetyTip={ageSafetyTip(child.date_of_birth)}
-              onDismiss={dismissDigest}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Alert summary cards — ABOVE "Up next" */}
       <section className="px-5 pt-4 sm:px-6 animate-fade-up stagger-1">
