@@ -25,6 +25,7 @@ import { Route as AuthenticatedRecallCheckRouteImport } from './routes/_authenti
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
 import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
+import { Route as AuthenticatedMomentsRouteImport } from './routes/_authenticated/moments'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedHandmedownRouteImport } from './routes/_authenticated/handmedown'
 import { Route as AuthenticatedGrowthRouteImport } from './routes/_authenticated/growth'
@@ -40,7 +41,6 @@ import { Route as AuthenticatedProfileNotificationSettingsRouteImport } from './
 import { Route as AuthenticatedProductsScanRouteImport } from './routes/_authenticated/products_.scan'
 import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products_.new'
 import { Route as AuthenticatedProductsIdRouteImport } from './routes/_authenticated/products_.$id'
-import { Route as AuthenticatedMomentsRouteImport } from './routes/_authenticated/moments'
 import { Route as AuthenticatedMomentsNewRouteImport } from './routes/_authenticated/moments.new'
 import { Route as AuthenticatedBottlesNewRouteImport } from './routes/_authenticated/bottles.new'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -133,6 +133,11 @@ const AuthenticatedPricingRoute = AuthenticatedPricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMomentsRoute = AuthenticatedMomentsRouteImport.update({
+  id: '/moments',
+  path: '/moments',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -214,15 +219,10 @@ const AuthenticatedProductsIdRoute = AuthenticatedProductsIdRouteImport.update({
   path: '/products/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedMomentsRoute = AuthenticatedMomentsRouteImport.update({
-  id: '/moments',
-  path: '/moments',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedMomentsNewRoute = AuthenticatedMomentsNewRouteImport.update({
-  id: '/moments/new',
-  path: '/moments/new',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AuthenticatedMomentsRoute,
 } as any)
 const AuthenticatedBottlesNewRoute = AuthenticatedBottlesNewRouteImport.update({
   id: '/new',
@@ -274,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/growth': typeof AuthenticatedGrowthRoute
   '/handmedown': typeof AuthenticatedHandmedownRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/moments': typeof AuthenticatedMomentsRouteWithChildren
   '/pricing': typeof AuthenticatedPricingRoute
   '/products': typeof AuthenticatedProductsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -285,7 +286,6 @@ export interface FileRoutesByFullPath {
   '/travel-checklist': typeof AuthenticatedTravelChecklistRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/bottles/new': typeof AuthenticatedBottlesNewRoute
-  '/moments': typeof AuthenticatedMomentsRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
   '/products/$id': typeof AuthenticatedProductsIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
@@ -314,6 +314,7 @@ export interface FileRoutesByTo {
   '/growth': typeof AuthenticatedGrowthRoute
   '/handmedown': typeof AuthenticatedHandmedownRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/moments': typeof AuthenticatedMomentsRouteWithChildren
   '/pricing': typeof AuthenticatedPricingRoute
   '/products': typeof AuthenticatedProductsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -325,7 +326,6 @@ export interface FileRoutesByTo {
   '/travel-checklist': typeof AuthenticatedTravelChecklistRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/bottles/new': typeof AuthenticatedBottlesNewRoute
-  '/moments': typeof AuthenticatedMomentsRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
   '/products/$id': typeof AuthenticatedProductsIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
@@ -356,6 +356,7 @@ export interface FileRoutesById {
   '/_authenticated/growth': typeof AuthenticatedGrowthRoute
   '/_authenticated/handmedown': typeof AuthenticatedHandmedownRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/moments': typeof AuthenticatedMomentsRouteWithChildren
   '/_authenticated/pricing': typeof AuthenticatedPricingRoute
   '/_authenticated/products': typeof AuthenticatedProductsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -367,7 +368,6 @@ export interface FileRoutesById {
   '/_authenticated/travel-checklist': typeof AuthenticatedTravelChecklistRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/bottles/new': typeof AuthenticatedBottlesNewRoute
-  '/_authenticated/moments': typeof AuthenticatedMomentsRoute
   '/_authenticated/moments/new': typeof AuthenticatedMomentsNewRoute
   '/_authenticated/products_/$id': typeof AuthenticatedProductsIdRoute
   '/_authenticated/products_/new': typeof AuthenticatedProductsNewRoute
@@ -398,6 +398,7 @@ export interface FileRouteTypes {
     | '/growth'
     | '/handmedown'
     | '/home'
+    | '/moments'
     | '/pricing'
     | '/products'
     | '/profile'
@@ -409,7 +410,6 @@ export interface FileRouteTypes {
     | '/travel-checklist'
     | '/auth/callback'
     | '/bottles/new'
-    | '/moments'
     | '/moments/new'
     | '/products/$id'
     | '/products/new'
@@ -438,6 +438,7 @@ export interface FileRouteTypes {
     | '/growth'
     | '/handmedown'
     | '/home'
+    | '/moments'
     | '/pricing'
     | '/products'
     | '/profile'
@@ -449,7 +450,6 @@ export interface FileRouteTypes {
     | '/travel-checklist'
     | '/auth/callback'
     | '/bottles/new'
-    | '/moments'
     | '/moments/new'
     | '/products/$id'
     | '/products/new'
@@ -479,6 +479,7 @@ export interface FileRouteTypes {
     | '/_authenticated/growth'
     | '/_authenticated/handmedown'
     | '/_authenticated/home'
+    | '/_authenticated/moments'
     | '/_authenticated/pricing'
     | '/_authenticated/products'
     | '/_authenticated/profile'
@@ -490,7 +491,6 @@ export interface FileRouteTypes {
     | '/_authenticated/travel-checklist'
     | '/auth/callback'
     | '/_authenticated/bottles/new'
-    | '/_authenticated/moments'
     | '/_authenticated/moments/new'
     | '/_authenticated/products_/$id'
     | '/_authenticated/products_/new'
@@ -633,6 +633,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPricingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/moments': {
+      id: '/_authenticated/moments'
+      path: '/moments'
+      fullPath: '/moments'
+      preLoaderRoute: typeof AuthenticatedMomentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/home': {
       id: '/_authenticated/home'
       path: '/home'
@@ -738,19 +745,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProductsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/moments': {
-      id: '/_authenticated/moments'
-      path: '/moments'
-      fullPath: '/moments'
-      preLoaderRoute: typeof AuthenticatedMomentsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/moments/new': {
       id: '/_authenticated/moments/new'
-      path: '/moments/new'
+      path: '/new'
       fullPath: '/moments/new'
       preLoaderRoute: typeof AuthenticatedMomentsNewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedMomentsRoute
     }
     '/_authenticated/bottles/new': {
       id: '/_authenticated/bottles/new'
@@ -808,6 +808,17 @@ const AuthenticatedBottlesRouteChildren: AuthenticatedBottlesRouteChildren = {
 const AuthenticatedBottlesRouteWithChildren =
   AuthenticatedBottlesRoute._addFileChildren(AuthenticatedBottlesRouteChildren)
 
+interface AuthenticatedMomentsRouteChildren {
+  AuthenticatedMomentsNewRoute: typeof AuthenticatedMomentsNewRoute
+}
+
+const AuthenticatedMomentsRouteChildren: AuthenticatedMomentsRouteChildren = {
+  AuthenticatedMomentsNewRoute: AuthenticatedMomentsNewRoute,
+}
+
+const AuthenticatedMomentsRouteWithChildren =
+  AuthenticatedMomentsRoute._addFileChildren(AuthenticatedMomentsRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAddRoute: typeof AuthenticatedAddRoute
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
@@ -818,6 +829,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedGrowthRoute: typeof AuthenticatedGrowthRoute
   AuthenticatedHandmedownRoute: typeof AuthenticatedHandmedownRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedMomentsRoute: typeof AuthenticatedMomentsRouteWithChildren
   AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -827,8 +839,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSafetyGuidesRoute: typeof AuthenticatedSafetyGuidesRoute
   AuthenticatedTrackingRoute: typeof AuthenticatedTrackingRoute
   AuthenticatedTravelChecklistRoute: typeof AuthenticatedTravelChecklistRoute
-  AuthenticatedMomentsRoute: typeof AuthenticatedMomentsRoute
-  AuthenticatedMomentsNewRoute: typeof AuthenticatedMomentsNewRoute
   AuthenticatedProductsIdRoute: typeof AuthenticatedProductsIdRoute
   AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
   AuthenticatedProductsScanRoute: typeof AuthenticatedProductsScanRoute
@@ -847,6 +857,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedGrowthRoute: AuthenticatedGrowthRoute,
   AuthenticatedHandmedownRoute: AuthenticatedHandmedownRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedMomentsRoute: AuthenticatedMomentsRouteWithChildren,
   AuthenticatedPricingRoute: AuthenticatedPricingRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
@@ -856,8 +867,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSafetyGuidesRoute: AuthenticatedSafetyGuidesRoute,
   AuthenticatedTrackingRoute: AuthenticatedTrackingRoute,
   AuthenticatedTravelChecklistRoute: AuthenticatedTravelChecklistRoute,
-  AuthenticatedMomentsRoute: AuthenticatedMomentsRoute,
-  AuthenticatedMomentsNewRoute: AuthenticatedMomentsNewRoute,
   AuthenticatedProductsIdRoute: AuthenticatedProductsIdRoute,
   AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
   AuthenticatedProductsScanRoute: AuthenticatedProductsScanRoute,
@@ -898,13 +907,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
