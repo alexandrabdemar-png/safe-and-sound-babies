@@ -1,37 +1,54 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <g stroke="#2C3560" stroke-linecap="round" stroke-linejoin="round" fill="none">
+  <g stroke="#2C3560" fill="none" stroke-linecap="round" stroke-linejoin="round">
     <!-- Handle bar -->
-    <path d="M42 38 Q44 32 52 32 L148 32 Q156 32 158 38" stroke-width="2.2"/>
-    <!-- Frame left strut -->
-    <line x1="52" y1="32" x2="72" y2="130" stroke-width="2"/>
-    <!-- Frame right strut -->
-    <line x1="148" y1="32" x2="128" y2="130" stroke-width="2"/>
+    <path d="M46 42 C46 36 52 32 60 32 L140 32 C148 32 154 36 154 42" stroke-width="2.4"/>
+    <!-- Handle grip texture -->
+    <line x1="80" y1="32" x2="80" y2="38" stroke-width="1.2"/>
+    <line x1="92" y1="32" x2="92" y2="36" stroke-width="1.2"/>
+    <line x1="108" y1="32" x2="108" y2="36" stroke-width="1.2"/>
+    <line x1="120" y1="32" x2="120" y2="38" stroke-width="1.2"/>
+    <!-- Left frame strut to seat -->
+    <path d="M60 42 C60 60 64 76 72 92 L76 132" stroke-width="2"/>
+    <!-- Right frame strut to seat -->
+    <path d="M140 42 C140 60 136 76 128 92 L124 132" stroke-width="2"/>
     <!-- Seat bottom -->
-    <path d="M72 130 L128 130" stroke-width="2"/>
+    <line x1="76" y1="132" x2="124" y2="132" stroke-width="2"/>
     <!-- Seat back -->
-    <path d="M72 130 L68 90 L132 90 L128 130" stroke-width="2"/>
-    <!-- Hood/canopy -->
-    <path d="M68 90 Q68 58 100 52 Q132 58 132 90" stroke-width="2"/>
-    <!-- Hood ribs -->
-    <path d="M78 90 Q80 68 100 64" stroke-width="1.3"/>
-    <path d="M90 90 Q92 62 100 60" stroke-width="1.3"/>
+    <path d="M72 92 L68 52" stroke-width="1.8"/>
+    <path d="M128 92 L132 52" stroke-width="1.8"/>
+    <!-- Seat back panel -->
+    <path d="M68 52 L76 132 L124 132 L132 52 Z" stroke-width="1.8"/>
+    <!-- Canopy -->
+    <path d="M68 52 C70 32 130 32 132 52" stroke-width="2.2"/>
+    <!-- Canopy ribs -->
+    <path d="M76 52 C78 38 100 36 100 36" stroke-width="1.2"/>
+    <path d="M88 52 C90 36 100 34 100 34" stroke-width="1.2"/>
+    <path d="M124 52 C122 38 100 36 100 36" stroke-width="1.2"/>
+    <!-- Canopy peak edge -->
+    <path d="M68 52 C80 56 120 56 132 52" stroke-width="1.4"/>
     <!-- Bumper bar -->
-    <path d="M72 108 Q100 112 128 108" stroke-width="1.6"/>
-    <!-- Front leg -->
-    <line x1="106" y1="130" x2="92" y2="166" stroke-width="2"/>
-    <!-- Rear leg -->
-    <line x1="72" y1="130" x2="58" y2="170" stroke-width="2"/>
+    <path d="M76 104 C88 110 112 110 124 104" stroke-width="1.8"/>
+    <!-- Seat padding lines -->
+    <path d="M78 112 C88 116 112 116 122 112" stroke-width="1.2"/>
+    <!-- Left rear leg -->
+    <path d="M76 132 C68 148 56 160 48 176" stroke-width="2.2"/>
+    <!-- Right front leg -->
+    <path d="M124 132 C128 148 130 160 132 174" stroke-width="2.2"/>
+    <!-- Rear axle -->
+    <line x1="36" y1="170" x2="62" y2="162" stroke-width="1.8"/>
     <!-- Front axle -->
-    <line x1="80" y1="166" x2="106" y2="166" stroke-width="1.8"/>
-    <!-- Back axle / cross brace -->
-    <line x1="52" y1="158" x2="88" y2="150" stroke-width="1.6"/>
-    <!-- Rear wheel -->
-    <circle cx="52" cy="170" r="16" stroke-width="2"/>
-    <circle cx="52" cy="170" r="5" stroke-width="1.4"/>
-    <!-- Front wheel -->
-    <circle cx="93" cy="170" r="12" stroke-width="2"/>
-    <circle cx="93" cy="170" r="4" stroke-width="1.4"/>
+    <line x1="120" y1="166" x2="144" y2="166" stroke-width="1.8"/>
+    <!-- Rear wheel large -->
+    <circle cx="42" cy="176" r="18" stroke-width="2.2"/>
+    <circle cx="42" cy="176" r="8" stroke-width="1.4"/>
+    <!-- Front wheel small -->
+    <circle cx="132" cy="176" r="13" stroke-width="2"/>
+    <circle cx="132" cy="176" r="5" stroke-width="1.4"/>
     <!-- Foot rest -->
-    <path d="M106 130 Q118 136 128 130" stroke-width="1.5"/>
+    <path d="M106" y1="132" x2="118" y2="140" stroke-width="1.6"/>
+    <path d="M76 140 Q100 145 124 140" stroke-width="1.6"/>
+    <!-- Shopping basket -->
+    <path d="M66 148 L74 132 L126 132 L134 148 Z" stroke-width="1.4"/>
+    <path d="M66 148 Q100 154 134 148" stroke-width="1.2"/>
   </g>
 </svg>

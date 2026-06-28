@@ -1,19 +1,32 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <g stroke="#2C3560" stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <!-- Nipple top -->
-    <path d="M92 42 Q92 32 100 30 Q108 32 108 42" stroke-width="1.8"/>
-    <line x1="92" y1="42" x2="92" y2="50" stroke-width="1.8"/>
-    <line x1="108" y1="42" x2="108" y2="50" stroke-width="1.8"/>
-    <!-- Collar ring -->
-    <rect x="86" y="50" width="28" height="10" rx="4" stroke-width="1.8"/>
+  <g stroke="#2C3560" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Nipple tip -->
+    <path d="M93 28 C93 20 107 20 107 28" stroke-width="1.8"/>
+    <!-- Nipple -->
+    <path d="M88 48 C88 36 93 28 100 28 C107 28 112 36 112 48" stroke-width="2"/>
+    <!-- Collar ring top -->
+    <path d="M84 48 L116 48" stroke-width="2.2"/>
+    <!-- Collar body -->
+    <rect x="84" y="48" width="32" height="14" rx="5" stroke-width="2"/>
+    <!-- Collar ring bottom -->
+    <path d="M84 62 C84 62 92 65 100 65 C108 65 116 62 116 62" stroke-width="1.6"/>
     <!-- Bottle body -->
-    <path d="M82 60 Q72 72 70 90 L70 148 Q70 164 100 164 Q130 164 130 148 L130 90 Q128 72 118 60 Z" stroke-width="2"/>
-    <!-- Measurement lines -->
-    <line x1="82" y1="110" x2="90" y2="110" stroke-width="1.4"/>
-    <line x1="82" y1="122" x2="90" y2="122" stroke-width="1.4"/>
-    <line x1="82" y1="134" x2="90" y2="134" stroke-width="1.4"/>
-    <line x1="82" y1="146" x2="90" y2="146" stroke-width="1.4"/>
-    <!-- Cloud decoration -->
-    <path d="M90 88 Q90 82 95 82 Q97 78 101 78 Q106 78 108 82 Q112 82 112 88 Q112 93 90 93 Z" stroke-width="1.5"/>
+    <path d="M84 62 C74 68 68 80 68 96 L68 156 C68 168 82 174 100 174 C118 174 132 168 132 156 L132 96 C132 80 126 68 116 62 Z" stroke-width="2.2"/>
+    <!-- Measurement lines right side -->
+    <line x1="118" y1="108" x2="126" y2="108" stroke-width="1.4"/>
+    <line x1="118" y1="122" x2="126" y2="122" stroke-width="1.4"/>
+    <line x1="118" y1="136" x2="126" y2="136" stroke-width="1.4"/>
+    <line x1="118" y1="150" x2="126" y2="150" stroke-width="1.4"/>
+    <!-- Measurement lines left side -->
+    <line x1="82" y1="108" x2="74" y2="108" stroke-width="1.4"/>
+    <line x1="82" y1="122" x2="74" y2="122" stroke-width="1.4"/>
+    <line x1="82" y1="136" x2="74" y2="136" stroke-width="1.4"/>
+    <line x1="82" y1="150" x2="74" y2="150" stroke-width="1.4"/>
+    <!-- Cloud with heart inside -->
+    <path d="M82 90 C82 84 87 80 93 81 C94 77 98 74 103 74 C108 74 112 77 113 81 C119 80 124 84 124 90 C124 96 119 100 113 100 L87 100 C81 100 76 96 76 90 Z" stroke-width="1.6"/>
+    <!-- Heart inside cloud -->
+    <path d="M100 86 C100 83 103 82 105 84 C107 82 110 83 110 86 C110 90 105 94 100 94 C95 94 90 90 90 86 C90 83 93 82 95 84 C97 82 100 83 100 86 Z" stroke-width="1.3"/>
+    <!-- Bottle base curve -->
+    <path d="M68 156 C68 168 82 174 100 174 C118 174 132 168 132 156" stroke-width="1.6"/>
   </g>
 </svg>

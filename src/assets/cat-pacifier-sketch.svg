@@ -1,19 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <g stroke="#2C3560" stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <!-- Nipple bulb -->
-    <ellipse cx="100" cy="72" rx="14" ry="20" stroke-width="2"/>
-    <!-- Guard / shield plate -->
-    <path d="M48 100 Q48 78 70 76 L130 76 Q152 78 152 100 Q152 128 130 132 L70 132 Q48 128 48 100 Z" stroke-width="2"/>
-    <!-- Ventilation holes -->
-    <circle cx="76" cy="98" r="5" stroke-width="1.6"/>
-    <circle cx="124" cy="98" r="5" stroke-width="1.6"/>
-    <!-- Heart left -->
-    <path d="M68 112 Q68 108 72 108 Q76 108 76 112 Q76 116 68 120 Q60 116 60 112 Q60 108 64 108 Q68 108 68 112 Z" stroke-width="1.5"/>
-    <!-- Heart right -->
-    <path d="M132 112 Q132 108 136 108 Q140 108 140 112 Q140 116 132 120 Q124 116 124 112 Q124 108 128 108 Q132 108 132 112 Z" stroke-width="1.5"/>
+  <g stroke="#2C3560" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Nipple bulb - large rounded teardrop -->
+    <path d="M100 38 C114 38 124 50 124 64 C124 78 114 88 100 88 C86 88 76 78 76 64 C76 50 86 38 100 38 Z" stroke-width="2"/>
+    <!-- Nipple tip -->
+    <path d="M94 38 C94 30 106 30 106 38" stroke-width="1.8"/>
+    <!-- Shield plate - large rounded rectangle -->
+    <path d="M44 100 C44 82 56 76 100 76 C144 76 156 82 156 100 C156 130 138 148 100 148 C62 148 44 130 44 100 Z" stroke-width="2.2"/>
+    <!-- Shield ventilation holes -->
+    <ellipse cx="78" cy="100" rx="10" ry="10" stroke-width="1.6"/>
+    <ellipse cx="122" cy="100" rx="10" ry="10" stroke-width="1.6"/>
+    <!-- Hearts on shield -->
+    <path d="M68 120 C68 115 72 113 76 117 C80 113 84 115 84 120 C84 126 76 133 76 133 C76 133 68 126 68 120Z" stroke-width="1.5"/>
+    <path d="M116 120 C116 115 120 113 124 117 C128 113 132 115 132 120 C132 126 124 133 124 133 C124 133 116 126 116 120Z" stroke-width="1.5"/>
     <!-- Ring handle -->
-    <circle cx="100" cy="155" r="16" stroke-width="2"/>
-    <!-- Handle stem -->
-    <line x1="100" y1="132" x2="100" y2="139" stroke-width="2"/>
+    <circle cx="100" cy="168" r="18" stroke-width="2.2"/>
+    <!-- Connector stem -->
+    <rect x="94" y="146" width="12" height="10" rx="5" stroke-width="1.8"/>
   </g>
 </svg>
