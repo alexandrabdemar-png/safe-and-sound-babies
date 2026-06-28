@@ -40,6 +40,7 @@ import { Route as AuthenticatedProfileNotificationSettingsRouteImport } from './
 import { Route as AuthenticatedProductsScanRouteImport } from './routes/_authenticated/products_.scan'
 import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products_.new'
 import { Route as AuthenticatedProductsIdRouteImport } from './routes/_authenticated/products_.$id'
+import { Route as AuthenticatedMomentsRouteImport } from './routes/_authenticated/moments'
 import { Route as AuthenticatedMomentsNewRouteImport } from './routes/_authenticated/moments.new'
 import { Route as AuthenticatedBottlesNewRouteImport } from './routes/_authenticated/bottles.new'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -213,6 +214,11 @@ const AuthenticatedProductsIdRoute = AuthenticatedProductsIdRouteImport.update({
   path: '/products/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMomentsRoute = AuthenticatedMomentsRouteImport.update({
+  id: '/moments',
+  path: '/moments',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMomentsNewRoute = AuthenticatedMomentsNewRouteImport.update({
   id: '/moments/new',
   path: '/moments/new',
@@ -279,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/travel-checklist': typeof AuthenticatedTravelChecklistRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/bottles/new': typeof AuthenticatedBottlesNewRoute
+  '/moments': typeof AuthenticatedMomentsRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
   '/products/$id': typeof AuthenticatedProductsIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
@@ -318,6 +325,7 @@ export interface FileRoutesByTo {
   '/travel-checklist': typeof AuthenticatedTravelChecklistRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/bottles/new': typeof AuthenticatedBottlesNewRoute
+  '/moments': typeof AuthenticatedMomentsRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
   '/products/$id': typeof AuthenticatedProductsIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
@@ -359,6 +367,7 @@ export interface FileRoutesById {
   '/_authenticated/travel-checklist': typeof AuthenticatedTravelChecklistRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/bottles/new': typeof AuthenticatedBottlesNewRoute
+  '/_authenticated/moments': typeof AuthenticatedMomentsRoute
   '/_authenticated/moments/new': typeof AuthenticatedMomentsNewRoute
   '/_authenticated/products_/$id': typeof AuthenticatedProductsIdRoute
   '/_authenticated/products_/new': typeof AuthenticatedProductsNewRoute
@@ -400,6 +409,7 @@ export interface FileRouteTypes {
     | '/travel-checklist'
     | '/auth/callback'
     | '/bottles/new'
+    | '/moments'
     | '/moments/new'
     | '/products/$id'
     | '/products/new'
@@ -439,6 +449,7 @@ export interface FileRouteTypes {
     | '/travel-checklist'
     | '/auth/callback'
     | '/bottles/new'
+    | '/moments'
     | '/moments/new'
     | '/products/$id'
     | '/products/new'
@@ -479,6 +490,7 @@ export interface FileRouteTypes {
     | '/_authenticated/travel-checklist'
     | '/auth/callback'
     | '/_authenticated/bottles/new'
+    | '/_authenticated/moments'
     | '/_authenticated/moments/new'
     | '/_authenticated/products_/$id'
     | '/_authenticated/products_/new'
@@ -726,6 +738,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProductsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/moments': {
+      id: '/_authenticated/moments'
+      path: '/moments'
+      fullPath: '/moments'
+      preLoaderRoute: typeof AuthenticatedMomentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/moments/new': {
       id: '/_authenticated/moments/new'
       path: '/moments/new'
@@ -808,6 +827,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSafetyGuidesRoute: typeof AuthenticatedSafetyGuidesRoute
   AuthenticatedTrackingRoute: typeof AuthenticatedTrackingRoute
   AuthenticatedTravelChecklistRoute: typeof AuthenticatedTravelChecklistRoute
+  AuthenticatedMomentsRoute: typeof AuthenticatedMomentsRoute
   AuthenticatedMomentsNewRoute: typeof AuthenticatedMomentsNewRoute
   AuthenticatedProductsIdRoute: typeof AuthenticatedProductsIdRoute
   AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
@@ -836,6 +856,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSafetyGuidesRoute: AuthenticatedSafetyGuidesRoute,
   AuthenticatedTrackingRoute: AuthenticatedTrackingRoute,
   AuthenticatedTravelChecklistRoute: AuthenticatedTravelChecklistRoute,
+  AuthenticatedMomentsRoute: AuthenticatedMomentsRoute,
   AuthenticatedMomentsNewRoute: AuthenticatedMomentsNewRoute,
   AuthenticatedProductsIdRoute: AuthenticatedProductsIdRoute,
   AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
