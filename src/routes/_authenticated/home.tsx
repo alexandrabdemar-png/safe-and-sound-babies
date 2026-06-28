@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowRight, BookOpen, Calendar, ChevronDown, ChevronUp, Gift, Loader2, Package, Plus, Radio, RefreshCw, Ruler, Sparkles, Sun, Zap, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, Calendar, ChevronDown, ChevronUp, Gift, Loader2, Package, Plus, Radio, RefreshCw, Ruler, Sparkles, Sun, Zap, X } from "lucide-react";
 import { MomentTimeline } from "@/components/MomentTimeline";
 import { SparkleIllustration } from "@/components/EmptyIllustration";
 import { BottomNav } from "@/components/BottomNav";
@@ -12,8 +12,8 @@ import { Button } from "@/components/ui/button";
 import { evaluateInsights, type Insight, type ProductInput } from "@/lib/insights";
 import { friendlyError } from "@/lib/errors";
 import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
-import { selectWeeklyTip, getIsoWeekNumber, weekKey as getTipWeekKey } from "@/lib/safetyTips";
 import { getDevelopmentBand } from "@/lib/developmentContent";
+import { selectWeeklyTip, getIsoWeekNumber, weekKey as getTipWeekKey } from "@/lib/safetyTips";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
 
 
@@ -1317,6 +1317,27 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
             <p style={{ fontSize: 14, color: "#3D3935", lineHeight: 1.55, margin: 0 }}>{weekendReminder(child.date_of_birth ?? null)}</p>
           </div>
         </div>
+        {comingUp.length > 0 && (
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #E2DAD0" }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
+              Coming up for {child?.name ?? "your little one"}
+            </p>
+            {comingUp.slice(0, 3).map((p) => {
+              const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
+              const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
+              return (
+                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <p style={{ fontSize: 13, color: "#3D3935", margin: 0 }}>
+                    {p.type === "replace"
+                      ? `It may be time to replace ${p.name} soon`
+                      : `${p.name} might be ready for a size-up`}
+                  </p>
+                  <span style={{ fontSize: 11, color: days <= 7 ? "#B91C1C" : days <= 21 ? "#B45309" : "#4A7A47", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }
@@ -1349,67 +1370,26 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-// ── Development This Week card ───────────────────────────────────────────────
-
-function DevelopmentThisWeekCard({ dobStr }: { dobStr: string }) {
-  const [expanded, setExpanded] = useState(false);
-  const ageWeeks = Math.floor(Math.max(0, Date.now() - parseDateLocal(dobStr).getTime()) / (7 * 86400000));
-  const band = getDevelopmentBand(ageWeeks);
-
-  return (
-    <div style={{ borderRadius: 20, backgroundColor: "#EDF4EC", border: "1px solid #C8DEC6", padding: "16px 18px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: "50%", backgroundColor: "#C8DEC6", color: "#4A7A47" }}>
-            <BookOpen size={13} />
-          </span>
-          <div>
-            <p style={{ fontSize: 12, fontWeight: 700, color: "#4A7A47", margin: 0, textTransform: "uppercase", letterSpacing: "0.1em" }}>Development this week</p>
-            <p style={{ fontSize: 11, color: "#7A9E78", margin: 0 }}>every baby grows in their own time</p>
-          </div>
+      {comingUp.length > 0 && (
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #E2DAD0" }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
+            Coming up for {child?.name ?? "your little one"}
+          </p>
+          {comingUp.slice(0, 3).map((p) => {
+            const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
+            const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
+            return (
+              <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <p style={{ fontSize: 13, color: "#3D3935", margin: 0 }}>
+                  {p.type === "replace"
+                    ? `It may be time to replace ${p.name} soon`
+                    : `${p.name} might be ready for a size-up`}
+                </p>
+                <span style={{ fontSize: 11, color: days <= 7 ? "#B91C1C" : days <= 21 ? "#B45309" : "#4A7A47", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+              </div>
+            );
+          })}
         </div>
-        <button
-          type="button"
-          onClick={() => setExpanded((e) => !e)}
-          style={{ background: "none", border: "none", cursor: "pointer", color: "#7A9E78", padding: 4 }}
-          aria-label={expanded ? "Show less" : "Show more"}
-        >
-          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </button>
-      </div>
-
-      {/* Physical — always visible */}
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-        <span style={{ fontSize: 15, marginTop: 1 }}>🌱</span>
-        <p style={{ fontSize: 13, color: "#3D3935", lineHeight: 1.6, margin: 0 }}>{band.physical}</p>
-      </div>
-
-      {/* Cognitive + Safety — shown when expanded */}
-      {expanded && (
-        <>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginTop: 10, paddingTop: 10, borderTop: "1px solid #C8DEC6" }}>
-            <span style={{ fontSize: 15, marginTop: 1 }}>💡</span>
-            <p style={{ fontSize: 13, color: "#3D3935", lineHeight: 1.6, margin: 0 }}>{band.cognitive}</p>
-          </div>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginTop: 10, paddingTop: 10, borderTop: "1px solid #C8DEC6" }}>
-            <span style={{ fontSize: 15, marginTop: 1 }}>🛡️</span>
-            <p style={{ fontSize: 13, color: "#3D3935", lineHeight: 1.6, margin: 0 }}>{band.safety}</p>
-          </div>
-        </>
-      )}
-
-      {!expanded && (
-        <button
-          type="button"
-          onClick={() => setExpanded(true)}
-          style={{ marginTop: 8, background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#4A7A47", padding: 0, display: "flex", alignItems: "center", gap: 3 }}
-        >
-          <Sun size={12} /> See cognitive & safety notes
-        </button>
       )}
     </div>
   );
