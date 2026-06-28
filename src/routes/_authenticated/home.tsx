@@ -406,6 +406,21 @@ function HomePage() {
     return () => { cancelled = true; };
   }, [navigate]);
 
+  // Re-fetch moments when tab regains visibility (e.g. returning from /moments/new)
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState !== "visible") return;
+      supabase.from("milestones")
+        .select("id, title, logged_at, notes")
+        .eq("child_id", (child as any)?.id)
+        .order("logged_at", { ascending: false })
+        .limit(5)
+        .then(({ data }) => { if (data) setMoments(data as Moment[]); });
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [child]);
+
   const age = useMemo(() => calcAge(child?.date_of_birth ?? null), [child]);
   const totalAlerts = alerts.recalls + alerts.replace + alerts.sizeUp;
   const upNext: Insight[] = useMemo(() => {

@@ -148,7 +148,7 @@ const PROMPTS = [
 function NewMomentPage() {
   const navigate = useNavigate();
   const { activeChildId, children } = useActiveChild();
-  const { isPro, loading: proLoading, requirePro } = useProGate();
+  const { isPro, loading: proLoading } = useProGate();
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState("");
   const [loggedAt, setLoggedAt] = useState(new Date().toISOString().slice(0, 10));
@@ -159,28 +159,20 @@ function NewMomentPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!requirePro("Milestone logging", "Everything in free, plus expert features, tips and tricks, safety insights, and pediatrician-reviewed guidance. Try free for 7 days.")) return;
     if (!title.trim()) { toast.error("Give the moment a title"); return; }
     if (!activeChildId) { toast.error("Add a child first"); return; }
     setSaving(true);
     const rawNotes = notes.trim();
-    let savedNotes: string | null = null;
-    if (momentType === "Letter") {
-      const childName = activeChild?.name ?? "little one";
-      const letterPrefix = `[Letter] Dear ${childName},\n`;
-      savedNotes = rawNotes ? letterPrefix + rawNotes : letterPrefix;
-    } else if (momentType !== "Milestone") {
-      savedNotes = rawNotes ? `[${momentType}] ${rawNotes}` : null;
-    } else {
-      savedNotes = rawNotes || null;
-    }
-    const { error } = await supabase.from("milestones").insert({
+    const savedNotes = (momentType !== "Milestone" && rawNotes)
+      ? `[${momentType}] ${rawNotes}`
+      : rawNotes || null;
+    const { error } = await (supabase as any).from("milestones").insert({
       child_id: activeChildId,
       title: title.trim(),
       logged_at: loggedAt,
       notes: savedNotes,
       completed: true,
-    } as never);
+    });
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Saved that moment 💛");
@@ -188,7 +180,7 @@ function NewMomentPage() {
     if (tip) {
       setSafetyTip(tip);
     } else {
-      navigate({ to: "/home" });
+      navigate({ to: "/moments" });
     }
   }
 
@@ -333,11 +325,6 @@ function NewMomentPage() {
                 );
               })}
             </div>
-            {momentType === "Letter" && (
-              <p className="font-body text-xs text-muted-foreground italic">
-                Your entry will be formatted as a letter starting with "Dear {activeChild?.name ?? "little one"},"
-              </p>
-            )}
           </div>
 
           <div className="space-y-2">
@@ -352,11 +339,11 @@ function NewMomentPage() {
           </div>
 
           <div className="space-y-2">
-            <Label className="font-body text-sm">{momentType === "Letter" ? "Your letter" : "Notes (optional)"}</Label>
+            <Label className="font-body text-sm">Notes (optional)</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder={momentType === "Letter" ? "Write your letter here — it'll be saved starting with 'Dear [name],'…" : "A little detail you'll want to remember…"}
+              placeholder="A little detail you'll want to remember…"
               maxLength={1000}
               rows={4}
               className="rounded-2xl bg-card px-4 py-3 font-body text-base"
