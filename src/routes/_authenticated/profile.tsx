@@ -413,7 +413,7 @@ function ReferFriendSection() {
         </div>
       </div>
       <p className="mb-4 font-body text-xs text-muted-foreground leading-relaxed">
-        Share Peace of Mine with another parent. When they sign up with your link and subscribe to Pro, you both get one free month added to your account.
+        Share Peace of Mine with another caregiver. When they sign up with your link and subscribe to Pro, you both get one free month added to your account.
       </p>
       {code ? (
         <div className="space-y-3">
