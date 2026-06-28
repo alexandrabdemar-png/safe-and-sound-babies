@@ -1,59 +1,70 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <g stroke="#2C3560" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Toy bar arch left -->
-    <path d="M58 110 C54 88 56 68 70 54" stroke-width="2"/>
-    <!-- Toy bar arch right -->
-    <path d="M142 110 C146 88 144 68 130 54" stroke-width="2"/>
-    <!-- Arch top bar -->
-    <path d="M70 54 C82 44 100 40 118 44 C126 46 130 50 130 54" stroke-width="2"/>
-    <!-- Left hanging elephant string -->
-    <line x1="82" y1="48" x2="82" y2="64" stroke-width="1.4"/>
-    <!-- Left elephant body -->
-    <ellipse cx="82" cy="74" rx="12" ry="10" stroke-width="1.8"/>
-    <!-- Left elephant head -->
-    <circle cx="92" cy="68" r="7" stroke-width="1.6"/>
-    <!-- Left elephant trunk -->
-    <path d="M96 68 C104 68 107 74 103 78" stroke-width="1.4"/>
-    <!-- Left elephant ear -->
-    <path d="M86 62 C90 57 96 59 94 65" stroke-width="1.3"/>
-    <!-- Left elephant eye -->
-    <circle cx="94" cy="67" r="1.2" fill="#2C3560"/>
-    <!-- Right hanging elephant string -->
-    <line x1="118" y1="48" x2="118" y2="64" stroke-width="1.4"/>
-    <!-- Right elephant body -->
-    <ellipse cx="118" cy="74" rx="12" ry="10" stroke-width="1.8"/>
-    <!-- Right elephant head -->
-    <circle cx="108" cy="68" r="7" stroke-width="1.6"/>
-    <!-- Right elephant trunk -->
-    <path d="M104 68 C96 68 93 74 97 78" stroke-width="1.4"/>
-    <!-- Right elephant ear -->
-    <path d="M114 62 C110 57 104 59 106 65" stroke-width="1.3"/>
-    <!-- Right elephant eye -->
-    <circle cx="106" cy="67" r="1.2" fill="#2C3560"/>
-    <!-- Seat main shape -->
-    <path d="M52 118 C50 98 60 84 80 78 L120 78 C140 84 150 98 148 118 C146 140 130 158 100 160 C70 158 54 140 52 118 Z" stroke-width="2.2"/>
-    <!-- Seat back -->
-    <path d="M80 78 C76 66 74 52 76 44 L124 44 C126 52 124 66 120 78" stroke-width="2"/>
-    <!-- Headrest -->
-    <path d="M76 44 C78 36 86 30 100 30 C114 30 122 36 124 44" stroke-width="2"/>
-    <!-- Seat padding lines -->
-    <path d="M68 118 C80 112 120 112 132 118" stroke-width="1.4"/>
-    <path d="M62 130 C76 122 124 122 138 130" stroke-width="1.2"/>
-    <!-- Harness centre -->
-    <line x1="100" y1="90" x2="100" y2="140" stroke-width="1.4"/>
-    <!-- Harness shoulder left -->
-    <path d="M80 88 C84 100 90 110 100 118" stroke-width="1.4"/>
-    <!-- Harness shoulder right -->
-    <path d="M120 88 C116 100 110 110 100 118" stroke-width="1.4"/>
-    <!-- Harness waist -->
-    <path d="M78 128 Q100 132 122 128" stroke-width="1.4"/>
-    <!-- Rocker base -->
-    <path d="M30 178 C50 156 76 148 100 148 C124 148 150 156 170 178" stroke-width="2.4"/>
-    <!-- Legs -->
-    <line x1="68" y1="148" x2="48" y2="176" stroke-width="2"/>
-    <line x1="132" y1="148" x2="152" y2="176" stroke-width="2"/>
-    <!-- Bounce button -->
-    <circle cx="148" cy="118" r="6" stroke-width="1.6"/>
-    <circle cx="148" cy="132" r="6" stroke-width="1.6"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" stroke="#2C3560" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Toy arch left post -->
+  <path d="M 54 132 C 50 110 52 88 62 70" stroke-width="2.2"/>
+  <!-- Toy arch right post -->
+  <path d="M 148 120 C 152 102 150 84 140 68" stroke-width="2.2"/>
+  <!-- Arch bar top -->
+  <path d="M 62 70 C 74 54 102 46 126 52 C 134 54 140 60 140 68" stroke-width="2.2"/>
+
+  <!-- Hanging string left elephant -->
+  <line x1="78" y1="62" x2="78" y2="78" stroke-width="1.3"/>
+  <!-- Elephant body left -->
+  <ellipse cx="78" cy="88" rx="13" ry="11" stroke-width="1.8"/>
+  <!-- Elephant head left -->
+  <circle cx="88" cy="80" r="9" stroke-width="1.8"/>
+  <!-- Elephant trunk curling left -->
+  <path d="M 94 80 C 103 78 108 84 104 92" stroke-width="1.4"/>
+  <!-- Elephant ear left -->
+  <path d="M 82 73 C 86 67 94 69 92 76" stroke-width="1.3"/>
+  <!-- Elephant eye left -->
+  <circle cx="90" cy="79" r="1.5" fill="#2C3560" stroke-width="0"/>
+
+  <!-- Hanging string right duck -->
+  <line x1="118" y1="56" x2="118" y2="70" stroke-width="1.3"/>
+  <!-- Duck body right -->
+  <ellipse cx="118" cy="80" rx="12" ry="9" stroke-width="1.8"/>
+  <!-- Duck head right -->
+  <circle cx="126" cy="73" r="7" stroke-width="1.8"/>
+  <!-- Duck beak -->
+  <path d="M 131 73 L 137 75 L 131 77 Z" stroke-width="1.3"/>
+  <!-- Duck wing -->
+  <path d="M 118 78 C 122 74 128 74 128 78" stroke-width="1.2"/>
+  <!-- Duck eye -->
+  <circle cx="128" cy="72" r="1.3" fill="#2C3560" stroke-width="0"/>
+
+  <!-- Seat main shape reclined -->
+  <path d="M 48 136 C 46 120 52 106 66 98 L 130 90 C 150 92 162 106 158 128 C 154 148 134 162 110 164 L 70 162 C 52 158 48 148 48 136 Z" stroke-width="2.4"/>
+  <!-- Seat back panel top -->
+  <path d="M 66 98 C 64 84 62 68 64 58 L 110 52 C 118 52 126 56 128 62 L 130 90" stroke-width="2.2"/>
+  <!-- Headrest top padding -->
+  <path d="M 64 58 C 68 48 80 42 92 42 C 104 42 116 46 120 54 L 128 62" stroke-width="2.2"/>
+  <!-- Headrest inner padding curve -->
+  <path d="M 68 60 C 72 52 82 48 92 48 C 103 48 114 52 118 60" stroke-width="1.3"/>
+
+  <!-- Seat padding contour lines -->
+  <path d="M 58 132 C 74 124 138 120 154 128" stroke-width="1.3"/>
+  <path d="M 54 144 C 70 136 140 132 156 140" stroke-width="1.1"/>
+
+  <!-- Harness centre strap -->
+  <line x1="98" y1="102" x2="98" y2="148" stroke-width="1.5"/>
+  <!-- Harness left shoulder -->
+  <path d="M 76 104 C 80 116 86 128 98 136" stroke-width="1.5"/>
+  <!-- Harness right shoulder -->
+  <path d="M 130 104 C 124 116 112 128 98 136" stroke-width="1.5"/>
+  <!-- Harness waist clip -->
+  <path d="M 74 140 Q 98 148 122 140" stroke-width="1.5"/>
+  <!-- Crotch buckle -->
+  <rect x="88" y="136" width="18" height="12" rx="4" stroke-width="1.5"/>
+
+  <!-- Rocker base sweeping curve -->
+  <path d="M 22 186 C 44 168 68 154 100 150 C 132 154 158 168 178 186" stroke-width="2.6"/>
+  <!-- Seat legs connecting to rocker -->
+  <line x1="60" y1="152" x2="36" y2="184" stroke-width="2.2"/>
+  <line x1="144" y1="152" x2="168" y2="184" stroke-width="2.2"/>
+
+  <!-- Control panel side -->
+  <rect x="156" y="118" width="16" height="36" rx="6" stroke-width="1.6"/>
+  <circle cx="164" cy="128" r="4" stroke-width="1.4"/>
+  <circle cx="164" cy="142" r="4" stroke-width="1.4"/>
+  <line x1="158" y1="135" x2="170" y2="135" stroke-width="1.1"/>
 </svg>

@@ -1,46 +1,53 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <g stroke="#2C3560" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Handle arch left strut -->
-    <path d="M64 108 C60 80 66 56 80 42" stroke-width="2"/>
-    <!-- Handle arch right strut -->
-    <path d="M136 108 C140 80 134 56 120 42" stroke-width="2"/>
-    <!-- Handle arch top (with grip) -->
-    <path d="M80 42 C86 36 94 32 100 32 C106 32 114 36 120 42" stroke-width="2.2"/>
-    <!-- Grip texture lines on handle -->
-    <line x1="88" y1="36" x2="92" y2="34" stroke-width="1.2"/>
-    <line x1="96" y1="33" x2="100" y2="32" stroke-width="1.2"/>
-    <line x1="104" y1="33" x2="108" y2="34" stroke-width="1.2"/>
-    <line x1="112" y1="36" x2="116" y2="38" stroke-width="1.2"/>
-    <!-- Seat shell outer -->
-    <path d="M58 150 C56 124 62 96 80 82 L120 82 C138 96 144 124 142 150 C140 165 124 172 100 172 C76 172 60 165 58 150 Z" stroke-width="2.2"/>
-    <!-- Seat shell back angled -->
-    <path d="M80 82 C76 68 76 54 80 44" stroke-width="1.8"/>
-    <path d="M120 82 C124 68 124 54 120 44" stroke-width="1.8"/>
-    <!-- Seat shell inner padding shape -->
-    <path d="M68 148 C68 126 76 106 100 102 C124 106 132 126 132 148" stroke-width="1.6"/>
-    <!-- Side wings left -->
-    <path d="M58 150 L46 156 L48 118 L60 110" stroke-width="1.8"/>
-    <!-- Side wings right -->
-    <path d="M142 150 L154 156 L152 118 L140 110" stroke-width="1.8"/>
-    <!-- Newborn insert -->
-    <path d="M74 140 C76 124 86 114 100 112 C114 114 124 124 126 140" stroke-width="1.4"/>
-    <!-- Harness left -->
-    <path d="M82 96 L86 130" stroke-width="1.8"/>
-    <!-- Harness right -->
-    <path d="M118 96 L114 130" stroke-width="1.8"/>
-    <!-- Harness waist clip -->
-    <path d="M86 130 Q100 136 114 130" stroke-width="1.8"/>
-    <!-- Crotch buckle -->
-    <rect x="92" y="130" width="16" height="10" rx="4" stroke-width="1.6"/>
-    <!-- Rocker base base -->
-    <path d="M36 182 C56 162 76 154 100 154 C124 154 144 162 164 182" stroke-width="2.4"/>
-    <!-- Leg left -->
-    <line x1="68" y1="155" x2="48" y2="180" stroke-width="2.2"/>
-    <!-- Leg right -->
-    <line x1="132" y1="155" x2="152" y2="180" stroke-width="2.2"/>
-    <!-- Control panel side -->
-    <rect x="144" y="124" width="14" height="30" rx="5" stroke-width="1.6"/>
-    <circle cx="151" cy="132" r="3.5" stroke-width="1.4"/>
-    <circle cx="151" cy="143" r="3.5" stroke-width="1.4"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" stroke="#2C3560" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Handle arch left strut -->
+  <path d="M 58 118 C 54 96 56 72 66 52" stroke-width="2.4"/>
+  <!-- Handle arch right strut -->
+  <path d="M 142 110 C 148 90 148 68 138 50" stroke-width="2.4"/>
+  <!-- Handle arch top -->
+  <path d="M 66 52 C 76 40 90 34 104 34 C 118 34 132 40 138 50" stroke-width="2.4"/>
+  <!-- Handle grip texture marks -->
+  <line x1="82" y1="38" x2="86" y2="36" stroke-width="1.2"/>
+  <line x1="94" y1="34" x2="98" y2="33" stroke-width="1.2"/>
+  <line x1="108" y1="34" x2="112" y2="35" stroke-width="1.2"/>
+  <line x1="120" y1="38" x2="124" y2="41" stroke-width="1.2"/>
+
+  <!-- Seat shell outer bucket shape -->
+  <path d="M 52 160 C 50 134 54 108 66 92 L 76 80 L 138 80 L 148 94 C 158 110 160 136 158 160 C 154 176 130 184 100 184 C 70 184 54 176 52 160 Z" stroke-width="2.4"/>
+
+  <!-- Seat shell back panel angled -->
+  <path d="M 76 80 C 72 64 70 50 72 40" stroke-width="2"/>
+  <path d="M 138 80 C 142 64 142 50 140 40" stroke-width="2"/>
+  <!-- Back rest top edge -->
+  <path d="M 72 40 Q 100 34 140 40" stroke-width="1.8"/>
+
+  <!-- Inner seat shell padding -->
+  <path d="M 64 158 C 64 136 72 114 100 108 C 128 114 136 136 136 158" stroke-width="1.6"/>
+  <!-- Seat shell padding lower -->
+  <path d="M 58 168 C 66 180 82 186 100 186" stroke-width="1.3"/>
+  <path d="M 148 168 C 140 180 118 186 100 186" stroke-width="1.3"/>
+
+  <!-- Left side wing -->
+  <path d="M 52 160 L 38 164 L 40 122 L 58 118" stroke-width="1.8"/>
+  <!-- Right side wing -->
+  <path d="M 158 160 L 172 164 L 170 120 L 142 110" stroke-width="1.8"/>
+
+  <!-- Newborn insert inner padding -->
+  <path d="M 70 148 C 72 130 84 118 100 116 C 116 118 128 130 130 148" stroke-width="1.4"/>
+
+  <!-- Harness left shoulder strap -->
+  <path d="M 78 90 L 82 138" stroke-width="1.8"/>
+  <!-- Harness right shoulder strap -->
+  <path d="M 122 90 L 118 138" stroke-width="1.8"/>
+  <!-- Harness chest clip -->
+  <path d="M 82 112 Q 100 116 118 112" stroke-width="1.6"/>
+  <rect x="90" y="108" width="20" height="10" rx="4" stroke-width="1.5"/>
+  <!-- Crotch buckle -->
+  <path d="M 82 138 Q 100 146 118 138" stroke-width="1.8"/>
+  <rect x="90" y="138" width="20" height="12" rx="5" stroke-width="1.6"/>
+
+  <!-- Rocking base underneath -->
+  <path d="M 28 188 C 50 170 74 160 100 158 C 126 160 150 170 172 188" stroke-width="2.6"/>
+  <!-- Seat legs to rocker -->
+  <line x1="62" y1="162" x2="42" y2="186" stroke-width="2.2"/>
+  <line x1="138" y1="162" x2="158" y2="186" stroke-width="2.2"/>
 </svg>
