@@ -12,8 +12,8 @@ import { Button } from "@/components/ui/button";
 import { evaluateInsights, type Insight, type ProductInput } from "@/lib/insights";
 import { friendlyError } from "@/lib/errors";
 import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
-import { getDevelopmentBand } from "@/lib/developmentContent";
 import { selectWeeklyTip, getIsoWeekNumber, weekKey as getTipWeekKey } from "@/lib/safetyTips";
+import { getDevelopmentBand } from "@/lib/developmentContent";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
 
 
@@ -260,7 +260,6 @@ function HomePage() {
     return "pending";
   });
   const [hpStep, setHpStep] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
-
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -547,7 +546,6 @@ function HomePage() {
     setHomeProfileSetup("skipped");
     try { localStorage.setItem("safesound.homeProfileSetup", "skipped"); } catch {}
   }
-
   // Weekly safety tip
   const alertsPaused = notifPrefs.paused_until && new Date(notifPrefs.paused_until) > new Date();
   const today = new Date().getDay();
