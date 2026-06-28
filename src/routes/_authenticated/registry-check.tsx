@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/BottomNav";
-import { searchCpsc, type CpscRecall } from "@/lib/cpscSearch";
+import { searchCpsc, searchFdaRecalls, isFoodRelated, type CpscRecall, type FdaRecall } from "@/lib/cpscSearch";
 
 export const Route = createFileRoute("/_authenticated/registry-check")({
   ssr: false,
@@ -45,6 +45,7 @@ function RegistryCheckPage() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [recalls, setRecalls] = useState<CpscRecall[]>([]);
+  const [fdaRecalls, setFdaRecalls] = useState<FdaRecall[]>([]);
   const [resolvedQuery, setResolvedQuery] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,11 +68,15 @@ function RegistryCheckPage() {
     setSearched(false);
     setError(null);
     setRecalls([]);
+    setFdaRecalls([]);
     setResolvedQuery(resolved);
 
     try {
-      const found = await searchCpsc(query);
+      const cpscPromise = searchCpsc(query);
+      const fdaPromise = isFoodRelated(query) ? searchFdaRecalls(query) : Promise.resolve([]);
+      const [found, foundFda] = await Promise.all([cpscPromise, fdaPromise]);
       setRecalls(found);
+      setFdaRecalls(foundFda);
       setSearched(true);
     } catch {
       setError("Couldn't reach the CPSC database right now. Try again or check cpsc.gov/Recalls manually.");
@@ -82,12 +87,13 @@ function RegistryCheckPage() {
   }
 
   function clear() {
-    setInput(""); setRecalls([]); setSearched(false);
+    setInput(""); setRecalls([]); setFdaRecalls([]); setSearched(false);
     setError(null); setResolvedQuery(null);
   }
 
+  const totalRecalls = recalls.length + fdaRecalls.length;
   const verdict: "safe" | "unsafe" | null = searched && !error
-    ? recalls.length > 0 ? "unsafe" : "safe"
+    ? totalRecalls > 0 ? "unsafe" : "safe"
     : null;
 
   return (
@@ -172,9 +178,9 @@ function RegistryCheckPage() {
                   <ShieldAlert className="h-6 w-6" />
                 </span>
                 <div>
-                  <p className="font-display text-xl font-semibold text-destructive">Don't add this to your registry</p>
+                  <p className="font-display text-xl font-semibold text-destructive">Active recall found — check before adding</p>
                   <p className="font-body text-xs text-destructive/80">
-                    {recalls.length} active recall{recalls.length !== 1 ? "s" : ""} found in the CPSC database
+                    {totalRecalls} active recall{totalRecalls !== 1 ? "s" : ""} found — review details below
                   </p>
                 </div>
               </div>
@@ -189,7 +195,7 @@ function RegistryCheckPage() {
                 </span>
                 <div>
                   <p className="font-display text-xl font-semibold text-primary">Looks good to add</p>
-                  <p className="font-body text-xs text-primary/70">No recalls found in the CPSC database for this search</p>
+                  <p className="font-body text-xs text-primary/70">No known recalls found for this product — always verify on cpsc.gov before purchasing</p>
                 </div>
               </div>
               <p className="mt-3 font-body text-xs text-muted-foreground">
@@ -217,10 +223,13 @@ function RegistryCheckPage() {
           )}
 
           {/* Recall cards */}
-          {searched && recalls.length > 0 && (
+          {searched && totalRecalls > 0 && (
             <div className="space-y-3">
               {recalls.map((r) => (
                 <RecallCard key={r.RecallID} recall={r} />
+              ))}
+              {fdaRecalls.map((r) => (
+                <FdaRecallCard key={r.id} recall={r} />
               ))}
             </div>
           )}
@@ -234,6 +243,34 @@ function RegistryCheckPage() {
       </main>
 
       <BottomNav />
+    </div>
+  );
+}
+
+function FdaRecallCard({ recall }: { recall: FdaRecall }) {
+  const dateLabel = recall.recallDate
+    ? new Date(recall.recallDate.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3")).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+    : null;
+  return (
+    <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-4 space-y-2">
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-destructive/15 text-destructive">
+          <ShieldAlert className="h-4 w-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-body text-sm font-semibold leading-snug">{recall.productDescription}</p>
+          {dateLabel && <p className="mt-0.5 font-body text-xs text-muted-foreground">FDA · {dateLabel}</p>}
+        </div>
+      </div>
+      {recall.reasonForRecall && (
+        <p className="font-body text-xs text-muted-foreground leading-relaxed pl-10 line-clamp-3">{recall.reasonForRecall}</p>
+      )}
+      <div className="pl-10">
+        <a href={recall.url} target="_blank" rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive underline underline-offset-2">
+          FDA recall details <ArrowUpRight className="h-3 w-3" />
+        </a>
+      </div>
     </div>
   );
 }

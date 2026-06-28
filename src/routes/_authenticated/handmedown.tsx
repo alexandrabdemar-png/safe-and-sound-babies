@@ -7,7 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BottomNav } from "@/components/BottomNav";
-import { searchCpsc, type CpscRecall } from "@/lib/cpscSearch";
+import { searchCpsc, searchFdaRecalls, isFoodRelated, type CpscRecall, type FdaRecall } from "@/lib/cpscSearch";
 
 export const Route = createFileRoute("/_authenticated/handmedown")({
   ssr: false,
@@ -122,6 +122,7 @@ function HandmedownPage() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [recalls, setRecalls] = useState<CpscRecall[]>([]);
+  const [fdaRecalls, setFdaRecalls] = useState<FdaRecall[]>([]);
   const [expiryResult, setExpiryResult] = useState<ReturnType<typeof checkExpiry>>(null);
   const [error, setError] = useState<string | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -134,14 +135,18 @@ function HandmedownPage() {
     setSearched(false);
     setError(null);
     setRecalls([]);
+    setFdaRecalls([]);
     setExpiryResult(null);
 
     const yearNum = yearStr ? parseInt(yearStr, 10) : null;
     const validYear = yearNum && yearNum >= 1980 && yearNum <= new Date().getFullYear() ? yearNum : null;
 
     try {
-      const found = await searchCpsc(q);
+      const cpscPromise = searchCpsc(q);
+      const fdaPromise = isFoodRelated(q) ? searchFdaRecalls(q) : Promise.resolve([]);
+      const [found, foundFda] = await Promise.all([cpscPromise, fdaPromise]);
       setRecalls(found);
+      setFdaRecalls(foundFda);
       setExpiryResult(checkExpiry(q, validYear));
       setSearched(true);
     } catch {
@@ -178,12 +183,13 @@ function HandmedownPage() {
 
   // Derive overall verdict
   let verdict: Verdict = null;
+  const totalRecalls = recalls.length + fdaRecalls.length;
   if (searched && !error) {
-    if (recalls.length > 0 || expiryResult?.expired) {
+    if (totalRecalls > 0 || expiryResult?.expired) {
       verdict = "unsafe";
     } else if (expiryResult?.caution) {
       verdict = "caution";
-    } else if (recalls.length === 0) {
+    } else if (totalRecalls === 0) {
       verdict = "safe";
     }
   }
@@ -286,10 +292,10 @@ function HandmedownPage() {
                 <div>
                   <p className="font-display text-xl font-semibold text-destructive">Not safe to use</p>
                   <p className="font-body text-xs text-destructive/80">
-                    {recalls.length > 0 && expiryResult?.expired
+                    {totalRecalls > 0 && expiryResult?.expired
                       ? "Active recall + expired product"
-                      : recalls.length > 0
-                      ? `${recalls.length} active recall${recalls.length > 1 ? "s" : ""} found`
+                      : totalRecalls > 0
+                      ? `${totalRecalls} active recall${totalRecalls > 1 ? "s" : ""} found`
                       : "Product has expired its safe-use lifespan"}
                   </p>
                 </div>
@@ -345,23 +351,26 @@ function HandmedownPage() {
           )}
 
           {/* Recall details */}
-          {searched && recalls.length > 0 && (
+          {searched && totalRecalls > 0 && (
             <div className="space-y-3">
               <p className="font-body text-sm font-semibold text-destructive">
-                {recalls.length} active recall{recalls.length !== 1 ? "s" : ""} found
+                {totalRecalls} active recall{totalRecalls !== 1 ? "s" : ""} found
               </p>
               {recalls.map((r) => (
                 <RecallCard key={r.RecallID} recall={r} />
               ))}
+              {fdaRecalls.map((r) => (
+                <FdaRecallCard key={r.id} recall={r} />
+              ))}
             </div>
           )}
 
-          {/* No recalls message (but may still have expiry issues) */}
-          {searched && !error && recalls.length === 0 && (
+          {/* No recalls message */}
+          {searched && !error && totalRecalls < 3 && (
             <p className="font-body text-xs text-muted-foreground">
-              No matching recalls in the CPSC database. Always double-check at{" "}
-              <a href="https://cpsc.gov/Recalls" target="_blank" rel="noopener noreferrer"
-                className="font-semibold underline underline-offset-2">cpsc.gov/Recalls</a>.
+              No recalls found for this product — this is a good sign, but always check the CPSC website directly to be sure.{" "}
+              <a href="https://www.cpsc.gov" target="_blank" rel="noopener noreferrer"
+                className="font-semibold underline underline-offset-2">cpsc.gov</a>
             </p>
           )}
 
@@ -376,6 +385,34 @@ function HandmedownPage() {
       </Suspense>
 
       <BottomNav />
+    </div>
+  );
+}
+
+function FdaRecallCard({ recall }: { recall: FdaRecall }) {
+  const dateLabel = recall.recallDate
+    ? new Date(recall.recallDate.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3")).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+    : null;
+  return (
+    <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-4 space-y-2">
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-destructive/15 text-destructive">
+          <ShieldAlert className="h-4 w-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-body text-sm font-semibold leading-snug">{recall.productDescription}</p>
+          {dateLabel && <p className="mt-0.5 font-body text-xs text-muted-foreground">FDA · {dateLabel}</p>}
+        </div>
+      </div>
+      {recall.reasonForRecall && (
+        <p className="font-body text-xs text-muted-foreground leading-relaxed pl-10 line-clamp-3">{recall.reasonForRecall}</p>
+      )}
+      <div className="pl-10">
+        <a href={recall.url} target="_blank" rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive underline underline-offset-2">
+          View FDA recall details →
+        </a>
+      </div>
     </div>
   );
 }

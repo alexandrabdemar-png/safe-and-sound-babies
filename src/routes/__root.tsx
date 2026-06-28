@@ -85,7 +85,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Never miss a safety milestone again. Track car seats, pacifiers, cribs, and more with quiet, kind reminders." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@SafeAndSound" },
+      { name: "twitter:site", content: "@PeaceOfMineApp" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
