@@ -437,6 +437,29 @@ function HomePage() {
     return updatedAt < twentyEightDaysAgo;
   }, [child, measReminderDismissed]);
 
+  async function dismissInsight(insightId: string) {
+    if (!child) return;
+    setDismissedIds((prev) => new Set([...prev, insightId]));
+    await (supabase as any).from("insight_dismissals").upsert({
+      child_id: child.id,
+      rule_id: insightId,
+      action: "dismissed",
+      until: null,
+    }, { onConflict: "child_id,rule_id" });
+  }
+
+  async function snoozeInsight(insightId: string) {
+    if (!child) return;
+    setDismissedIds((prev) => new Set([...prev, insightId]));
+    const until = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    await (supabase as any).from("insight_dismissals").upsert({
+      child_id: child.id,
+      rule_id: insightId,
+      action: "snoozed",
+      until,
+    }, { onConflict: "child_id,rule_id" });
+  }
+
   function dismissRecallBanner() {
     try { localStorage.setItem(`safesound.recallBannerDismissed.${todayKey()}`, "true"); } catch {}
     setRecallBannerDismissed(true);
@@ -795,7 +818,12 @@ function HomePage() {
               </div>
               <ul className="space-y-2.5">
                 {upNext.map((i) => (
-                  <InsightCard key={i.id} insight={i} />
+                  <InsightCard
+                    key={i.id}
+                    insight={i}
+                    onDismiss={() => dismissInsight(i.id)}
+                    onSnooze={() => snoozeInsight(i.id)}
+                  />
                 ))}
               </ul>
             </div>
@@ -833,7 +861,7 @@ function HomePage() {
   );
 }
 
-function InsightCard({ insight }: { insight: Insight }) {
+function InsightCard({ insight, onDismiss, onSnooze }: { insight: Insight; onDismiss: () => void; onSnooze: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const isLong = insight.body.length > 100;
   return (
@@ -851,15 +879,33 @@ function InsightCard({ insight }: { insight: Insight }) {
         </span>
       </div>
       <p className={`mt-1 font-body text-xs text-muted-foreground ${!expanded && isLong ? "line-clamp-2" : ""}`}>{insight.body}</p>
-      {isLong && (
-        <button
-          type="button"
-          onClick={() => setExpanded((e) => !e)}
-          className="mt-1 inline-flex items-center gap-0.5 font-body text-[11px] font-semibold text-accent/80 hover:underline"
-        >
-          {expanded ? <><ChevronUp className="h-3 w-3" /> Show less</> : <><ChevronDown className="h-3 w-3" /> Show more</>}
-        </button>
-      )}
+      <div className="mt-2 flex items-center gap-2">
+        {isLong && (
+          <button
+            type="button"
+            onClick={() => setExpanded((e) => !e)}
+            className="inline-flex items-center gap-0.5 font-body text-[11px] font-semibold text-accent/80 hover:underline"
+          >
+            {expanded ? <><ChevronUp className="h-3 w-3" /> Show less</> : <><ChevronDown className="h-3 w-3" /> Show more</>}
+          </button>
+        )}
+        <div className="ml-auto flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={onSnooze}
+            className="rounded-full border border-border/60 bg-card px-2.5 py-0.5 font-body text-[11px] text-muted-foreground hover:bg-muted"
+          >
+            Snooze 1 week
+          </button>
+          <button
+            type="button"
+            onClick={onDismiss}
+            className="rounded-full border border-border/60 bg-card px-2.5 py-0.5 font-body text-[11px] text-muted-foreground hover:bg-muted"
+          >
+            Done
+          </button>
+        </div>
+      </div>
     </li>
   );
 }
