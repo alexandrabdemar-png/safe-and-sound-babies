@@ -1146,7 +1146,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
   const ageWeeks = Math.floor(Math.max(0, Date.now() - parseDateLocal(child.date_of_birth ?? "").getTime()) / (7 * 86400000));
   const devBand = getDevelopmentBand(ageWeeks);
 
-  // Sunday: digest snapshot
+  // Sunday: week-in-review snapshot (no separate "this week" section)
   if (day === 0) {
     return (
       <div style={cardBase}>
@@ -1154,35 +1154,16 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span style={{ fontSize: 22, marginTop: 2 }}>✨</span>
           <div>
-            <p style={{ fontSize: 14, fontWeight: 600, color: "#3D3935", margin: "0 0 8px" }}>Your week in review, {child.name}</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#4A7A47", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Week in review</p>
             <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 5 }}>
               <li style={{ fontSize: 13, color: "#5C5248" }}>{recalls > 0 ? `⚠️ ${recalls} active recall${recalls > 1 ? "s" : ""} — check the Alerts tab` : "✅ No recalls affecting your products this week"}</li>
-              <li style={{ fontSize: 13, color: "#5C5248" }}>{comingUp.length > 0 ? `It may be time to take a look at ${comingUp[0].name} soon` : "Nothing due for replacement or size-up in the next 90 days"}</li>
+              {comingUp.length > 0 && (
+                <li style={{ fontSize: 13, color: "#5C5248" }}>It may be time to take a look at {comingUp[0].name} soon</li>
+              )}
               <li style={{ fontSize: 13, color: "#5C5248" }}>🛡️ {safetyTip}</li>
             </ul>
           </div>
         </div>
-        {comingUp.length > 0 && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #E2DAD0" }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
-              Coming up for {child?.name ?? "your little one"}
-            </p>
-            {comingUp.slice(0, 3).map((p) => {
-              const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
-              const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
-              return (
-                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                  <p style={{ fontSize: 13, color: "#3D3935", margin: 0 }}>
-                    {p.type === "replace"
-                      ? `It may be time to replace ${p.name} soon`
-                      : `${p.name} might be ready for a size-up`}
-                  </p>
-                  <span style={{ fontSize: 11, color: days <= 7 ? "#B91C1C" : days <= 21 ? "#B45309" : "#4A7A47", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
     );
   }
