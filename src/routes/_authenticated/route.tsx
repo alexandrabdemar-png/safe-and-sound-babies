@@ -169,7 +169,7 @@ function AuthenticatedLayout() {
             ]);
             const hasRecall = cpscResults.length > 0 || fdaResults.length > 0;
             if (hasRecall) {
-              await supabase.from("product_recalls").insert({
+              await (supabase as any).from("product_recalls").insert({
                 product_id: product.id,
                 user_id: user.id,
                 acknowledged: false,

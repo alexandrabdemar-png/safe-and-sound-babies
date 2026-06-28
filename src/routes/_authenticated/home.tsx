@@ -12,8 +12,8 @@ import { Button } from "@/components/ui/button";
 import { evaluateInsights, type Insight, type ProductInput } from "@/lib/insights";
 import { friendlyError } from "@/lib/errors";
 import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
-import { getDevelopmentBand } from "@/lib/developmentContent";
 import { selectWeeklyTip, getIsoWeekNumber, weekKey as getTipWeekKey } from "@/lib/safetyTips";
+import { getDevelopmentBand } from "@/lib/developmentContent";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
 
 
@@ -240,6 +240,9 @@ function HomePage() {
   // Measurements reminder dismiss (resets after 7 days)
   const [measReminderDismissed, setMeasReminderDismissed] = useState(false);
 
+  // Bottle weaning reminder dismiss
+  const [bottleWeaningDismissed, setBottleWeaningDismissed] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -276,6 +279,15 @@ function HomePage() {
           }
         }
       } catch {}
+
+      // Check bottle weaning dismissal
+      if (c.id) {
+        try {
+          if (localStorage.getItem(`safesound.bottleWeaning.${c.id}`) === "true") {
+            setBottleWeaningDismissed(true);
+          }
+        } catch {}
+      }
 
       const horizon30 = new Date();
       horizon30.setDate(horizon30.getDate() + 30);
@@ -470,6 +482,17 @@ function HomePage() {
 
   const recentMilestone = getRecentMilestone(child?.date_of_birth ?? null);
 
+  const ageMonthsForBottle = child?.date_of_birth
+    ? Math.floor((Date.now() - new Date(child.date_of_birth).getTime()) / (30.44 * 86400000))
+    : 0;
+  const showBottleWeaning = !bottleWeaningDismissed && ageMonthsForBottle >= 12 && ageMonthsForBottle <= 15;
+
+  function dismissBottleWeaning() {
+    if (!child) return;
+    try { localStorage.setItem(`safesound.bottleWeaning.${child.id}`, "true"); } catch {}
+    setBottleWeaningDismissed(true);
+  }
+
   // Weekly safety tip
   const alertsPaused = notifPrefs.paused_until && new Date(notifPrefs.paused_until) > new Date();
   const today = new Date().getDay();
@@ -523,20 +546,35 @@ function HomePage() {
         </div>
       </div>
 
-      {/* Development This Week — below Today card */}
-      {child?.date_of_birth && (
-        <div className="px-5 pt-3 sm:px-6">
-          <div className="mx-auto max-w-md">
-            <DevelopmentThisWeekCard dobStr={child.date_of_birth} />
-          </div>
-        </div>
-      )}
-
       {/* Weekly Safety Tip */}
       {showTipCard && weeklyTip && (
         <div className="px-5 pt-3 sm:px-6">
           <div className="mx-auto max-w-md">
             <WeeklySafetyTipCard tip={weeklyTip} onDone={markTipDone} showSuccess={tipSuccess} />
+          </div>
+        </div>
+      )}
+
+      {/* Bottle weaning reminder — 12–15 months only */}
+      {showBottleWeaning && child && (
+        <div className="px-5 pt-3 sm:px-6">
+          <div className="mx-auto max-w-md">
+            <div className="flex items-start justify-between gap-3 rounded-2xl border border-[#8FAF8C]/40 bg-[#F2F7F1] px-4 py-3.5">
+              <div className="min-w-0 flex-1">
+                <p className="font-body text-xs font-semibold uppercase tracking-wider text-[#4A7A47] mb-1">A gentle heads-up</p>
+                <p className="font-body text-sm leading-snug text-foreground/80">
+                  Many pediatric dentists suggest beginning to transition away from bottle use around 12 to 15 months to support healthy tooth development — every child is different so check with your own dentist or pediatrician about what feels right for your family.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={dismissBottleWeaning}
+                className="mt-0.5 shrink-0 rounded-full p-1 text-muted-foreground hover:bg-black/10"
+                aria-label="Dismiss"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -662,41 +700,6 @@ function HomePage() {
           )}
         </div>
       </section>
-
-      {/* Coming up — product date countdown */}
-      {!loading && comingUp.length > 0 && (
-        <section className="px-5 pt-4 sm:px-6 animate-fade-up stagger-2">
-          <div className="mx-auto max-w-md">
-            <div className="rounded-3xl border border-border/60 bg-card p-5">
-              <div className="mb-3 flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sand/60 text-accent">
-                  <Calendar className="h-3.5 w-3.5" />
-                </span>
-                <p className="font-display text-sm font-semibold tracking-tight">Coming up</p>
-              </div>
-              <ul className="space-y-2.5">
-                {comingUp.map((p) => {
-                  const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
-                  const label = days === 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in ${Math.round(days / 7)} weeks`;
-                  const urgency = days <= 7 ? "text-destructive bg-destructive/10" : days <= 21 ? "text-amber-700 bg-amber-100" : "text-accent bg-sand/60";
-                  return (
-                    <li key={p.id} className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate font-body text-sm font-medium text-foreground">{p.name}</p>
-                        <p className="font-body text-xs text-muted-foreground">{p.type === "replace" ? "Replace" : "Size up"}{p.brand ? ` · ${p.brand}` : ""}</p>
-                      </div>
-                      <span className={`shrink-0 rounded-full px-2.5 py-1 font-body text-[11px] font-semibold ${urgency}`}>{label}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-              <Link to="/alerts" className="mt-3 inline-flex items-center gap-1 font-body text-xs font-semibold text-accent hover:underline">
-                View all alerts <ArrowRight className="h-3 w-3" />
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* What's New */}
       {!whatsNewDismissed && (
@@ -866,14 +869,12 @@ function WeeklyDigestCard({
         )}
         {comingUp.length > 0 ? (
           <li className="flex items-start gap-2">
-            <span className="mt-0.5 text-sm">📅</span>
             <p className="font-body text-sm text-foreground">
-              <span className="font-semibold">{comingUp.length} product{comingUp.length > 1 ? "s" : ""}</span> coming due soon — {comingUp[0].name}{comingUp.length > 1 ? ` and ${comingUp.length - 1} more` : ""}.
+              It may be time to take a look at {comingUp[0].name}{comingUp.length > 1 ? ` and ${comingUp.length - 1} other product${comingUp.length - 1 > 1 ? "s" : ""}` : ""} — {comingUp.length > 1 ? "they" : "it"} could be due for a refresh soon.
             </p>
           </li>
         ) : (
           <li className="flex items-start gap-2">
-            <span className="mt-0.5 text-sm">📅</span>
             <p className="font-body text-sm text-foreground">No replacements or size-ups due in the next 90 days.</p>
           </li>
         )}
@@ -1094,11 +1095,32 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
             <p style={{ fontSize: 14, fontWeight: 600, color: "#3D3935", margin: "0 0 8px" }}>Your week in review, {child.name}</p>
             <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 5 }}>
               <li style={{ fontSize: 13, color: "#5C5248" }}>{recalls > 0 ? `⚠️ ${recalls} active recall${recalls > 1 ? "s" : ""} — check the Alerts tab` : "✅ No recalls affecting your products this week"}</li>
-              <li style={{ fontSize: 13, color: "#5C5248" }}>{comingUp.length > 0 ? `📅 ${comingUp[0].name} is coming due soon` : "📅 No replacements or size-ups due in the next 90 days"}</li>
+              <li style={{ fontSize: 13, color: "#5C5248" }}>{comingUp.length > 0 ? `It may be time to take a look at ${comingUp[0].name} soon` : "Nothing due for replacement or size-up in the next 90 days"}</li>
               <li style={{ fontSize: 13, color: "#5C5248" }}>🛡️ {safetyTip}</li>
             </ul>
           </div>
         </div>
+        {comingUp.length > 0 && (
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #E2DAD0" }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
+              Coming up for {child?.name ?? "your little one"}
+            </p>
+            {comingUp.slice(0, 3).map((p) => {
+              const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
+              const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
+              return (
+                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <p style={{ fontSize: 13, color: "#3D3935", margin: 0 }}>
+                    {p.type === "replace"
+                      ? `It may be time to replace ${p.name} soon`
+                      : `${p.name} might be ready for a size-up`}
+                  </p>
+                  <span style={{ fontSize: 11, color: days <= 7 ? "#B91C1C" : days <= 21 ? "#B45309" : "#4A7A47", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }
@@ -1115,6 +1137,27 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
             <p style={{ fontSize: 14, color: "#3D3935", lineHeight: 1.55, margin: 0 }}>{devBand.physical}</p>
           </div>
         </div>
+        {comingUp.length > 0 && (
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #E2DAD0" }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
+              Coming up for {child?.name ?? "your little one"}
+            </p>
+            {comingUp.slice(0, 3).map((p) => {
+              const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
+              const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
+              return (
+                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <p style={{ fontSize: 13, color: "#3D3935", margin: 0 }}>
+                    {p.type === "replace"
+                      ? `It may be time to replace ${p.name} soon`
+                      : `${p.name} might be ready for a size-up`}
+                  </p>
+                  <span style={{ fontSize: 11, color: days <= 7 ? "#B91C1C" : days <= 21 ? "#B45309" : "#4A7A47", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }
@@ -1131,6 +1174,27 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
             <p style={{ fontSize: 14, color: "#3D3935", lineHeight: 1.55, margin: 0 }}>{safetyTip}</p>
           </div>
         </div>
+        {comingUp.length > 0 && (
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #E2DAD0" }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
+              Coming up for {child?.name ?? "your little one"}
+            </p>
+            {comingUp.slice(0, 3).map((p) => {
+              const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
+              const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
+              return (
+                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <p style={{ fontSize: 13, color: "#3D3935", margin: 0 }}>
+                    {p.type === "replace"
+                      ? `It may be time to replace ${p.name} soon`
+                      : `${p.name} might be ready for a size-up`}
+                  </p>
+                  <span style={{ fontSize: 11, color: days <= 7 ? "#B91C1C" : days <= 21 ? "#B45309" : "#4A7A47", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }
@@ -1164,6 +1228,27 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
             )}
           </div>
         </div>
+        {comingUp.length > 0 && (
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #E2DAD0" }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
+              Coming up for {child?.name ?? "your little one"}
+            </p>
+            {comingUp.slice(0, 3).map((p) => {
+              const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
+              const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
+              return (
+                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <p style={{ fontSize: 13, color: "#3D3935", margin: 0 }}>
+                    {p.type === "replace"
+                      ? `It may be time to replace ${p.name} soon`
+                      : `${p.name} might be ready for a size-up`}
+                  </p>
+                  <span style={{ fontSize: 11, color: days <= 7 ? "#B91C1C" : days <= 21 ? "#B45309" : "#4A7A47", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </button>
     );
   }
@@ -1195,6 +1280,27 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
             )}
           </div>
         </div>
+        {comingUp.length > 0 && (
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #E2DAD0" }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
+              Coming up for {child?.name ?? "your little one"}
+            </p>
+            {comingUp.slice(0, 3).map((p) => {
+              const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
+              const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
+              return (
+                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <p style={{ fontSize: 13, color: "#3D3935", margin: 0 }}>
+                    {p.type === "replace"
+                      ? `It may be time to replace ${p.name} soon`
+                      : `${p.name} might be ready for a size-up`}
+                  </p>
+                  <span style={{ fontSize: 11, color: days <= 7 ? "#B91C1C" : days <= 21 ? "#B45309" : "#4A7A47", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }
