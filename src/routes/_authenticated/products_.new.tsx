@@ -113,7 +113,7 @@ class SearchErrorBoundary extends Component<{ children: ReactNode }, { failed: b
 export const Route = createFileRoute("/_authenticated/products_/new")({
   ssr: false,
   component: NewProductPage,
-  head: () => ({ meta: [{ title: "Add product — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "Add product — Peace of Mine" }] }),
 });
 
 function toISODate(d: Date) {

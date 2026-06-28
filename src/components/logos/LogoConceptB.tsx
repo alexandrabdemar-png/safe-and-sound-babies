@@ -5,7 +5,7 @@
  *   - Upper petal: dusty sage (#A3B899)
  *   - Lower petal: soft blush (#DBBFB5)
  * They overlap to create a letter-S implied form.
- * Wordmark "Safe & Sound" in DM Sans light sits below the mark.
+ * Wordmark "Peace of Mine" in DM Sans light sits below the mark.
  *
  * This is the primary brand mark. Used on the splash screen and app icon.
  */
@@ -44,7 +44,7 @@ export function LogoConceptB({
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
-      aria-label="Safe & Sound"
+      aria-label="Peace of Mine"
       role="img"
     >
       {/* ── Petal mark — overlapping leaf/petal shapes ─────────────── */}

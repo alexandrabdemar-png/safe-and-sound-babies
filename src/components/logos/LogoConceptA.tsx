@@ -1,7 +1,7 @@
 /**
  * Logo Concept A — Wordmark with botanical sprig
  *
- * "Safe & Sound" in DM Serif Display, slightly wide tracking.
+ * "Peace of Mine" in DM Serif Display, slightly wide tracking.
  * Three-leaf sprig rendered in SVG, sitting above the ampersand.
  * Clean, editorial, linen-and-cream energy.
  */
@@ -31,7 +31,7 @@ export function LogoConceptA({
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
-      aria-label="Safe & Sound"
+      aria-label="Peace of Mine"
       role="img"
     >
       {/* ── Sprig mark — 3 leaves, minimal linework ───────────────── */}
@@ -57,7 +57,7 @@ export function LogoConceptA({
         opacity="0.65"
       />
 
-      {/* ── Wordmark: "Safe & Sound" ──────────────────────────────── */}
+      {/* ── Wordmark: "Peace of Mine" ──────────────────────────────── */}
       <text
         x="0"
         y="46"

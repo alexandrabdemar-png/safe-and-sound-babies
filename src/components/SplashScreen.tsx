@@ -2,7 +2,7 @@
  * SplashScreen — shown during app load / auth transitions.
  *
  * Parchment background (#F5F0E8), centered Concept B petal mark,
- * "Safe & Sound" wordmark below in DM Serif Display charcoal.
+ * "Peace of Mine" wordmark below in DM Serif Display charcoal.
  */
 import { LogoConceptBMark } from "@/components/logos/LogoConceptB";
 
@@ -38,7 +38,7 @@ export function SplashScreen({ className }: SplashScreenProps) {
         height="32"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        aria-label="Safe & Sound"
+        aria-label="Peace of Mine"
       >
         <text
           x="100"

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/safety-guides")({
   ssr: false,
   component: SafetyGuidesPage,
-  head: () => ({ meta: [{ title: "Safety Guides — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "Safety Guides — Peace of Mine" }] }),
 });
 
 const SAFETY_MILESTONES = [
@@ -211,7 +211,7 @@ async function generateShareImage(title: string, items: string[], source: string
     // Branding
     ctx.fillStyle = "#A3B899";
     ctx.font = "bold 34px 'Georgia', serif";
-    ctx.fillText("Safe & Sound", 80, SIZE - 88);
+    ctx.fillText("Peace of Mine", 80, SIZE - 88);
 
     ctx.fillStyle = "#8A8078";
     ctx.font = "28px 'Arial', sans-serif";
@@ -228,7 +228,7 @@ async function shareTip(title: string, items: string[], source: string) {
   if (!blob) return;
   const file = new File([blob], "safety-tip.png", { type: "image/png" });
   if (typeof navigator !== "undefined" && "share" in navigator && navigator.canShare?.({ files: [file] })) {
-    await navigator.share({ files: [file], title: `${title} — Safe & Sound`, text: "A safety tip from Safe & Sound" }).catch(() => {});
+    await navigator.share({ files: [file], title: `${title} — Peace of Mine`, text: "A safety tip from Peace of Mine" }).catch(() => {});
   } else {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "safety-tip.png"; a.click();
@@ -423,7 +423,7 @@ function SafetyGuidesPage() {
             </div>
             {reviewHelpful === null ? (
               <>
-                <p className="font-display text-lg font-semibold tracking-tight">Are you finding Safe & Sound helpful?</p>
+                <p className="font-display text-lg font-semibold tracking-tight">Are you finding Peace of Mine helpful?</p>
                 <p className="mt-1 font-body text-sm text-muted-foreground">We only ask this once. Your honest answer helps us improve.</p>
                 <div className="mt-5 flex gap-3">
                   <Button className="flex-1 rounded-full" onClick={() => setReviewHelpful(true)}>Yes, it's great</Button>

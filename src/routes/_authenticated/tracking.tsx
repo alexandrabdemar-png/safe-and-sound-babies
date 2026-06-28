@@ -5,7 +5,7 @@ import { BottomNav } from "@/components/BottomNav";
 export const Route = createFileRoute("/_authenticated/tracking")({
   ssr: false,
   component: TrackingPage,
-  head: () => ({ meta: [{ title: "Tracking — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "Tracking — Peace of Mine" }] }),
 });
 
 function TrackingPage() {

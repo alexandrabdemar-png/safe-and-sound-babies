@@ -10,7 +10,7 @@ export const Route = createFileRoute(
 )({
   ssr: false,
   component: NotificationSettingsPage,
-  head: () => ({ meta: [{ title: "Notification Settings — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "Notification Settings — Peace of Mine" }] }),
 });
 
 type AlertSettings = {

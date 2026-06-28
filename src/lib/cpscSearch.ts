@@ -14,6 +14,8 @@ export const BABY_KEYWORDS = [
   "newborn", "preemie", "layette", "onesie", "sleeper",
 ];
 
+const FOOD_KEYWORDS = ["formula", "food", "puree", "cereal", "snack", "milk", "feeding", "baby food", "infant food", "organic"];
+
 export type CpscRecall = {
   RecallID: string;
   RecallHeading: string;
@@ -21,6 +23,15 @@ export type CpscRecall = {
   RecallDate?: string;
   Products?: Array<{ Name: string; Description: string }>;
   Inconjunctions?: Array<{ Name: string }>;
+};
+
+export type FdaRecall = {
+  id: string;
+  productDescription: string;
+  reasonForRecall: string;
+  recallDate: string;
+  status: string;
+  url: string;
 };
 
 export function isBabyRelated(recall: CpscRecall): boolean {
@@ -32,6 +43,38 @@ export function isBabyRelated(recall: CpscRecall): boolean {
   return BABY_KEYWORDS.some((kw) => text.includes(kw));
 }
 
+export function isFoodRelated(query: string): boolean {
+  const q = query.toLowerCase();
+  return FOOD_KEYWORDS.some((kw) => q.includes(kw));
+}
+
+// Returns true if the recall text contains a meaningful word-boundary match for the query.
+// Splits query into words of 4+ chars and checks each appears as a whole word.
+export function isStrongMatch(recallText: string, query: string): boolean {
+  const text = recallText.toLowerCase();
+  const words = query.toLowerCase().split(/\s+/).filter((w) => w.length >= 4);
+  if (words.length === 0) return text.includes(query.toLowerCase());
+  // At least half the meaningful words must match as whole words
+  const matchCount = words.filter((w) => new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i").test(text)).length;
+  return matchCount >= Math.ceil(words.length / 2);
+}
+
+function recallTextFor(recall: CpscRecall): string {
+  return [
+    recall.RecallHeading,
+    ...(recall.Products?.map((p) => `${p.Name} ${p.Description}`) ?? []),
+    ...(recall.Inconjunctions?.map((i) => i.Name) ?? []),
+  ].join(" ");
+}
+
+const TEN_YEARS_AGO = new Date();
+TEN_YEARS_AGO.setFullYear(TEN_YEARS_AGO.getFullYear() - 10);
+
+function isWithinTenYears(recall: CpscRecall): boolean {
+  if (!recall.RecallDate) return true; // include if date unknown
+  return new Date(recall.RecallDate) >= TEN_YEARS_AGO;
+}
+
 export async function searchCpsc(query: string): Promise<CpscRecall[]> {
   const res = await fetch(
     `https://www.saferproducts.gov/RestWebServices/Recall?format=json&Keyword=${encodeURIComponent(query)}`
@@ -39,10 +82,48 @@ export async function searchCpsc(query: string): Promise<CpscRecall[]> {
   if (!res.ok) throw new Error(`CPSC API error ${res.status}`);
   const data = await res.json();
   const all: CpscRecall[] = Array.isArray(data) ? data : [];
-  return all.filter(isBabyRelated);
+  return all
+    .filter(isBabyRelated)
+    .filter(isWithinTenYears)
+    .filter((r) => isStrongMatch(recallTextFor(r), query))
+    .slice(0, 10);
 }
 
-const FDA_BABY_KEYWORDS = ["infant", "baby", "formula", "breast milk", "toddler", "newborn", "child food", "baby food"];
+const FDA_BABY_KEYWORDS = ["infant", "baby", "formula", "breast milk", "toddler", "newborn", "child food", "baby food", "nara", "infant formula", "enfamil", "similac", "gerber", "holle", "hipp", "kendamil"];
+
+export async function searchFdaRecalls(query: string): Promise<FdaRecall[]> {
+  try {
+    const url = `https://api.fda.gov/food/enforcement.json?search=product_description:"${encodeURIComponent(query)}"&limit=20`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    const results: Array<{
+      recall_number?: string;
+      product_description?: string;
+      reason_for_recall?: string;
+      recall_initiation_date?: string;
+      status?: string;
+    }> = data?.results ?? [];
+    return results
+      .filter((r) => {
+        const text = `${r.product_description ?? ""} ${r.reason_for_recall ?? ""}`.toLowerCase();
+        const isBaby = FDA_BABY_KEYWORDS.some((kw) => text.includes(kw));
+        const isMatch = isStrongMatch(text, query);
+        return isBaby && isMatch;
+      })
+      .slice(0, 10)
+      .map((r) => ({
+        id: r.recall_number ?? Math.random().toString(36).slice(2),
+        productDescription: r.product_description ?? "",
+        reasonForRecall: r.reason_for_recall ?? "",
+        recallDate: r.recall_initiation_date ?? "",
+        status: r.status ?? "",
+        url: "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts",
+      }));
+  } catch {
+    return [];
+  }
+}
 
 export async function fetchFdaBabyRecallCount(daysBack = 30): Promise<number> {
   const end = new Date();

@@ -16,13 +16,13 @@ import catBouncer from "@/assets/cat-bouncer.png";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Safe & Sound — Baby Safety Tracking" },
+      { title: "Peace of Mine — Baby Safety Tracking" },
       {
         name: "description",
         content:
           "Never miss a safety milestone again. Track car seats, pacifiers, cribs, and more with quiet, kind reminders.",
       },
-      { property: "og:title", content: "Safe & Sound — Baby Safety Tracking" },
+      { property: "og:title", content: "Peace of Mine — Baby Safety Tracking" },
       {
         property: "og:description",
         content:

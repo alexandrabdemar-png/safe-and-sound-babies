@@ -8,10 +8,10 @@ export const Route = createFileRoute("/recalls")({
   component: PublicRecallsPage,
   head: () => ({
     meta: [
-      { title: "Latest Baby Product Recalls — Safe & Sound" },
+      { title: "Latest Baby Product Recalls — Peace of Mine" },
       { name: "description", content: "Free, always-updated list of CPSC baby and kids product recalls from the last 30 days. No login required." },
-      { property: "og:title", content: "Latest Baby Product Recalls — Safe & Sound" },
-      { property: "og:description", content: "Free list of CPSC baby product recalls updated daily. Powered by Safe & Sound." },
+      { property: "og:title", content: "Latest Baby Product Recalls — Peace of Mine" },
+      { property: "og:description", content: "Free list of CPSC baby product recalls updated daily. Powered by Peace of Mine." },
     ],
   }),
 });
@@ -55,7 +55,7 @@ function PublicRecallsPage() {
             </span>
             <div>
               <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, fontWeight: 600, color: "#3D2B1F", margin: 0 }}>
-                Safe & Sound
+                Peace of Mine
               </p>
               <p style={{ fontSize: 11, color: "#8A8078", margin: 0, textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 Recall Radar
@@ -129,7 +129,7 @@ function PublicRecallsPage() {
             Get alerts for products <em>you own</em>
           </p>
           <p style={{ fontSize: 13, color: "#6B5B50", marginBottom: 16 }}>
-            Safe & Sound tracks your specific products and notifies you the moment a recall is issued — even for things you bought second-hand.
+            Peace of Mine tracks your specific products and notifies you the moment a recall is issued — even for things you bought second-hand.
           </p>
           <Link to="/auth" style={{
             display: "inline-block", padding: "10px 24px", borderRadius: 999, backgroundColor: "#A3B899", color: "white",

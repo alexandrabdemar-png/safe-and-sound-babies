@@ -20,7 +20,7 @@ import {
 export const Route = createFileRoute("/_authenticated/bottles")({
   ssr: false,
   component: BottlesPage,
-  head: () => ({ meta: [{ title: "Bottles — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "Bottles — Peace of Mine" }] }),
 });
 
 type Bottle = {
@@ -86,7 +86,7 @@ function BottlesPage() {
         const msg = remaining > 0 ? `${label} expires in ${remaining}m` : `${label} has expired`;
         toast(msg);
         if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-          try { new Notification("Safe & Sound", { body: msg }); } catch {/* ignore */}
+          try { new Notification("Peace of Mine", { body: msg }); } catch {/* ignore */}
         }
       }
     });

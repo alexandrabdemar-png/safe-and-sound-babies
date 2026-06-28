@@ -1,9 +1,9 @@
 export const PRIVACY_POLICY_UPDATED = "June 11, 2026";
 
-export const PRIVACY_POLICY = `Safe & Sound — Privacy Policy
+export const PRIVACY_POLICY = `Peace of Mine — Privacy Policy
 Last updated: ${PRIVACY_POLICY_UPDATED}
 
-We built Safe & Sound for parents who want to keep their children safe. This policy explains exactly what information we collect, why we need it, and how it is protected. Plain language only — no legalese.
+We built Peace of Mine for parents who want to keep their children safe. This policy explains exactly what information we collect, why we need it, and how it is protected. Plain language only — no legalese.
 
 ──────────────────────────────────────
 1. WHAT INFORMATION WE COLLECT
@@ -88,7 +88,7 @@ You have full control over your data:
 7. CHILDREN'S PRIVACY
 ──────────────────────────────────────
 
-Safe & Sound is an app for parents and caregivers to track their own children's data. The account holder must be 18 years of age or older. We do not knowingly collect personal information directly from children under 13.
+Peace of Mine is an app for parents and caregivers to track their own children's data. The account holder must be 18 years of age or older. We do not knowingly collect personal information directly from children under 13.
 
 ──────────────────────────────────────
 8. CHANGES TO THIS POLICY

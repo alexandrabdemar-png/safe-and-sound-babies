@@ -10,8 +10,8 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
   head: () => ({
     meta: [
-      { title: "Sign in — Safe & Sound" },
-      { name: "description", content: "Sign in or create your Safe & Sound account to start tracking your little one's milestones." },
+      { title: "Sign in — Peace of Mine" },
+      { name: "description", content: "Sign in or create your Peace of Mine account to start tracking your little one's milestones." },
     ],
   }),
   validateSearch: (s: Record<string, unknown>): { error?: string; mode?: string } => ({
@@ -58,7 +58,7 @@ function AuthPage() {
         });
         if (error) throw error;
         if (data.session) {
-          toast.success("Welcome to Safe & Sound ✨");
+          toast.success("Welcome to Peace of Mine ✨");
           navigate({ to: "/onboarding" });
         } else {
           toast.success("Check your inbox to confirm your email ✨");
@@ -302,7 +302,7 @@ function AuthPage() {
             )}
             {(mode === "signin" || mode === "signup") && (
               <div className="text-muted-foreground">
-                {mode === "signup" ? "Already have an account?" : "New to Safe & Sound?"}{" "}
+                {mode === "signup" ? "Already have an account?" : "New to Peace of Mine?"}{" "}
                 <button
                   type="button"
                   onClick={() => setMode(mode === "signup" ? "signin" : "signup")}

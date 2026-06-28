@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { toast } from "sonner";
 import { AlertTriangle, Users } from "lucide-react";
+import { searchCpsc, searchFdaRecalls, isFoodRelated } from "@/lib/cpscSearch";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -132,6 +133,62 @@ function AuthenticatedLayout() {
     return () => {
       channels.forEach((ch) => void supabase.removeChannel(ch));
     };
+  }, [user?.id]);
+
+  // ── Daily retroactive recall check ─────────────────────────────────────────
+  // Once per day, re-check all products saved in the last 90 days against
+  // CPSC and FDA. If a new match is found that isn't already flagged, insert
+  // a product_recalls row and show an in-app toast.
+  useEffect(() => {
+    if (!user?.id) return;
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const lsKey = `safesound.retroRecallCheck.${todayKey}`;
+    try { if (localStorage.getItem(lsKey)) return; } catch {}
+
+    (async () => {
+      try {
+        const since = new Date();
+        since.setDate(since.getDate() - 90);
+        const { data: products } = await supabase
+          .from("products")
+          .select("id, name, category")
+          .gte("created_at", since.toISOString());
+        if (!products?.length) return;
+
+        const { data: existingRecalls } = await supabase
+          .from("product_recalls")
+          .select("product_id");
+        const flaggedIds = new Set((existingRecalls ?? []).map((r: { product_id: string }) => r.product_id));
+
+        for (const product of products) {
+          if (flaggedIds.has(product.id)) continue;
+          try {
+            const [cpscResults, fdaResults] = await Promise.all([
+              searchCpsc(product.name),
+              isFoodRelated(product.name) ? searchFdaRecalls(product.name) : Promise.resolve([]),
+            ]);
+            const hasRecall = cpscResults.length > 0 || fdaResults.length > 0;
+            if (hasRecall) {
+              await supabase.from("product_recalls").insert({
+                product_id: product.id,
+                user_id: user.id,
+                acknowledged: false,
+              });
+              toast.error(`Safety recall: ${product.name}`, {
+                description: "A recall was found for one of your products — tap to review.",
+                icon: <AlertTriangle className="h-4 w-4" />,
+                duration: 12000,
+                action: { label: "View", onClick: () => {} },
+              });
+              flaggedIds.add(product.id);
+            }
+          } catch {}
+          // Small delay to avoid hammering APIs
+          await new Promise((r) => setTimeout(r, 300));
+        }
+        try { localStorage.setItem(lsKey, "1"); } catch {}
+      } catch {}
+    })();
   }, [user?.id]);
 
   return (

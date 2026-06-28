@@ -9,7 +9,7 @@ import { friendlyError } from "@/lib/errors";
 export const Route = createFileRoute("/_authenticated/first-foods")({
   ssr: false,
   component: FirstFoodsPage,
-  head: () => ({ meta: [{ title: "First Foods — Safe & Sound" }] }),
+  head: () => ({ meta: [{ title: "First Foods — Peace of Mine" }] }),
 });
 
 const TOP_ALLERGENS = ["Milk", "Eggs", "Fish", "Shellfish", "Tree nuts", "Peanuts", "Wheat", "Soy", "Sesame"] as const;
