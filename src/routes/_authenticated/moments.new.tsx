@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { useProGate } from "@/hooks/useProGate";
+import { ALL_TYPES, TYPE_STYLES, type MomentType } from "@/routes/_authenticated/moments";
 
 type SafetyTip = { title: string; tips: string[] };
 
@@ -146,13 +147,15 @@ const PROMPTS = [
 
 function NewMomentPage() {
   const navigate = useNavigate();
-  const { activeChildId } = useActiveChild();
+  const { activeChildId, children } = useActiveChild();
   const { isPro, loading: proLoading, requirePro } = useProGate();
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState("");
   const [loggedAt, setLoggedAt] = useState(new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState("");
+  const [momentType, setMomentType] = useState<MomentType>("Milestone");
   const [safetyTip, setSafetyTip] = useState<SafetyTip | null>(null);
+  const activeChild = children.find((c) => c.id === activeChildId);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -160,11 +163,22 @@ function NewMomentPage() {
     if (!title.trim()) { toast.error("Give the moment a title"); return; }
     if (!activeChildId) { toast.error("Add a child first"); return; }
     setSaving(true);
+    const rawNotes = notes.trim();
+    let savedNotes: string | null = null;
+    if (momentType === "Letter") {
+      const childName = activeChild?.name ?? "little one";
+      const letterPrefix = `[Letter] Dear ${childName},\n`;
+      savedNotes = rawNotes ? letterPrefix + rawNotes : letterPrefix;
+    } else if (momentType !== "Milestone") {
+      savedNotes = rawNotes ? `[${momentType}] ${rawNotes}` : null;
+    } else {
+      savedNotes = rawNotes || null;
+    }
     const { error } = await supabase.from("milestones").insert({
       child_id: activeChildId,
       title: title.trim(),
       logged_at: loggedAt,
-      notes: notes.trim() || null,
+      notes: savedNotes,
       completed: true,
     } as never);
     setSaving(false);
@@ -297,6 +311,35 @@ function NewMomentPage() {
             </div>
           </div>
 
+          {/* Moment type */}
+          <div className="space-y-2">
+            <Label className="font-body text-sm">Type</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {ALL_TYPES.map((t) => {
+                const s = TYPE_STYLES[t];
+                const active = momentType === t;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setMomentType(t)}
+                    className="rounded-full px-3 py-1.5 font-body text-[11px] font-medium transition-colors border"
+                    style={active
+                      ? { backgroundColor: s.accent, color: "#fff", borderColor: s.accent }
+                      : { backgroundColor: s.bg, color: s.accent, borderColor: s.border }}
+                  >
+                    {s.emoji} {t}
+                  </button>
+                );
+              })}
+            </div>
+            {momentType === "Letter" && (
+              <p className="font-body text-xs text-muted-foreground italic">
+                Your entry will be formatted as a letter starting with "Dear {activeChild?.name ?? "little one"},"
+              </p>
+            )}
+          </div>
+
           <div className="space-y-2">
             <Label className="font-body text-sm">When</Label>
             <Input
@@ -309,11 +352,11 @@ function NewMomentPage() {
           </div>
 
           <div className="space-y-2">
-            <Label className="font-body text-sm">Notes (optional)</Label>
+            <Label className="font-body text-sm">{momentType === "Letter" ? "Your letter" : "Notes (optional)"}</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="A little detail you'll want to remember…"
+              placeholder={momentType === "Letter" ? "Write your letter here — it'll be saved starting with 'Dear [name],'…" : "A little detail you'll want to remember…"}
               maxLength={1000}
               rows={4}
               className="rounded-2xl bg-card px-4 py-3 font-body text-base"

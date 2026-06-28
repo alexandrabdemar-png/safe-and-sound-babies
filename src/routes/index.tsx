@@ -2,16 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import catCarseat from "@/assets/cat-carseat.png";
-import catPacifier from "@/assets/cat-pacifier.png";
-import catBreastmilk from "@/assets/cat-breastmilk.png";
-import catFormula from "@/assets/cat-formula.png";
-import catBabyfood from "@/assets/cat-babyfood.png";
-import catSwaddle from "@/assets/cat-swaddle.png";
-import catStroller from "@/assets/cat-stroller.png";
-import catPacknplay from "@/assets/cat-packnplay.png";
-import catCarrier from "@/assets/cat-carrier.png";
-import catBouncer from "@/assets/cat-bouncer.png";
+import catCarseat from "@/assets/cat-carseat-sketch.svg";
+import catPacifier from "@/assets/cat-pacifier-sketch.svg";
+import catBreastmilk from "@/assets/cat-breastmilk-sketch.svg";
+import catFormula from "@/assets/cat-formula-sketch.svg";
+import catBabyfood from "@/assets/cat-babyfood-sketch.svg";
+import catSwaddle from "@/assets/cat-swaddle-sketch.svg";
+import catStroller from "@/assets/cat-stroller-sketch.svg";
+import catPacknplay from "@/assets/cat-packnplay-sketch.svg";
+import catCarrier from "@/assets/cat-carrier-sketch.svg";
+import catBouncer from "@/assets/cat-bouncer-sketch.svg";
 
 export const Route = createFileRoute("/")({
   head: () => ({

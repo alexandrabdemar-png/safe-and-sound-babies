@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <g stroke="#2C3560" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Can body (cylinder) -->
+    <rect x="56" y="80" width="88" height="90" rx="10" stroke-width="2"/>
+    <!-- Can top ellipse -->
+    <ellipse cx="100" cy="80" rx="44" ry="12" stroke-width="2"/>
+    <!-- Lid -->
+    <ellipse cx="100" cy="68" rx="40" ry="10" stroke-width="2"/>
+    <!-- Lid tab -->
+    <path d="M100 58 Q100 48 108 46 Q116 44 118 50 L114 58" stroke-width="1.8"/>
+    <!-- Scoop/spoon on lid -->
+    <path d="M82 64 Q86 60 90 62 Q88 66 84 68 Z" stroke-width="1.3"/>
+    <!-- Label wrap -->
+    <rect x="60" y="88" width="80" height="68" rx="4" stroke-width="1.4"/>
+    <!-- Product name lines -->
+    <line x1="68" y1="100" x2="132" y2="100" stroke-width="2"/>
+    <line x1="74" y1="108" x2="126" y2="108" stroke-width="1.4"/>
+    <!-- Baby bottle icon on label -->
+    <path d="M92 120 Q92 116 100 115 Q108 116 108 120 L106 142 Q106 146 100 146 Q94 146 94 142 Z" stroke-width="1.4"/>
+    <!-- Nipple of icon bottle -->
+    <path d="M95 115 Q96 110 100 110 Q104 110 105 115" stroke-width="1.3"/>
+    <!-- Serving suggestion dots -->
+    <line x1="68" y1="148" x2="82" y2="148" stroke-width="1.2"/>
+    <line x1="68" y1="155" x2="88" y2="155" stroke-width="1.2"/>
+    <line x1="68" y1="162" x2="78" y2="162" stroke-width="1.2"/>
+    <!-- Star decoration -->
+    <path d="M144 120 L146 126 L140 122 L150 122 L144 126 Z" stroke-width="1.3"/>
+    <path d="M152 140 L154 146 L148 142 L158 142 L152 146 Z" stroke-width="1.3"/>
+  </g>
+</svg>

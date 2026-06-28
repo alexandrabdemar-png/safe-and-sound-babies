@@ -198,6 +198,16 @@ function ProfilePage() {
           <Button asChild variant="ghost" className="w-full justify-start rounded-xl">
             <Link to="/profile/notification-settings"><Bell className="h-4 w-4 mr-2" /> Notification Settings</Link>
           </Button>
+          <Button
+            variant="ghost"
+            className="w-full justify-start rounded-xl"
+            onClick={() => {
+              try { localStorage.setItem("safesound.homeProfileSetup", "pending"); } catch {}
+              navigate({ to: "/home" });
+            }}
+          >
+            <Gift className="h-4 w-4 mr-2" /> Edit home profile
+          </Button>
           <Button asChild variant="ghost" className="w-full justify-start rounded-xl">
             <Link to="/profile/privacy-policy"><Shield className="h-4 w-4 mr-2" /> Privacy Policy</Link>
           </Button>

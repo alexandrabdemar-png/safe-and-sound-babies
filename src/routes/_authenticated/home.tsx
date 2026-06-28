@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowRight, BookOpen, Calendar, ChevronDown, ChevronUp, Gift, Loader2, Package, Plus, Radio, RefreshCw, Ruler, Sparkles, Sun, Zap, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, Calendar, ChevronDown, ChevronUp, Gift, Loader2, Package, Plus, Radio, RefreshCw, Ruler, Sparkles, Sun, Zap, X } from "lucide-react";
 import { MomentTimeline } from "@/components/MomentTimeline";
 import { SparkleIllustration } from "@/components/EmptyIllustration";
 import { BottomNav } from "@/components/BottomNav";
@@ -243,6 +243,23 @@ function HomePage() {
   // Bottle weaning reminder dismiss
   const [bottleWeaningDismissed, setBottleWeaningDismissed] = useState(false);
 
+  // Home profile personalization
+  type HomeProfile = {
+    has_stairs: boolean;
+    home_type: string;
+    has_pet: boolean;
+    has_car: boolean;
+    in_daycare: boolean;
+  };
+  const [homeProfile, setHomeProfile] = useState<HomeProfile | null>(null);
+  const [homeProfileSetup, setHomeProfileSetup] = useState<"pending" | "done" | "skipped">(() => {
+    try {
+      const v = localStorage.getItem("safesound.homeProfileSetup");
+      if (v === "done" || v === "skipped") return v;
+    } catch {}
+    return "pending";
+  });
+  const [hpStep, setHpStep] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -342,6 +359,24 @@ function HomePage() {
         else if (d.action === 'snoozed' && d.until && d.until > nowIso) blocked.add(d.rule_id);
       }
       setDismissedIds(blocked);
+
+      // Load home profile
+      try {
+        const { data: { session: sess2 } } = await supabase.auth.getSession();
+        if (sess2?.user) {
+          const { data: hp } = await (supabase as any)
+            .from("home_profile")
+            .select("has_stairs, home_type, has_pet, has_car, in_daycare")
+            .eq("user_id", sess2.user.id)
+            .maybeSingle();
+          if (hp) {
+            setHomeProfile(hp as HomeProfile);
+            // If we have a profile, mark setup done
+            try { localStorage.setItem("safesound.homeProfileSetup", "done"); } catch {}
+            setHomeProfileSetup("done");
+          }
+        }
+      } catch {}
 
       // Load notification preferences
       try {
@@ -493,6 +528,24 @@ function HomePage() {
     setBottleWeaningDismissed(true);
   }
 
+  async function saveHomeProfile(answers: HomeProfile) {
+    setHomeProfile(answers);
+    setHomeProfileSetup("done");
+    try { localStorage.setItem("safesound.homeProfileSetup", "done"); } catch {}
+    try {
+      const { data: { session: sess } } = await supabase.auth.getSession();
+      if (!sess?.user) return;
+      await (supabase as any).from("home_profile").upsert({
+        user_id: sess.user.id,
+        ...answers,
+      }, { onConflict: "user_id" });
+    } catch {}
+  }
+
+  function skipHomeProfile() {
+    setHomeProfileSetup("skipped");
+    try { localStorage.setItem("safesound.homeProfileSetup", "skipped"); } catch {}
+  }
   // Weekly safety tip
   const alertsPaused = notifPrefs.paused_until && new Date(notifPrefs.paused_until) > new Date();
   const today = new Date().getDay();
@@ -529,6 +582,20 @@ function HomePage() {
           </p>
         </div>
       </header>
+
+      {/* Home Personalization Setup — one-time, shown after onboarding */}
+      {homeProfileSetup === "pending" && child && (
+        <div className="px-5 pt-4 sm:px-6">
+          <div className="mx-auto max-w-md">
+            <HomePersonalizationCard
+              step={hpStep}
+              onStep={setHpStep}
+              onSave={saveHomeProfile}
+              onSkip={skipHomeProfile}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Today Section — day-of-week rotating card */}
       <div className="px-5 pt-4 sm:px-6">
@@ -639,7 +706,11 @@ function HomePage() {
             <AgeJumpCard
               childName={child.name}
               months={recentMilestone.months}
-              actions={recentMilestone.actions}
+              actions={recentMilestone.actions.filter((a) =>
+                homeProfile?.has_stairs === false
+                  ? !/stair|gate/i.test(a)
+                  : true
+              )}
               onDismiss={dismissAgeJump}
             />
           </div>
@@ -736,17 +807,22 @@ function HomePage() {
         <div className="mx-auto max-w-md">
           <div className="mb-4 flex items-baseline justify-between">
             <h2 className="font-display text-xl font-semibold tracking-tight">Moments</h2>
-            <Button asChild size="sm" variant="ghost" className="rounded-full font-body text-xs">
-              <Link to="/moments/new">
-                <Plus className="mr-1 h-3.5 w-3.5" /> Log one
-              </Link>
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button asChild size="sm" variant="ghost" className="rounded-full font-body text-xs">
+                <Link to="/moments">View all</Link>
+              </Button>
+              <Button asChild size="sm" variant="ghost" className="rounded-full font-body text-xs">
+                <Link to="/moments/new">
+                  <Plus className="mr-1 h-3.5 w-3.5" /> Log
+                </Link>
+              </Button>
+            </div>
           </div>
 
           {moments.length === 0 ? (
             <EmptyMoments />
           ) : (
-            <MomentTimeline moments={moments} />
+            <MomentTimeline moments={moments} childName={child?.name} childDob={child?.date_of_birth} />
           )}
         </div>
       </section>
@@ -1317,6 +1393,27 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
             <p style={{ fontSize: 14, color: "#3D3935", lineHeight: 1.55, margin: 0 }}>{weekendReminder(child.date_of_birth ?? null)}</p>
           </div>
         </div>
+        {comingUp.length > 0 && (
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #E2DAD0" }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
+              Coming up for {child?.name ?? "your little one"}
+            </p>
+            {comingUp.slice(0, 3).map((p) => {
+              const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
+              const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
+              return (
+                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <p style={{ fontSize: 13, color: "#3D3935", margin: 0 }}>
+                    {p.type === "replace"
+                      ? `It may be time to replace ${p.name} soon`
+                      : `${p.name} might be ready for a size-up`}
+                  </p>
+                  <span style={{ fontSize: 11, color: days <= 7 ? "#B91C1C" : days <= 21 ? "#B45309" : "#4A7A47", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }
@@ -1349,67 +1446,26 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-// ── Development This Week card ───────────────────────────────────────────────
-
-function DevelopmentThisWeekCard({ dobStr }: { dobStr: string }) {
-  const [expanded, setExpanded] = useState(false);
-  const ageWeeks = Math.floor(Math.max(0, Date.now() - parseDateLocal(dobStr).getTime()) / (7 * 86400000));
-  const band = getDevelopmentBand(ageWeeks);
-
-  return (
-    <div style={{ borderRadius: 20, backgroundColor: "#EDF4EC", border: "1px solid #C8DEC6", padding: "16px 18px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: "50%", backgroundColor: "#C8DEC6", color: "#4A7A47" }}>
-            <BookOpen size={13} />
-          </span>
-          <div>
-            <p style={{ fontSize: 12, fontWeight: 700, color: "#4A7A47", margin: 0, textTransform: "uppercase", letterSpacing: "0.1em" }}>Development this week</p>
-            <p style={{ fontSize: 11, color: "#7A9E78", margin: 0 }}>every baby grows in their own time</p>
-          </div>
+      {comingUp.length > 0 && (
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #E2DAD0" }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
+            Coming up for {child?.name ?? "your little one"}
+          </p>
+          {comingUp.slice(0, 3).map((p) => {
+            const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
+            const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
+            return (
+              <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <p style={{ fontSize: 13, color: "#3D3935", margin: 0 }}>
+                  {p.type === "replace"
+                    ? `It may be time to replace ${p.name} soon`
+                    : `${p.name} might be ready for a size-up`}
+                </p>
+                <span style={{ fontSize: 11, color: days <= 7 ? "#B91C1C" : days <= 21 ? "#B45309" : "#4A7A47", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+              </div>
+            );
+          })}
         </div>
-        <button
-          type="button"
-          onClick={() => setExpanded((e) => !e)}
-          style={{ background: "none", border: "none", cursor: "pointer", color: "#7A9E78", padding: 4 }}
-          aria-label={expanded ? "Show less" : "Show more"}
-        >
-          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </button>
-      </div>
-
-      {/* Physical — always visible */}
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-        <span style={{ fontSize: 15, marginTop: 1 }}>🌱</span>
-        <p style={{ fontSize: 13, color: "#3D3935", lineHeight: 1.6, margin: 0 }}>{band.physical}</p>
-      </div>
-
-      {/* Cognitive + Safety — shown when expanded */}
-      {expanded && (
-        <>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginTop: 10, paddingTop: 10, borderTop: "1px solid #C8DEC6" }}>
-            <span style={{ fontSize: 15, marginTop: 1 }}>💡</span>
-            <p style={{ fontSize: 13, color: "#3D3935", lineHeight: 1.6, margin: 0 }}>{band.cognitive}</p>
-          </div>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginTop: 10, paddingTop: 10, borderTop: "1px solid #C8DEC6" }}>
-            <span style={{ fontSize: 15, marginTop: 1 }}>🛡️</span>
-            <p style={{ fontSize: 13, color: "#3D3935", lineHeight: 1.6, margin: 0 }}>{band.safety}</p>
-          </div>
-        </>
-      )}
-
-      {!expanded && (
-        <button
-          type="button"
-          onClick={() => setExpanded(true)}
-          style={{ marginTop: 8, background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#4A7A47", padding: 0, display: "flex", alignItems: "center", gap: 3 }}
-        >
-          <Sun size={12} /> See cognitive & safety notes
-        </button>
       )}
     </div>
   );
@@ -1472,6 +1528,147 @@ function EmptyMoments() {
           <Plus className="mr-1 h-3.5 w-3.5" /> Log your first moment
         </Link>
       </Button>
+    </div>
+  );
+}
+
+// ── Home Personalization Card ────────────────────────────────────────────────
+type HomeProfileAnswers = {
+  has_stairs: boolean;
+  home_type: string;
+  has_pet: boolean;
+  has_car: boolean;
+  in_daycare: boolean;
+};
+
+function HomePersonalizationCard({
+  step,
+  onStep,
+  onSave,
+  onSkip,
+}: {
+  step: 0 | 1 | 2 | 3 | 4 | 5;
+  onStep: (s: 0 | 1 | 2 | 3 | 4 | 5) => void;
+  onSave: (answers: HomeProfileAnswers) => void;
+  onSkip: () => void;
+}) {
+  const [answers, setAnswers] = useState<Partial<HomeProfileAnswers>>({});
+
+  function pick(key: keyof HomeProfileAnswers, value: boolean | string) {
+    const updated = { ...answers, [key]: value };
+    setAnswers(updated);
+    // Advance to next step after pick
+    const next = (step + 1) as 0 | 1 | 2 | 3 | 4 | 5;
+    if (step < 5) {
+      onStep(next);
+    }
+    if (step === 4) {
+      // Last question — save
+      onSave({
+        has_stairs: updated.has_stairs ?? false,
+        home_type: updated.home_type ?? "Other",
+        has_pet: updated.has_pet ?? false,
+        has_car: updated.has_car ?? true,
+        in_daycare: updated.in_daycare ?? false,
+      });
+    }
+  }
+
+  const questions: { key: keyof HomeProfileAnswers; text: string; options: { label: string; value: boolean | string }[] }[] = [
+    {
+      key: "has_stairs",
+      text: "Do you have stairs at home?",
+      options: [{ label: "Yes", value: true }, { label: "No", value: false }],
+    },
+    {
+      key: "home_type",
+      text: "What type of home do you live in?",
+      options: [{ label: "House", value: "house" }, { label: "Apartment", value: "apartment" }, { label: "Other", value: "other" }],
+    },
+    {
+      key: "has_pet",
+      text: "Do you have a pet?",
+      options: [{ label: "Yes", value: true }, { label: "No", value: false }],
+    },
+    {
+      key: "has_car",
+      text: "Do you have a car?",
+      options: [{ label: "Yes", value: true }, { label: "No", value: false }],
+    },
+    {
+      key: "in_daycare",
+      text: "Is your baby in daycare or cared for at home?",
+      options: [{ label: "Daycare", value: true }, { label: "At home", value: false }],
+    },
+  ];
+
+  if (step === 0) {
+    return (
+      <div className="rounded-3xl border border-primary/30 bg-card p-5 animate-scale-in">
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-primary">
+              <Sparkles className="h-3.5 w-3.5" />
+            </span>
+            <p className="font-display text-sm font-semibold tracking-tight">Help us personalise your reminders</p>
+          </div>
+          <button type="button" onClick={onSkip} className="rounded-full p-1 text-muted-foreground hover:bg-muted" aria-label="Skip">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+        <p className="font-body text-sm text-muted-foreground leading-relaxed mb-4">
+          A few quick questions so we only show you the reminders that actually apply to your home and family — no forms, just taps.
+        </p>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            className="rounded-full font-body text-xs"
+            onClick={() => onStep(1)}
+          >
+            Get started →
+          </Button>
+          <Button size="sm" variant="ghost" className="rounded-full font-body text-xs text-muted-foreground" onClick={onSkip}>
+            Skip
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const q = questions[step - 1];
+
+  return (
+    <div className="rounded-3xl border border-primary/30 bg-card p-5 animate-scale-in">
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <p className="font-body text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Question {step} of {questions.length}
+        </p>
+        <button type="button" onClick={onSkip} className="rounded-full p-1 text-muted-foreground hover:bg-muted" aria-label="Skip">
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      <p className="font-display text-base font-semibold tracking-tight mb-4">{q.text}</p>
+      <div className="flex flex-wrap gap-2">
+        {q.options.map((opt) => (
+          <button
+            key={String(opt.value)}
+            type="button"
+            onClick={() => pick(q.key, opt.value)}
+            className="rounded-full border border-border bg-muted/40 px-5 py-2.5 font-body text-sm font-medium text-foreground hover:border-primary/50 hover:bg-primary/10 transition-colors"
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      {/* Progress dots */}
+      <div className="flex gap-1 mt-4">
+        {questions.map((_, i) => (
+          <span
+            key={i}
+            className={`h-1.5 rounded-full transition-all ${i + 1 < step ? "w-4 bg-primary" : i + 1 === step ? "w-4 bg-primary/60" : "w-1.5 bg-border"}`}
+          />
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <g stroke="#2C3560" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Nipple bulb -->
+    <ellipse cx="100" cy="72" rx="14" ry="20" stroke-width="2"/>
+    <!-- Guard / shield plate -->
+    <path d="M48 100 Q48 78 70 76 L130 76 Q152 78 152 100 Q152 128 130 132 L70 132 Q48 128 48 100 Z" stroke-width="2"/>
+    <!-- Ventilation holes -->
+    <circle cx="76" cy="98" r="5" stroke-width="1.6"/>
+    <circle cx="124" cy="98" r="5" stroke-width="1.6"/>
+    <!-- Heart left -->
+    <path d="M68 112 Q68 108 72 108 Q76 108 76 112 Q76 116 68 120 Q60 116 60 112 Q60 108 64 108 Q68 108 68 112 Z" stroke-width="1.5"/>
+    <!-- Heart right -->
+    <path d="M132 112 Q132 108 136 108 Q140 108 140 112 Q140 116 132 120 Q124 116 124 112 Q124 108 128 108 Q132 108 132 112 Z" stroke-width="1.5"/>
+    <!-- Ring handle -->
+    <circle cx="100" cy="155" r="16" stroke-width="2"/>
+    <!-- Handle stem -->
+    <line x1="100" y1="132" x2="100" y2="139" stroke-width="2"/>
+  </g>
+</svg>
