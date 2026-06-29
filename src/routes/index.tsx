@@ -2,6 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import catCarseat from "@/assets/cat-carseat-sketch.svg";
+import catPacifier from "@/assets/cat-pacifier-sketch.svg";
+import catBreastMilk from "@/assets/cat-breastmilk-sketch.svg";
+import catFormula from "@/assets/cat-formula-sketch.svg";
+import catBabyFood from "@/assets/cat-babyfood-sketch.svg";
+import catSwaddle from "@/assets/cat-swaddle-sketch.svg";
+import catStroller from "@/assets/cat-stroller-sketch.svg";
+import catPacknPlay from "@/assets/cat-packnplay-sketch.svg";
+import catCarrier from "@/assets/cat-carrier-sketch.svg";
+import catBouncer from "@/assets/cat-bouncer-sketch.svg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,8 +36,16 @@ export const Route = createFileRoute("/")({
 });
 
 const categories = [
-  "Car seats", "Pacifiers", "Breast Milk", "Formula", "Baby Food",
-  "Swaddles", "Strollers", "Pack 'n Plays", "Carriers", "Bouncers",
+  { name: "Car seats", image: catCarseat },
+  { name: "Pacifiers", image: catPacifier },
+  { name: "Breast Milk", image: catBreastMilk },
+  { name: "Formula", image: catFormula },
+  { name: "Baby Food", image: catBabyFood },
+  { name: "Swaddles", image: catSwaddle },
+  { name: "Strollers", image: catStroller },
+  { name: "Pack 'n Plays", image: catPacknPlay },
+  { name: "Carriers", image: catCarrier },
+  { name: "Bouncers", image: catBouncer },
 ];
 
 const features = [
@@ -106,13 +124,16 @@ function Index() {
           </div>
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6">
-            {categories.map((name) => (
+            {categories.map((cat) => (
               <div
-                key={name}
+                key={cat.name}
                 className="group flex flex-col items-center justify-center rounded-3xl border border-border/60 bg-card px-4 py-6 text-center transition-all hover:border-border hover:shadow-lg hover:shadow-foreground/5"
               >
+                <div className="mb-4 flex h-20 w-20 items-center justify-center">
+                  <img src={cat.image} alt={cat.name} className="h-full w-full object-contain" />
+                </div>
                 <span className="font-body text-sm font-medium text-foreground">
-                  {name}
+                  {cat.name}
                 </span>
               </div>
             ))}
