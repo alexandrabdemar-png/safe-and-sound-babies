@@ -295,6 +295,56 @@ export const SAFETY_TIPS: SafetyTip[] = [
   },
 
   // ── 24+ months ──
+  // ── Pool safety ──
+  {
+    id: "t053",
+    minMonths: 0,
+    maxMonths: 999,
+    text: "It may be worth checking that any home pool or spa has a four-sided fence that meets local code — a barrier that completely surrounds the water and latches at the top is considered the most effective layer of protection.",
+  },
+  {
+    id: "t054",
+    minMonths: 0,
+    maxMonths: 999,
+    text: "Some families find it helpful to confirm that the gate on their pool fence is self-closing and self-latching, with the latch on the pool side — this way it can't accidentally be left open.",
+  },
+  {
+    id: "t055",
+    minMonths: 0,
+    maxMonths: 48,
+    text: "You might want to keep a US Coast Guard–approved life jacket sized for your child near any body of water — floaties and swim rings are fun but are not safety devices.",
+  },
+  {
+    id: "t056",
+    minMonths: 0,
+    maxMonths: 48,
+    text: "It may be a good time to make sure that an adult who knows how to swim is within arm's reach whenever your child is in or near the water — designated water watching, with no phone distractions.",
+  },
+  {
+    id: "t057",
+    minMonths: 12,
+    maxMonths: 999,
+    text: "Some families find it helpful to enroll their child in age-appropriate swim lessons — the AAP notes that lessons can significantly reduce drowning risk for children one year and older.",
+  },
+  {
+    id: "t058",
+    minMonths: 0,
+    maxMonths: 999,
+    text: "You might consider learning CPR — pool-related emergencies happen very quickly, and hands-only CPR before emergency services arrive can make a meaningful difference.",
+  },
+  {
+    id: "t059",
+    minMonths: 0,
+    maxMonths: 36,
+    text: "It may be worth emptying any portable or inflatable pools completely after each use and storing them upside down — even a few inches of water left standing is a drowning risk for young children.",
+  },
+  {
+    id: "t060",
+    minMonths: 0,
+    maxMonths: 999,
+    text: "Some families find it helpful to keep a reaching pole and a ring buoy at the pool's edge during any swim session — having rescue equipment immediately at hand can save critical seconds.",
+  },
+
   {
     id: "t047",
     minMonths: 22,
