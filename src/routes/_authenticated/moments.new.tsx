@@ -166,7 +166,10 @@ function NewMomentPage() {
     const savedNotes = (momentType !== "Milestone" && rawNotes)
       ? `[${momentType}] ${rawNotes}`
       : rawNotes || null;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { toast.error("Sign in to log moments"); setSaving(false); return; }
     const { error } = await (supabase as any).from("milestones").insert({
+      user_id: session.user.id,
       child_id: activeChildId,
       title: title.trim(),
       logged_at: loggedAt,
