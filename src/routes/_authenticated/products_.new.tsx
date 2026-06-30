@@ -3,9 +3,11 @@ import { Component, lazy, Suspense, useEffect, useMemo, useRef, useState, type R
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
+  AlertTriangle,
   ArrowLeft,
   CalendarDays,
   ChevronDown,
+  ExternalLink,
   Loader2,
   Search,
   ShieldCheck,
@@ -13,6 +15,7 @@ import {
   ScanLine,
   X,
 } from "lucide-react";
+import { checkRecallsForProduct, type RecallHit } from "@/lib/recallCheck";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,51 +47,27 @@ async function runLookupGuidelines(productId: string): Promise<void> {
   await lookupAndSaveGuidelines({ data: { productId } });
 }
 
-type CpscRecall = {
-  RecallID: string;
-  RecallHeading: string;
-  URL: string;
-  Products?: Array<{ Name: string; Description: string }>;
-};
-
-async function checkCpscRecalls(productId: string, productName: string): Promise<void> {
+async function recordRecallInDb(productId: string, hit: RecallHit): Promise<void> {
   try {
-    const res = await fetch(
-      `https://www.saferproducts.gov/RestWebServices/Recall?format=json&Keyword=${encodeURIComponent(productName)}&limit=5`
-    );
-    if (!res.ok) return;
-    const recalls: CpscRecall[] = await res.json();
-    if (!Array.isArray(recalls) || recalls.length === 0) return;
+    const { data: catalogEntry } = await (supabase as any)
+      .from("recalls")
+      .upsert(
+        { source: hit.source, source_id: hit.id, title: hit.title, url: hit.url },
+        { onConflict: "source,source_id" }
+      )
+      .select("id")
+      .single();
 
-    toast.error("Recall found for this product — check Alerts");
-
-    for (const recall of recalls.slice(0, 5)) {
-      const { data: catalogEntry } = await supabase
-        .from("recalls")
-        .upsert(
-          {
-            source: "cpsc",
-            source_id: String(recall.RecallID),
-            title: recall.RecallHeading,
-            url: recall.URL,
-          } as never,
-          { onConflict: "source,source_id" }
-        )
-        .select("id")
-        .single();
-
-      const recallId = (catalogEntry as { id: string } | null)?.id;
-      if (!recallId) continue;
-
-      await supabase.from("product_recalls").upsert(
-        { product_id: productId, recall_id: recallId, acknowledged: false } as never,
-        { onConflict: "product_id,recall_id" }
-      );
+    const recallId = (catalogEntry as { id: string } | null)?.id;
+    if (recallId) {
+      await (supabase as any)
+        .from("product_recalls")
+        .upsert({ product_id: productId, recall_id: recallId, acknowledged: false }, { onConflict: "product_id,recall_id" });
     }
 
-    await supabase.from("products").update({ recalled: true } as never).eq("id", productId);
+    await (supabase as any).from("products").update({ recalled: true }).eq("id", productId);
   } catch (err) {
-    console.warn("[cpsc-recall-check] failed:", err instanceof Error ? err.message : "unknown");
+    console.warn("[recall-db] failed:", err instanceof Error ? err.message : "unknown");
   }
 }
 
@@ -151,6 +130,9 @@ function NewProductPage() {
   // Sheet state for AI-picked product
   const [sheetProduct, setSheetProduct] = useState<ProductSearchResult | null>(null);
 
+  // Recall modal state
+  const [recallModal, setRecallModal] = useState<{ hit: RecallHit; productName: string; productId: string } | null>(null);
+
   const computedReplaceAt = useMemo(() => {
     if (category === "car_seat") return carSeatExpiry || "";
     return "";
@@ -184,9 +166,14 @@ function NewProductPage() {
         runLookupGuidelines(productId).catch((err) => {
           console.warn("[guidelines] lookup failed:", err instanceof Error ? err.message : "unknown");
         });
-        checkCpscRecalls(productId, name.trim()).catch((err) => {
-          console.warn("[cpsc] check failed:", err instanceof Error ? err.message : "unknown");
-        });
+
+        // Inline recall check — must complete before navigating
+        const hit = await checkRecallsForProduct(name.trim());
+        if (hit) {
+          await recordRecallInDb(productId, hit);
+          setRecallModal({ hit, productName: name.trim(), productId });
+          return; // wait for user to dismiss modal before navigating
+        }
       }
       toast.success("Saved — fetching safety guidelines");
       navigate({ to: "/products" });
@@ -353,7 +340,90 @@ function NewProductPage() {
         product={sheetProduct}
         onClose={() => setSheetProduct(null)}
         onSaved={() => navigate({ to: "/products" })}
+        onRecallFound={(hit, productName, productId) => {
+          setSheetProduct(null);
+          setRecallModal({ hit, productName, productId });
+        }}
       />
+
+      {/* Recall alert modal */}
+      {recallModal && (
+        <RecallAlertModal
+          hit={recallModal.hit}
+          productName={recallModal.productName}
+          onDismiss={() => {
+            setRecallModal(null);
+            navigate({ to: "/products" });
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── Recall Alert Modal ───────────────────────────────────────────────────────
+
+function RecallAlertModal({
+  hit,
+  productName,
+  onDismiss,
+}: {
+  hit: RecallHit;
+  productName: string;
+  onDismiss: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
+      style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+    >
+      <div className="w-full max-w-md overflow-hidden rounded-t-3xl sm:rounded-3xl bg-white">
+        {/* Red header */}
+        <div className="px-6 py-5" style={{ backgroundColor: "#C8523A" }}>
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="h-5 w-5 text-white" />
+            <span className="font-display text-lg font-semibold text-white">Recall Alert Found</span>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5 space-y-4">
+          <div>
+            <p className="font-display text-xl font-semibold text-foreground">{productName}</p>
+            <p className="mt-0.5 font-body text-sm text-muted-foreground">{hit.title}</p>
+          </div>
+
+          <div
+            className="rounded-2xl px-4 py-3"
+            style={{ backgroundColor: "rgba(200,82,58,0.08)" }}
+          >
+            <p className="font-body text-sm leading-relaxed text-foreground">{hit.reason}</p>
+          </div>
+
+          {hit.recallDate && (
+            <p className="font-body text-xs text-muted-foreground">Recall date: {hit.recallDate}</p>
+          )}
+
+          <a
+            href={hit.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 h-12 w-full rounded-full font-body text-sm font-semibold text-white transition-colors"
+            style={{ backgroundColor: "#C8523A" }}
+          >
+            View official recall notice
+            <ExternalLink className="h-4 w-4" />
+          </a>
+
+          <button
+            type="button"
+            onClick={onDismiss}
+            className="flex items-center justify-center h-12 w-full rounded-full border border-border font-body text-sm font-medium text-foreground hover:bg-muted transition-colors"
+          >
+            Got it — save product anyway
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -500,10 +570,12 @@ function SaveProductSheet({
   product,
   onClose,
   onSaved,
+  onRecallFound,
 }: {
   product: ProductSearchResult | null;
   onClose: () => void;
   onSaved: () => void;
+  onRecallFound: (hit: RecallHit, productName: string, productId: string) => void;
 }) {
   const [purchasedAt, setPurchasedAt] = useState(toISODate(new Date()));
   const [childId, setChildId] = useState<string>("");
@@ -564,9 +636,14 @@ function SaveProductSheet({
         runLookupGuidelines(productId).catch((err) => {
           console.warn("[guidelines] lookup failed:", err instanceof Error ? err.message : "unknown");
         });
-        checkCpscRecalls(productId, product.name).catch((err) => {
-          console.warn("[cpsc] check failed:", err instanceof Error ? err.message : "unknown");
-        });
+
+        // Inline recall check — must complete before navigating
+        const hit = await checkRecallsForProduct(product.name);
+        if (hit) {
+          await recordRecallInDb(productId, hit);
+          onRecallFound(hit, product.name, productId);
+          return;
+        }
       }
 
       toast.success(`${product.name} saved`);

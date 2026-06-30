@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { sanitizeError } from "@/lib/sanitize-error";
+import { fuzzyMatchProduct, CRITICAL_RECALLS } from "@/lib/recallCheck";
 
 export const Route = createFileRoute("/api/public/hooks/check-recalls")({
   server: {
@@ -51,40 +52,15 @@ type UserProduct = {
   category: string | null;
 };
 
-const STOPWORDS = new Set([
-  "the", "and", "for", "with", "kids", "baby", "infant", "toddler", "child", "children",
-  "set", "pack", "size", "model", "new", "old", "from", "your", "their", "this", "that",
-  "inc", "llc", "ltd", "company", "co", "brand",
-]);
-
-function tokenize(s: string): string[] {
-  return s
-    .toLowerCase()
-    .replace(/[^a-z0-9 ]+/g, " ")
-    .split(/\s+/)
-    .filter((t) => t.length >= 4 && !STOPWORDS.has(t));
-}
-
 function isMatch(product: UserProduct, recall: CpscRecall): boolean {
-  const productTokens = new Set(tokenize([product.name, product.brand ?? ""].join(" ")));
-  if (productTokens.size === 0) return false;
-
+  const productName = [product.name, product.brand ?? ""].filter(Boolean).join(" ");
   const recallText = [
     recall.Title ?? "",
+    recall.Description ?? "",
     ...(recall.Products ?? []).flatMap((p) => [p.Name ?? "", p.Model ?? "", p.Type ?? ""]),
     ...(recall.Manufacturers ?? []).map((m) => m.Name ?? ""),
   ].join(" ");
-  const recallTokens = new Set(tokenize(recallText));
-  if (recallTokens.size === 0) return false;
-
-  // Count overlapping significant tokens
-  let overlap = 0;
-  for (const t of productTokens) if (recallTokens.has(t)) overlap++;
-
-  // Require either: brand token + 1 other token match, OR 2+ token overlap overall
-  const brandTokens = new Set(tokenize(product.brand ?? ""));
-  const brandHit = [...brandTokens].some((t) => recallTokens.has(t));
-  return (brandHit && overlap >= 1) || overlap >= 2;
+  return fuzzyMatchProduct(productName, recallText);
 }
 
 async function runCheck(): Promise<Response> {
@@ -149,26 +125,94 @@ async function runCheck(): Promise<Response> {
 
     let matched = 0;
     const productIdsToFlag = new Set<string>();
-    const matchRows: { user_id: string; product_id: string; recall_id: string }[] = [];
+    const matchRows: { user_id: string; product_id: string; recall_id: string; acknowledged?: boolean }[] = [];
 
     for (const product of (products ?? []) as UserProduct[]) {
+      const productName = [product.name, product.brand ?? ""].filter(Boolean).join(" ");
+
+      // 1. Critical recalls (no network, instant)
+      for (const critical of CRITICAL_RECALLS) {
+        const name = productName.toLowerCase();
+        const hit = critical.keywords.some((kw) => name.includes(kw.toLowerCase()));
+        if (!hit) continue;
+
+        const { data: catalogEntry } = await supabaseAdmin
+          .from("recalls")
+          .upsert(
+            { source: "critical", source_id: critical.id, title: critical.title, url: critical.url },
+            { onConflict: "source,source_id" }
+          )
+          .select("id")
+          .single();
+        const recallId = (catalogEntry as { id: string } | null)?.id;
+        if (recallId) {
+          matchRows.push({ user_id: product.user_id, product_id: product.id, recall_id: recallId, acknowledged: false });
+          productIdsToFlag.add(product.id);
+          matched++;
+        }
+        break; // one critical match per product is enough
+      }
+
+      // 2. CPSC matches
       for (const recall of recent) {
         if (!recall.RecallID) continue;
         if (!isMatch(product, recall)) continue;
         const recallId = idBySource.get(String(recall.RecallID));
         if (!recallId) continue;
-        matchRows.push({
-          user_id: product.user_id,
-          product_id: product.id,
-          recall_id: recallId,
-        });
+        matchRows.push({ user_id: product.user_id, product_id: product.id, recall_id: recallId, acknowledged: false });
         productIdsToFlag.add(product.id);
         matched++;
       }
     }
 
+    // 3. FDA bulk check — fetch once per unique product name and match
+    const uniqueNames = [...new Set((products ?? []).map((p: UserProduct) => p.name))];
+    for (const productName of uniqueNames.slice(0, 100)) {
+      try {
+        const enc = encodeURIComponent(productName);
+        const fdaRes = await fetch(
+          `https://api.fda.gov/food/enforcement.json?search=product_description:${enc}&limit=5`
+        );
+        if (!fdaRes.ok) continue;
+        const fdaData = await fdaRes.json().catch(() => null);
+        if (!fdaData?.results?.length) continue;
+
+        for (const r of fdaData.results as { recall_number?: string; product_description?: string; reason_for_recall?: string; recall_initiation_date?: string }) {
+          const text = `${r.product_description ?? ""} ${r.reason_for_recall ?? ""}`;
+          if (!fuzzyMatchProduct(productName, text)) continue;
+
+          const { data: catalogEntry } = await supabaseAdmin
+            .from("recalls")
+            .upsert(
+              {
+                source: "fda",
+                source_id: r.recall_number ?? `fda-${productName.slice(0, 20)}`,
+                title: (r.product_description ?? "FDA Food Recall").slice(0, 500),
+                url: "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts",
+                recall_date: r.recall_initiation_date?.slice(0, 10) ?? null,
+              },
+              { onConflict: "source,source_id" }
+            )
+            .select("id")
+            .single();
+
+          const recallId = (catalogEntry as { id: string } | null)?.id;
+          if (!recallId) continue;
+
+          // Link all products with this name
+          for (const product of (products ?? []) as UserProduct[]) {
+            if (product.name !== productName) continue;
+            matchRows.push({ user_id: product.user_id, product_id: product.id, recall_id: recallId, acknowledged: false });
+            productIdsToFlag.add(product.id);
+            matched++;
+          }
+        }
+      } catch {
+        // ignore per-product FDA errors
+      }
+    }
+
     if (matchRows.length) {
-      // Unique constraint (product_id, recall_id) makes this idempotent
       const { error: mErr } = await supabaseAdmin
         .from("product_recalls")
         .upsert(matchRows, { onConflict: "product_id,recall_id", ignoreDuplicates: true });

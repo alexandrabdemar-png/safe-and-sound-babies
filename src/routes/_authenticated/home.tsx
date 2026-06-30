@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { evaluateInsights, type Insight, type ProductInput } from "@/lib/insights";
 import { friendlyError } from "@/lib/errors";
 import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
+import { checkCriticalRecalls } from "@/lib/recallCheck";
 import { selectWeeklyTip, getIsoWeekNumber, weekKey as getTipWeekKey } from "@/lib/safetyTips";
 import { getDevelopmentBand } from "@/lib/developmentContent";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
@@ -420,6 +421,55 @@ function HomePage() {
     document.addEventListener("visibilitychange", onVisible);
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, [child]);
+
+  // Background critical recall check — runs once after products load
+  useEffect(() => {
+    if (products.length === 0) return;
+    (async () => {
+      try {
+        // Fetch id + name for all products to check against critical recalls
+        const { data } = await (supabase as any)
+          .from("products")
+          .select("id, name, recalled");
+        if (!Array.isArray(data)) return;
+
+        let newRecalls = 0;
+        for (const p of data as { id: string; name: string; recalled: boolean }) {
+          if (p.recalled) continue; // already flagged
+          const hit = checkCriticalRecalls(p.name);
+          if (!hit) continue;
+
+          // Upsert into recall catalog
+          const { data: catalogEntry } = await (supabase as any)
+            .from("recalls")
+            .upsert(
+              { source: "critical", source_id: hit.id, title: hit.title, url: hit.url },
+              { onConflict: "source,source_id" }
+            )
+            .select("id")
+            .single();
+          const recallId = (catalogEntry as { id: string } | null)?.id;
+          if (recallId) {
+            await (supabase as any)
+              .from("product_recalls")
+              .upsert({ product_id: p.id, recall_id: recallId, acknowledged: false }, { onConflict: "product_id,recall_id" });
+          }
+          await (supabase as any).from("products").update({ recalled: true }).eq("id", p.id);
+          newRecalls++;
+        }
+        if (newRecalls > 0) {
+          // Refresh alert counts
+          const { count } = await (supabase as any)
+            .from("product_recalls")
+            .select("id", { count: "exact", head: true })
+            .eq("acknowledged", false);
+          setAlerts((prev) => ({ ...prev, recalls: count ?? prev.recalls }));
+        }
+      } catch {
+        // background — silently ignore
+      }
+    })();
+  }, [products.length]);
 
   const age = useMemo(() => calcAge(child?.date_of_birth ?? null), [child]);
   const totalAlerts = alerts.recalls + alerts.replace + alerts.sizeUp;
