@@ -251,6 +251,7 @@ function HomePage() {
     has_pet: boolean;
     has_car: boolean;
     in_daycare: boolean;
+    has_pool: boolean;
   };
   const [homeProfile, setHomeProfile] = useState<HomeProfile | null>(null);
   const [homeProfileSetup, setHomeProfileSetup] = useState<"pending" | "done" | "skipped">(() => {
@@ -260,7 +261,7 @@ function HomePage() {
     } catch {}
     return "pending";
   });
-  const [hpStep, setHpStep] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
+  const [hpStep, setHpStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6>(0);
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -367,7 +368,7 @@ function HomePage() {
         if (sess2?.user) {
           const { data: hp } = await (supabase as any)
             .from("home_profile")
-            .select("has_stairs, home_type, has_pet, has_car, in_daycare")
+            .select("has_stairs, home_type, has_pet, has_car, in_daycare, has_pool")
             .eq("user_id", sess2.user.id)
             .maybeSingle();
           if (hp) {
@@ -816,6 +817,23 @@ function HomePage() {
         <div className="px-5 pt-3 sm:px-6">
           <div className="mx-auto max-w-md">
             <RecallRadarCard count={recallRadarCount} />
+          </div>
+        </div>
+      )}
+
+      {/* Pool alarm nudge — shown when home profile says they have a pool */}
+      {homeProfile?.has_pool && (
+        <div className="px-5 pt-3 sm:px-6">
+          <div className="mx-auto max-w-md">
+            <div className="flex items-start gap-3 rounded-3xl border border-blue-200 bg-blue-50 px-4 py-4">
+              <span className="mt-0.5 text-xl">🏊</span>
+              <div className="flex-1 min-w-0">
+                <p className="font-body text-sm font-semibold text-foreground">Pool alarm recommended</p>
+                <p className="mt-0.5 font-body text-xs leading-relaxed text-muted-foreground">
+                  Since you have a pool, the AAP recommends a pool alarm as a secondary layer of protection alongside a four-sided fence. Alarms can alert you if a child enters the water unexpectedly.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -1623,6 +1641,7 @@ type HomeProfileAnswers = {
   has_pet: boolean;
   has_car: boolean;
   in_daycare: boolean;
+  has_pool: boolean;
 };
 
 function HomePersonalizationCard({
@@ -1631,8 +1650,8 @@ function HomePersonalizationCard({
   onSave,
   onSkip,
 }: {
-  step: 0 | 1 | 2 | 3 | 4 | 5;
-  onStep: (s: 0 | 1 | 2 | 3 | 4 | 5) => void;
+  step: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  onStep: (s: 0 | 1 | 2 | 3 | 4 | 5 | 6) => void;
   onSave: (answers: HomeProfileAnswers) => void;
   onSkip: () => void;
 }) {
@@ -1641,12 +1660,11 @@ function HomePersonalizationCard({
   function pick(key: keyof HomeProfileAnswers, value: boolean | string) {
     const updated = { ...answers, [key]: value };
     setAnswers(updated);
-    // Advance to next step after pick
-    const next = (step + 1) as 0 | 1 | 2 | 3 | 4 | 5;
-    if (step < 5) {
+    const next = (step + 1) as 0 | 1 | 2 | 3 | 4 | 5 | 6;
+    if (step < 6) {
       onStep(next);
     }
-    if (step === 4) {
+    if (step === 5) {
       // Last question — save
       onSave({
         has_stairs: updated.has_stairs ?? false,
@@ -1654,6 +1672,7 @@ function HomePersonalizationCard({
         has_pet: updated.has_pet ?? false,
         has_car: updated.has_car ?? true,
         in_daycare: updated.in_daycare ?? false,
+        has_pool: updated.has_pool ?? false,
       });
     }
   }
@@ -1683,6 +1702,11 @@ function HomePersonalizationCard({
       key: "in_daycare",
       text: "Is your baby in daycare or cared for at home?",
       options: [{ label: "Daycare", value: true }, { label: "At home", value: false }],
+    },
+    {
+      key: "has_pool",
+      text: "Do you have a pool or spa at home?",
+      options: [{ label: "Yes", value: true }, { label: "No", value: false }],
     },
   ];
 
