@@ -103,7 +103,7 @@ function Index() {
 
               <Link
                 to="/auth"
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-body text-base font-semibold text-primary-foreground transition-all duration-150 hover:bg-[#234E4A]"
+                className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-body text-base font-semibold text-primary-foreground transition-all duration-150 hover:bg-[#485240]"
               >
                 Get started free
                 <ArrowRight className="h-4 w-4" />
