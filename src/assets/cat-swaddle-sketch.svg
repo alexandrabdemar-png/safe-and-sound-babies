@@ -1,72 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" stroke="#2C3560" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <!-- Baby head circle -->
-  <circle cx="100" cy="52" r="28" stroke-width="2.4"/>
-  <!-- Hair wisps -->
-  <path d="M 87 26 C 85 19 89 14 93 17" stroke-width="1.5"/>
-  <path d="M 100 24 C 100 16 105 13 107 17" stroke-width="1.5"/>
-  <path d="M 113 27 C 116 20 112 15 109 19" stroke-width="1.3"/>
-
-  <!-- Eyes -->
-  <ellipse cx="90" cy="50" rx="3.5" ry="4" stroke-width="1.5"/>
-  <ellipse cx="110" cy="50" rx="3.5" ry="4" stroke-width="1.5"/>
-  <!-- Pupils -->
-  <circle cx="90" cy="51" r="1.8" fill="#2C3560" stroke-width="0"/>
-  <circle cx="110" cy="51" r="1.8" fill="#2C3560" stroke-width="0"/>
-  <!-- Eyelashes upper left -->
-  <line x1="87" y1="46" x2="85" y2="43" stroke-width="1"/>
-  <line x1="90" y1="46" x2="90" y2="42" stroke-width="1"/>
-  <line x1="93" y1="46" x2="95" y2="43" stroke-width="1"/>
-  <!-- Eyelashes upper right -->
-  <line x1="107" y1="46" x2="105" y2="43" stroke-width="1"/>
-  <line x1="110" y1="46" x2="110" y2="42" stroke-width="1"/>
-  <line x1="113" y1="46" x2="115" y2="43" stroke-width="1"/>
-  <!-- Nose -->
-  <path d="M 97 57 C 98 60 102 60 103 57" stroke-width="1.3"/>
-  <!-- Chubby cheeks -->
-  <path d="M 80 55 C 78 58 78 63 82 65" stroke-width="1.1"/>
-  <path d="M 120 55 C 122 58 122 63 118 65" stroke-width="1.1"/>
-  <!-- Smile -->
-  <path d="M 92 64 C 96 69 104 69 108 64" stroke-width="1.5"/>
-  <!-- Left ear -->
-  <path d="M 72 48 C 67 44 67 58 72 62" stroke-width="1.8"/>
-  <!-- Right ear -->
-  <path d="M 128 48 C 133 44 133 58 128 62" stroke-width="1.8"/>
-
-  <!-- Swaddle outer body large burrito shape -->
-  <path d="M 54 90 C 48 102 46 118 48 136 C 50 158 60 172 76 180 L 100 186 L 124 180 C 140 172 150 158 152 136 C 154 118 152 102 146 90 Z" stroke-width="2.6"/>
-
-  <!-- Left wing fold wrapping over front -->
-  <path d="M 54 90 C 58 80 70 74 86 76 C 72 86 62 100 60 118" stroke-width="2.2"/>
-  <!-- Right wing fold wrapping over front -->
-  <path d="M 146 90 C 142 80 130 74 114 76 C 128 86 138 100 140 118" stroke-width="2.2"/>
-
-  <!-- Main cross-fold crease across front -->
-  <path d="M 60 118 C 72 106 88 102 100 104 C 112 102 128 106 140 118" stroke-width="1.8"/>
-
-  <!-- Lower swaddle taper -->
-  <path d="M 54 148 C 58 140 64 136 72 138" stroke-width="1.4"/>
-  <path d="M 146 148 C 142 140 136 136 128 138" stroke-width="1.4"/>
-
-  <!-- Bottom gather tuck -->
-  <path d="M 72 176 C 82 182 92 185 100 185 C 108 185 118 182 128 176" stroke-width="1.8"/>
-  <path d="M 76 172 C 84 178 92 181 100 181 C 108 181 116 178 124 172" stroke-width="1.3"/>
-  <!-- Bottom tuck fold lines -->
-  <path d="M 88 184 C 90 188 94 190 100 190" stroke-width="1.1"/>
-  <path d="M 112 184 C 110 188 106 190 100 190" stroke-width="1.1"/>
-
-  <!-- Tiny fist peeking from left -->
-  <path d="M 50 100 C 40 96 34 106 38 116 C 41 124 50 128 56 120" stroke-width="1.8"/>
-  <path d="M 38 112 C 36 120 40 126 44 126" stroke-width="1.3"/>
-  <!-- Knuckle lines on fist -->
-  <line x1="40" y1="108" x2="44" y2="106" stroke-width="1.1"/>
-  <line x1="40" y1="114" x2="44" y2="113" stroke-width="1.1"/>
-
-  <!-- Blanket texture dots scattered -->
-  <circle cx="64" cy="130" r="2" stroke-width="1"/>
-  <circle cx="70" cy="148" r="2" stroke-width="1"/>
-  <circle cx="136" cy="130" r="2" stroke-width="1"/>
-  <circle cx="130" cy="148" r="2" stroke-width="1"/>
-  <!-- Small star texture marks -->
-  <path d="M 60 140 L 61 137 L 62 140 L 59 138 L 63 138 Z" stroke-width="1"/>
-  <path d="M 138 144 L 139 141 L 140 144 L 137 142 L 141 142 Z" stroke-width="1"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <g stroke="#2C3560" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Swaddle body wrap -->
+    <path d="M70 95 Q60 80 64 64 Q68 48 100 44 Q132 48 136 64 Q140 80 130 95 Q120 115 118 160 Q116 178 100 178 Q84 178 82 160 Q80 115 70 95 Z" stroke-width="2"/>
+    <!-- Head/face circle -->
+    <circle cx="100" cy="58" r="22" stroke-width="2"/>
+    <!-- Face features -->
+    <circle cx="93" cy="55" r="2.5" fill="#2C3560"/>
+    <circle cx="107" cy="55" r="2.5" fill="#2C3560"/>
+    <path d="M94 65 Q100 70 106 65" stroke-width="1.6"/>
+    <!-- Wrap fold left -->
+    <path d="M70 95 Q76 108 80 130" stroke-width="1.5"/>
+    <!-- Wrap fold right -->
+    <path d="M130 95 Q124 108 120 130" stroke-width="1.5"/>
+    <!-- Swaddle tuck/fold at bottom -->
+    <path d="M82 160 Q90 155 100 155 Q110 155 118 160" stroke-width="1.5"/>
+    <!-- Left wing of swaddle -->
+    <path d="M64 80 Q52 85 46 95 Q48 108 64 104 Q70 95 72 88" stroke-width="1.8"/>
+    <!-- Right wing -->
+    <path d="M136 80 Q148 85 154 95 Q152 108 136 104 Q130 95 128 88" stroke-width="1.8"/>
+    <!-- Small star doodle -->
+    <path d="M155 58 L157 64 L151 60 L161 60 L155 64 Z" stroke-width="1.3"/>
+    <path d="M42 120 L44 126 L38 122 L48 122 L42 126 Z" stroke-width="1.3"/>
+  </g>
 </svg>

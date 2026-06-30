@@ -1,45 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" stroke="#2C3560" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <!-- Toy arch — from back of seat arching high over to front -->
-  <path d="M 72 118 C 66 88 68 58 84 36 C 96 18 120 14 140 26 C 156 36 162 56 156 80 L 148 116" stroke-width="2.2"/>
-  <!-- Hanging string -->
-  <line x1="118" y1="28" x2="118" y2="48" stroke-width="1.3"/>
-  <!-- Elephant toy body -->
-  <ellipse cx="118" cy="58" rx="14" ry="11" stroke-width="1.8"/>
-  <!-- Elephant head -->
-  <circle cx="130" cy="50" r="9" stroke-width="1.8"/>
-  <!-- Elephant trunk -->
-  <path d="M 136 52 C 145 50 148 58 143 64" stroke-width="1.4"/>
-  <!-- Elephant ear -->
-  <path d="M 124 44 C 128 38 136 40 134 47" stroke-width="1.3"/>
-  <!-- Elephant eye -->
-  <circle cx="132" cy="49" r="1.5" fill="#2C3560" stroke-width="0"/>
-  <!-- Seat back — reclined at ~40° -->
-  <path d="M 56 122 C 52 100 56 78 68 64 L 112 62 C 128 64 140 78 140 96 L 140 130 C 138 148 120 158 94 158 L 70 156 C 56 150 54 140 56 122 Z" stroke-width="2.6"/>
-  <!-- Headrest at top of seat back -->
-  <path d="M 68 64 C 70 52 80 44 96 42 C 112 44 124 52 128 62" stroke-width="2.2"/>
-  <!-- Headrest inner pad -->
-  <path d="M 74 66 C 76 56 84 50 96 49 C 108 50 118 56 122 64" stroke-width="1.4"/>
-  <!-- Seat padding lines -->
-  <path d="M 60 118 C 76 110 122 110 138 118" stroke-width="1.4"/>
-  <path d="M 58 132 C 74 124 124 124 140 132" stroke-width="1.2"/>
-  <!-- Harness centre -->
-  <line x1="96" y1="80" x2="96" y2="148" stroke-width="1.6"/>
-  <!-- Harness shoulders -->
-  <path d="M 76 80 C 80 100 86 116 96 128" stroke-width="1.5"/>
-  <path d="M 122 80 C 118 100 110 116 96 128" stroke-width="1.5"/>
-  <!-- Harness waist -->
-  <path d="M 70 136 Q 96 144 124 136" stroke-width="1.5"/>
-  <!-- Crotch buckle -->
-  <rect x="84" y="128" width="22" height="14" rx="5" stroke-width="1.6"/>
-  <!-- Rocker frame left leg -->
-  <path d="M 60 150 C 52 162 40 172 26 178" stroke-width="2.4"/>
-  <!-- Rocker frame right leg -->
-  <path d="M 138 150 C 148 162 158 170 170 176" stroke-width="2.4"/>
-  <!-- Rocker base sweeping arc -->
-  <path d="M 18 180 C 42 164 68 156 98 154 C 128 156 158 166 182 182" stroke-width="2.8"/>
-  <!-- Second rocker arc (depth) -->
-  <path d="M 24 184 C 48 170 72 162 98 160 C 126 162 154 172 176 184" stroke-width="1.4"/>
-  <!-- Control button side -->
-  <circle cx="144" cy="112" r="7" stroke-width="1.8"/>
-  <circle cx="144" cy="132" r="7" stroke-width="1.8"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <g stroke="#2C3560" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Seat -->
+    <path d="M55 110 Q52 90 70 80 L130 80 Q148 90 145 110 Q142 135 120 145 L80 145 Q58 135 55 110 Z" stroke-width="2"/>
+    <!-- Back recline -->
+    <path d="M70 80 Q62 65 60 50" stroke-width="2"/>
+    <path d="M130 80 Q138 65 140 50" stroke-width="2"/>
+    <!-- Headrest top -->
+    <path d="M60 50 Q70 38 100 36 Q130 38 140 50" stroke-width="2"/>
+    <!-- Toy bar arch -->
+    <path d="M58 92 Q55 70 65 58" stroke-width="1.8"/>
+    <path d="M142 92 Q145 70 135 58" stroke-width="1.8"/>
+    <path d="M65 58 Q82 46 100 46 Q118 46 135 58" stroke-width="1.8"/>
+    <!-- Hanging elephant left -->
+    <line x1="78" y1="58" x2="78" y2="70" stroke-width="1.4"/>
+    <ellipse cx="78" cy="75" rx="8" ry="7" stroke-width="1.5"/>
+    <path d="M72 74 Q66 76 65 80 Q66 83 70 81" stroke-width="1.3"/>
+    <circle cx="80" cy="73" r="1.2" fill="#2C3560"/>
+    <!-- Hanging elephant right -->
+    <line x1="122" y1="58" x2="122" y2="70" stroke-width="1.4"/>
+    <ellipse cx="122" cy="75" rx="8" ry="7" stroke-width="1.5"/>
+    <path d="M128 74 Q134 76 135 80 Q134 83 130 81" stroke-width="1.3"/>
+    <circle cx="120" cy="73" r="1.2" fill="#2C3560"/>
+    <!-- Rocker base -->
+    <path d="M36 168 Q68 148 100 146 Q132 148 164 168" stroke-width="2.2"/>
+    <!-- Rocker legs -->
+    <line x1="65" y1="145" x2="48" y2="168" stroke-width="2"/>
+    <line x1="135" y1="145" x2="152" y2="168" stroke-width="2"/>
+    <!-- Harness straps -->
+    <path d="M80 100 Q88 112 100 115 Q112 112 120 100" stroke-width="1.5"/>
+    <line x1="100" y1="115" x2="100" y2="135" stroke-width="1.5"/>
+  </g>
 </svg>

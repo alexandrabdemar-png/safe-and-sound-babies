@@ -1,73 +1,37 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" stroke="#2C3560" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <!-- Handle bar top curve -->
-  <path d="M 48 46 C 48 38 56 32 66 32 L 146 32 C 156 32 164 38 164 46" stroke-width="2.6"/>
-  <!-- Handle grip texture notches -->
-  <line x1="84" y1="32" x2="84" y2="39" stroke-width="1.2"/>
-  <line x1="96" y1="32" x2="96" y2="38" stroke-width="1.2"/>
-  <line x1="110" y1="32" x2="110" y2="38" stroke-width="1.2"/>
-  <line x1="122" y1="32" x2="122" y2="39" stroke-width="1.2"/>
-
-  <!-- Left main frame strut -->
-  <path d="M 66 46 C 64 62 68 80 76 96 L 80 140" stroke-width="2.2"/>
-  <!-- Right main frame strut -->
-  <path d="M 146 46 C 148 62 144 80 136 96 L 132 140" stroke-width="2.2"/>
-
-  <!-- Seat back left edge -->
-  <path d="M 74 56 L 70 48" stroke-width="1.8"/>
-  <!-- Seat back right edge -->
-  <path d="M 138 56 L 142 48" stroke-width="1.8"/>
-
-  <!-- Canopy hood -->
-  <path d="M 70 48 C 74 26 138 26 142 48" stroke-width="2.4"/>
-  <!-- Canopy hood lower edge -->
-  <path d="M 70 48 C 84 58 128 58 142 48" stroke-width="1.6"/>
-  <!-- Canopy rib lines -->
-  <path d="M 78 50 C 80 34 100 28 100 28" stroke-width="1.2"/>
-  <path d="M 90 52 C 92 34 100 26 100 26" stroke-width="1.2"/>
-  <path d="M 134 50 C 132 34 100 28 100 28" stroke-width="1.2"/>
-  <path d="M 122 52 C 120 34 100 26 100 26" stroke-width="1.2"/>
-
-  <!-- Seat back panel -->
-  <path d="M 70 48 L 74 56 L 80 140 L 132 140 L 138 56 L 142 48 Z" stroke-width="1.8"/>
-
-  <!-- Seat padding line -->
-  <path d="M 76 100 C 90 108 122 108 136 100" stroke-width="1.3"/>
-  <!-- Seat cushion lower -->
-  <path d="M 78 118 C 90 124 122 124 134 118" stroke-width="1.1"/>
-
-  <!-- Bumper bar -->
-  <path d="M 80 96 C 92 104 120 104 132 96" stroke-width="1.8"/>
-  <!-- Bumper bar ends clipping into frame -->
-  <circle cx="80" cy="96" r="3" stroke-width="1.4"/>
-  <circle cx="132" cy="96" r="3" stroke-width="1.4"/>
-
-  <!-- Left rear leg -->
-  <path d="M 80 140 C 72 154 54 166 40 178" stroke-width="2.4"/>
-  <!-- Right front leg -->
-  <path d="M 132 140 C 136 154 140 166 144 178" stroke-width="2.4"/>
-  <!-- Front axle stub -->
-  <line x1="130" y1="170" x2="156" y2="170" stroke-width="1.8"/>
-  <!-- Rear axle stub -->
-  <line x1="28" y1="172" x2="56" y2="166" stroke-width="1.8"/>
-
-  <!-- Rear wheel large -->
-  <circle cx="34" cy="180" r="20" stroke-width="2.4"/>
-  <circle cx="34" cy="180" r="9" stroke-width="1.4"/>
-  <!-- Rear wheel spokes -->
-  <line x1="34" y1="161" x2="34" y2="199" stroke-width="1.1"/>
-  <line x1="15" y1="180" x2="53" y2="180" stroke-width="1.1"/>
-
-  <!-- Front wheel small -->
-  <circle cx="144" cy="180" r="14" stroke-width="2.2"/>
-  <circle cx="144" cy="180" r="6" stroke-width="1.4"/>
-
-  <!-- Under-seat basket -->
-  <path d="M 70 140 L 64 158 L 80 140" stroke-width="1.4"/>
-  <path d="M 142 140 L 148 158 L 132 140" stroke-width="1.4"/>
-  <path d="M 64 158 Q 106 166 148 158" stroke-width="1.6"/>
-  <!-- Basket cross hatching suggestion -->
-  <line x1="80" y1="140" x2="76" y2="158" stroke-width="1.1"/>
-  <line x1="96" y1="140" x2="92" y2="158" stroke-width="1.1"/>
-  <line x1="112" y1="140" x2="110" y2="158" stroke-width="1.1"/>
-  <line x1="128" y1="140" x2="126" y2="158" stroke-width="1.1"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <g stroke="#2C3560" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Handle bar -->
+    <path d="M42 38 Q44 32 52 32 L148 32 Q156 32 158 38" stroke-width="2.2"/>
+    <!-- Frame left strut -->
+    <line x1="52" y1="32" x2="72" y2="130" stroke-width="2"/>
+    <!-- Frame right strut -->
+    <line x1="148" y1="32" x2="128" y2="130" stroke-width="2"/>
+    <!-- Seat bottom -->
+    <path d="M72 130 L128 130" stroke-width="2"/>
+    <!-- Seat back -->
+    <path d="M72 130 L68 90 L132 90 L128 130" stroke-width="2"/>
+    <!-- Hood/canopy -->
+    <path d="M68 90 Q68 58 100 52 Q132 58 132 90" stroke-width="2"/>
+    <!-- Hood ribs -->
+    <path d="M78 90 Q80 68 100 64" stroke-width="1.3"/>
+    <path d="M90 90 Q92 62 100 60" stroke-width="1.3"/>
+    <!-- Bumper bar -->
+    <path d="M72 108 Q100 112 128 108" stroke-width="1.6"/>
+    <!-- Front leg -->
+    <line x1="106" y1="130" x2="92" y2="166" stroke-width="2"/>
+    <!-- Rear leg -->
+    <line x1="72" y1="130" x2="58" y2="170" stroke-width="2"/>
+    <!-- Front axle -->
+    <line x1="80" y1="166" x2="106" y2="166" stroke-width="1.8"/>
+    <!-- Back axle / cross brace -->
+    <line x1="52" y1="158" x2="88" y2="150" stroke-width="1.6"/>
+    <!-- Rear wheel -->
+    <circle cx="52" cy="170" r="16" stroke-width="2"/>
+    <circle cx="52" cy="170" r="5" stroke-width="1.4"/>
+    <!-- Front wheel -->
+    <circle cx="93" cy="170" r="12" stroke-width="2"/>
+    <circle cx="93" cy="170" r="4" stroke-width="1.4"/>
+    <!-- Foot rest -->
+    <path d="M106 130 Q118 136 128 130" stroke-width="1.5"/>
+  </g>
 </svg>
