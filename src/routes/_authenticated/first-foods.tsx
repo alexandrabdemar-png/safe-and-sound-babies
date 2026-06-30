@@ -86,8 +86,11 @@ function FirstFoodsPage() {
 
     setSaving(true);
     const finalName = isAllergen && selectedAllergen ? `${foodName.trim()} (${selectedAllergen})` : foodName.trim();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { toast.error("Sign in to log foods"); setSaving(false); return; }
 
     const { error } = await supabase.from("first_foods" as any).insert({
+      user_id: session.user.id,
       child_id: child.id,
       food_name: finalName,
       date_introduced: dateIntroduced,
@@ -95,7 +98,7 @@ function FirstFoodsPage() {
       reaction_notes: reactionNotes.trim() || null,
     });
 
-    if (error) { toast.error(friendlyError(error.message)); setSaving(false); return; }
+    if (error) { toast.error(error.message || "Couldn't save — please try again"); setSaving(false); return; }
 
     toast.success(`${finalName} added to ${child.name}'s food log.`);
     setFoodName(""); setDateIntroduced(new Date().toISOString().slice(0, 10));
