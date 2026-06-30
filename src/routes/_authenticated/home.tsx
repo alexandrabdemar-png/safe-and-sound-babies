@@ -491,24 +491,34 @@ function HomePage() {
   async function dismissInsight(insightId: string) {
     if (!child) return;
     setDismissedIds((prev) => new Set([...prev, insightId]));
-    await (supabase as any).from("insight_dismissals").upsert({
-      child_id: child.id,
-      rule_id: insightId,
-      action: "dismissed",
-      until: null,
-    }, { onConflict: "child_id,rule_id" });
+    try {
+      const { data: { session: sess } } = await supabase.auth.getSession();
+      if (!sess?.user) return;
+      await (supabase as any).from("insight_dismissals").upsert({
+        user_id: sess.user.id,
+        child_id: child.id,
+        rule_id: insightId,
+        action: "dismissed",
+        until: null,
+      }, { onConflict: "child_id,rule_id" });
+    } catch {}
   }
 
   async function snoozeInsight(insightId: string) {
     if (!child) return;
     setDismissedIds((prev) => new Set([...prev, insightId]));
     const until = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-    await (supabase as any).from("insight_dismissals").upsert({
-      child_id: child.id,
-      rule_id: insightId,
-      action: "snoozed",
-      until,
-    }, { onConflict: "child_id,rule_id" });
+    try {
+      const { data: { session: sess } } = await supabase.auth.getSession();
+      if (!sess?.user) return;
+      await (supabase as any).from("insight_dismissals").upsert({
+        user_id: sess.user.id,
+        child_id: child.id,
+        rule_id: insightId,
+        action: "snoozed",
+        until,
+      }, { onConflict: "child_id,rule_id" });
+    } catch {}
   }
 
   function dismissRecallBanner() {
@@ -544,12 +554,12 @@ function HomePage() {
         Math.floor((Date.now() - new Date(child.date_of_birth ?? new Date().toISOString()).getTime()) / (30.44 * 86400000)),
         getIsoWeekNumber(),
       ) : null;
-      await (supabase as any).from("completed_tips").insert({
+      await (supabase as any).from("completed_tips").upsert({
         user_id: sess.user.id,
         child_id: child?.id ?? null,
         tip_id: tip?.id ?? "unknown",
         week_key: wk,
-      });
+      }, { onConflict: "user_id,week_key" });
     } catch {}
   }
 
