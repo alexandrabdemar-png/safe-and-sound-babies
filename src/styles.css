@@ -16,17 +16,17 @@
  *   Body / UI labels   : Inter — clean, modern, professional
  *   Captions / accents : DM Sans — editorial; pairs with DM Serif
  *
- * Palette (hex → oklch):
- *   #FAF8F5  background — warm off-white
- *   #FFFFFF  card — pure white with subtle shadow
- *   #1C2B2B  text — deep forest (not pure black)
- *   #4A6362  secondary — muted teal-green
- *   #8A9E9D  muted — quiet neutral
- *   #2C5F5A  primary — deep trustworthy teal
+ * Palette — Sherwin Williams inspired (hex → oklch):
+ *   #F1EBE1  background — Marshmellow (warm off-white)
+ *   #FDFAF6  card — near-white, warm
+ *   #3A3028  text — deep warm brown
+ *   #5C6355  primary — deep Soft Sage
+ *   #C4A98C  accent — Malted Milk (warm taupe)
+ *   #E8DFCC  muted/secondary — Champagne
+ *   #CEBFAB  border — Solstice
+ *   #B4BFC5  misty — cool blue-gray info tint
  *   #C8523A  terracotta — safety alerts & recalls only
- *   #B8956A  gold — Pro features & highlights
- *   #E8E2DA  border — barely-there warm border
- *   #F0E8DC  sand — hover fills, section backgrounds
+ *   #D4C3B2  sand — hover fills, section backgrounds
  */
 
 @theme inline {
@@ -99,28 +99,28 @@
   --radius: 1rem;
 
   /* ── Backgrounds ─────────────────────────────────────────────────────── */
-  /* #FAF8F5 */ --background: oklch(0.979 0.005 75);
-  /* #1C2B2B */ --foreground: oklch(0.202 0.028 185);
+  /* #F1EBE1 Marshmellow */ --background: oklch(0.937 0.018 84);
+  /* #3A3028            */ --foreground: oklch(0.228 0.022 72);
 
-  /* #FFFFFF */ --card: oklch(1.000 0 0);
-               --card-foreground: oklch(0.202 0.028 185);
-  /* #FFFFFF */ --popover: oklch(1.000 0 0);
-               --popover-foreground: oklch(0.202 0.028 185);
+  /* #FDFAF6 warm near-white */ --card: oklch(0.990 0.007 80);
+               --card-foreground: oklch(0.228 0.022 72);
+  /* #FDFAF6 */ --popover: oklch(0.990 0.007 80);
+               --popover-foreground: oklch(0.228 0.022 72);
 
-  /* ── Primary: #2C5F5A deep trustworthy teal ─────────────────────────── */
-  /* #2C5F5A */ --primary: oklch(0.400 0.068 185);
+  /* ── Primary: #5C6355 deep Soft Sage ────────────────────────────────── */
+  /* #5C6355 */ --primary: oklch(0.430 0.038 138);
                --primary-foreground: oklch(1.000 0 0);
 
-  /* ── Secondary: #F0E8DC warm sand ───────────────────────────────────── */
-  /* #F0E8DC */ --secondary: oklch(0.938 0.020 75);
-               --secondary-foreground: oklch(0.202 0.028 185);
+  /* ── Secondary: #E8DFCC Champagne ───────────────────────────────────── */
+  /* #E8DFCC */ --secondary: oklch(0.893 0.028 83);
+               --secondary-foreground: oklch(0.228 0.022 72);
 
   /* ── Muted ───────────────────────────────────────────────────────────── */
-  /* #F0E8DC */ --muted: oklch(0.938 0.020 75);
-  /* #8A9E9D */ --muted-foreground: oklch(0.648 0.022 185);
+  /* #E8DFCC Champagne */ --muted: oklch(0.893 0.028 83);
+  /* #7A7060           */ --muted-foreground: oklch(0.503 0.025 74);
 
-  /* ── Accent: #B8956A warm gold (Pro features) ───────────────────────── */
-  /* #B8956A */ --accent: oklch(0.682 0.083 68);
+  /* ── Accent: #C4A98C Malted Milk ────────────────────────────────────── */
+  /* #C4A98C */ --accent: oklch(0.714 0.052 68);
                --accent-foreground: oklch(1.000 0 0);
 
   /* ── Destructive: #C8523A terracotta (safety alerts only) ───────────── */
@@ -128,43 +128,43 @@
                --destructive-foreground: oklch(1.000 0 0);
 
   /* ── Borders ─────────────────────────────────────────────────────────── */
-  /* #E8E2DA */ --border: oklch(0.906 0.012 75);
-               --input: oklch(0.906 0.012 75);
-  /* #2C5F5A */ --ring: oklch(0.400 0.068 185);
+  /* #CEBFAB Solstice */ --border: oklch(0.800 0.030 76);
+               --input: oklch(0.800 0.030 76);
+  /* #5C6355 */ --ring: oklch(0.430 0.038 138);
 
   /* ── Charts ─────────────────────────────────────────────────────────── */
-  /* #3D7A5F */ --chart-1: oklch(0.510 0.090 155);
-  /* #C4862A */ --chart-2: oklch(0.635 0.110 70);
+  /* #5C6355 */ --chart-1: oklch(0.430 0.038 138);
+  /* #C4A98C */ --chart-2: oklch(0.714 0.052 68);
   /* #C8523A */ --chart-3: oklch(0.545 0.130 35);
-  /* #2C5F5A */ --chart-4: oklch(0.400 0.068 185);
-  /* #B8956A */ --chart-5: oklch(0.682 0.083 68);
+  /* #B4BFC5 */ --chart-4: oklch(0.762 0.018 220);
+  /* #D4C3B2 */ --chart-5: oklch(0.820 0.030 76);
 
   /* ── Sidebar ─────────────────────────────────────────────────────────── */
-  --sidebar: oklch(0.979 0.005 75);
-  --sidebar-foreground: oklch(0.202 0.028 185);
-  --sidebar-primary: oklch(0.400 0.068 185);
+  --sidebar: oklch(0.937 0.018 84);
+  --sidebar-foreground: oklch(0.228 0.022 72);
+  --sidebar-primary: oklch(0.430 0.038 138);
   --sidebar-primary-foreground: oklch(1.000 0 0);
-  --sidebar-accent: oklch(0.682 0.083 68);
+  --sidebar-accent: oklch(0.714 0.052 68);
   --sidebar-accent-foreground: oklch(1.000 0 0);
-  --sidebar-border: oklch(0.906 0.012 75);
-  --sidebar-ring: oklch(0.400 0.068 185);
+  --sidebar-border: oklch(0.800 0.030 76);
+  --sidebar-ring: oklch(0.430 0.038 138);
 
   /* ── Extended brand tokens ──────────────────────────────────────────── */
-  /* #F0E8DC */ --sand:        oklch(0.938 0.020 75);
-  /* #C8523A */ --terracotta:  oklch(0.545 0.130 35);
-  /* #3D7A5F */ --forest:      oklch(0.510 0.090 155);
-  /* #FAF8F5 */ --cream:       oklch(0.979 0.005 75);
-               --card-surface: oklch(1.000 0 0);
-  /* #FAF8F5 */ --butter:      oklch(0.979 0.005 75);
-  /* #4A6362 */ --sage:        oklch(0.422 0.038 185);
-  /* #F0E8DC */ --mist:        oklch(0.938 0.020 75);
-  /* #E8E2DA */ --blush:       oklch(0.906 0.012 75);
-  /* #C4862A */ --amber:       oklch(0.635 0.110 70);
-  /* #B8956A */ --gold:        oklch(0.682 0.083 68);
+  /* #D4C3B2 Solstice  */ --sand:        oklch(0.820 0.030 76);
+  /* #C8523A terracotta */ --terracotta: oklch(0.545 0.130 35);
+  /* #5C6355 sage       */ --forest:     oklch(0.430 0.038 138);
+  /* #F1EBE1 marshmellow*/ --cream:      oklch(0.937 0.018 84);
+               --card-surface: oklch(0.990 0.007 80);
+  /* #F1EBE1            */ --butter:     oklch(0.937 0.018 84);
+  /* #5C6355 soft sage  */ --sage:       oklch(0.430 0.038 138);
+  /* #B4BFC5 misty      */ --mist:       oklch(0.762 0.018 220);
+  /* #CEBFAB solstice   */ --blush:      oklch(0.800 0.030 76);
+  /* #C4A98C malted milk*/ --amber:      oklch(0.714 0.052 68);
+  /* #C4A98C malted milk*/ --gold:       oklch(0.714 0.052 68);
 
   /* Status semantic tokens */
-  /* #3D7A5F */ --status-good:   oklch(0.510 0.090 155);
-  /* #C4862A */ --status-warn:   oklch(0.635 0.110 70);
+  /* #5C6355 */ --status-good:   oklch(0.430 0.038 138);
+  /* #C4A98C */ --status-warn:   oklch(0.714 0.052 68);
   /* #C8523A */ --status-action: oklch(0.545 0.130 35);
 }
 

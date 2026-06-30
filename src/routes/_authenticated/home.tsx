@@ -1255,7 +1255,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
 
   const cardBase: React.CSSProperties = {
     borderRadius: 20,
-    backgroundColor: "#2C5F5A",
+    backgroundColor: "#5C6355",
     border: "1px solid rgba(255,255,255,0.08)",
     padding: "24px",
   };
@@ -1280,7 +1280,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         <button
           type="button"
           onClick={() => onNavigate({ to: "/onboarding" })}
-          style={{ marginTop: 12, padding: "8px 18px", borderRadius: 999, backgroundColor: "rgba(255,255,255,0.9)", color: "#2C5F5A", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}
+          style={{ marginTop: 12, padding: "8px 18px", borderRadius: 999, backgroundColor: "rgba(255,255,255,0.9)", color: "#5C6355", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}
         >
           Add a child →
         </button>
@@ -1397,7 +1397,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
       <button
         type="button"
         onClick={() => onNavigate({ to: "/recall-radar" })}
-        style={{ ...cardBase, backgroundColor: total > 0 ? "#C8523A" : "#2C5F5A", width: "100%", textAlign: "left", cursor: "pointer" }}
+        style={{ ...cardBase, backgroundColor: total > 0 ? "#C8523A" : "#5C6355", width: "100%", textAlign: "left", cursor: "pointer" }}
       >
         {label}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
@@ -1546,7 +1546,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
               <button
                 type="button"
                 onClick={() => onNavigate({ to: "/growth" })}
-                style={{ padding: "7px 16px", borderRadius: 999, backgroundColor: "rgba(255,255,255,0.9)", color: "#2C5F5A", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}
+                style={{ padding: "7px 16px", borderRadius: 999, backgroundColor: "rgba(255,255,255,0.9)", color: "#5C6355", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}
               >
                 Log measurements →
               </button>
