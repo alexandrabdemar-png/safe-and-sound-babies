@@ -15,17 +15,14 @@ export const Route = createFileRoute("/_authenticated/moments")({
   head: () => ({ meta: [{ title: "Memory Book — Peace of Mine" }] }),
 });
 
-export type MomentType = "First" | "Funny" | "Milestone" | "Observation" | "Letter" | "Gratitude";
+export type MomentType = "First" | "Funny" | "Milestone";
 
-export const ALL_TYPES: MomentType[] = ["First", "Funny", "Milestone", "Observation", "Letter", "Gratitude"];
+export const ALL_TYPES: MomentType[] = ["First", "Funny", "Milestone"];
 
 export const TYPE_STYLES: Record<MomentType, { accent: string; bg: string; border: string; emoji: string }> = {
-  First:       { accent: "#C47B2B", bg: "#FEF9F0", border: "#F0D5A0", emoji: "⭐" },
-  Funny:       { accent: "#6A7FBF", bg: "#F0F2FA", border: "#C5CCEC", emoji: "😄" },
-  Milestone:   { accent: "#4A7A47", bg: "#F0F6F0", border: "#B5D5B2", emoji: "🎯" },
-  Observation: { accent: "#7A5A9A", bg: "#F5F0FA", border: "#CCBAE0", emoji: "💭" },
-  Letter:      { accent: "#8A5A4A", bg: "#FBF5F2", border: "#DFC5BC", emoji: "✉️" },
-  Gratitude:   { accent: "#B05A70", bg: "#FAF0F3", border: "#EAC0C8", emoji: "🙏" },
+  First:     { accent: "#C47B2B", bg: "#FEF9F0", border: "#F0D5A0", emoji: "⭐" },
+  Funny:     { accent: "#6A7FBF", bg: "#F0F2FA", border: "#C5CCEC", emoji: "😄" },
+  Milestone: { accent: "#4A7A47", bg: "#F0F6F0", border: "#B5D5B2", emoji: "🎯" },
 };
 
 export function parseMomentType(notes: string | null): { type: MomentType; displayNotes: string } {

@@ -80,7 +80,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Peace of Mine — Baby Safety Tracking" },
       { name: "description", content: "Never miss a safety milestone again. Track car seats, pacifiers, cribs, and more with quiet, kind reminders." },
       { name: "author", content: "Peace of Mine" },
-      { name: "theme-color", content: "#A3B899" },
+      { name: "theme-color", content: "#2C5F5A" },
       { property: "og:title", content: "Peace of Mine — Baby Safety Tracking" },
       { property: "og:description", content: "Never miss a safety milestone again. Track car seats, pacifiers, cribs, and more with quiet, kind reminders." },
       { property: "og:type", content: "website" },
@@ -90,7 +90,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Dancing+Script:wght@600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600&display=swap" },
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "apple-touch-icon", sizes: "192x192", href: "/icon-192.png" },

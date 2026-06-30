@@ -4,12 +4,12 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import catCarseat from "@/assets/cat-carseat-sketch.svg";
 import catPacifier from "@/assets/cat-pacifier-sketch.svg";
-import catBreastmilk from "@/assets/cat-breastmilk-sketch.svg";
+import catBreastMilk from "@/assets/cat-breastmilk-sketch.svg";
 import catFormula from "@/assets/cat-formula-sketch.svg";
-import catBabyfood from "@/assets/cat-babyfood-sketch.svg";
+import catBabyFood from "@/assets/cat-babyfood-sketch.svg";
 import catSwaddle from "@/assets/cat-swaddle-sketch.svg";
 import catStroller from "@/assets/cat-stroller-sketch.svg";
-import catPacknplay from "@/assets/cat-packnplay-sketch.svg";
+import catPacknPlay from "@/assets/cat-packnplay-sketch.svg";
 import catCarrier from "@/assets/cat-carrier-sketch.svg";
 import catBouncer from "@/assets/cat-bouncer-sketch.svg";
 
@@ -38,12 +38,12 @@ export const Route = createFileRoute("/")({
 const categories = [
   { name: "Car seats", image: catCarseat },
   { name: "Pacifiers", image: catPacifier },
-  { name: "Breast Milk", image: catBreastmilk },
+  { name: "Breast Milk", image: catBreastMilk },
   { name: "Formula", image: catFormula },
-  { name: "Baby Food", image: catBabyfood },
+  { name: "Baby Food", image: catBabyFood },
   { name: "Swaddles", image: catSwaddle },
   { name: "Strollers", image: catStroller },
-  { name: "Pack 'n Plays", image: catPacknplay },
+  { name: "Pack 'n Plays", image: catPacknPlay },
   { name: "Carriers", image: catCarrier },
   { name: "Bouncers", image: catBouncer },
 ];
@@ -103,11 +103,17 @@ function Index() {
 
               <Link
                 to="/auth"
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-body text-base font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20"
+                className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-body text-base font-semibold text-primary-foreground transition-all duration-150 hover:bg-[#234E4A]"
               >
                 Get started free
                 <ArrowRight className="h-4 w-4" />
               </Link>
+              <p
+                className="mt-5 text-[11px] font-medium tracking-[0.1em] text-muted-foreground/60"
+                style={{ fontFamily: '"DM Sans", system-ui, sans-serif', textTransform: "uppercase" }}
+              >
+                Safety guidelines based on AAP and CPSC recommendations
+              </p>
             </div>
 
           </div>
@@ -127,17 +133,10 @@ function Index() {
             {categories.map((cat) => (
               <div
                 key={cat.name}
-                className="group flex flex-col items-center rounded-3xl border border-border/60 bg-card p-6 text-center transition-all hover:border-border hover:shadow-lg hover:shadow-foreground/5"
+                className="group flex flex-col items-center justify-center rounded-3xl border border-border/60 bg-card px-4 py-6 text-center transition-all hover:border-border hover:shadow-lg hover:shadow-foreground/5"
               >
                 <div className="mb-4 flex h-20 w-20 items-center justify-center">
-                  <img
-                    src={cat.image}
-                    alt={cat.name}
-                    loading="lazy"
-                    width={512}
-                    height={512}
-                    className="h-full w-full object-contain"
-                  />
+                  <img src={cat.image} alt={cat.name} className="h-full w-full object-contain" />
                 </div>
                 <span className="font-body text-sm font-medium text-foreground">
                   {cat.name}

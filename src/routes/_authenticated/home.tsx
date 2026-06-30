@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { evaluateInsights, type Insight, type ProductInput } from "@/lib/insights";
 import { friendlyError } from "@/lib/errors";
 import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
+import { checkCriticalRecalls } from "@/lib/recallCheck";
 import { selectWeeklyTip, getIsoWeekNumber, weekKey as getTipWeekKey } from "@/lib/safetyTips";
 import { getDevelopmentBand } from "@/lib/developmentContent";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
@@ -406,6 +407,70 @@ function HomePage() {
     return () => { cancelled = true; };
   }, [navigate]);
 
+  // Re-fetch moments when tab regains visibility (e.g. returning from /moments/new)
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState !== "visible") return;
+      supabase.from("milestones")
+        .select("id, title, logged_at, notes")
+        .eq("child_id", (child as any)?.id)
+        .order("logged_at", { ascending: false })
+        .limit(5)
+        .then(({ data }) => { if (data) setMoments(data as Moment[]); });
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [child]);
+
+  // Background critical recall check — runs once after products load
+  useEffect(() => {
+    if (products.length === 0) return;
+    (async () => {
+      try {
+        // Fetch id + name for all products to check against critical recalls
+        const { data } = await (supabase as any)
+          .from("products")
+          .select("id, name, recalled");
+        if (!Array.isArray(data)) return;
+
+        let newRecalls = 0;
+        for (const p of data as { id: string; name: string; recalled: boolean }) {
+          if (p.recalled) continue; // already flagged
+          const hit = checkCriticalRecalls(p.name);
+          if (!hit) continue;
+
+          // Upsert into recall catalog
+          const { data: catalogEntry } = await (supabase as any)
+            .from("recalls")
+            .upsert(
+              { source: "critical", source_id: hit.id, title: hit.title, url: hit.url },
+              { onConflict: "source,source_id" }
+            )
+            .select("id")
+            .single();
+          const recallId = (catalogEntry as { id: string } | null)?.id;
+          if (recallId) {
+            await (supabase as any)
+              .from("product_recalls")
+              .upsert({ product_id: p.id, recall_id: recallId, acknowledged: false }, { onConflict: "product_id,recall_id" });
+          }
+          await (supabase as any).from("products").update({ recalled: true }).eq("id", p.id);
+          newRecalls++;
+        }
+        if (newRecalls > 0) {
+          // Refresh alert counts
+          const { count } = await (supabase as any)
+            .from("product_recalls")
+            .select("id", { count: "exact", head: true })
+            .eq("acknowledged", false);
+          setAlerts((prev) => ({ ...prev, recalls: count ?? prev.recalls }));
+        }
+      } catch {
+        // background — silently ignore
+      }
+    })();
+  }, [products.length]);
+
   const age = useMemo(() => calcAge(child?.date_of_birth ?? null), [child]);
   const totalAlerts = alerts.recalls + alerts.replace + alerts.sizeUp;
   const upNext: Insight[] = useMemo(() => {
@@ -421,6 +486,29 @@ function HomePage() {
     const twentyEightDaysAgo = Date.now() - 28 * 24 * 60 * 60 * 1000;
     return updatedAt < twentyEightDaysAgo;
   }, [child, measReminderDismissed]);
+
+  async function dismissInsight(insightId: string) {
+    if (!child) return;
+    setDismissedIds((prev) => new Set([...prev, insightId]));
+    await (supabase as any).from("insight_dismissals").upsert({
+      child_id: child.id,
+      rule_id: insightId,
+      action: "dismissed",
+      until: null,
+    }, { onConflict: "child_id,rule_id" });
+  }
+
+  async function snoozeInsight(insightId: string) {
+    if (!child) return;
+    setDismissedIds((prev) => new Set([...prev, insightId]));
+    const until = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    await (supabase as any).from("insight_dismissals").upsert({
+      child_id: child.id,
+      rule_id: insightId,
+      action: "snoozed",
+      until,
+    }, { onConflict: "child_id,rule_id" });
+  }
 
   function dismissRecallBanner() {
     try { localStorage.setItem(`safesound.recallBannerDismissed.${todayKey()}`, "true"); } catch {}
@@ -580,6 +668,12 @@ function HomePage() {
           <p className="mt-2 font-body text-base text-muted-foreground">
             {age.label} · <span className="text-foreground/70">{age.subtitle}</span>
           </p>
+          <p
+            className="mt-4 text-[10px] font-medium tracking-[0.12em] text-muted-foreground/50"
+            style={{ fontFamily: '"DM Sans", system-ui, sans-serif', textTransform: "uppercase" }}
+          >
+            Safety guidelines based on AAP and CPSC recommendations
+          </p>
         </div>
       </header>
 
@@ -726,20 +820,6 @@ function HomePage() {
         </div>
       )}
 
-      {/* Weekly digest — Sundays only, once per week */}
-      {!loading && isSunday() && !digestDismissed && child && (
-        <div className="px-5 pt-3 sm:px-6">
-          <div className="mx-auto max-w-md">
-            <WeeklyDigestCard
-              childName={child.name}
-              recalls={alerts.recalls}
-              comingUp={comingUp}
-              safetyTip={ageSafetyTip(child.date_of_birth)}
-              onDismiss={dismissDigest}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Alert summary cards — ABOVE "Up next" */}
       <section className="px-5 pt-4 sm:px-6 animate-fade-up stagger-1">
@@ -794,7 +874,12 @@ function HomePage() {
               </div>
               <ul className="space-y-2.5">
                 {upNext.map((i) => (
-                  <InsightCard key={i.id} insight={i} />
+                  <InsightCard
+                    key={i.id}
+                    insight={i}
+                    onDismiss={() => dismissInsight(i.id)}
+                    onSnooze={() => snoozeInsight(i.id)}
+                  />
                 ))}
               </ul>
             </div>
@@ -832,7 +917,7 @@ function HomePage() {
   );
 }
 
-function InsightCard({ insight }: { insight: Insight }) {
+function InsightCard({ insight, onDismiss, onSnooze }: { insight: Insight; onDismiss: () => void; onSnooze: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const isLong = insight.body.length > 100;
   return (
@@ -850,15 +935,33 @@ function InsightCard({ insight }: { insight: Insight }) {
         </span>
       </div>
       <p className={`mt-1 font-body text-xs text-muted-foreground ${!expanded && isLong ? "line-clamp-2" : ""}`}>{insight.body}</p>
-      {isLong && (
-        <button
-          type="button"
-          onClick={() => setExpanded((e) => !e)}
-          className="mt-1 inline-flex items-center gap-0.5 font-body text-[11px] font-semibold text-accent/80 hover:underline"
-        >
-          {expanded ? <><ChevronUp className="h-3 w-3" /> Show less</> : <><ChevronDown className="h-3 w-3" /> Show more</>}
-        </button>
-      )}
+      <div className="mt-2 flex items-center gap-2">
+        {isLong && (
+          <button
+            type="button"
+            onClick={() => setExpanded((e) => !e)}
+            className="inline-flex items-center gap-0.5 font-body text-[11px] font-semibold text-accent/80 hover:underline"
+          >
+            {expanded ? <><ChevronUp className="h-3 w-3" /> Show less</> : <><ChevronDown className="h-3 w-3" /> Show more</>}
+          </button>
+        )}
+        <div className="ml-auto flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={onSnooze}
+            className="rounded-full border border-border/60 bg-card px-2.5 py-0.5 font-body text-[11px] text-muted-foreground hover:bg-muted"
+          >
+            Snooze 1 week
+          </button>
+          <button
+            type="button"
+            onClick={onDismiss}
+            className="rounded-full border border-border/60 bg-card px-2.5 py-0.5 font-body text-[11px] text-muted-foreground hover:bg-muted"
+          >
+            Done
+          </button>
+        </div>
+      </div>
     </li>
   );
 }
@@ -1124,12 +1227,12 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
 
   const cardBase: React.CSSProperties = {
     borderRadius: 20,
-    backgroundColor: "#F5F1EB",
-    border: "1px solid #E2DAD0",
-    padding: "16px 18px",
+    backgroundColor: "#2C5F5A",
+    border: "1px solid rgba(255,255,255,0.08)",
+    padding: "24px",
   };
   const label = (
-    <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>
+    <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 12, fontFamily: '"DM Sans", system-ui, sans-serif' }}>
       Today · {dayName}
     </p>
   );
@@ -1142,14 +1245,14 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 24 }}>👶</span>
           <div>
-            <p style={{ fontSize: 14, fontWeight: 600, color: "#3D3935", margin: 0 }}>Add your first child to get started</p>
-            <p style={{ fontSize: 12, color: "#8A8078", marginTop: 2 }}>Peace of Mine personalises every tip, alert, and insight to your baby's age.</p>
+            <p style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.95)", margin: 0 }}>Add your first child to get started</p>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>Peace of Mine personalises every tip, alert, and insight to your baby's age.</p>
           </div>
         </div>
         <button
           type="button"
           onClick={() => onNavigate({ to: "/onboarding" })}
-          style={{ marginTop: 12, padding: "8px 18px", borderRadius: 999, backgroundColor: "#4A7A47", color: "white", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}
+          style={{ marginTop: 12, padding: "8px 18px", borderRadius: 999, backgroundColor: "rgba(255,255,255,0.9)", color: "#2C5F5A", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}
         >
           Add a child →
         </button>
@@ -1160,7 +1263,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
   const ageWeeks = Math.floor(Math.max(0, Date.now() - parseDateLocal(child.date_of_birth ?? "").getTime()) / (7 * 86400000));
   const devBand = getDevelopmentBand(ageWeeks);
 
-  // Sunday: digest snapshot
+  // Sunday: week-in-review snapshot (no separate "this week" section)
   if (day === 0) {
     return (
       <div style={cardBase}>
@@ -1168,35 +1271,16 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span style={{ fontSize: 22, marginTop: 2 }}>✨</span>
           <div>
-            <p style={{ fontSize: 14, fontWeight: 600, color: "#3D3935", margin: "0 0 8px" }}>Your week in review, {child.name}</p>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"DM Sans", system-ui, sans-serif' }}>Week in review</p>
             <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 5 }}>
-              <li style={{ fontSize: 13, color: "#5C5248" }}>{recalls > 0 ? `⚠️ ${recalls} active recall${recalls > 1 ? "s" : ""} — check the Alerts tab` : "✅ No recalls affecting your products this week"}</li>
-              <li style={{ fontSize: 13, color: "#5C5248" }}>{comingUp.length > 0 ? `It may be time to take a look at ${comingUp[0].name} soon` : "Nothing due for replacement or size-up in the next 90 days"}</li>
-              <li style={{ fontSize: 13, color: "#5C5248" }}>🛡️ {safetyTip}</li>
+              <li style={{ fontSize: 13, color: "rgba(255,255,255,0.88)" }}>{recalls > 0 ? `⚠️ ${recalls} active recall${recalls > 1 ? "s" : ""} — check the Alerts tab` : "✅ No recalls affecting your products this week"}</li>
+              {comingUp.length > 0 && (
+                <li style={{ fontSize: 13, color: "rgba(255,255,255,0.88)" }}>It may be time to take a look at {comingUp[0].name} soon</li>
+              )}
+              <li style={{ fontSize: 13, color: "rgba(255,255,255,0.88)" }}>🛡️ {safetyTip}</li>
             </ul>
           </div>
         </div>
-        {comingUp.length > 0 && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #E2DAD0" }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
-              Coming up for {child?.name ?? "your little one"}
-            </p>
-            {comingUp.slice(0, 3).map((p) => {
-              const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
-              const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
-              return (
-                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                  <p style={{ fontSize: 13, color: "#3D3935", margin: 0 }}>
-                    {p.type === "replace"
-                      ? `It may be time to replace ${p.name} soon`
-                      : `${p.name} might be ready for a size-up`}
-                  </p>
-                  <span style={{ fontSize: 11, color: days <= 7 ? "#B91C1C" : days <= 21 ? "#B45309" : "#4A7A47", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
     );
   }
@@ -1209,13 +1293,13 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span style={{ fontSize: 22, marginTop: 2 }}>🌱</span>
           <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#4A7A47", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Development this week</p>
-            <p style={{ fontSize: 14, color: "#3D3935", lineHeight: 1.55, margin: 0 }}>{devBand.physical}</p>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"DM Sans", system-ui, sans-serif' }}>Development this week</p>
+            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>{devBand.physical}</p>
           </div>
         </div>
         {comingUp.length > 0 && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #E2DAD0" }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"DM Sans", system-ui, sans-serif' }}>
               Coming up for {child?.name ?? "your little one"}
             </p>
             {comingUp.slice(0, 3).map((p) => {
@@ -1223,12 +1307,12 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
               const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
               return (
                 <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                  <p style={{ fontSize: 13, color: "#3D3935", margin: 0 }}>
+                  <p style={{ fontSize: 13, color: "rgba(255,255,255,0.90)", margin: 0 }}>
                     {p.type === "replace"
                       ? `It may be time to replace ${p.name} soon`
                       : `${p.name} might be ready for a size-up`}
                   </p>
-                  <span style={{ fontSize: 11, color: days <= 7 ? "#B91C1C" : days <= 21 ? "#B45309" : "#4A7A47", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+                  <span style={{ fontSize: 11, color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
                 </div>
               );
             })}
@@ -1246,13 +1330,13 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span style={{ fontSize: 22, marginTop: 2 }}>🛡️</span>
           <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#4A7A47", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Quick safety tip</p>
-            <p style={{ fontSize: 14, color: "#3D3935", lineHeight: 1.55, margin: 0 }}>{safetyTip}</p>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"DM Sans", system-ui, sans-serif' }}>Quick safety tip</p>
+            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>{safetyTip}</p>
           </div>
         </div>
         {comingUp.length > 0 && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #E2DAD0" }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"DM Sans", system-ui, sans-serif' }}>
               Coming up for {child?.name ?? "your little one"}
             </p>
             {comingUp.slice(0, 3).map((p) => {
@@ -1260,12 +1344,12 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
               const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
               return (
                 <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                  <p style={{ fontSize: 13, color: "#3D3935", margin: 0 }}>
+                  <p style={{ fontSize: 13, color: "rgba(255,255,255,0.90)", margin: 0 }}>
                     {p.type === "replace"
                       ? `It may be time to replace ${p.name} soon`
                       : `${p.name} might be ready for a size-up`}
                   </p>
-                  <span style={{ fontSize: 11, color: days <= 7 ? "#B91C1C" : days <= 21 ? "#B45309" : "#4A7A47", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+                  <span style={{ fontSize: 11, color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
                 </div>
               );
             })}
@@ -1285,28 +1369,28 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
       <button
         type="button"
         onClick={() => onNavigate({ to: "/recall-radar" })}
-        style={{ ...cardBase, width: "100%", textAlign: "left", cursor: "pointer" }}
+        style={{ ...cardBase, backgroundColor: total > 0 ? "#C8523A" : "#2C5F5A", width: "100%", textAlign: "left", cursor: "pointer" }}
       >
         {label}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span style={{ fontSize: 22, marginTop: 2 }}>📡</span>
           <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#4A7A47", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Recall Radar · last 30 days</p>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"DM Sans", system-ui, sans-serif' }}>Recall Radar · last 30 days</p>
             {loading ? (
               <p style={{ fontSize: 14, color: "#8A8078", margin: 0 }}>Checking CPSC and FDA databases…</p>
             ) : (
               <>
-                <p style={{ fontSize: 14, color: "#3D3935", fontWeight: 600, margin: "0 0 2px" }}>
+                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.95)", fontWeight: 600, margin: "0 0 2px" }}>
                   {total === 0 ? "No baby or infant product recalls this month" : `${total} baby & infant recall${total > 1 ? "s" : ""} this month`}
                 </p>
-                <p style={{ fontSize: 12, color: "#8A8078", margin: 0 }}>{cpsc} consumer products (CPSC) · {fda} food & formula (FDA) · tap to browse</p>
+                <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", margin: 0 }}>{cpsc} consumer products (CPSC) · {fda} food & formula (FDA) · tap to browse</p>
               </>
             )}
           </div>
         </div>
         {comingUp.length > 0 && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #E2DAD0" }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"DM Sans", system-ui, sans-serif' }}>
               Coming up for {child?.name ?? "your little one"}
             </p>
             {comingUp.slice(0, 3).map((p) => {
@@ -1314,12 +1398,12 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
               const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
               return (
                 <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                  <p style={{ fontSize: 13, color: "#3D3935", margin: 0 }}>
+                  <p style={{ fontSize: 13, color: "rgba(255,255,255,0.90)", margin: 0 }}>
                     {p.type === "replace"
                       ? `It may be time to replace ${p.name} soon`
                       : `${p.name} might be ready for a size-up`}
                   </p>
-                  <span style={{ fontSize: 11, color: days <= 7 ? "#B91C1C" : days <= 21 ? "#B45309" : "#4A7A47", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+                  <span style={{ fontSize: 11, color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
                 </div>
               );
             })}
@@ -1338,11 +1422,11 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span style={{ fontSize: 22, marginTop: 2 }}>📅</span>
           <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#4A7A47", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Coming up</p>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"DM Sans", system-ui, sans-serif' }}>Coming up</p>
             {next ? (
               <>
-                <p style={{ fontSize: 14, color: "#3D3935", fontWeight: 600, margin: "0 0 2px" }}>{next.name}</p>
-                <p style={{ fontSize: 12, color: "#8A8078", margin: 0 }}>
+                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.95)", fontWeight: 600, margin: "0 0 2px" }}>{next.name}</p>
+                <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", margin: 0 }}>
                   {next.type === "replace" ? "Replacement" : "Size-up"} · {
                     (() => {
                       const d = Math.round((new Date(next.when + "T00:00:00").getTime() - Date.now()) / 86400000);
@@ -1352,13 +1436,13 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
                 </p>
               </>
             ) : (
-              <p style={{ fontSize: 14, color: "#3D3935", margin: 0 }}>No size-ups or replacements coming up in the next 90 days.</p>
+              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", margin: 0 }}>No size-ups or replacements coming up in the next 90 days.</p>
             )}
           </div>
         </div>
         {comingUp.length > 0 && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #E2DAD0" }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"DM Sans", system-ui, sans-serif' }}>
               Coming up for {child?.name ?? "your little one"}
             </p>
             {comingUp.slice(0, 3).map((p) => {
@@ -1366,12 +1450,12 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
               const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
               return (
                 <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                  <p style={{ fontSize: 13, color: "#3D3935", margin: 0 }}>
+                  <p style={{ fontSize: 13, color: "rgba(255,255,255,0.90)", margin: 0 }}>
                     {p.type === "replace"
                       ? `It may be time to replace ${p.name} soon`
                       : `${p.name} might be ready for a size-up`}
                   </p>
-                  <span style={{ fontSize: 11, color: days <= 7 ? "#B91C1C" : days <= 21 ? "#B45309" : "#4A7A47", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+                  <span style={{ fontSize: 11, color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
                 </div>
               );
             })}
@@ -1389,13 +1473,13 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span style={{ fontSize: 22, marginTop: 2 }}>🌤️</span>
           <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#4A7A47", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Weekend heads-up</p>
-            <p style={{ fontSize: 14, color: "#3D3935", lineHeight: 1.55, margin: 0 }}>{weekendReminder(child.date_of_birth ?? null)}</p>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"DM Sans", system-ui, sans-serif' }}>Weekend heads-up</p>
+            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>{weekendReminder(child.date_of_birth ?? null)}</p>
           </div>
         </div>
         {comingUp.length > 0 && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #E2DAD0" }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"DM Sans", system-ui, sans-serif' }}>
               Coming up for {child?.name ?? "your little one"}
             </p>
             {comingUp.slice(0, 3).map((p) => {
@@ -1403,12 +1487,12 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
               const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
               return (
                 <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                  <p style={{ fontSize: 13, color: "#3D3935", margin: 0 }}>
+                  <p style={{ fontSize: 13, color: "rgba(255,255,255,0.90)", margin: 0 }}>
                     {p.type === "replace"
                       ? `It may be time to replace ${p.name} soon`
                       : `${p.name} might be ready for a size-up`}
                   </p>
-                  <span style={{ fontSize: 11, color: days <= 7 ? "#B91C1C" : days <= 21 ? "#B45309" : "#4A7A47", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+                  <span style={{ fontSize: 11, color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
                 </div>
               );
             })}
@@ -1425,30 +1509,30 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
         <span style={{ fontSize: 22, marginTop: 2 }}>📏</span>
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: "#4A7A47", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>Measurements check-in</p>
+          <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"DM Sans", system-ui, sans-serif' }}>Measurements check-in</p>
           {showMeasReminder ? (
             <>
-              <p style={{ fontSize: 14, color: "#3D3935", lineHeight: 1.55, margin: "0 0 10px" }}>
+              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: "0 0 10px" }}>
                 It's been a while since you updated {child.name}'s height and weight. Fresh measurements help predict size-ups more accurately.
               </p>
               <button
                 type="button"
                 onClick={() => onNavigate({ to: "/growth" })}
-                style={{ padding: "7px 16px", borderRadius: 999, backgroundColor: "#4A7A47", color: "white", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}
+                style={{ padding: "7px 16px", borderRadius: 999, backgroundColor: "rgba(255,255,255,0.9)", color: "#2C5F5A", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}
               >
                 Log measurements →
               </button>
             </>
           ) : (
-            <p style={{ fontSize: 14, color: "#3D3935", lineHeight: 1.55, margin: 0 }}>
+            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>
               {child.name}'s measurements are up to date — nice work. We'll remind you again in about a month.
             </p>
           )}
         </div>
       </div>
       {comingUp.length > 0 && (
-        <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #E2DAD0" }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: "#8A8078", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
+          <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"DM Sans", system-ui, sans-serif' }}>
             Coming up for {child?.name ?? "your little one"}
           </p>
           {comingUp.slice(0, 3).map((p) => {
@@ -1456,12 +1540,12 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
             const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
             return (
               <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <p style={{ fontSize: 13, color: "#3D3935", margin: 0 }}>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.90)", margin: 0 }}>
                   {p.type === "replace"
                     ? `It may be time to replace ${p.name} soon`
                     : `${p.name} might be ready for a size-up`}
                 </p>
-                <span style={{ fontSize: 11, color: days <= 7 ? "#B91C1C" : days <= 21 ? "#B45309" : "#4A7A47", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+                <span style={{ fontSize: 11, color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
               </div>
             );
           })}
