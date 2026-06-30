@@ -103,11 +103,17 @@ function Index() {
 
               <Link
                 to="/auth"
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-body text-base font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20"
+                className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-body text-base font-semibold text-primary-foreground transition-all duration-150 hover:bg-[#234E4A]"
               >
                 Get started free
                 <ArrowRight className="h-4 w-4" />
               </Link>
+              <p
+                className="mt-5 text-[11px] font-medium tracking-[0.1em] text-muted-foreground/60"
+                style={{ fontFamily: '"DM Sans", system-ui, sans-serif', textTransform: "uppercase" }}
+              >
+                Safety guidelines based on AAP and CPSC recommendations
+              </p>
             </div>
 
           </div>
