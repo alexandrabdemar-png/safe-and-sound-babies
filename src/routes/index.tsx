@@ -93,7 +93,7 @@ function Index() {
 
               <p className="mt-6 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
                 Add any baby essential—from car seats and cribs to bottles,
-                carriers, and everything in between. Safe &amp; Sound keeps
+                carriers, and everything in between. Peace of Mine keeps
                 track of the details for you, with reminders when it's time to
                 replace, resize or double-check the fit.
               </p>
