@@ -7,6 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/BottomNav";
 import { searchCpsc, searchFdaRecalls, isFoodRelated, type CpscRecall, type FdaRecall } from "@/lib/cpscSearch";
+import { checkCriticalRecalls, type RecallHit } from "@/lib/recallCheck";
 
 export const Route = createFileRoute("/_authenticated/registry-check")({
   ssr: false,
@@ -46,6 +47,7 @@ function RegistryCheckPage() {
   const [searched, setSearched] = useState(false);
   const [recalls, setRecalls] = useState<CpscRecall[]>([]);
   const [fdaRecalls, setFdaRecalls] = useState<FdaRecall[]>([]);
+  const [criticalRecall, setCriticalRecall] = useState<RecallHit | null>(null);
   const [resolvedQuery, setResolvedQuery] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,9 +71,25 @@ function RegistryCheckPage() {
     setError(null);
     setRecalls([]);
     setFdaRecalls([]);
+    setCriticalRecall(null);
     setResolvedQuery(resolved);
 
     try {
+      // Check CRITICAL_RECALLS first — instant, no network
+      const critical = checkCriticalRecalls(query);
+      if (critical) {
+        setCriticalRecall({
+          source: "critical",
+          id: critical.id,
+          title: critical.title,
+          productDescription: query,
+          reason: critical.reason,
+          url: critical.url,
+        });
+        setSearched(true);
+        return;
+      }
+
       const cpscPromise = searchCpsc(query);
       const fdaPromise = isFoodRelated(query) ? searchFdaRecalls(query) : Promise.resolve([]);
       const [found, foundFda] = await Promise.all([cpscPromise, fdaPromise]);
@@ -87,11 +105,11 @@ function RegistryCheckPage() {
   }
 
   function clear() {
-    setInput(""); setRecalls([]); setFdaRecalls([]); setSearched(false);
-    setError(null); setResolvedQuery(null);
+    setInput(""); setRecalls([]); setFdaRecalls([]); setCriticalRecall(null);
+    setSearched(false); setError(null); setResolvedQuery(null);
   }
 
-  const totalRecalls = recalls.length + fdaRecalls.length;
+  const totalRecalls = recalls.length + fdaRecalls.length + (criticalRecall ? 1 : 0);
   const verdict: "safe" | "unsafe" | null = searched && !error
     ? totalRecalls > 0 ? "unsafe" : "safe"
     : null;
@@ -225,6 +243,7 @@ function RegistryCheckPage() {
           {/* Recall cards */}
           {searched && totalRecalls > 0 && (
             <div className="space-y-3">
+              {criticalRecall && <CriticalRecallCard hit={criticalRecall} />}
               {recalls.map((r) => (
                 <RecallCard key={r.RecallID} recall={r} />
               ))}
@@ -243,6 +262,33 @@ function RegistryCheckPage() {
       </main>
 
       <BottomNav />
+    </div>
+  );
+}
+
+function CriticalRecallCard({ hit }: { hit: RecallHit }) {
+  return (
+    <div className="rounded-2xl border-2 border-destructive/50 bg-destructive/5 px-4 py-4 space-y-3">
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-destructive/20 text-destructive">
+          <ShieldAlert className="h-4 w-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-body text-sm font-semibold leading-snug text-destructive">{hit.title}</p>
+          <p className="mt-0.5 font-body text-[10px] font-semibold uppercase tracking-wider text-destructive/70">Active recall</p>
+        </div>
+      </div>
+      <p className="font-body text-xs leading-relaxed text-foreground pl-10">{hit.reason}</p>
+      <div className="pl-10">
+        <a
+          href={hit.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive underline underline-offset-2"
+        >
+          Read the FDA recall notice <ArrowUpRight className="h-3 w-3" />
+        </a>
+      </div>
     </div>
   );
 }
