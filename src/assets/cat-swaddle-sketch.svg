@@ -1,25 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
   <g stroke="#2C3560" stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <!-- Swaddle body wrap -->
-    <path d="M70 95 Q60 80 64 64 Q68 48 100 44 Q132 48 136 64 Q140 80 130 95 Q120 115 118 160 Q116 178 100 178 Q84 178 82 160 Q80 115 70 95 Z" stroke-width="2"/>
-    <!-- Head/face circle -->
-    <circle cx="100" cy="58" r="22" stroke-width="2"/>
-    <!-- Face features -->
-    <circle cx="93" cy="55" r="2.5" fill="#2C3560"/>
-    <circle cx="107" cy="55" r="2.5" fill="#2C3560"/>
-    <path d="M94 65 Q100 70 106 65" stroke-width="1.6"/>
-    <!-- Wrap fold left -->
-    <path d="M70 95 Q76 108 80 130" stroke-width="1.5"/>
-    <!-- Wrap fold right -->
-    <path d="M130 95 Q124 108 120 130" stroke-width="1.5"/>
-    <!-- Swaddle tuck/fold at bottom -->
-    <path d="M82 160 Q90 155 100 155 Q110 155 118 160" stroke-width="1.5"/>
-    <!-- Left wing of swaddle -->
-    <path d="M64 80 Q52 85 46 95 Q48 108 64 104 Q70 95 72 88" stroke-width="1.8"/>
+    <!-- Swaddle body -->
+    <path d="M72 60 Q62 72 66 90 Q68 108 70 130 Q74 162 100 166 Q126 162 130 130 Q132 108 134 90 Q138 72 128 60 Q114 48 100 46 Q86 48 72 60 Z" stroke-width="2"/>
+    <!-- Left wing -->
+    <path d="M72 68 Q58 72 50 84 Q50 100 66 96 Q70 88 72 78" stroke-width="1.8"/>
     <!-- Right wing -->
-    <path d="M136 80 Q148 85 154 95 Q152 108 136 104 Q130 95 128 88" stroke-width="1.8"/>
+    <path d="M128 68 Q142 72 150 84 Q150 100 134 96 Q130 88 128 78" stroke-width="1.8"/>
+    <!-- Wrap fold left -->
+    <path d="M70 92 Q76 112 78 134" stroke-width="1.5"/>
+    <!-- Wrap fold right -->
+    <path d="M130 92 Q124 112 122 134" stroke-width="1.5"/>
+    <!-- Swaddle tuck at bottom -->
+    <path d="M80 158 Q90 153 100 153 Q110 153 120 158" stroke-width="1.5"/>
+    <!-- Top opening/fold edge -->
+    <path d="M78 56 Q90 52 100 51 Q110 52 122 56" stroke-width="1.5"/>
     <!-- Small star doodle -->
-    <path d="M155 58 L157 64 L151 60 L161 60 L155 64 Z" stroke-width="1.3"/>
-    <path d="M42 120 L44 126 L38 122 L48 122 L42 126 Z" stroke-width="1.3"/>
+    <path d="M155 68 L157 74 L151 70 L161 70 L155 74 Z" stroke-width="1.3"/>
+    <path d="M40 128 L42 134 L36 130 L46 130 L40 134 Z" stroke-width="1.3"/>
   </g>
 </svg>
