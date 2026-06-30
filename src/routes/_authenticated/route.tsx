@@ -1,9 +1,9 @@
 import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { toast } from "sonner";
-import { AlertTriangle, Users } from "lucide-react";
+import { AlertTriangle, Users, WifiOff } from "lucide-react";
 import { searchCpsc, searchFdaRecalls, isFoodRelated } from "@/lib/cpscSearch";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -35,8 +35,19 @@ function describeChange(table: string, record: Record<string, unknown>): string 
 function AuthenticatedLayout() {
   const { user } = Route.useRouteContext();
   const navigate = useNavigate();
-  // Track IDs of records recently changed by THIS user so we don't toast on our own edits.
   const ownChanges = useRef<Set<string>>(new Set());
+  const [isOffline, setIsOffline] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
+
+  useEffect(() => {
+    function handleOffline() { setIsOffline(true); }
+    function handleOnline() { setIsOffline(false); }
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+    return () => {
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
+    };
+  }, []);
 
   // Expose a helper that other parts of the app can call to register own changes.
   // (simple module-level ref — no context needed for this lightweight use case)
@@ -193,6 +204,12 @@ function AuthenticatedLayout() {
 
   return (
     <>
+      {isOffline && (
+        <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-2 bg-foreground px-4 py-2.5 font-body text-xs font-medium text-background">
+          <WifiOff className="h-3.5 w-3.5 flex-shrink-0" />
+          You're offline — some features may not load until you reconnect.
+        </div>
+      )}
       <Outlet />
       <UpgradePrompt />
     </>

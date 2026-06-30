@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   LogOut, User as UserIcon, Sparkles, Loader2, Plus, Trash2,
-  Download, CreditCard, Shield, Bell, Share2, Gift, Copy, Check,
+  Download, CreditCard, Shield, Bell, Share2, Gift, Copy, Check, HelpCircle, AlertTriangle,
 } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useProGate } from "@/hooks/useProGate";
@@ -33,6 +33,8 @@ function ProfilePage() {
   const [addingChild, setAddingChild] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
@@ -90,6 +92,31 @@ function ProfilePage() {
     setActiveChildId(null);
     await refreshChildren();
     toast.success('Removed');
+  }
+
+  async function handleDeleteAccount() {
+    if (!deleteConfirm) { setDeleteConfirm(true); return; }
+    setDeleting(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) throw new Error("Not signed in");
+      const tables = [
+        "milestones", "first_foods", "products", "product_recalls",
+        "children", "insight_dismissals", "completed_tips",
+        "child_measurements",
+      ];
+      for (const table of tables) {
+        await (supabase as any).from(table).delete().eq("user_id", uid);
+      }
+      await supabase.auth.signOut();
+      navigate({ to: "/auth" });
+      toast.success("Account deleted. We're sorry to see you go.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not delete account");
+      setDeleting(false);
+      setDeleteConfirm(false);
+    }
   }
 
   async function handleExport() {
@@ -211,6 +238,9 @@ function ProfilePage() {
           <Button asChild variant="ghost" className="w-full justify-start rounded-xl">
             <Link to="/profile/privacy-policy"><Shield className="h-4 w-4 mr-2" /> Privacy Policy</Link>
           </Button>
+          <Button asChild variant="ghost" className="w-full justify-start rounded-xl">
+            <Link to="/profile/support"><HelpCircle className="h-4 w-4 mr-2" /> Help & Support</Link>
+          </Button>
         </section>
 
         {/* Account */}
@@ -234,6 +264,49 @@ function ProfilePage() {
               <LogOut className="mr-2 h-4 w-4" /> Sign out
             </Button>
           </div>
+        </section>
+
+        {/* Danger Zone */}
+        <section className="rounded-3xl border border-destructive/30 bg-card p-5 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle className="h-4 w-4 text-destructive" />
+            <p className="font-display text-base font-semibold text-destructive">Danger zone</p>
+          </div>
+          {!deleteConfirm ? (
+            <Button
+              onClick={handleDeleteAccount}
+              variant="ghost"
+              className="w-full justify-start rounded-xl text-destructive hover:bg-destructive/5 hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" /> Delete my account
+            </Button>
+          ) : (
+            <div className="space-y-3">
+              <div className="rounded-2xl bg-destructive/8 border border-destructive/20 px-4 py-3">
+                <p className="font-body text-sm font-semibold text-destructive mb-1">Are you sure?</p>
+                <p className="font-body text-xs text-muted-foreground leading-relaxed">
+                  This will permanently delete your account and all data — children, products, moments, and safety alerts. This cannot be undone.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-full"
+                  onClick={() => setDeleteConfirm(false)}
+                  disabled={deleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 rounded-full bg-destructive hover:bg-destructive/90 text-white"
+                  onClick={handleDeleteAccount}
+                  disabled={deleting}
+                >
+                  {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Yes, delete everything"}
+                </Button>
+              </div>
+            </div>
+          )}
         </section>
       </div>
 
