@@ -8,6 +8,7 @@ import { StripeEmbeddedCheckout } from '@/components/StripeEmbeddedCheckout';
 import { useSubscription } from '@/hooks/useSubscription';
 import { createPortalSession } from '@/utils/payments.functions';
 import { getStripeEnvironment } from '@/lib/stripe';
+import { openUrl } from '@/lib/browser';
 import { toast } from 'sonner';
 
 export const Route = createFileRoute('/_authenticated/pricing')({
@@ -73,7 +74,7 @@ function PricingPage() {
         },
       });
       if ('error' in result) throw new Error(result.error);
-      window.open(result.url, '_blank');
+      await openUrl(result.url);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not open billing portal');
     } finally {

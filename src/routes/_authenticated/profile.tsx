@@ -15,6 +15,7 @@ import { useActiveChild, setActiveChildId } from "@/hooks/useActiveChild";
 import { createPortalSession } from "@/utils/payments.functions";
 import { exportUserData } from "@/utils/export.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
+import { openUrl } from "@/lib/browser";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   ssr: false,
@@ -53,7 +54,7 @@ function ProfilePage() {
         data: { returnUrl: window.location.href, environment: getStripeEnvironment() },
       });
       if ('error' in result) throw new Error(result.error);
-      window.open(result.url, '_blank');
+      await openUrl(result.url);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not open billing portal');
     } finally { setPortalLoading(false); }
