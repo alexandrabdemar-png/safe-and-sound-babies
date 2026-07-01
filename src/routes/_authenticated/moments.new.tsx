@@ -344,11 +344,11 @@ function NewMomentPage() {
           </div>
 
           <div className="space-y-2">
-            <Label className="font-body text-sm">{momentType === "Letter" ? "Your letter" : "Notes (optional)"}</Label>
+            <Label className="font-body text-sm">{(momentType as string) === "Letter" ? "Your letter" : "Notes (optional)"}</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder={momentType === "Letter" ? "Write your letter here — it'll be saved starting with 'Dear [name],'…" : "A little detail you'll want to remember…"}
+              placeholder={(momentType as string) === "Letter" ? "Write your letter here — it'll be saved starting with 'Dear [name],'…" : "A little detail you'll want to remember…"}
               maxLength={1000}
               rows={4}
               className="rounded-2xl bg-card px-4 py-3 font-body text-base"

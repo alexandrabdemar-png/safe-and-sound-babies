@@ -177,7 +177,7 @@ async function runCheck(): Promise<Response> {
         const fdaData = await fdaRes.json().catch(() => null);
         if (!fdaData?.results?.length) continue;
 
-        for (const r of fdaData.results as { recall_number?: string; product_description?: string; reason_for_recall?: string; recall_initiation_date?: string }) {
+        for (const r of fdaData.results as Array<{ recall_number?: string; product_description?: string; reason_for_recall?: string; recall_initiation_date?: string }>) {
           const text = `${r.product_description ?? ""} ${r.reason_for_recall ?? ""}`;
           if (!fuzzyMatchProduct(productName, text)) continue;
 
