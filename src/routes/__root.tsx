@@ -78,7 +78,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "Peace of Mine — Baby Safety Tracking" },
-      { name: "description", content: "Never miss a safety moment — track recalls, milestones, and product safety for your baby." },
+      { name: "description", content: "Stay on top of safety — track recalls, milestones, and product safety for your baby." },
       { name: "author", content: "Peace of Mine" },
       { name: "theme-color", content: "#FAF8F5" },
       // PWA / Apple
@@ -88,7 +88,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "mobile-web-app-capable", content: "yes" },
       // Open Graph
       { property: "og:title", content: "Peace of Mine" },
-      { property: "og:description", content: "Never miss a safety moment — track recalls, milestones, and product safety for your baby." },
+      { property: "og:description", content: "Stay on top of safety — track recalls, milestones, and product safety for your baby." },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "/app-icon-1024.png" },
       { property: "og:image:width", content: "1024" },
@@ -97,7 +97,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "app" },
       { name: "twitter:site", content: "@PeaceOfMineApp" },
       { name: "twitter:title", content: "Peace of Mine" },
-      { name: "twitter:description", content: "Never miss a safety moment — track recalls, milestones, and product safety for your baby." },
+      { name: "twitter:description", content: "Stay on top of safety — track recalls, milestones, and product safety for your baby." },
       { name: "twitter:image", content: "/app-icon-1024.png" },
     ],
     links: [

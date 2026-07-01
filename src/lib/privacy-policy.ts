@@ -30,7 +30,7 @@ What we do NOT collect
 2. WHY WE COLLECT IT (PURPOSES)
 ──────────────────────────────────────
 
-Safety alerts — When the CPSC issues a recall, we automatically compare it against the products you have added. If there is a match, we alert you so you can act quickly. This is the core reason the app exists.
+Safety alerts — When the CPSC issues a recall, we compare it against the products you have added. If there is a match, we send you an alert. This is the core reason the app exists.
 
 Size-up predictions — We use your child's measurements and age to predict when they are likely to outgrow a clothing size or diaper size, and remind you before you run out.
 

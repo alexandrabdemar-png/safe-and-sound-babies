@@ -21,13 +21,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Never miss a safety milestone again. Track car seats, pacifiers, cribs, and more with quiet, kind reminders.",
+          "Stay on top of safety milestones. Track car seats, pacifiers, cribs, and more with quiet, kind reminders.",
       },
       { property: "og:title", content: "Peace of Mine — Baby Safety Tracking" },
       {
         property: "og:description",
         content:
-          "Never miss a safety milestone again. Track car seats, pacifiers, cribs, and more with quiet, kind reminders.",
+          "Stay on top of safety milestones. Track car seats, pacifiers, cribs, and more with quiet, kind reminders.",
       },
       { property: "og:url", content: "/" },
     ],
@@ -63,9 +63,9 @@ const features = [
       "Thoughtful reminders for life's little milestones and the gear that grows with them. Because the little things are the big things.",
   },
   {
-    title: "Always one step ahead",
+    title: "Built to keep you ahead",
     description:
-      "Real-time recall alerts for every product you own — so you hear about safety issues the moment they happen, not months later.",
+      "Recall alerts for the products you own, so you're not finding out months later.",
   },
 ];
 

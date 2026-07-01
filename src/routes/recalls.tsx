@@ -129,7 +129,7 @@ function PublicRecallsPage() {
             Get alerts for products <em>you own</em>
           </p>
           <p style={{ fontSize: 13, color: "#6B5B50", marginBottom: 16 }}>
-            Peace of Mine tracks your specific products and notifies you the moment a recall is issued — even for things you bought second-hand.
+            Peace of Mine tracks your specific products and alerts you as soon as a recall comes through — even for things you bought second-hand.
           </p>
           <Link to="/auth" style={{
             display: "inline-block", padding: "10px 24px", borderRadius: 999, backgroundColor: "#A3B899", color: "white",

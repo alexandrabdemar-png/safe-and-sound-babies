@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/profile_/support")({
 const FAQ = [
   {
     q: "How does recall detection work?",
-    a: "When you add a product, we check it against the CPSC and FDA recall databases as well as our own curated list of critical safety alerts. We also run a daily background check on all products you've saved. If a match is found, you'll see an alert on your home screen and in the Alerts tab.",
+    a: "When you add a product, we check it against the CPSC and FDA recall databases as well as our own curated list of critical safety alerts, and run a daily background check on the products you've saved. If a match is found, you'll see an alert on your home screen and in the Alerts tab.",
   },
   {
     q: "Is my child's data private?",

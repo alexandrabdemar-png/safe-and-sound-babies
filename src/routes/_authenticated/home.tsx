@@ -118,7 +118,7 @@ const WHATS_NEW = [
     date: "June 2025",
     updates: [
       "Recall Radar: live CPSC baby recall count right on your home screen",
-      "Hand-Me-Down Checker catches expired and recalled second-hand gear before you use it",
+      "Hand-Me-Down Checker flags expired and recalled second-hand gear you've logged",
       "Travel Safety Mode — a full 30-item checklist for traveling with baby",
     ],
   },
