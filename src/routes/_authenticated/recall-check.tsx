@@ -4,6 +4,7 @@ import { ArrowLeft, Loader2, ScanLine, Search, ShieldAlert, ShieldCheck, X } fro
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BottomNav } from "@/components/BottomNav";
+import { lookupBarcode } from "@/lib/barcodeLookup";
 
 export const Route = createFileRoute("/_authenticated/recall-check")({
   ssr: false,
@@ -59,16 +60,6 @@ async function searchCpsc(query: string): Promise<CpscRecall[]> {
   return all.filter(isBabyRelated);
 }
 
-async function lookupBarcode(barcode: string): Promise<string | null> {
-  try {
-    const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.product?.product_name || data?.product?.brands || null;
-  } catch {
-    return null;
-  }
-}
 
 function RecallCheckPage() {
   const [query, setQuery] = useState("");
@@ -106,22 +97,11 @@ function RecallCheckPage() {
     setSearched(false);
     setError(null);
     setResolvedName(null);
-    try {
-      const name = await lookupBarcode(barcode);
-      if (name) {
-        setQuery(name);
-        setResolvedName(name);
-        await runSearch(name);
-      } else {
-        // Fall back to searching with the raw barcode
-        setQuery(barcode);
-        await runSearch(barcode);
-      }
-    } catch {
-      setError("Could not look up that barcode. Please type the product name instead.");
-      setSearched(true);
-      setLoading(false);
-    }
+    const result = await lookupBarcode(barcode);
+    const searchTerm = result?.name ?? barcode;
+    setQuery(searchTerm);
+    if (result?.name) setResolvedName(result.name);
+    await runSearch(searchTerm);
   }
 
   function clear() {

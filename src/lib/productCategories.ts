@@ -60,22 +60,22 @@ export function categoryFromLabel(label: string | null | undefined): (typeof CAT
 
 export function guessCategoryFromText(text: string): CategoryKey | "" {
   const hay = text.toLowerCase();
-  if (/car ?seat/.test(hay)) return "car_seat";
+  if (/car ?seat|infant seat|convertible seat|booster seat/.test(hay)) return "car_seat";
   if (/bassinet/.test(hay)) return "bassinet";
   if (/crib|cot\b/.test(hay)) return "crib";
-  if (/stroller|pram|buggy/.test(hay)) return "stroller";
+  if (/stroller|pram|buggy|pushchair/.test(hay)) return "stroller";
   if (/high ?chair/.test(hay)) return "high_chair";
   if (/baby swing|infant swing|\bswing\b/.test(hay)) return "swing";
   if (/bouncer/.test(hay)) return "bouncer";
   if (/activity ?center|jumperoo|exersaucer/.test(hay)) return "activity_center";
-  if (/sleep ?sack|swaddle|wearable blanket/.test(hay)) return "sleep_sack";
-  if (/baby ?gate|safety gate/.test(hay)) return "baby_gate";
+  if (/sleep ?sack|swaddle|wearable blanket|swaddl/.test(hay)) return "sleep_sack";
+  if (/baby ?gate|safety gate|stair gate/.test(hay)) return "baby_gate";
   if (/pack ?n ?play|play ?yard|playard|travel crib/.test(hay)) return "play_yard";
   if (/baby monitor|video monitor/.test(hay)) return "baby_monitor";
   if (/pacifier|soother|binky|dummy/.test(hay)) return "pacifier";
-  if (/formula/.test(hay)) return "formula";
-  if (/breast ?milk/.test(hay)) return "breast_milk";
-  if (/baby food|puree|stage [1-4]/.test(hay)) return "baby_food";
+  if (/infant formula|baby formula|\bformula\b/.test(hay)) return "formula";
+  if (/breast ?pump|nursing pump|breast ?milk/.test(hay)) return "breast_milk";
+  if (/baby food|puree|stage [1-4]|baby cereal|infant cereal/.test(hay)) return "baby_food";
   if (/toothbrush|tooth ?brush/.test(hay)) return "toothbrush";
   return "";
 }
