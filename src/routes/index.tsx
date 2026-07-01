@@ -2,16 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import catCarseat from "@/assets/cat-carseat-sketch.svg";
-import catPacifier from "@/assets/cat-pacifier-sketch.svg";
-import catBreastMilk from "@/assets/cat-breastmilk-sketch.svg";
-import catFormula from "@/assets/cat-formula-sketch.svg";
-import catBabyFood from "@/assets/cat-babyfood-sketch.svg";
-import catSwaddle from "@/assets/cat-swaddle-sketch.svg";
-import catStroller from "@/assets/cat-stroller-sketch.svg";
-import catPacknPlay from "@/assets/cat-packnplay-sketch.svg";
-import catCarrier from "@/assets/cat-carrier-sketch.svg";
-import catBouncer from "@/assets/cat-bouncer-sketch.svg";
+import catCarseat from "@/assets/hd-carseat.png";
+import catPacifier from "@/assets/hd-pacifier.png";
+import catBreastMilk from "@/assets/hd-breastmilk.png";
+import catFormula from "@/assets/hd-formula.png";
+import catBabyFood from "@/assets/hd-babyfood.png";
+import catSwaddle from "@/assets/hd-swaddle.png";
+import catStroller from "@/assets/hd-stroller.png";
+import catPacknPlay from "@/assets/hd-packnplay.png";
+import catCarrier from "@/assets/hd-carrier.png";
+import catBouncer from "@/assets/hd-bouncer.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -120,25 +120,29 @@ function Index() {
         </div>
       </section>
 
-      {/* Categories Section */}
+      {/* Categories Section — hand-drawn circles */}
       <section className="w-full px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-        <div className="mx-auto max-w-4xl">
-          <div className="mb-12 text-center">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-14 text-center">
             <h2 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
               Track what matters
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 sm:gap-x-10 sm:gap-y-14 lg:grid-cols-5">
             {categories.map((cat) => (
-              <div
-                key={cat.name}
-                className="group flex flex-col items-center justify-center rounded-3xl border border-border/60 bg-card px-4 py-6 text-center transition-all hover:border-border hover:shadow-lg hover:shadow-foreground/5"
-              >
-                <div className="mb-4 flex h-20 w-20 items-center justify-center">
-                  <img src={cat.image} alt={cat.name} className="h-full w-full object-contain" />
+              <div key={cat.name} className="flex flex-col items-center text-center">
+                <div className="aspect-square w-full max-w-[180px] overflow-hidden rounded-full">
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    width={512}
+                    height={512}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
                 </div>
-                <span className="font-body text-sm font-medium text-foreground">
+                <span className="mt-4 font-body text-sm font-medium text-foreground">
                   {cat.name}
                 </span>
               </div>
