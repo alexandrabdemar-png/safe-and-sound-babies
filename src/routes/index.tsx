@@ -12,6 +12,7 @@ import catStroller from "@/assets/hd-stroller.png";
 import catPacknPlay from "@/assets/hd-packnplay.png";
 import catCarrier from "@/assets/hd-carrier.png";
 import catBouncer from "@/assets/hd-bouncer.png";
+import catCrib from "@/assets/hd-crib.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -37,6 +38,7 @@ export const Route = createFileRoute("/")({
 
 const categories = [
   { name: "Car seats", image: catCarseat },
+  { name: "Cribs", image: catCrib },
   { name: "Pacifiers", image: catPacifier },
   { name: "Breast Milk", image: catBreastMilk },
   { name: "Formula", image: catFormula },
@@ -47,6 +49,7 @@ const categories = [
   { name: "Carriers", image: catCarrier },
   { name: "Bouncers", image: catBouncer },
 ];
+
 
 const features = [
   {
@@ -132,16 +135,17 @@ function Index() {
           <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 sm:gap-x-10 sm:gap-y-14 lg:grid-cols-5">
             {categories.map((cat) => (
               <div key={cat.name} className="flex flex-col items-center text-center">
-                <div className="aspect-square w-full max-w-[180px] overflow-hidden rounded-full">
+                <div className="flex aspect-square w-full max-w-[180px] items-center justify-center overflow-hidden rounded-full bg-[#F5F1E8] p-6">
                   <img
                     src={cat.image}
                     alt={cat.name}
                     width={512}
                     height={512}
                     loading="lazy"
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-contain"
                   />
                 </div>
+
                 <span className="mt-4 font-body text-sm font-medium text-foreground">
                   {cat.name}
                 </span>
