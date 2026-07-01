@@ -279,7 +279,7 @@ function SafetyGuidesPage() {
 
   function handleMilestoneExpand(idx: number | null) {
     setExpandedIdx(expandedIdx === idx ? null : idx);
-    recordMilestoneRead(idx);
+    if (idx !== null) recordMilestoneRead(idx);
     if (shouldShowReview()) setShowReview(true);
   }
 
