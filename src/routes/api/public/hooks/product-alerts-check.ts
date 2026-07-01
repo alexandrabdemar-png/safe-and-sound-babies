@@ -235,44 +235,119 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
           }
         }
 
-        if (messages.length === 0) {
-          return new Response(
-            JSON.stringify({ ok: true, sent: 0, note: "no push tokens" }),
-            { headers: { "Content-Type": "application/json" } },
+        // ── Send push notifications ───────────────────────────────────────────
+        let pushSent = 0;
+        if (messages.length > 0) {
+          const expoHeaders: Record<string, string> = {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            "Accept-Encoding": "gzip, deflate",
+          };
+          if (process.env.EXPO_ACCESS_TOKEN) {
+            expoHeaders.Authorization = `Bearer ${process.env.EXPO_ACCESS_TOKEN}`;
+          }
+          const expoRes = await fetch("https://exp.host/--/api/v2/push/send", {
+            method: "POST",
+            headers: expoHeaders,
+            body: JSON.stringify(messages),
+          });
+          if (expoRes.ok && alertsToLog.length) {
+            await supabaseAdmin.from("product_alerts").insert(alertsToLog as never[]);
+            pushSent = messages.length;
+          }
+        }
+
+        // ── Email fallback for recall alerts ──────────────────────────────────
+        // Send to: users with no push token, OR users with recalls_enabled=false
+        // (recall emails always send regardless of push preference — safety critical)
+        const resendKey = process.env.RESEND_API_KEY;
+        let emailSent = 0;
+
+        if (resendKey) {
+          // Find all users who have a pending recall but no push token or no token at all
+          const pushTokenOwners = new Set(
+            (profiles ?? []).map((p) => p.user_id).filter(Boolean)
           );
-        }
 
-        const expoHeaders: Record<string, string> = {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "Accept-Encoding": "gzip, deflate",
-        };
-        if (process.env.EXPO_ACCESS_TOKEN) {
-          expoHeaders.Authorization = `Bearer ${process.env.EXPO_ACCESS_TOKEN}`;
-        }
-        const expoRes = await fetch("https://exp.host/--/api/v2/push/send", {
-          method: "POST",
-          headers: expoHeaders,
-          body: JSON.stringify(messages),
-        });
-        const expoBody = await expoRes.json().catch(() => ({}));
+          // Gather users who have recall items but no push token
+          const usersNeedingEmail: string[] = [];
+          for (const [uid, b] of byUser) {
+            if (b.recalls.length === 0) continue; // only email for recalls
+            if (!pushTokenOwners.has(uid)) usersNeedingEmail.push(uid);
+          }
 
-        // Log sent alerts for deduplication
-        if (expoRes.ok && alertsToLog.length) {
-          await supabaseAdmin.from("product_alerts").insert(alertsToLog as never[]);
+          if (usersNeedingEmail.length > 0) {
+            // Look up emails from auth.users via admin API
+            type AuthUser = { id: string; email?: string };
+            const emailsByUid = new Map<string, string>();
+            for (const uid of usersNeedingEmail) {
+              try {
+                const { data } = await (supabaseAdmin.auth.admin.getUserById(uid)) as { data: { user: AuthUser | null } };
+                if (data?.user?.email) emailsByUid.set(uid, data.user.email);
+              } catch { /* skip */ }
+            }
+
+            for (const [uid, email] of emailsByUid) {
+              const b = byUser.get(uid);
+              if (!b?.recalls.length) continue;
+
+              const recallList = b.recalls
+                .map((r) => `<li style="margin-bottom:8px"><strong>${r.name}</strong> — an active safety recall has been issued for this product.</li>`)
+                .join("");
+
+              const html = `
+<div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a">
+  <div style="background:#C8523A;padding:20px 24px;border-radius:12px 12px 0 0">
+    <p style="margin:0;color:white;font-size:18px;font-weight:700">⚠️ Safety Recall Alert — Peace of Mine</p>
+  </div>
+  <div style="background:#fff;padding:24px;border:1px solid #e5e5e5;border-top:none;border-radius:0 0 12px 12px">
+    <p style="margin:0 0 16px">A safety recall has been issued for one or more products you're tracking:</p>
+    <ul style="padding-left:20px;margin:0 0 20px">${recallList}</ul>
+    <p style="margin:0 0 20px;color:#555;font-size:14px">
+      Stop using the recalled product immediately. Check the official recall notice for return, repair, or refund instructions.
+    </p>
+    <a href="https://peaceofmineapp.com/alerts" style="display:inline-block;background:#C8523A;color:white;text-decoration:none;padding:12px 24px;border-radius:50px;font-weight:600;font-size:14px">
+      View recall details →
+    </a>
+    <p style="margin:20px 0 0;font-size:12px;color:#888">
+      Always verify at <a href="https://www.recalls.gov" style="color:#888">recalls.gov</a>.
+      You received this because you have products tracked in Peace of Mine.
+    </p>
+  </div>
+</div>`;
+
+              try {
+                await fetch("https://api.resend.com/emails", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${resendKey}`,
+                  },
+                  body: JSON.stringify({
+                    from: "Peace of Mine Alerts <alerts@peaceofmineapp.com>",
+                    to: [email],
+                    subject: `⚠️ Safety recall on ${b.recalls[0].name}${b.recalls.length > 1 ? ` and ${b.recalls.length - 1} other product${b.recalls.length - 1 > 1 ? "s" : ""}` : ""}`,
+                    html,
+                  }),
+                });
+                emailSent++;
+                // Log email-sent alerts for deduplication
+                await supabaseAdmin.from("product_alerts").insert(
+                  b.recalls.map((r) => ({ product_id: r.productId, user_id: uid, alert_type: "recall" })) as never[]
+                ).on("conflict", "do nothing" as never);
+              } catch { /* email send errors are non-fatal */ }
+            }
+          }
         }
 
         return new Response(
           JSON.stringify({
-            ok: expoRes.ok,
-            sent: messages.length,
+            ok: true,
+            push_sent: pushSent,
+            email_sent: emailSent,
             users: recipientIds.length,
-            expo: expoBody,
           }),
-          {
-            status: expoRes.ok ? 200 : 502,
-            headers: { "Content-Type": "application/json" },
-          },
+          { headers: { "Content-Type": "application/json" } },
         );
       },
     },

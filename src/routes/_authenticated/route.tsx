@@ -5,6 +5,7 @@ import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { toast } from "sonner";
 import { AlertTriangle, Users, WifiOff } from "lucide-react";
 import { searchCpsc, searchFdaRecalls, isFoodRelated } from "@/lib/cpscSearch";
+import { registerForPushNotifications } from "@/lib/pushNotifications";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -48,6 +49,12 @@ function AuthenticatedLayout() {
       window.removeEventListener("online", handleOnline);
     };
   }, []);
+
+  // Register for push notifications once per session (best-effort, never throws)
+  useEffect(() => {
+    if (!user?.id) return;
+    registerForPushNotifications();
+  }, [user?.id]);
 
   // Expose a helper that other parts of the app can call to register own changes.
   // (simple module-level ref — no context needed for this lightweight use case)

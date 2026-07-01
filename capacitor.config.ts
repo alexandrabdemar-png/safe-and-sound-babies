@@ -11,6 +11,11 @@ const config: CapacitorConfig = {
   plugins: {
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"],
+      // iOS Critical Alerts: bypasses Do Not Disturb and muted notifications.
+      // Requires Apple entitlement — apply at:
+      // https://developer.apple.com/contact/request/notifications-critical-alerts-entitlement/
+      // Once approved, set this to true and re-submit to the App Store.
+      // criticalAlerts: true,
     },
     Browser: {
       presentationStyle: "popover",
