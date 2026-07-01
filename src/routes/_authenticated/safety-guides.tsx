@@ -277,9 +277,9 @@ function SafetyGuidesPage() {
   const [showReview, setShowReview] = useState(false);
   const [reviewHelpful, setReviewHelpful] = useState<boolean | null>(null);
 
-  function handleMilestoneExpand(idx: number) {
+  function handleMilestoneExpand(idx: number | null) {
     setExpandedIdx(expandedIdx === idx ? null : idx);
-    recordMilestoneRead(idx);
+    if (idx !== null) recordMilestoneRead(idx);
     if (shouldShowReview()) setShowReview(true);
   }
 

@@ -199,7 +199,7 @@ function MomentsPage() {
               <ul className="space-y-5">
                 {filtered.map((m) => {
                   const s = TYPE_STYLES[m.type];
-                  const isLetter = m.type === "Letter";
+                  const isLetter = (m.type as string) === "Letter";
                   const age = childDob && m.logged_at ? calcAgeAt(childDob, m.logged_at) : null;
                   return (
                     <li key={m.id} className="relative pl-7">

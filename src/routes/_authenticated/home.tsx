@@ -440,7 +440,7 @@ function HomePage() {
         if (!Array.isArray(data)) return;
 
         let newRecalls = 0;
-        for (const p of data as { id: string; name: string; recalled: boolean }) {
+        for (const p of data as Array<{ id: string; name: string; recalled: boolean }>) {
           if (p.recalled) continue; // already flagged
           const hit = checkCriticalRecalls(p.name);
           if (!hit) continue;

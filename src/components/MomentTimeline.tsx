@@ -42,7 +42,7 @@ export function MomentTimeline({
         const { type, displayNotes } = parseMomentType(m.notes);
         const s = TYPE_STYLES[type];
         const age = childName && childDob && m.logged_at ? calcAgeAt(childDob, m.logged_at) : null;
-        const isLetter = type === "Letter";
+        const isLetter = (type as string) === "Letter";
         return (
           <li
             key={m.id}
