@@ -2,13 +2,12 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Sparkles, Lock, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useActiveChild } from "@/hooks/useActiveChild";
-import { useProGate } from "@/hooks/useProGate";
 import { ALL_TYPES, TYPE_STYLES, type MomentType } from "@/routes/_authenticated/moments";
 import { trackEvent } from "@/lib/analytics";
 
@@ -149,7 +148,6 @@ const PROMPTS = [
 function NewMomentPage() {
   const navigate = useNavigate();
   const { activeChildId, children } = useActiveChild();
-  const { isPro, loading: proLoading } = useProGate();
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState("");
   const [loggedAt, setLoggedAt] = useState(new Date().toISOString().slice(0, 10));
@@ -189,38 +187,6 @@ function NewMomentPage() {
     }
   }
 
-  if (!proLoading && !isPro) {
-    return (
-      <div className="flex min-h-screen flex-col bg-background pb-16">
-        <header className="px-5 pt-8 pb-4 sm:px-6">
-          <div className="mx-auto max-w-md">
-            <Button asChild variant="ghost" size="sm" className="-ml-2 rounded-full font-body text-xs">
-              <Link to="/home">
-                <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Home
-              </Link>
-            </Button>
-          </div>
-        </header>
-        <main className="flex flex-1 flex-col items-center justify-center px-5 text-center">
-          <div className="mx-auto max-w-sm space-y-4">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-              <Lock className="h-6 w-6 text-primary" />
-            </div>
-            <h2 className="font-display text-2xl font-semibold">Milestone logging is a Pro feature</h2>
-            <p className="font-body text-sm text-muted-foreground">
-              Everything in free, plus expert features, tips and tricks, safety insights, and pediatrician-reviewed guidance. Try free for 7 days.
-            </p>
-            <Button className="w-full rounded-full" onClick={() => navigate({ to: "/pricing" })}>
-              <Sparkles className="mr-2 h-4 w-4" /> Start free trial
-            </Button>
-            <Button variant="ghost" className="w-full rounded-full" onClick={() => navigate({ to: "/home" })}>
-              Not now
-            </Button>
-          </div>
-        </main>
-      </div>
-    );
-  }
 
   if (safetyTip) {
     return (

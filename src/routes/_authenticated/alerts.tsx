@@ -459,16 +459,14 @@ function RecallCard({ item, onDismiss }: { item: RecallMatch; onDismiss: () => v
         </p>
       )}
       <div className="mt-4 flex items-center gap-2">
-        {recall.url && (
-          <a
-            href={recall.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 rounded-full bg-destructive px-3.5 py-1.5 font-body text-xs font-semibold text-destructive-foreground"
-          >
-            Read details <ArrowUpRight className="h-3 w-3" />
-          </a>
-        )}
+        <a
+          href={recall.url ?? "https://www.cpsc.gov/Recalls"}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 rounded-full bg-destructive px-3.5 py-1.5 font-body text-xs font-semibold text-destructive-foreground"
+        >
+          Read recall details <ArrowUpRight className="h-3 w-3" />
+        </a>
         <Button
           size="sm"
           variant="ghost"
