@@ -235,12 +235,13 @@ function RecallCheckPage() {
           )}
 
           {/* Disclaimer — always visible */}
-          <div className="rounded-2xl border border-border/40 bg-muted/30 px-4 py-3 font-body text-xs text-muted-foreground space-y-1">
+          <div className="rounded-2xl border border-border/40 bg-muted/30 px-4 py-3.5 font-body text-xs text-muted-foreground space-y-2">
+            <p className="font-semibold text-foreground">About this data</p>
             <p>
-              This searches the CPSC database. Results may be incomplete — the absence of a recall does not confirm a product is safe.
+              This queries the CPSC database directly. We pull recall data as quickly as CPSC publishes it — but CPSC typically takes <span className="font-medium text-foreground">1–2 hours</span> to make a new recall available in their database after announcement. A result showing no recalls does not confirm a product is free of all recalls.
             </p>
             <p>
-              For the authoritative recall list, visit{" "}
+              For the most current information, always cross-reference with the authoritative sources:{" "}
               <a
                 href="https://www.recalls.gov"
                 target="_blank"
@@ -249,7 +250,7 @@ function RecallCheckPage() {
               >
                 recalls.gov
               </a>{" "}
-              or{" "}
+              and{" "}
               <a
                 href="https://cpsc.gov/Recalls"
                 target="_blank"
@@ -258,6 +259,9 @@ function RecallCheckPage() {
               >
                 cpsc.gov/Recalls
               </a>.
+            </p>
+            <p className="text-muted-foreground/70">
+              Peace of Mine provides safety aggregation for informational purposes only. It is not a substitute for official recalls, medical advice, or manufacturer guidelines.
             </p>
           </div>
         </div>

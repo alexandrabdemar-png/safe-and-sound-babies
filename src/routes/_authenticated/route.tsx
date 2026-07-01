@@ -90,12 +90,12 @@ function AuthenticatedLayout() {
               .maybeSingle();
             if (data?.name) name = data.name;
           }
-          toast.error(`Safety recall: ${name}`, {
-            description: "Tap to view what to do next.",
+          toast.error(`Safety recall detected — ${name}`, {
+            description: "A new recall was just flagged in the CPSC database. Tap to see what to do next.",
             icon: <AlertTriangle className="h-4 w-4" />,
-            duration: 12000,
+            duration: 15000,
             action: {
-              label: "View",
+              label: "View alerts",
               onClick: () => navigate({ to: "/alerts" }),
             },
           });

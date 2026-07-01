@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, AlertTriangle, Ruler, RefreshCw, Trash2, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, Ruler, RefreshCw, Trash2, ShieldAlert, ExternalLink, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,6 +56,9 @@ function ProductDetailPage() {
   const [child, setChild] = useState<Child | null>(null);
   const [recallNames, setRecallNames] = useState<string[]>([]);
   const [refreshingAI, setRefreshingAI] = useState(false);
+  const [liveChecking, setLiveChecking] = useState(false);
+  const [liveResults, setLiveResults] = useState<Array<{ id: string; title: string; url: string; date: string | null }> | null>(null);
+  const [liveCheckedAt, setLiveCheckedAt] = useState<Date | null>(null);
 
   async function load() {
     setLoading(true);
@@ -96,6 +99,42 @@ function ProductDetailPage() {
     } finally { setRefreshingAI(false); }
   }
 
+  async function checkLiveNow() {
+    if (!product) return;
+    setLiveChecking(true);
+    setLiveResults(null);
+    try {
+      const query = [product.name, product.brand].filter(Boolean).join(" ");
+      const res = await fetch(
+        `https://www.saferproducts.gov/RestWebServices/Recall?format=json&Keyword=${encodeURIComponent(query)}`
+      );
+      if (!res.ok) throw new Error(`CPSC API ${res.status}`);
+      const data = await res.json();
+      type CpscRow = { RecallID: string; RecallHeading: string; URL: string; RecallDate?: string };
+      const rows: CpscRow[] = Array.isArray(data) ? data : [];
+      const hits = rows.map((r) => ({ id: r.RecallID, title: r.RecallHeading, url: r.URL, date: r.RecallDate ?? null }));
+      setLiveResults(hits);
+      setLiveCheckedAt(new Date());
+
+      // If live check found recalls not already in our DB, insert them
+      if (hits.length > 0 && !product.recalled && recallNames.length === 0) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from("product_recalls" as never).insert({
+            product_id: product.id,
+            user_id: user.id,
+            acknowledged: false,
+          } as never);
+          await load(); // refresh to show the new recall banner
+        }
+      }
+    } catch {
+      toast.error("Could not reach the CPSC database. Try again or visit cpsc.gov/Recalls.");
+    } finally {
+      setLiveChecking(false);
+    }
+  }
+
   async function deleteProduct() {
     if (!product) return;
     if (!confirm("Delete this product?")) return;
@@ -129,31 +168,82 @@ function ProductDetailPage() {
       </header>
       <main className="flex-1 px-5 sm:px-6">
         <div className="mx-auto max-w-md space-y-5">
-          {/* Recall banner */}
-          {(product.recalled || recallNames.length > 0) ? (
-            <div className="rounded-3xl bg-destructive/15 border border-destructive/30 p-4 space-y-2">
-              <div className="flex items-center gap-2 font-body text-sm font-semibold text-destructive">
-                <AlertTriangle className="h-4 w-4" /> Active recall found in CPSC database
+          {/* Recall status card */}
+          <div className={`rounded-3xl border p-4 space-y-3 ${product.recalled || recallNames.length > 0 ? "bg-destructive/15 border-destructive/30" : "bg-card border-border/50"}`}>
+            {/* Header */}
+            {(product.recalled || recallNames.length > 0) ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 font-body text-sm font-semibold text-destructive">
+                  <AlertTriangle className="h-4 w-4" /> Active recall found in CPSC database
+                </div>
+                {recallNames.length > 0 && (
+                  <ul className="space-y-1 font-body text-xs text-destructive/90">
+                    {recallNames.map((t, i) => <li key={i}>· {t}</li>)}
+                  </ul>
+                )}
+                <a href="https://www.cpsc.gov/Recalls" target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive underline">
+                  View on cpsc.gov <ExternalLink className="h-3 w-3" />
+                </a>
               </div>
-              {recallNames.length > 0 && (
-                <ul className="space-y-1 font-body text-xs text-destructive/90">
-                  {recallNames.map((t, i) => <li key={i}>· {t}</li>)}
-                </ul>
-              )}
-              <p className="font-body text-xs text-muted-foreground">
-                Stop using this product. Verify at{" "}
-                <a href="https://www.cpsc.gov/Recalls" target="_blank" rel="noopener noreferrer" className="font-semibold underline">cpsc.gov/Recalls</a>.
-              </p>
-            </div>
-          ) : (
-            <div className="rounded-3xl border border-border/50 bg-card p-4">
+            ) : (
               <div className="flex items-center gap-2 font-body text-xs text-muted-foreground">
                 <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
-                No active CPSC recalls found in our database. Recall data may not reflect recent changes — always verify at{" "}
-                <a href="https://www.cpsc.gov/Recalls" target="_blank" rel="noopener noreferrer" className="font-semibold text-foreground underline">cpsc.gov/Recalls</a>.
+                No active CPSC recalls found in our database
               </div>
-            </div>
-          )}
+            )}
+
+            {/* Live check button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={checkLiveNow}
+              disabled={liveChecking}
+              className="w-full rounded-full font-body text-xs gap-1.5 h-9"
+            >
+              {liveChecking
+                ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Querying CPSC…</>
+                : <><Zap className="h-3.5 w-3.5" /> Check CPSC live now</>}
+            </Button>
+
+            {/* Live check results */}
+            {liveResults !== null && liveCheckedAt && (
+              <div className="space-y-2">
+                <p className="font-body text-xs text-muted-foreground">
+                  Live CPSC query — {liveCheckedAt.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}{" "}
+                  at {liveCheckedAt.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+                </p>
+                {liveResults.length === 0 ? (
+                  <p className="font-body text-xs text-muted-foreground">
+                    No recalls returned by CPSC for this search. The absence of a result does not confirm this product is free of all recalls — CPSC data can be delayed by 1–2 hours from the time of publication.
+                  </p>
+                ) : (
+                  <ul className="space-y-1.5">
+                    {liveResults.map((r) => (
+                      <li key={r.id} className="rounded-2xl border border-destructive/20 bg-destructive/8 px-3 py-2 font-body text-xs">
+                        <p className="font-semibold text-foreground">{r.title}</p>
+                        {r.date && <p className="text-muted-foreground">{new Date(r.date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</p>}
+                        {r.url && (
+                          <a href={r.url} target="_blank" rel="noopener noreferrer" className="mt-0.5 inline-flex items-center gap-1 font-semibold text-destructive underline">
+                            Full details <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {/* Delay disclaimer */}
+            <p className="font-body text-[11px] leading-relaxed text-muted-foreground/70">
+              We pull recall data as quickly as CPSC publishes it, but CPSC typically takes 1–2 hours to make new recalls available in their database after announcement. For the most current information, always check{" "}
+              <a href="https://www.cpsc.gov/Recalls" target="_blank" rel="noopener noreferrer" className="font-semibold underline">cpsc.gov/Recalls</a>{" "}
+              and{" "}
+              <a href="https://www.recalls.gov" target="_blank" rel="noopener noreferrer" className="font-semibold underline">recalls.gov</a>{" "}
+              directly.
+            </p>
+          </div>
 
           {/* Header */}
           <div className="flex items-start gap-3">
