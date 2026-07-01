@@ -12,6 +12,7 @@ import catStroller from "@/assets/hd-stroller.png";
 import catPacknPlay from "@/assets/hd-packnplay.png";
 import catCarrier from "@/assets/hd-carrier.png";
 import catBouncer from "@/assets/hd-bouncer.png";
+import catCrib from "@/assets/hd-crib.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -37,6 +38,7 @@ export const Route = createFileRoute("/")({
 
 const categories = [
   { name: "Car seats", image: catCarseat },
+  { name: "Cribs", image: catCrib },
   { name: "Pacifiers", image: catPacifier },
   { name: "Breast Milk", image: catBreastMilk },
   { name: "Formula", image: catFormula },
@@ -47,6 +49,7 @@ const categories = [
   { name: "Carriers", image: catCarrier },
   { name: "Bouncers", image: catBouncer },
 ];
+
 
 const features = [
   {
