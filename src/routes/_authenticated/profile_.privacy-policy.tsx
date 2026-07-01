@@ -46,10 +46,10 @@ function PrivacyPolicyPage() {
         <p className="mt-6 text-center font-body text-xs text-muted-foreground">
           Questions?{" "}
           <a
-            href="mailto:privacy@safeandsoundbabies.com"
+            href="mailto:privacy@peaceofmineapp.com"
             className="text-primary underline underline-offset-2"
           >
-            privacy@safeandsoundbabies.com
+            privacy@peaceofmineapp.com
           </a>
         </p>
       </main>

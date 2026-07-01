@@ -88,7 +88,7 @@ export function LogoConceptC({
         letterSpacing="0.02em"
         fill={color}
       >
-        Safe &amp; Sound
+        Peace of Mine
       </text>
     </svg>
   );

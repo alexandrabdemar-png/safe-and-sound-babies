@@ -71,7 +71,7 @@ You have full control over your data:
 
 • Delete a child — Go to Profile → tap the trash icon next to the child's name. This permanently deletes that child's profile, all measurements, milestones, and associated product alerts.
 
-• Delete your account and all data — Email us at privacy@safeandsoundbabies.com with the subject line "Delete my account". We will permanently delete your account and all associated data within 30 days and confirm by email when complete.
+• Delete your account and all data — Email us at privacy@peaceofmineapp.com with the subject line "Delete my account". We will permanently delete your account and all associated data within 30 days and confirm by email when complete.
 
 • Export your data — Pro subscribers can download a complete JSON export of all their data at any time from the Profile page. Use this before requesting deletion if you want a copy.
 
@@ -102,6 +102,6 @@ If we make a material change to this policy we will notify you via the email add
 
 Questions about this policy or your data? We are happy to help.
 
-  Email: privacy@safeandsoundbabies.com
+  Email: privacy@peaceofmineapp.com
 
 We aim to respond within 48 hours.`;

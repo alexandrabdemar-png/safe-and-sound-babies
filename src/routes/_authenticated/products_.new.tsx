@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/sheet";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { CATEGORIES, type CategoryKey } from "@/lib/productCategories";
+import { trackEvent } from "@/lib/analytics";
 
 // Server functions are imported dynamically to prevent module-level evaluation
 // crashing the page if the server environment or API keys aren't available.
@@ -172,9 +173,11 @@ function NewProductPage() {
         if (hit) {
           await recordRecallInDb(productId, hit);
           setRecallModal({ hit, productName: name.trim(), productId });
+          trackEvent("recall_alert_shown", { category: category || "unknown" });
           return; // wait for user to dismiss modal before navigating
         }
       }
+      trackEvent("product_added", { category: category || "unknown" });
       toast.success("Saved — fetching safety guidelines");
       navigate({ to: "/products" });
     } catch (err) {

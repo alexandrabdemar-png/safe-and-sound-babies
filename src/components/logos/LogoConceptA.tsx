@@ -67,7 +67,7 @@ export function LogoConceptA({
         letterSpacing="0.05em"
         fill={color}
       >
-        Safe &amp; Sound
+        Peace of Mine
       </text>
     </svg>
   );
