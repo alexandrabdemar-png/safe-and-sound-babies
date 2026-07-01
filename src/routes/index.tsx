@@ -60,7 +60,7 @@ const features = [
   {
     title: "Safety first",
     description:
-      "Know exactly when to replace, size up, or check the fit. Because the little things are the big things.",
+      "Thoughtful reminders for life's little milestones and the gear that grows with them. Because the little things are the big things.",
   },
   {
     title: "Always one step ahead",
@@ -88,10 +88,10 @@ function Index() {
               </div>
 
               <h1 className="font-display text-5xl font-semibold leading-[1.1] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
-                Never miss a{" "}
+                Stay on top of every{" "}
                 <span className="font-display-italic italic text-primary">safety</span>
                 <br />
-                milestone again.
+                milestone.
               </h1>
 
               <p className="mt-6 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
