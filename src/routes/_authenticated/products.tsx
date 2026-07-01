@@ -75,15 +75,6 @@ function ProductsPage() {
               size="sm"
               variant="outline"
               className="rounded-full px-3 font-body text-xs font-semibold"
-              onClick={() => navigate({ to: "/handmedown" })}
-            >
-              Hand-me-down?
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="rounded-full px-3 font-body text-xs font-semibold"
               onClick={() => navigate({ to: "/products/scan" })}
             >
               <ScanLine className="mr-1 h-3.5 w-3.5" /> Scan
