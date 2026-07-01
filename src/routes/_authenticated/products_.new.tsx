@@ -178,7 +178,7 @@ function NewProductPage() {
         }
       }
       trackEvent("product_added", { category: category || "unknown" });
-      toast.success("Saved — fetching safety guidelines");
+      toast.success("Saved — fetching estimated safety guidelines");
       navigate({ to: "/products" });
     } catch (err) {
       console.error("[products/new] handleSubmit error:", err);
@@ -480,7 +480,7 @@ function ProductSearchAI({ onPick }: { onPick: (r: ProductSearchResult) => void 
         <div>
           <p className="font-body text-sm font-semibold text-foreground">Search by product name</p>
           <p className="font-body text-xs text-muted-foreground">
-            AI looks up safety info instantly — no manual entry needed.
+            AI looks up estimated safety info — always verify with the manufacturer or your pediatrician.
           </p>
         </div>
       </div>

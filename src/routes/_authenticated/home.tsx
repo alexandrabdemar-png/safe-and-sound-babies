@@ -1611,6 +1611,9 @@ function WeeklySafetyTipCard({
             Safety tip this week
           </p>
           <p className="font-body text-sm text-foreground leading-relaxed">{tip.text}</p>
+          <p className="mt-1.5 font-body text-[11px] text-muted-foreground">
+            Based on AAP guidelines. Always consult your pediatrician for advice specific to your child.
+          </p>
           <div className="mt-3 flex items-center gap-2">
             <Button
               size="sm"

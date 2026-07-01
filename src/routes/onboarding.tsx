@@ -240,7 +240,7 @@ function OnboardingPage() {
               ))}
             </ul>
             <p className="mt-4 text-center font-body text-[11px] text-muted-foreground">
-              Based on AAP recommendations.
+              Based on AAP recommendations. Peace of Mine is not a substitute for professional medical advice — always consult your pediatrician.
             </p>
             <Button
               className="mt-6 h-12 w-full rounded-full bg-primary font-body text-sm font-semibold"

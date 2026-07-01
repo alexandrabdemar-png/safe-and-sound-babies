@@ -320,7 +320,11 @@ function AuthPage() {
           <Link to="/terms" className="underline hover:text-foreground">
             Terms & Conditions
           </Link>{" "}
-          and Privacy Policy.
+          and{" "}
+          <a href="/profile/privacy-policy" className="underline hover:text-foreground">
+            Privacy Policy
+          </a>
+          . Peace of Mine is not a substitute for professional medical advice.
         </p>
       </div>
     </main>

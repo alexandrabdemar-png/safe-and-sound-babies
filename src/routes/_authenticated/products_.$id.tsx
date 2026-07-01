@@ -196,6 +196,9 @@ function ProductDetailPage() {
                 {guideline.source && (
                   <p className="text-xs text-muted-foreground">Source: {guideline.source}</p>
                 )}
+                <p className="text-xs text-muted-foreground/70 pt-1">
+                  These guidelines are AI-estimated. Always verify with the manufacturer and consult your pediatrician.
+                </p>
               </div>
             ) : (
               <p className="font-body text-sm text-muted-foreground">No guidelines yet. Tap Refresh to fetch.</p>

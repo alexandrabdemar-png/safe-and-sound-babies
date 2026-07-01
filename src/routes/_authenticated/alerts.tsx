@@ -321,6 +321,11 @@ function AlertsPage() {
                       <RecallCard key={r.id} item={r} onDismiss={() => dismissRecall(r.id)} />
                     ))}
                   </ul>
+                  <p className="mt-2 font-body text-xs text-muted-foreground">
+                    Always verify recalls at{" "}
+                    <a href="https://www.recalls.gov" target="_blank" rel="noopener noreferrer" className="underline">recalls.gov</a>{" "}
+                    — our database may not reflect the latest updates.
+                  </p>
                 </Section>
               )}
 

@@ -78,6 +78,7 @@ function RecallCheckPage() {
   const [error, setError] = useState<string | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [resolvedName, setResolvedName] = useState<string | null>(null);
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
   async function runSearch(searchQuery: string) {
     const q = searchQuery.trim();
@@ -90,6 +91,7 @@ function RecallCheckPage() {
       const recalls = await searchCpsc(q);
       setResults(recalls);
       setSearched(true);
+      setLastChecked(new Date());
     } catch {
       setError("Could not reach the CPSC database. Please try again or visit cpsc.gov/Recalls.");
       setSearched(true);
@@ -220,16 +222,29 @@ function RecallCheckPage() {
                   <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <ShieldCheck className="h-6 w-6" />
                   </div>
-                  <p className="font-display text-lg font-semibold tracking-tight">No recalls found</p>
+                  <p className="font-display text-lg font-semibold tracking-tight">No recalls found in our database</p>
                   <p className="mt-1.5 mx-auto max-w-xs font-body text-sm text-muted-foreground">
-                    No baby or kids product recalls found for that search. Always verify at cpsc.gov/Recalls.
+                    Our database shows no matching recalls, but this does not confirm the product is safe. Always verify at{" "}
+                    <a href="https://www.recalls.gov" target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2">recalls.gov</a>.
                   </p>
+                  {lastChecked && (
+                    <p className="mt-2 font-body text-xs text-muted-foreground/60">
+                      Last checked: {lastChecked.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <p className="font-body text-sm font-semibold text-destructive">
-                    {results.length} recall{results.length !== 1 ? "s" : ""} found
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="font-body text-sm font-semibold text-destructive">
+                      {results.length} recall{results.length !== 1 ? "s" : ""} found in our database
+                    </p>
+                    {lastChecked && (
+                      <p className="font-body text-xs text-muted-foreground/60">
+                        Checked {lastChecked.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+                      </p>
+                    )}
+                  </div>
                   {results.map((r) => (
                     <RecallCard key={r.RecallID} recall={r} />
                   ))}
@@ -239,16 +254,30 @@ function RecallCheckPage() {
           )}
 
           {/* Disclaimer — always visible */}
-          <div className="rounded-2xl border border-border/40 bg-muted/30 px-4 py-3 font-body text-xs text-muted-foreground">
-            This searches the CPSC database. For the most up-to-date information, visit{" "}
-            <a
-              href="https://cpsc.gov/Recalls"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-foreground underline underline-offset-2"
-            >
-              cpsc.gov/Recalls
-            </a>
+          <div className="rounded-2xl border border-border/40 bg-muted/30 px-4 py-3 font-body text-xs text-muted-foreground space-y-1">
+            <p>
+              This searches the CPSC database. Results may be incomplete — the absence of a recall does not confirm a product is safe.
+            </p>
+            <p>
+              For the authoritative recall list, visit{" "}
+              <a
+                href="https://www.recalls.gov"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-foreground underline underline-offset-2"
+              >
+                recalls.gov
+              </a>{" "}
+              or{" "}
+              <a
+                href="https://cpsc.gov/Recalls"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-foreground underline underline-offset-2"
+              >
+                cpsc.gov/Recalls
+              </a>.
+            </p>
           </div>
         </div>
       </main>
