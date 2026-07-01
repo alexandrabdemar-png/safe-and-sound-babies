@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { useProGate } from "@/hooks/useProGate";
 import { ALL_TYPES, TYPE_STYLES, type MomentType } from "@/routes/_authenticated/moments";
+import { trackEvent } from "@/lib/analytics";
 
 type SafetyTip = { title: string; tips: string[] };
 
@@ -178,6 +179,7 @@ function NewMomentPage() {
     });
     setSaving(false);
     if (error) { toast.error(error.message); return; }
+    trackEvent("milestone_completed");
     toast.success("Saved that moment 💛");
     const tip = getSafetyTip(title.trim());
     if (tip) {

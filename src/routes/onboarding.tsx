@@ -7,6 +7,7 @@ import {
   ShieldCheck, Bed, Moon, Footprints, Utensils, Armchair, Grid3x3, DoorClosed, Shield,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { trackEvent } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -190,6 +191,7 @@ function OnboardingPage() {
       }
 
       clearProgress();
+      trackEvent("onboarding_completed");
 
       const actions = getSafetyFirstLook(dob || null);
       setSafetyFirstLook(actions);

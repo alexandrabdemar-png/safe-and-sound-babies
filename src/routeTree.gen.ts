@@ -19,7 +19,6 @@ import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedTravelChecklistRouteImport } from './routes/_authenticated/travel-checklist'
 import { Route as AuthenticatedTrackingRouteImport } from './routes/_authenticated/tracking'
 import { Route as AuthenticatedSafetyGuidesRouteImport } from './routes/_authenticated/safety-guides'
-import { Route as AuthenticatedRegistryCheckRouteImport } from './routes/_authenticated/registry-check'
 import { Route as AuthenticatedRecallRadarRouteImport } from './routes/_authenticated/recall-radar'
 import { Route as AuthenticatedRecallCheckRouteImport } from './routes/_authenticated/recall-check'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -27,7 +26,6 @@ import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
 import { Route as AuthenticatedMomentsRouteImport } from './routes/_authenticated/moments'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
-import { Route as AuthenticatedHandmedownRouteImport } from './routes/_authenticated/handmedown'
 import { Route as AuthenticatedGrowthRouteImport } from './routes/_authenticated/growth'
 import { Route as AuthenticatedFirstFoodsRouteImport } from './routes/_authenticated/first-foods'
 import { Route as AuthenticatedChecklistsRouteImport } from './routes/_authenticated/checklists'
@@ -35,6 +33,7 @@ import { Route as AuthenticatedCaregiverCardRouteImport } from './routes/_authen
 import { Route as AuthenticatedBottlesRouteImport } from './routes/_authenticated/bottles'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
+import { Route as AuthenticatedProfileSupportRouteImport } from './routes/_authenticated/profile_.support'
 import { Route as AuthenticatedProfilePrivacyPromiseRouteImport } from './routes/_authenticated/profile_/privacy-promise'
 import { Route as AuthenticatedProfilePrivacyPolicyRouteImport } from './routes/_authenticated/profile_.privacy-policy'
 import { Route as AuthenticatedProfileNotificationSettingsRouteImport } from './routes/_authenticated/profile_.notification-settings'
@@ -100,12 +99,6 @@ const AuthenticatedSafetyGuidesRoute =
     path: '/safety-guides',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedRegistryCheckRoute =
-  AuthenticatedRegistryCheckRouteImport.update({
-    id: '/registry-check',
-    path: '/registry-check',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedRecallRadarRoute =
   AuthenticatedRecallRadarRouteImport.update({
     id: '/recall-radar',
@@ -141,11 +134,6 @@ const AuthenticatedMomentsRoute = AuthenticatedMomentsRouteImport.update({
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedHandmedownRoute = AuthenticatedHandmedownRouteImport.update({
-  id: '/handmedown',
-  path: '/handmedown',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedGrowthRoute = AuthenticatedGrowthRouteImport.update({
@@ -184,6 +172,12 @@ const AuthenticatedAddRoute = AuthenticatedAddRouteImport.update({
   path: '/add',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProfileSupportRoute =
+  AuthenticatedProfileSupportRouteImport.update({
+    id: '/profile_/support',
+    path: '/profile/support',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProfilePrivacyPromiseRoute =
   AuthenticatedProfilePrivacyPromiseRouteImport.update({
     id: '/profile_/privacy-promise',
@@ -272,7 +266,6 @@ export interface FileRoutesByFullPath {
   '/checklists': typeof AuthenticatedChecklistsRoute
   '/first-foods': typeof AuthenticatedFirstFoodsRoute
   '/growth': typeof AuthenticatedGrowthRoute
-  '/handmedown': typeof AuthenticatedHandmedownRoute
   '/home': typeof AuthenticatedHomeRoute
   '/moments': typeof AuthenticatedMomentsRouteWithChildren
   '/pricing': typeof AuthenticatedPricingRoute
@@ -280,7 +273,6 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/recall-check': typeof AuthenticatedRecallCheckRoute
   '/recall-radar': typeof AuthenticatedRecallRadarRoute
-  '/registry-check': typeof AuthenticatedRegistryCheckRoute
   '/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/tracking': typeof AuthenticatedTrackingRoute
   '/travel-checklist': typeof AuthenticatedTravelChecklistRoute
@@ -293,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/profile/notification-settings': typeof AuthenticatedProfileNotificationSettingsRoute
   '/profile/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/profile/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
+  '/profile/support': typeof AuthenticatedProfileSupportRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
@@ -312,7 +305,6 @@ export interface FileRoutesByTo {
   '/checklists': typeof AuthenticatedChecklistsRoute
   '/first-foods': typeof AuthenticatedFirstFoodsRoute
   '/growth': typeof AuthenticatedGrowthRoute
-  '/handmedown': typeof AuthenticatedHandmedownRoute
   '/home': typeof AuthenticatedHomeRoute
   '/moments': typeof AuthenticatedMomentsRouteWithChildren
   '/pricing': typeof AuthenticatedPricingRoute
@@ -320,7 +312,6 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/recall-check': typeof AuthenticatedRecallCheckRoute
   '/recall-radar': typeof AuthenticatedRecallRadarRoute
-  '/registry-check': typeof AuthenticatedRegistryCheckRoute
   '/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/tracking': typeof AuthenticatedTrackingRoute
   '/travel-checklist': typeof AuthenticatedTravelChecklistRoute
@@ -333,6 +324,7 @@ export interface FileRoutesByTo {
   '/profile/notification-settings': typeof AuthenticatedProfileNotificationSettingsRoute
   '/profile/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/profile/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
+  '/profile/support': typeof AuthenticatedProfileSupportRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
@@ -354,7 +346,6 @@ export interface FileRoutesById {
   '/_authenticated/checklists': typeof AuthenticatedChecklistsRoute
   '/_authenticated/first-foods': typeof AuthenticatedFirstFoodsRoute
   '/_authenticated/growth': typeof AuthenticatedGrowthRoute
-  '/_authenticated/handmedown': typeof AuthenticatedHandmedownRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/moments': typeof AuthenticatedMomentsRouteWithChildren
   '/_authenticated/pricing': typeof AuthenticatedPricingRoute
@@ -362,7 +353,6 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/recall-check': typeof AuthenticatedRecallCheckRoute
   '/_authenticated/recall-radar': typeof AuthenticatedRecallRadarRoute
-  '/_authenticated/registry-check': typeof AuthenticatedRegistryCheckRoute
   '/_authenticated/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/_authenticated/tracking': typeof AuthenticatedTrackingRoute
   '/_authenticated/travel-checklist': typeof AuthenticatedTravelChecklistRoute
@@ -375,6 +365,7 @@ export interface FileRoutesById {
   '/_authenticated/profile_/notification-settings': typeof AuthenticatedProfileNotificationSettingsRoute
   '/_authenticated/profile_/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/_authenticated/profile_/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
+  '/_authenticated/profile_/support': typeof AuthenticatedProfileSupportRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
@@ -396,7 +387,6 @@ export interface FileRouteTypes {
     | '/checklists'
     | '/first-foods'
     | '/growth'
-    | '/handmedown'
     | '/home'
     | '/moments'
     | '/pricing'
@@ -404,7 +394,6 @@ export interface FileRouteTypes {
     | '/profile'
     | '/recall-check'
     | '/recall-radar'
-    | '/registry-check'
     | '/safety-guides'
     | '/tracking'
     | '/travel-checklist'
@@ -417,6 +406,7 @@ export interface FileRouteTypes {
     | '/profile/notification-settings'
     | '/profile/privacy-policy'
     | '/profile/privacy-promise'
+    | '/profile/support'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
@@ -436,7 +426,6 @@ export interface FileRouteTypes {
     | '/checklists'
     | '/first-foods'
     | '/growth'
-    | '/handmedown'
     | '/home'
     | '/moments'
     | '/pricing'
@@ -444,7 +433,6 @@ export interface FileRouteTypes {
     | '/profile'
     | '/recall-check'
     | '/recall-radar'
-    | '/registry-check'
     | '/safety-guides'
     | '/tracking'
     | '/travel-checklist'
@@ -457,6 +445,7 @@ export interface FileRouteTypes {
     | '/profile/notification-settings'
     | '/profile/privacy-policy'
     | '/profile/privacy-promise'
+    | '/profile/support'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
@@ -477,7 +466,6 @@ export interface FileRouteTypes {
     | '/_authenticated/checklists'
     | '/_authenticated/first-foods'
     | '/_authenticated/growth'
-    | '/_authenticated/handmedown'
     | '/_authenticated/home'
     | '/_authenticated/moments'
     | '/_authenticated/pricing'
@@ -485,7 +473,6 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/recall-check'
     | '/_authenticated/recall-radar'
-    | '/_authenticated/registry-check'
     | '/_authenticated/safety-guides'
     | '/_authenticated/tracking'
     | '/_authenticated/travel-checklist'
@@ -498,6 +485,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile_/notification-settings'
     | '/_authenticated/profile_/privacy-policy'
     | '/_authenticated/profile_/privacy-promise'
+    | '/_authenticated/profile_/support'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/cpsc-sync'
@@ -591,13 +579,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSafetyGuidesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/registry-check': {
-      id: '/_authenticated/registry-check'
-      path: '/registry-check'
-      fullPath: '/registry-check'
-      preLoaderRoute: typeof AuthenticatedRegistryCheckRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/recall-radar': {
       id: '/_authenticated/recall-radar'
       path: '/recall-radar'
@@ -647,13 +628,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/handmedown': {
-      id: '/_authenticated/handmedown'
-      path: '/handmedown'
-      fullPath: '/handmedown'
-      preLoaderRoute: typeof AuthenticatedHandmedownRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/growth': {
       id: '/_authenticated/growth'
       path: '/growth'
@@ -701,6 +675,13 @@ declare module '@tanstack/react-router' {
       path: '/add'
       fullPath: '/add'
       preLoaderRoute: typeof AuthenticatedAddRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile_/support': {
+      id: '/_authenticated/profile_/support'
+      path: '/profile/support'
+      fullPath: '/profile/support'
+      preLoaderRoute: typeof AuthenticatedProfileSupportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/profile_/privacy-promise': {
@@ -827,7 +808,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedChecklistsRoute: typeof AuthenticatedChecklistsRoute
   AuthenticatedFirstFoodsRoute: typeof AuthenticatedFirstFoodsRoute
   AuthenticatedGrowthRoute: typeof AuthenticatedGrowthRoute
-  AuthenticatedHandmedownRoute: typeof AuthenticatedHandmedownRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedMomentsRoute: typeof AuthenticatedMomentsRouteWithChildren
   AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
@@ -835,7 +815,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRecallCheckRoute: typeof AuthenticatedRecallCheckRoute
   AuthenticatedRecallRadarRoute: typeof AuthenticatedRecallRadarRoute
-  AuthenticatedRegistryCheckRoute: typeof AuthenticatedRegistryCheckRoute
   AuthenticatedSafetyGuidesRoute: typeof AuthenticatedSafetyGuidesRoute
   AuthenticatedTrackingRoute: typeof AuthenticatedTrackingRoute
   AuthenticatedTravelChecklistRoute: typeof AuthenticatedTravelChecklistRoute
@@ -845,6 +824,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfileNotificationSettingsRoute: typeof AuthenticatedProfileNotificationSettingsRoute
   AuthenticatedProfilePrivacyPolicyRoute: typeof AuthenticatedProfilePrivacyPolicyRoute
   AuthenticatedProfilePrivacyPromiseRoute: typeof AuthenticatedProfilePrivacyPromiseRoute
+  AuthenticatedProfileSupportRoute: typeof AuthenticatedProfileSupportRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -855,7 +835,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChecklistsRoute: AuthenticatedChecklistsRoute,
   AuthenticatedFirstFoodsRoute: AuthenticatedFirstFoodsRoute,
   AuthenticatedGrowthRoute: AuthenticatedGrowthRoute,
-  AuthenticatedHandmedownRoute: AuthenticatedHandmedownRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedMomentsRoute: AuthenticatedMomentsRouteWithChildren,
   AuthenticatedPricingRoute: AuthenticatedPricingRoute,
@@ -863,7 +842,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRecallCheckRoute: AuthenticatedRecallCheckRoute,
   AuthenticatedRecallRadarRoute: AuthenticatedRecallRadarRoute,
-  AuthenticatedRegistryCheckRoute: AuthenticatedRegistryCheckRoute,
   AuthenticatedSafetyGuidesRoute: AuthenticatedSafetyGuidesRoute,
   AuthenticatedTrackingRoute: AuthenticatedTrackingRoute,
   AuthenticatedTravelChecklistRoute: AuthenticatedTravelChecklistRoute,
@@ -876,6 +854,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedProfilePrivacyPolicyRoute,
   AuthenticatedProfilePrivacyPromiseRoute:
     AuthenticatedProfilePrivacyPromiseRoute,
+  AuthenticatedProfileSupportRoute: AuthenticatedProfileSupportRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

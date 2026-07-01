@@ -50,7 +50,7 @@ export function SplashScreen({ className }: SplashScreenProps) {
           textAnchor="middle"
           fill="#3A3530"
         >
-          Safe &amp; Sound
+          Peace of Mine
         </text>
       </svg>
     </div>

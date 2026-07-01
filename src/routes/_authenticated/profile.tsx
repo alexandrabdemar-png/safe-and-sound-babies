@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   LogOut, User as UserIcon, Sparkles, Loader2, Plus, Trash2,
-  Download, CreditCard, Shield, Bell, Share2, Gift, Copy, Check,
+  Download, CreditCard, Shield, Bell, Share2, Gift, Copy, Check, HelpCircle, AlertTriangle, MessageSquare,
 } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useProGate } from "@/hooks/useProGate";
@@ -15,6 +15,8 @@ import { useActiveChild, setActiveChildId } from "@/hooks/useActiveChild";
 import { createPortalSession } from "@/utils/payments.functions";
 import { exportUserData } from "@/utils/export.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
+import { openUrl } from "@/lib/browser";
+import { APP_VERSION, SHARE_URL } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   ssr: false,
@@ -33,6 +35,8 @@ function ProfilePage() {
   const [addingChild, setAddingChild] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
@@ -51,7 +55,7 @@ function ProfilePage() {
         data: { returnUrl: window.location.href, environment: getStripeEnvironment() },
       });
       if ('error' in result) throw new Error(result.error);
-      window.open(result.url, '_blank');
+      await openUrl(result.url);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not open billing portal');
     } finally { setPortalLoading(false); }
@@ -90,6 +94,31 @@ function ProfilePage() {
     setActiveChildId(null);
     await refreshChildren();
     toast.success('Removed');
+  }
+
+  async function handleDeleteAccount() {
+    if (!deleteConfirm) { setDeleteConfirm(true); return; }
+    setDeleting(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) throw new Error("Not signed in");
+      const tables = [
+        "milestones", "first_foods", "products", "product_recalls",
+        "children", "insight_dismissals", "completed_tips",
+        "child_measurements",
+      ];
+      for (const table of tables) {
+        await (supabase as any).from(table).delete().eq("user_id", uid);
+      }
+      await supabase.auth.signOut();
+      navigate({ to: "/auth" });
+      toast.success("Account deleted. We're sorry to see you go.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not delete account");
+      setDeleting(false);
+      setDeleteConfirm(false);
+    }
   }
 
   async function handleExport() {
@@ -211,6 +240,9 @@ function ProfilePage() {
           <Button asChild variant="ghost" className="w-full justify-start rounded-xl">
             <Link to="/profile/privacy-policy"><Shield className="h-4 w-4 mr-2" /> Privacy Policy</Link>
           </Button>
+          <Button asChild variant="ghost" className="w-full justify-start rounded-xl">
+            <Link to="/profile/support"><HelpCircle className="h-4 w-4 mr-2" /> Help & Support</Link>
+          </Button>
         </section>
 
         {/* Account */}
@@ -235,7 +267,60 @@ function ProfilePage() {
             </Button>
           </div>
         </section>
+
+        {/* Share */}
+        <ShareSection />
+
+        {/* Feedback */}
+        <FeedbackSection />
+
+        {/* Danger Zone */}
+        <section className="rounded-3xl border border-destructive/30 bg-card p-5 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle className="h-4 w-4 text-destructive" />
+            <p className="font-display text-base font-semibold text-destructive">Danger zone</p>
+          </div>
+          {!deleteConfirm ? (
+            <Button
+              onClick={handleDeleteAccount}
+              variant="ghost"
+              className="w-full justify-start rounded-xl text-destructive hover:bg-destructive/5 hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" /> Delete my account
+            </Button>
+          ) : (
+            <div className="space-y-3">
+              <div className="rounded-2xl bg-destructive/8 border border-destructive/20 px-4 py-3">
+                <p className="font-body text-sm font-semibold text-destructive mb-1">Are you sure?</p>
+                <p className="font-body text-xs text-muted-foreground leading-relaxed">
+                  This will permanently delete your account and all data — children, products, moments, and safety alerts. This cannot be undone.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-full"
+                  onClick={() => setDeleteConfirm(false)}
+                  disabled={deleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 rounded-full bg-destructive hover:bg-destructive/90 text-white"
+                  onClick={handleDeleteAccount}
+                  disabled={deleting}
+                >
+                  {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Yes, delete everything"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
+
+      <p className="mt-2 mb-6 text-center font-body text-xs text-muted-foreground/50">
+        Version {APP_VERSION} Beta
+      </p>
 
       <BottomNav />
     </div>
@@ -511,6 +596,135 @@ function CoParentInvite({ children }: { children: { id: string; name: string }[]
             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Share2 className="mr-2 h-4 w-4" /> Send access invite</>}
           </Button>
         </form>
+      )}
+    </section>
+  );
+}
+
+function ShareSection() {
+  const [copied, setCopied] = useState(false);
+  const shareMessage = `I've been using Peace of Mine to track baby safety recalls and milestones — it's really helpful for new parents. Try it here: ${SHARE_URL}`;
+
+  async function handleShare() {
+    if (typeof navigator !== "undefined" && "share" in navigator) {
+      try {
+        await navigator.share({ title: "Peace of Mine", text: shareMessage, url: SHARE_URL });
+        return;
+      } catch {}
+    }
+    navigator.clipboard.writeText(SHARE_URL).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+      toast.success("Link copied to clipboard");
+    }).catch(() => toast("Share: " + SHARE_URL));
+  }
+
+  return (
+    <section className="rounded-3xl border border-border/60 bg-card p-5">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Share2 className="h-4 w-4" />
+        </div>
+        <div>
+          <p className="font-display text-base font-semibold">Share Peace of Mine</p>
+          <p className="font-body text-xs text-muted-foreground">Help other parents find us</p>
+        </div>
+      </div>
+      <Button onClick={handleShare} className="w-full rounded-full">
+        {copied ? <><Check className="mr-2 h-4 w-4" /> Copied!</> : <><Share2 className="mr-2 h-4 w-4" /> Share Peace of Mine</>}
+      </Button>
+    </section>
+  );
+}
+
+const FEEDBACK_TYPES = ["Bug report", "Feature request", "General feedback"] as const;
+type FeedbackType = (typeof FEEDBACK_TYPES)[number];
+
+function FeedbackSection() {
+  const [open, setOpen] = useState(false);
+  const [type, setType] = useState<FeedbackType>("General feedback");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!message.trim()) return;
+    setSubmitting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      await (supabase as any).from("feedback").insert({
+        user_id: user?.id ?? null,
+        type,
+        message: message.trim(),
+        app_version: APP_VERSION,
+      });
+      setDone(true);
+      setMessage("");
+    } catch {
+      toast.error("Could not send feedback — please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <section className="rounded-3xl border border-border/60 bg-card p-5">
+      <button
+        type="button"
+        onClick={() => { setOpen((o) => !o); setDone(false); }}
+        className="flex w-full items-center justify-between gap-3"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <MessageSquare className="h-4 w-4" />
+          </div>
+          <div className="text-left">
+            <p className="font-display text-base font-semibold">Share feedback</p>
+            <p className="font-body text-xs text-muted-foreground">Help us improve Peace of Mine</p>
+          </div>
+        </div>
+        <span className="text-muted-foreground text-lg leading-none">{open ? "−" : "+"}</span>
+      </button>
+
+      {open && (
+        <div className="mt-4">
+          {done ? (
+            <div className="rounded-2xl bg-primary/8 border border-primary/20 px-4 py-4 text-center">
+              <p className="font-display text-base font-semibold text-primary mb-1">Thank you — we read every message.</p>
+              <p className="font-body text-xs text-muted-foreground">Your feedback helps make Peace of Mine better for every family.</p>
+              <button type="button" onClick={() => { setDone(false); setOpen(false); }} className="mt-3 font-body text-xs font-medium text-primary underline underline-offset-2">
+                Close
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div>
+                <label className="block font-body text-xs font-medium text-muted-foreground mb-1.5">What type of feedback?</label>
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value as FeedbackType)}
+                  className="w-full rounded-xl border border-border bg-background px-3 py-2.5 font-body text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+                >
+                  {FEEDBACK_TYPES.map((t) => <option key={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block font-body text-xs font-medium text-muted-foreground mb-1.5">Your message</label>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Tell us what's on your mind…"
+                  rows={4}
+                  className="w-full rounded-xl border border-border bg-background px-3 py-2.5 font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 resize-none"
+                />
+              </div>
+              <Button type="submit" disabled={submitting || !message.trim()} className="w-full rounded-full">
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send feedback"}
+              </Button>
+            </form>
+          )}
+        </div>
       )}
     </section>
   );

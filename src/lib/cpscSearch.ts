@@ -70,13 +70,23 @@ function recallTextFor(recall: CpscRecall): string {
 const TEN_YEARS_AGO = new Date();
 TEN_YEARS_AGO.setFullYear(TEN_YEARS_AGO.getFullYear() - 10);
 
+async function fetchWithTimeout(url: string, timeoutMs = 10_000): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(id);
+  }
+}
+
 function isWithinTenYears(recall: CpscRecall): boolean {
   if (!recall.RecallDate) return true; // include if date unknown
   return new Date(recall.RecallDate) >= TEN_YEARS_AGO;
 }
 
 export async function searchCpsc(query: string): Promise<CpscRecall[]> {
-  const res = await fetch(
+  const res = await fetchWithTimeout(
     `https://www.saferproducts.gov/RestWebServices/Recall?format=json&Keyword=${encodeURIComponent(query)}`
   );
   if (!res.ok) throw new Error(`CPSC API error ${res.status}`);
@@ -94,7 +104,7 @@ const FDA_BABY_KEYWORDS = ["infant", "baby", "formula", "breast milk", "toddler"
 export async function searchFdaRecalls(query: string): Promise<FdaRecall[]> {
   try {
     const url = `https://api.fda.gov/food/enforcement.json?search=product_description:"${encodeURIComponent(query)}"&limit=20`;
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(url);
     if (!res.ok) return [];
     const data = await res.json();
     const results: Array<{
@@ -131,7 +141,7 @@ export async function fetchFdaBabyRecallCount(daysBack = 30): Promise<number> {
   start.setDate(start.getDate() - daysBack);
   const fmt = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, "");
   const url = `https://api.fda.gov/food/enforcement.json?search=recall_initiation_date:[${fmt(start)}+TO+${fmt(end)}]&limit=100`;
-  const res = await fetch(url);
+  const res = await fetchWithTimeout(url);
   if (!res.ok) return 0;
   const data = await res.json();
   const results: Array<{ product_description?: string; reason_for_recall?: string }> = data?.results ?? [];
@@ -145,7 +155,7 @@ export async function fetchRecentBabyRecalls(daysBack = 30): Promise<CpscRecall[
   const start = new Date();
   start.setDate(start.getDate() - daysBack);
   const startStr = start.toISOString().slice(0, 10);
-  const res = await fetch(
+  const res = await fetchWithTimeout(
     `https://www.saferproducts.gov/RestWebServices/Recall?format=json&RecallDateStart=${startStr}`
   );
   if (!res.ok) throw new Error(`CPSC API error ${res.status}`);

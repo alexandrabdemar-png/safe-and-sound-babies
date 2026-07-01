@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AlertTriangle, ArrowRight, Calendar, ChevronDown, ChevronUp, Gift, Loader2, Package, Plus, Radio, RefreshCw, Ruler, Sparkles, Sun, Zap, X } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
 import { MomentTimeline } from "@/components/MomentTimeline";
 import { SparkleIllustration } from "@/components/EmptyIllustration";
 import { BottomNav } from "@/components/BottomNav";
@@ -262,6 +263,10 @@ function HomePage() {
     return "pending";
   });
   const [hpStep, setHpStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6>(0);
+
+  // Track app open once per session
+  useEffect(() => { trackEvent("app_opened"); }, []);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -687,6 +692,8 @@ function HomePage() {
           </p>
         </div>
       </header>
+
+      <BetaBanner />
 
       {/* Home Personalization Setup — one-time, shown after onboarding */}
       {homeProfileSetup === "pending" && child && (
@@ -1786,6 +1793,39 @@ function HomePersonalizationCard({
             className={`h-1.5 rounded-full transition-all ${i + 1 < step ? "w-4 bg-primary" : i + 1 === step ? "w-4 bg-primary/60" : "w-1.5 bg-border"}`}
           />
         ))}
+      </div>
+    </div>
+  );
+}
+
+function BetaBanner() {
+  const [dismissed, setDismissed] = useState(() => {
+    try { return localStorage.getItem("pomBetaBannerDismissed") === "1"; } catch { return false; }
+  });
+
+  if (dismissed) return null;
+
+  function dismiss() {
+    try { localStorage.setItem("pomBetaBannerDismissed", "1"); } catch {}
+    setDismissed(true);
+  }
+
+  return (
+    <div className="mx-5 mt-2 sm:mx-6">
+      <div className="mx-auto max-w-md">
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-accent/30 bg-accent/10 px-4 py-2.5">
+          <p className="font-body text-xs text-foreground/80 leading-snug">
+            This is a beta version of Peace of Mine — your feedback helps us improve.
+          </p>
+          <button
+            type="button"
+            onClick={dismiss}
+            className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Dismiss banner"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
     </div>
   );

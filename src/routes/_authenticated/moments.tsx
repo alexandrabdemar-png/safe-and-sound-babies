@@ -1,13 +1,11 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Download, Lock, Plus, Search, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Plus, Search, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveChild } from "@/hooks/useActiveChild";
-import { useProGate } from "@/hooks/useProGate";
 import { BottomNav } from "@/components/BottomNav";
-import jsPDF from "jspdf";
 
 export const Route = createFileRoute("/_authenticated/moments")({
   ssr: false,
@@ -66,113 +64,15 @@ function formatDateLarge(dateStr: string | null) {
   return d.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
 }
 
-function downloadMemoryBook(childName: string, dob: string | null, moments: ParsedMoment[]) {
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const W = 210;
-  const H = 297;
-  const mx = 22;
-  const cw = W - mx * 2;
-
-  const sorted = [...moments].sort((a, b) => (a.logged_at ?? "").localeCompare(b.logged_at ?? ""));
-
-  // Cover page
-  doc.setFillColor(252, 248, 242);
-  doc.rect(0, 0, W, H, "F");
-  doc.setFont("times", "normal");
-  doc.setFontSize(10);
-  doc.setTextColor(138, 128, 120);
-  doc.text("A memory book for", W / 2, 100, { align: "center" });
-  doc.setFont("times", "bold");
-  doc.setFontSize(38);
-  doc.setTextColor(61, 57, 53);
-  doc.text(childName, W / 2, 118, { align: "center" });
-  doc.setFont("times", "italic");
-  doc.setFontSize(13);
-  doc.setTextColor(138, 128, 120);
-  doc.text("Peace of Mine", W / 2, 133, { align: "center" });
-  doc.setFont("times", "normal");
-  doc.setFontSize(9);
-  doc.text(`${sorted.length} moment${sorted.length !== 1 ? "s" : ""}`, W / 2, 145, { align: "center" });
-  doc.text(`Generated ${new Date().toLocaleDateString()}`, W / 2, H - 18, { align: "center" });
-
-  // Each moment
-  for (const m of sorted) {
-    doc.addPage();
-    doc.setFillColor(252, 248, 242);
-    doc.rect(0, 0, W, H, "F");
-
-    const style = TYPE_STYLES[m.type];
-    const r = parseInt(style.accent.slice(1, 3), 16);
-    const g = parseInt(style.accent.slice(3, 5), 16);
-    const b = parseInt(style.accent.slice(5, 7), 16);
-
-    // Type badge
-    doc.setFillColor(r, g, b);
-    doc.roundedRect(mx, 22, 28, 6, 1.5, 1.5, "F");
-    doc.setFont("times", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(255, 255, 255);
-    doc.text(`${style.emoji} ${m.type.toUpperCase()}`, mx + 3, 26.2);
-
-    // Date
-    doc.setFont("times", "bold");
-    doc.setFontSize(22);
-    doc.setTextColor(61, 57, 53);
-    doc.text(formatDateLarge(m.logged_at), mx, 42);
-
-    // Age label
-    if (dob && m.logged_at) {
-      doc.setFont("times", "italic");
-      doc.setFontSize(10);
-      doc.setTextColor(138, 128, 120);
-      doc.text(`${childName} at ${calcAgeAt(dob, m.logged_at)}`, mx, 50);
-    }
-
-    // Divider
-    doc.setDrawColor(r, g, b);
-    doc.setLineWidth(0.4);
-    doc.line(mx, 55, mx + cw, 55);
-
-    // Title
-    doc.setFont("times", "bold");
-    doc.setFontSize(16);
-    doc.setTextColor(61, 57, 53);
-    const titleLines = doc.splitTextToSize(m.title, cw);
-    doc.text(titleLines, mx, 65);
-
-    const titleH = titleLines.length * 7;
-
-    // Notes / letter body
-    if (m.displayNotes) {
-      doc.setFont("times", m.type === "Letter" ? "italic" : "normal");
-      doc.setFontSize(12);
-      doc.setTextColor(80, 74, 68);
-      const noteLines = doc.splitTextToSize(m.displayNotes, cw);
-      doc.text(noteLines, mx, 65 + titleH + 6);
-    }
-
-    // Page footer
-    doc.setFont("times", "italic");
-    doc.setFontSize(8);
-    doc.setTextColor(180, 170, 160);
-    doc.text(childName, mx, H - 14);
-    doc.text(formatDateLarge(m.logged_at) ?? "", W - mx, H - 14, { align: "right" });
-  }
-
-  doc.save(`${childName.toLowerCase().replace(/\s+/g, "-")}-memory-book.pdf`);
-}
 
 function MomentsPage() {
-  const navigate = useNavigate();
   const { activeChildId } = useActiveChild();
-  const { isPro, loading: proLoading, requirePro } = useProGate();
   const [moments, setMoments] = useState<ParsedMoment[]>([]);
   const [loading, setLoading] = useState(true);
   const [childName, setChildName] = useState("");
   const [childDob, setChildDob] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<MomentType | "all">("all");
-  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     if (!activeChildId) return;
@@ -204,19 +104,6 @@ function MomentsPage() {
     return result;
   }, [moments, typeFilter, search]);
 
-  function handleDownload() {
-    if (!requirePro("Memory book PDF", "Download a beautifully formatted PDF of all your moments — a keepsake to treasure forever.")) return;
-    setGenerating(true);
-    setTimeout(() => {
-      try {
-        downloadMemoryBook(childName, childDob, moments);
-      } catch {
-        toast.error("Could not generate PDF");
-      }
-      setGenerating(false);
-    }, 50);
-  }
-
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28">
       <header className="px-5 pt-8 pb-4 sm:px-6">
@@ -227,26 +114,11 @@ function MomentsPage() {
                 <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Home
               </Link>
             </Button>
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                className="rounded-full font-body text-xs gap-1.5"
-                onClick={handleDownload}
-                disabled={generating || proLoading}
-              >
-                {isPro ? (
-                  <><Download className="h-3.5 w-3.5" /> {generating ? "Generating…" : "Download memory book"}</>
-                ) : (
-                  <><Lock className="h-3.5 w-3.5" /> Download memory book</>
-                )}
-              </Button>
-              <Button asChild size="sm" className="rounded-full font-body text-xs">
-                <Link to="/moments/new">
-                  <Plus className="mr-1 h-3.5 w-3.5" /> Log
-                </Link>
-              </Button>
-            </div>
+            <Button asChild size="sm" className="rounded-full font-body text-xs">
+              <Link to="/moments/new">
+                <Plus className="mr-1 h-3.5 w-3.5" /> Log
+              </Link>
+            </Button>
           </div>
 
           <p className="font-body text-xs font-semibold uppercase tracking-[0.2em] text-accent">

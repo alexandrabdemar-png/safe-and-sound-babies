@@ -25,7 +25,7 @@ export function Footer() {
           </div>
 
           <p className="font-body text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} Safe &amp; Sound.
+            &copy; {new Date().getFullYear()} Peace of Mine.
           </p>
         </div>
       </div>
