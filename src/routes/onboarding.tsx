@@ -347,9 +347,14 @@ function OnboardingPage() {
             </StepShell>
           )}
 
-          <p className="mt-8 text-center font-body text-[11px] text-muted-foreground">
-            Safety guidelines based on AAP recommendations.
-          </p>
+          {/* Legal disclaimer banner — prominent, always visible */}
+          <div className="mt-8 rounded-2xl border border-amber-300/50 bg-amber-50 px-4 py-3.5 dark:border-amber-700/30 dark:bg-amber-950/30">
+            <p className="font-body text-xs font-semibold text-amber-900 dark:text-amber-200">Before you begin</p>
+            <p className="mt-1 font-body text-xs leading-relaxed text-amber-800 dark:text-amber-300">
+              Peace of Mine provides safety information for reference only. It is not a substitute for official recalls, medical advice, or manufacturer guidelines. Always consult your pediatrician and verify product safety directly with the manufacturer. Recall data is sourced from CPSC and FDA databases and may not be up to date — always verify at{" "}
+              <a href="https://www.recalls.gov" target="_blank" rel="noopener noreferrer" className="font-semibold underline">recalls.gov</a>.
+            </p>
+          </div>
 
           <div className="mt-4 flex items-center justify-between">
             {step > 0 ? (

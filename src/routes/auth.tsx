@@ -34,6 +34,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState<null | "email" | "google" | "apple" | "magic">(null);
+  const [tosAccepted, setTosAccepted] = useState(false);
 
   // Redirect if already signed in
   useEffect(() => {
@@ -248,9 +249,28 @@ function AuthPage() {
               </div>
             )}
 
+            {/* Clickwrap agreement — signup only */}
+            {mode === "signup" && (
+              <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border/60 bg-muted/30 px-4 py-3">
+                <input
+                  type="checkbox"
+                  checked={tosAccepted}
+                  onChange={(e) => setTosAccepted(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+                />
+                <span className="font-body text-xs leading-relaxed text-muted-foreground">
+                  I have read and agree to the{" "}
+                  <Link to="/terms" className="font-semibold text-foreground underline hover:text-primary">
+                    Terms & Conditions
+                  </Link>
+                  , including the Limitation of Liability, Assumption of Risk, and Arbitration clauses. I understand Peace of Mine provides safety information for reference only and is not a substitute for official recalls, medical advice, or manufacturer guidelines.
+                </span>
+              </label>
+            )}
+
             <button
               type="submit"
-              disabled={loading !== null}
+              disabled={loading !== null || (mode === "signup" && !tosAccepted)}
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 font-body text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md disabled:opacity-50"
             >
               {(loading === "email" || loading === "magic") && <Loader2 className="h-4 w-4 animate-spin" />}

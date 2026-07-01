@@ -274,6 +274,20 @@ function ProfilePage() {
         {/* Feedback */}
         <FeedbackSection />
 
+        {/* Legal disclaimer */}
+        <section className="rounded-2xl border border-amber-300/50 bg-amber-50 px-5 py-4 dark:border-amber-700/30 dark:bg-amber-950/30">
+          <p className="font-body text-xs font-semibold text-amber-900 dark:text-amber-200">Safety information disclaimer</p>
+          <p className="mt-1 font-body text-xs leading-relaxed text-amber-800 dark:text-amber-300">
+            Peace of Mine provides safety aggregation for informational purposes only. It does not constitute medical, legal, or professional safety advice. Always consult product manuals and pediatrician guidelines directly. Recall data is sourced from CPSC and FDA databases — always verify at{" "}
+            <a href="https://www.recalls.gov" target="_blank" rel="noopener noreferrer" className="font-semibold underline">recalls.gov</a>.
+            Use at your own risk.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+            <Link to="/terms" className="font-body text-xs font-semibold text-amber-900 underline dark:text-amber-200">Terms & Conditions</Link>
+            <Link to="/profile/privacy-policy" className="font-body text-xs font-semibold text-amber-900 underline dark:text-amber-200">Privacy Policy</Link>
+          </div>
+        </section>
+
         {/* Danger Zone */}
         <section className="rounded-3xl border border-destructive/30 bg-card p-5 mb-6">
           <div className="flex items-center gap-2 mb-3">

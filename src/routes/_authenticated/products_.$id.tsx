@@ -2,13 +2,12 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, AlertTriangle, Ruler, RefreshCw, Trash2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, Ruler, RefreshCw, Trash2, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { CATEGORY_BY_KEY, categoryFromLabel } from "@/lib/productCategories";
-import { formatMonthYear, daysBetween } from "@/lib/predictions";
 import { lookupAndSaveGuidelines, recomputePredictions } from "@/lib/guidelines.functions";
 
 export const Route = createFileRoute("/_authenticated/products_/$id")({
@@ -131,16 +130,28 @@ function ProductDetailPage() {
       <main className="flex-1 px-5 sm:px-6">
         <div className="mx-auto max-w-md space-y-5">
           {/* Recall banner */}
-          {(product.recalled || recallNames.length > 0) && (
-            <div className="rounded-3xl bg-destructive/15 border border-destructive/30 p-4">
+          {(product.recalled || recallNames.length > 0) ? (
+            <div className="rounded-3xl bg-destructive/15 border border-destructive/30 p-4 space-y-2">
               <div className="flex items-center gap-2 font-body text-sm font-semibold text-destructive">
-                <AlertTriangle className="h-4 w-4" /> RECALL
+                <AlertTriangle className="h-4 w-4" /> Active recall found in CPSC database
               </div>
               {recallNames.length > 0 && (
-                <ul className="mt-2 space-y-1 font-body text-xs text-destructive/90">
+                <ul className="space-y-1 font-body text-xs text-destructive/90">
                   {recallNames.map((t, i) => <li key={i}>· {t}</li>)}
                 </ul>
               )}
+              <p className="font-body text-xs text-muted-foreground">
+                Stop using this product. Verify at{" "}
+                <a href="https://www.cpsc.gov/Recalls" target="_blank" rel="noopener noreferrer" className="font-semibold underline">cpsc.gov/Recalls</a>.
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-3xl border border-border/50 bg-card p-4">
+              <div className="flex items-center gap-2 font-body text-xs text-muted-foreground">
+                <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+                No active CPSC recalls found in our database. Recall data may not reflect recent changes — always verify at{" "}
+                <a href="https://www.cpsc.gov/Recalls" target="_blank" rel="noopener noreferrer" className="font-semibold text-foreground underline">cpsc.gov/Recalls</a>.
+              </div>
             </div>
           )}
 
@@ -156,8 +167,10 @@ function ProductDetailPage() {
             </div>
           </div>
 
-          {/* Timeline */}
-          <DetailTimeline addedAt={product.added_at} sizeUpDate={product.predicted_sizeup_date} replacementDate={product.predicted_replacement_date} />
+          {/* Reactive fit check */}
+          {guideline && child && (
+            <FitCheck child={child} guideline={guideline} />
+          )}
 
           {/* Measurements */}
           {child && (
@@ -174,9 +187,6 @@ function ProductDetailPage() {
             </div>
             {guideline ? (
               <div className="space-y-3 font-body text-sm">
-                <div className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700 border border-green-200">
-                  <ShieldCheck className="h-3 w-3" /> Pediatrician reviewed
-                </div>
                 <KV label="Max weight" value={guideline.max_weight_lbs ? `${guideline.max_weight_lbs} lb` : "—"} />
                 <KV label="Max height" value={guideline.max_height_inches ? `${guideline.max_height_inches}"` : "—"} />
                 <KV label="Average use" value={guideline.average_use_months ? `${guideline.average_use_months} months` : "—"} />
@@ -196,9 +206,11 @@ function ProductDetailPage() {
                 {guideline.source && (
                   <p className="text-xs text-muted-foreground">Source: {guideline.source}</p>
                 )}
-                <p className="text-xs text-muted-foreground/70 pt-1">
-                  These guidelines are AI-estimated. Always verify with the manufacturer and consult your pediatrician.
-                </p>
+                <div className="rounded-2xl border border-amber-200/60 bg-amber-50/60 px-3 py-2.5 dark:border-amber-700/30 dark:bg-amber-950/20">
+                  <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-300">
+                    These are automated reference guidelines based on product documentation. Always verify limits directly from the product's manual and warning labels. This is not a replacement for a pediatrician's evaluation or the manufacturer's official specifications.
+                  </p>
+                </div>
               </div>
             ) : (
               <p className="font-body text-sm text-muted-foreground">No guidelines yet. Tap Refresh to fetch.</p>
@@ -223,45 +235,35 @@ function KV({ label, value }: { label: string; value: string }) {
   );
 }
 
-function DetailTimeline({ addedAt, sizeUpDate, replacementDate }: { addedAt: string | null; sizeUpDate: string | null; replacementDate: string | null }) {
-  if (!addedAt) return null;
-  return (
-    <div className="rounded-3xl border border-border bg-card p-5 space-y-3">
-      <h2 className="font-display text-base font-semibold">Timeline</h2>
-      {sizeUpDate ? (
-        <TimelineRow label="Estimated size-up" date={sizeUpDate} addedAt={addedAt} />
-      ) : (
-        <p className="font-body text-sm text-muted-foreground">Size-up prediction pending.</p>
-      )}
-      {replacementDate && <TimelineRow label="Replace by" date={replacementDate} addedAt={addedAt} variant="replace" />}
-    </div>
-  );
-}
+function FitCheck({ child, guideline }: { child: Child; guideline: Guideline }) {
+  const weightOk = guideline.max_weight_lbs == null || child.weight_lbs == null || child.weight_lbs < guideline.max_weight_lbs;
+  const heightOk = guideline.max_height_inches == null || child.height_inches == null || child.height_inches < guideline.max_height_inches;
+  const hasData = child.weight_lbs != null || child.height_inches != null;
+  const hasLimits = guideline.max_weight_lbs != null || guideline.max_height_inches != null;
+  if (!hasData || !hasLimits) return null;
 
-function TimelineRow({ label, date, addedAt, variant }: { label: string; date: string; addedAt: string; variant?: "replace" }) {
-  const start = new Date(addedAt);
-  const end = new Date(date + "T00:00:00");
-  const now = new Date();
-  const total = Math.max(1, daysBetween(start, end));
-  const elapsed = Math.max(0, Math.min(total, daysBetween(start, now)));
-  const pct = Math.round((elapsed / total) * 100);
-  const remaining = daysBetween(now, end);
-  let barClass = variant === "replace" ? "bg-primary" : "bg-emerald-500";
-  if (variant !== "replace") {
-    if (remaining <= 14) barClass = "bg-destructive";
-    else if (remaining <= 30) barClass = "bg-amber-500";
-  }
+  const exceeded = !weightOk || !heightOk;
   return (
-    <div>
-      <div className="flex items-baseline justify-between font-body text-sm">
-        <span>{label}</span>
-        <span className="font-semibold">{formatMonthYear(date)}</span>
+    <div className={`rounded-3xl border p-4 space-y-2 ${exceeded ? "border-destructive/40 bg-destructive/8" : "border-border/50 bg-card"}`}>
+      <h2 className="font-display text-base font-semibold">Current fit check</h2>
+      <div className="grid grid-cols-2 gap-2 font-body text-sm">
+        {guideline.max_weight_lbs != null && child.weight_lbs != null && (
+          <div className={`rounded-2xl px-3 py-2 ${child.weight_lbs >= guideline.max_weight_lbs ? "bg-destructive/15" : "bg-muted/40"}`}>
+            <p className="text-xs text-muted-foreground">Weight</p>
+            <p className="font-semibold">{child.weight_lbs.toFixed(1)} lb <span className="font-normal text-muted-foreground">/ {guideline.max_weight_lbs} lb limit</span></p>
+            {child.weight_lbs >= guideline.max_weight_lbs && <p className="text-xs font-semibold text-destructive mt-0.5">At or over limit</p>}
+          </div>
+        )}
+        {guideline.max_height_inches != null && child.height_inches != null && (
+          <div className={`rounded-2xl px-3 py-2 ${child.height_inches >= guideline.max_height_inches ? "bg-destructive/15" : "bg-muted/40"}`}>
+            <p className="text-xs text-muted-foreground">Height</p>
+            <p className="font-semibold">{child.height_inches.toFixed(1)}" <span className="font-normal text-muted-foreground">/ {guideline.max_height_inches}" limit</span></p>
+            {child.height_inches >= guideline.max_height_inches && <p className="text-xs font-semibold text-destructive mt-0.5">At or over limit</p>}
+          </div>
+        )}
       </div>
-      <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-muted">
-        <div className={`h-full ${barClass}`} style={{ width: `${pct}%` }} />
-      </div>
-      <p className="mt-1 font-body text-xs text-muted-foreground">
-        {remaining > 0 ? `${remaining} days from today` : "Past due — review now"}
+      <p className="font-body text-xs text-muted-foreground">
+        Based on {child.name}'s last recorded measurements. Update measurements in the card below. Always verify limits against the physical product label.
       </p>
     </div>
   );
@@ -299,14 +301,7 @@ function MeasurementCard({ child, productId: _productId, onUpdated }: { child: C
       // Recompute all predictions for this child
       await recomputePredictions({ data: { childId: child.id } });
       await onUpdated();
-      // Re-fetch predicted_sizeup_date for confirmation message
-      const { data: refreshed } = await supabase.from("products").select("predicted_sizeup_date").eq("id", _productId).maybeSingle();
-      const date = (refreshed as { predicted_sizeup_date: string | null } | null)?.predicted_sizeup_date;
-      if (date && weight_lbs) {
-        setPredictedMsg(`Based on ${child.name}'s current weight of ${weight_lbs} lbs, they will likely outgrow this product around ${formatMonthYear(date)}.`);
-      } else {
-        setPredictedMsg("Measurements saved.");
-      }
+      setPredictedMsg("Measurements saved. Check the limits below to confirm the product is still within the manufacturer's weight and height ranges.");
       setEditing(false);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Couldn't save");

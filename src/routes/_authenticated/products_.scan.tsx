@@ -539,6 +539,12 @@ function ScanPage() {
               </div>
             </div>
           )}
+        {/* Minimized disclaimer */}
+        <p className="mt-6 font-body text-[11px] leading-relaxed text-muted-foreground/70 text-center">
+          Recall data sourced from CPSC/FDA databases — may not reflect recent changes. Always verify at{" "}
+          <a href="https://www.recalls.gov" target="_blank" rel="noopener noreferrer" className="underline">recalls.gov</a>.
+          Peace of Mine is for informational purposes only — not a substitute for official recalls or medical advice.
+        </p>
         </div>
       </main>
     </div>

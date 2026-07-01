@@ -202,14 +202,15 @@ function RecallCheckPage() {
                   <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <ShieldCheck className="h-6 w-6" />
                   </div>
-                  <p className="font-display text-lg font-semibold tracking-tight">No recalls found in our database</p>
+                  <p className="font-display text-lg font-semibold tracking-tight">No active CPSC recalls found</p>
                   <p className="mt-1.5 mx-auto max-w-xs font-body text-sm text-muted-foreground">
-                    Our database shows no matching recalls, but this does not confirm the product is safe. Always verify at{" "}
+                    No matching recalls found in our database. This does not confirm the product has been declared safe — the database may not reflect recent recalls. Always verify at{" "}
                     <a href="https://www.recalls.gov" target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2">recalls.gov</a>.
                   </p>
                   {lastChecked && (
-                    <p className="mt-2 font-body text-xs text-muted-foreground/60">
-                      Last checked: {lastChecked.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+                    <p className="mt-2 font-body text-xs text-muted-foreground/70">
+                      CPSC data checked: {lastChecked.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })},{" "}
+                      {lastChecked.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
                     </p>
                   )}
                 </div>
