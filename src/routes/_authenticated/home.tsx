@@ -688,7 +688,7 @@ function HomePage() {
             className="mt-4 text-[10px] font-medium tracking-[0.12em] text-muted-foreground/50"
             style={{ fontFamily: '"DM Sans", system-ui, sans-serif', textTransform: "uppercase" }}
           >
-            Safety guidelines based on AAP and CPSC recommendations
+            Recall data sourced from CPSC · FDA · NHTSA official databases
           </p>
         </div>
       </header>

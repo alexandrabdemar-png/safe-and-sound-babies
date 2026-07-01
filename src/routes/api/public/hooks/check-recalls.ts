@@ -212,6 +212,68 @@ async function runCheck(): Promise<Response> {
       }
     }
 
+    // 4. NHTSA child restraint / equipment recalls (car seats — not in CPSC)
+    try {
+      const nhtsaRes = await fetch(
+        "https://api.nhtsa.gov/recalls/recallsByEquipment?equipmentType=2",
+        { headers: { Accept: "application/json" } }
+      );
+      if (nhtsaRes.ok) {
+        const nhtsaData = await nhtsaRes.json().catch(() => null);
+        const nhtsaRecalls: Array<{
+          NHTSACampaignNumber?: string;
+          Subject?: string;
+          Summary?: string;
+          ReportReceivedDate?: string;
+          Consequence?: string;
+          Remedy?: string;
+          Manufacturer?: string;
+        }> = nhtsaData?.results ?? [];
+
+        for (const r of nhtsaRecalls) {
+          if (!r.NHTSACampaignNumber) continue;
+          const parseDotNetDate = (s?: string): string | null => {
+            if (!s) return null;
+            const m = s.match(/\/Date\((\d+)\)\//);
+            return m ? new Date(parseInt(m[1])).toISOString().slice(0, 10) : s.slice(0, 10);
+          };
+
+          const { data: catalogEntry } = await supabaseAdmin
+            .from("recalls")
+            .upsert(
+              {
+                source: "nhtsa",
+                source_id: r.NHTSACampaignNumber,
+                title: (r.Subject ?? "NHTSA Child Restraint Recall").slice(0, 500),
+                description: r.Summary?.slice(0, 2000) ?? null,
+                brand: r.Manufacturer?.slice(0, 200) ?? null,
+                hazard: r.Consequence?.slice(0, 1000) ?? null,
+                remedy: r.Remedy?.slice(0, 1000) ?? null,
+                url: `https://www.nhtsa.gov/vehicle/recalls#${r.NHTSACampaignNumber}`,
+                recall_date: parseDotNetDate(r.ReportReceivedDate),
+              },
+              { onConflict: "source,source_id" }
+            )
+            .select("id")
+            .single();
+
+          const recallId = (catalogEntry as { id: string } | null)?.id;
+          if (!recallId) continue;
+
+          const recallText = `${r.Subject ?? ""} ${r.Summary ?? ""} ${r.Manufacturer ?? ""}`;
+          for (const product of (products ?? []) as UserProduct[]) {
+            const productName = [product.name, product.brand ?? ""].filter(Boolean).join(" ");
+            if (!fuzzyMatchProduct(productName, recallText)) continue;
+            matchRows.push({ user_id: product.user_id, product_id: product.id, recall_id: recallId, acknowledged: false });
+            productIdsToFlag.add(product.id);
+            matched++;
+          }
+        }
+      }
+    } catch {
+      // ignore NHTSA errors — other sources still processed
+    }
+
     if (matchRows.length) {
       const { error: mErr } = await supabaseAdmin
         .from("product_recalls")

@@ -2,15 +2,18 @@ import { createFileRoute } from "@tanstack/react-router";
 import { fuzzyMatchProduct } from "@/lib/recallCheck";
 
 /**
- * recall-rss-sync — Near-real-time recall detection via RSS feeds.
+ * recall-rss-sync — Near-real-time recall detection via RSS/Atom feeds.
  *
- * Polls two official RSS feeds (CPSC + FDA) which update within ~2 hours of
- * a new recall announcement — far faster than the REST APIs which may lag by
- * 24-48 hours. Runs hourly via pg_cron.
+ * Sources polled every hour (fastest signals first):
+ *   CPSC RSS    — https://www.cpsc.gov/Recalls/RSS                       (~1-2h lag)
+ *   FDA RSS     — fda.gov recalls RSS                                    (~1-2h lag)
+ *   NHTSA RSS   — https://www.nhtsa.gov/rss/recalls-rss.xml              (car seat/vehicle equipment)
+ *   Reddit RSS  — r/ProductRecalls, r/beyondthebump recall searches      (community early signal)
+ *   Google News — news.google.com RSS for "baby product recall"          (news article early signal)
  *
- * Sources:
- *   CPSC: https://www.cpsc.gov/Recalls/RSS
- *   FDA:  https://www.fda.gov/about-fda/contact-fda/stay-informed/rss-feeds/recalls/rss.xml
+ * Reddit and Google News serve as early-warning signals — parents and reporters
+ * often surface recalls via the brand's own press release hours before CPSC publishes.
+ * We store these as "reddit" / "news" source and fuzzy-match against user products.
  *
  * Auth: POST with HOOK_SECRET in Authorization header or apikey header.
  */
@@ -48,7 +51,7 @@ type RssItem = {
   link: string;
   description: string;
   pubDate: string | null;
-  source: "cpsc" | "fda";
+  source: "cpsc" | "fda" | "reddit" | "news";
 };
 
 // ── Simple RSS XML parser (no external deps) ──────────────────────────────────
@@ -59,7 +62,7 @@ function extractTag(xml: string, tag: string): string {
   return m?.[1]?.trim() ?? "";
 }
 
-function parseRss(xml: string, source: "cpsc" | "fda"): RssItem[] {
+function parseRss(xml: string, source: "cpsc" | "fda" | "nhtsa" | "reddit"): RssItem[] {
   const itemBlocks = xml.match(/<item[\s>][\s\S]*?<\/item>/gi) ?? [];
   return itemBlocks.map((block) => ({
     title: extractTag(block, "title"),
@@ -68,6 +71,19 @@ function parseRss(xml: string, source: "cpsc" | "fda"): RssItem[] {
     pubDate: extractTag(block, "pubDate") || null,
     source,
   })).filter((item) => item.title.length > 0);
+}
+
+// Google News returns Atom format (<entry> not <item>, <link href="..."/> attribute)
+function parseAtom(xml: string): RssItem[] {
+  const entryBlocks = xml.match(/<entry[\s>][\s\S]*?<\/entry>/gi) ?? [];
+  return entryBlocks.map((block) => {
+    const title = extractTag(block, "title");
+    const linkMatch = block.match(/<link[^>]+href="([^"]+)"/i);
+    const link = linkMatch?.[1] ?? extractTag(block, "link");
+    const description = extractTag(block, "summary") || extractTag(block, "content");
+    const pubDate = extractTag(block, "published") || extractTag(block, "updated") || null;
+    return { title, link, description, pubDate, source: "news" as const };
+  }).filter((item) => item.title.length > 0);
 }
 
 // ── Baby-related keyword filter ───────────────────────────────────────────────
@@ -81,13 +97,17 @@ function isBabyRelated(item: RssItem): boolean {
 
 // ── Fetch with timeout ────────────────────────────────────────────────────────
 
-async function fetchRss(url: string): Promise<string | null> {
+async function fetchRss(url: string, extraHeaders?: Record<string, string>): Promise<string | null> {
   const ac = new AbortController();
   const t = setTimeout(() => ac.abort(), 10_000);
   try {
     const res = await fetch(url, {
       signal: ac.signal,
-      headers: { Accept: "application/rss+xml, application/xml, text/xml" },
+      headers: {
+        Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
+        "User-Agent": "PeaceOfMine/1.0 RecallMonitor (safety aggregator)",
+        ...extraHeaders,
+      },
     });
     if (!res.ok) return null;
     return await res.text();
@@ -108,15 +128,25 @@ async function runRssSync(): Promise<Response> {
     // Only look at recalls published in the last 48 hours from either feed
     const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
 
-    // Fetch both feeds in parallel
-    const [cpscXml, fdaXml] = await Promise.all([
+    // Fetch all feeds in parallel — government sources + community early signals
+    const [cpscXml, fdaXml, nhtsaXml, redditRecallsXml, redditBbXml, googleNewsXml] = await Promise.all([
       fetchRss("https://www.cpsc.gov/Recalls/RSS"),
       fetchRss("https://www.fda.gov/about-fda/contact-fda/stay-informed/rss-feeds/recalls/rss.xml"),
+      fetchRss("https://www.nhtsa.gov/rss/recalls-rss.xml"),
+      fetchRss("https://www.reddit.com/r/ProductRecalls/new.rss"),
+      fetchRss("https://www.reddit.com/r/beyondthebump/search.rss?q=recall&sort=new&restrict_sr=1&limit=25"),
+      fetchRss("https://news.google.com/rss/search?q=baby+product+recall+CPSC&hl=en-US&gl=US&ceid=US:en"),
     ]);
 
     const cpscItems = cpscXml ? parseRss(cpscXml, "cpsc") : [];
     const fdaItems = fdaXml ? parseRss(fdaXml, "fda") : [];
-    const allItems = [...cpscItems, ...fdaItems];
+    const nhtsaItems = nhtsaXml ? parseRss(nhtsaXml, "nhtsa") : [];
+    const redditItems = [
+      ...(redditRecallsXml ? parseRss(redditRecallsXml, "reddit") : []),
+      ...(redditBbXml ? parseRss(redditBbXml, "reddit") : []),
+    ];
+    const newsItems = googleNewsXml ? parseAtom(googleNewsXml) : [];
+    const allItems = [...cpscItems, ...fdaItems, ...nhtsaItems, ...redditItems, ...newsItems];
 
     // Filter baby-related + recent
     const relevant = allItems.filter((item) => {
@@ -133,6 +163,9 @@ async function runRssSync(): Promise<Response> {
         ok: true,
         cpsc_items: cpscItems.length,
         fda_items: fdaItems.length,
+        nhtsa_items: nhtsaItems.length,
+        reddit_items: redditItems.length,
+        news_items: newsItems.length,
         baby_relevant: 0,
         new_matches: 0,
         duration_ms: Date.now() - startedAt,
@@ -216,6 +249,9 @@ async function runRssSync(): Promise<Response> {
       ok: true,
       cpsc_items: cpscItems.length,
       fda_items: fdaItems.length,
+      nhtsa_items: nhtsaItems.length,
+      reddit_items: redditItems.length,
+      news_items: newsItems.length,
       baby_relevant: relevant.length,
       new_recalls_upserted: upserted.length,
       new_matches: matchRows.length,

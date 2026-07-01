@@ -55,14 +55,14 @@ const features = [
       "From car seats to pacifiers, cribs to swaddles — one place for every baby product that matters.",
   },
   {
-    title: "Safety first",
+    title: "Government data, in your pocket",
     description:
-      "Know exactly when to replace, size up, or check the fit. Because the little things are the big things.",
+      "We pull directly from CPSC, FDA, and NHTSA databases — the same sources pediatricians and consumer advocates use. We do the searching. You make the call.",
   },
   {
-    title: "Always one step ahead",
+    title: "Hear about recalls sooner",
     description:
-      "Real-time recall alerts for every product you own — so you hear about safety issues the moment they happen, not months later.",
+      "Recall alerts drawn from official government sources plus community early signals — so you hear about issues as quickly as they become public, not months later.",
   },
 ];
 
@@ -92,13 +92,13 @@ function Index() {
               </h1>
 
               <p className="mt-6 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
-                Add any baby essential—from car seats and cribs to bottles,
-                carriers, and everything in between. Peace of Mine keeps
-                track of the details for you, with reminders when it's time to
-                replace, resize or double-check the fit.
+                Add any baby essential — from car seats and cribs to bottles,
+                carriers, and everything in between. Peace of Mine pulls recall
+                data directly from CPSC, FDA, and NHTSA and puts it in front of
+                you when it matters.
               </p>
               <p className="mt-3 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
-                Just the information you need, exactly when you need it.
+                We do the searching. You make the call.
               </p>
 
               <Link
@@ -112,7 +112,7 @@ function Index() {
                 className="mt-5 text-[11px] font-medium tracking-[0.1em] text-muted-foreground/60"
                 style={{ fontFamily: '"DM Sans", system-ui, sans-serif', textTransform: "uppercase" }}
               >
-                Safety guidelines based on AAP and CPSC recommendations
+                Data sourced from CPSC · FDA · NHTSA official databases
               </p>
             </div>
 
