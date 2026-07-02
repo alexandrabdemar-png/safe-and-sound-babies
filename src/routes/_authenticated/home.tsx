@@ -1263,9 +1263,11 @@ type TodayCardProps = {
   recalls: number;
   safetyTip: string;
   onNavigate: ReturnType<typeof useNavigate>;
+  safetyTipDismissed?: boolean;
+  onDismissSafetyTip?: () => void;
 };
 
-function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, recalls, safetyTip, onNavigate }: TodayCardProps) {
+function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, recalls, safetyTip, onNavigate, safetyTipDismissed, onDismissSafetyTip }: TodayCardProps) {
   const day = new Date().getDay(); // 0=Sun … 6=Sat
   const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const dayName = DAY_NAMES[day];
