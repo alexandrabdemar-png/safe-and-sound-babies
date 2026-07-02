@@ -731,6 +731,8 @@ function HomePage() {
             recalls={alerts.recalls}
             safetyTip={ageSafetyTip(child?.date_of_birth ?? null)}
             onNavigate={navigate}
+            safetyTipDismissed={dailyTipDismissed}
+            onDismissSafetyTip={dismissDailyTip}
           />
         </div>
       </div>
