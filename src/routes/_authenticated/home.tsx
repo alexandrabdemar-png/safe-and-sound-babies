@@ -581,6 +581,11 @@ function HomePage() {
     setMeasReminderDismissed(true);
   }
 
+  function dismissDailyTip() {
+    try { localStorage.setItem(`safesound.dailyTipDismissed.${todayKey()}`, "true"); } catch {}
+    setDailyTipDismissed(true);
+  }
+
   // Recall Radar: fetch 30-day CPSC baby recall count, cached daily
   useEffect(() => {
     const key = `safesound.recallRadar.${todayKey()}`;
