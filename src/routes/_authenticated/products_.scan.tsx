@@ -58,6 +58,16 @@ type OffProduct = {
   image_front_small_url?: string;
 };
 
+// Open Food Facts' sister projects (same organization, same API, same free
+// no-key access) — Open Food Facts alone is strong on groceries/formula but
+// has little coverage of car seats, strollers, toys, or personal-care items,
+// which is where these two fill the gap. Tried in order; first hit wins.
+const OFF_FAMILY_SOURCES: { domain: string; label: string }[] = [
+  { domain: "openfoodfacts.org", label: "Open Food Facts" },
+  { domain: "openproductsfacts.org", label: "Open Products Facts" },
+  { domain: "openbeautyfacts.org", label: "Open Beauty Facts" },
+];
+
 type Step = "scanning" | "looking-up" | "form" | "success";
 
 function ScanPage() {
@@ -69,6 +79,7 @@ function ScanPage() {
   const [barcode, setBarcode] = useState("");
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [foundProduct, setFoundProduct] = useState<OffProduct | null>(null);
+  const [foundSource, setFoundSource] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [brand, setBrand] = useState("");
@@ -88,23 +99,33 @@ function ScanPage() {
     setStep("looking-up");
     setLookupError(null);
     try {
-      const res = await fetch(
-        `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json`,
-      );
-      const json = await res.json();
-      if (json.status === 1 && json.product) {
-        const p = json.product as OffProduct;
-        setFoundProduct(p);
-        setName(p.product_name?.trim() || p.generic_name?.trim() || "");
-        setBrand(p.brands?.split(",")[0]?.trim() || "");
-        setCategory(guessCategory(p));
-      } else {
-        setFoundProduct(null);
-        setLookupError("We couldn't find this product. Add the details manually below.");
+      let anyLookupFailed = false;
+      for (const source of OFF_FAMILY_SOURCES) {
+        try {
+          const res = await fetch(
+            `https://world.${source.domain}/api/v2/product/${encodeURIComponent(code)}.json`,
+          );
+          const json = await res.json();
+          if (json.status === 1 && json.product) {
+            const p = json.product as OffProduct;
+            setFoundProduct(p);
+            setFoundSource(source.label);
+            setName(p.product_name?.trim() || p.generic_name?.trim() || "");
+            setBrand(p.brands?.split(",")[0]?.trim() || "");
+            setCategory(guessCategory(p));
+            return;
+          }
+        } catch {
+          anyLookupFailed = true;
+        }
       }
-    } catch (e) {
       setFoundProduct(null);
-      setLookupError(e instanceof Error ? e.message : "Lookup failed");
+      setFoundSource(null);
+      setLookupError(
+        anyLookupFailed
+          ? "Lookup failed — check your connection."
+          : "We couldn't find this product. Add the details manually below.",
+      );
     } finally {
       setStep("form");
     }
@@ -154,6 +175,7 @@ function ScanPage() {
     setStep("scanning");
     setBarcode("");
     setFoundProduct(null);
+    setFoundSource(null);
     setLookupError(null);
     setName("");
     setBrand("");
@@ -231,7 +253,7 @@ function ScanPage() {
                     <p className="font-mono text-sm">{barcode}</p>
                     {foundProduct ? (
                       <p className="mt-1 font-body text-xs text-emerald-700 dark:text-emerald-400">
-                        Found in Open Food Facts
+                        Found in {foundSource ?? "Open Food Facts"}
                       </p>
                     ) : (
                       <p className="mt-1 font-body text-xs text-amber-700 dark:text-amber-400">
@@ -406,7 +428,7 @@ function ScanPage() {
             Scan a barcode
           </h1>
           <p className="mt-1.5 font-body text-sm text-muted-foreground">
-            Point at any UPC/EAN. We'll fetch the name from Open Food Facts.
+            Point at any UPC/EAN. We'll fetch the name from Open Food Facts, Open Products Facts, or Open Beauty Facts.
           </p>
         </div>
       </header>
