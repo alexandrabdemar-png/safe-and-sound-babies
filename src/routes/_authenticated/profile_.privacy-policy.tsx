@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronLeft, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PRIVACY_POLICY, PRIVACY_POLICY_UPDATED } from "@/lib/privacy-policy";
+import { SUPPORT_EMAIL } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/profile_/privacy-policy")({
   ssr: false,
@@ -46,10 +47,10 @@ function PrivacyPolicyPage() {
         <p className="mt-6 text-center font-body text-xs text-muted-foreground">
           Questions?{" "}
           <a
-            href="mailto:privacy@peaceofmineapp.com"
+            href={`mailto:${SUPPORT_EMAIL}`}
             className="text-primary underline underline-offset-2"
           >
-            privacy@peaceofmineapp.com
+            {SUPPORT_EMAIL}
           </a>
         </p>
       </main>

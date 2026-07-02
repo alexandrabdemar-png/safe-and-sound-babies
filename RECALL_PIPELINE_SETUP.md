@@ -4,15 +4,16 @@ Five things need to happen outside the code before daily recall checks and
 push notifications actually run. Do them in order — each step needs the one
 before it.
 
-## ☐ Step 0 — Publish the app so it has a web address
+## ☑ Step 0 — Publish the app so it has a web address
 
-This app was built in Lovable's editor. Until you publish it, it only
-exists inside the editor and has no public address — nothing outside
-(Supabase, Apple, your phone) can reach it yet.
+Done — the project's web address is:
 
-- [ ] In the Lovable editor, click **Publish** (usually top-right)
-- [ ] Copy the web address Lovable gives you (something like
-      `https://your-project-name.lovable.app`) — you'll need this in Step 2
+```
+https://peace-of-mine.lovable.app
+```
+
+(This is already filled into Step 2 below. If you rename the project again
+later, the address changes too — come back and update Step 2 with the new one.)
 
 ## ☐ Step 1 — Set a secret password for the app
 
@@ -29,11 +30,11 @@ Variables" panel (this is Lovable's own settings, not a separate service).
 
 Where: Supabase Dashboard → SQL Editor.
 
-- [ ] Run this, replacing the two placeholders with your **real** app URL
-      and the **exact same** password from Step 1:
+- [ ] Run this, replacing only the second placeholder with the **exact same**
+      password from Step 1 (the URL is already filled in):
 
   ```sql
-  select vault.create_secret('https://YOUR-REAL-APP-URL', 'app_base_url');
+  select vault.create_secret('https://peace-of-mine.lovable.app', 'app_base_url');
   select vault.create_secret('YOUR-REAL-HOOK-SECRET', 'hook_secret');
   ```
 
