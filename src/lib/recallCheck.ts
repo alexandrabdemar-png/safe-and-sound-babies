@@ -135,12 +135,16 @@ type RawCpscRecall = {
 };
 
 /**
- * Fetch recalls from the CPSC API (2023–today) and fuzzy-match against productName.
+ * Fetch recalls from the CPSC API matching productName and fuzzy-match the results.
+ *
+ * Uses CPSC's Keyword search (server-side filtered) rather than pulling the
+ * entire multi-year, all-categories recall history and filtering client-side
+ * — that unfiltered fetch was the main reason adding a product manually felt
+ * slow, since this check blocks the save until it completes.
  */
 export async function fetchCpscRecallsForProduct(productName: string): Promise<RecallHit[]> {
   try {
-    const today = new Date().toISOString().slice(0, 10);
-    const url = `https://www.saferproducts.gov/RestWebServices/Recall?format=json&DateRecalledBegin=2023-01-01&DateRecalledEnd=${today}`;
+    const url = `https://www.saferproducts.gov/RestWebServices/Recall?format=json&Keyword=${encodeURIComponent(productName)}`;
     const res = await fetch(url);
     if (!res.ok) return [];
     const data: RawCpscRecall[] = await res.json();
