@@ -110,7 +110,7 @@ function RecallCheckPage() {
     setError(null);
     setResolvedName(null);
     try {
-      const name = await lookupBarcode(barcode);
+      const name = await lookupBarcodeName(barcode);
       if (name) {
         setQuery(name);
         setResolvedName(name);
