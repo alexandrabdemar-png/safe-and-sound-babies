@@ -394,7 +394,7 @@ function ScanPage() {
             Scan a barcode
           </h1>
           <p className="mt-1.5 font-body text-sm text-muted-foreground">
-            Point at any UPC/EAN. We'll fetch the name from Open Food Facts.
+            Point at any UPC/EAN — we search food, baby-gear, and general product databases.
           </p>
         </div>
       </header>
