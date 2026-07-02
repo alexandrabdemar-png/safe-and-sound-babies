@@ -1376,13 +1376,31 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
     return (
       <div style={cardBase}>
         {label}
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-          <span style={{ fontSize: 22, marginTop: 2 }}>🛡️</span>
-          <div>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"DM Sans", system-ui, sans-serif' }}>Quick safety tip</p>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>{safetyTip}</p>
+        {!safetyTipDismissed ? (
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+            <span style={{ fontSize: 22, marginTop: 2 }}>🛡️</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"DM Sans", system-ui, sans-serif' }}>Quick safety tip</p>
+                {onDismissSafetyTip && (
+                  <button
+                    type="button"
+                    onClick={onDismissSafetyTip}
+                    style={{ marginTop: -4, marginRight: -4, padding: 4, borderRadius: 999, background: "transparent", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.6)" }}
+                    aria-label="Dismiss tip"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>{safetyTip}</p>
+            </div>
           </div>
-        </div>
+        ) : (
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", margin: 0, fontStyle: "italic" }}>
+            Safety tip dismissed for today.
+          </p>
+        )}
         {comingUp.length > 0 && (
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
             <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"DM Sans", system-ui, sans-serif' }}>
