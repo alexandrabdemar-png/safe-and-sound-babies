@@ -60,7 +60,7 @@ const features = [
   {
     title: "Safety first",
     description:
-      "Know exactly when to replace, size up, or check the fit. Because the little things are the big things.",
+      "Here to share gentle suggestions on timing — when to consider replacing, sizing up, or checking the fit.",
   },
   {
     title: "Always one step ahead",

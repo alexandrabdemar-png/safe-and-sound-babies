@@ -245,6 +245,11 @@ function HomePage() {
   // Bottle weaning reminder dismiss
   const [bottleWeaningDismissed, setBottleWeaningDismissed] = useState(false);
 
+  // Daily safety tip dismiss (resets daily)
+  const [dailyTipDismissed, setDailyTipDismissed] = useState(() => {
+    try { return localStorage.getItem(`safesound.dailyTipDismissed.${todayKey()}`) === "true"; } catch { return false; }
+  });
+
   // Home profile personalization
   type HomeProfile = {
     has_stairs: boolean;
@@ -576,6 +581,11 @@ function HomePage() {
     setMeasReminderDismissed(true);
   }
 
+  function dismissDailyTip() {
+    try { localStorage.setItem(`safesound.dailyTipDismissed.${todayKey()}`, "true"); } catch {}
+    setDailyTipDismissed(true);
+  }
+
   // Recall Radar: fetch 30-day CPSC baby recall count, cached daily
   useEffect(() => {
     const key = `safesound.recallRadar.${todayKey()}`;
@@ -721,6 +731,8 @@ function HomePage() {
             recalls={alerts.recalls}
             safetyTip={ageSafetyTip(child?.date_of_birth ?? null)}
             onNavigate={navigate}
+            safetyTipDismissed={dailyTipDismissed}
+            onDismissSafetyTip={dismissDailyTip}
           />
         </div>
       </div>
@@ -1253,9 +1265,11 @@ type TodayCardProps = {
   recalls: number;
   safetyTip: string;
   onNavigate: ReturnType<typeof useNavigate>;
+  safetyTipDismissed?: boolean;
+  onDismissSafetyTip?: () => void;
 };
 
-function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, recalls, safetyTip, onNavigate }: TodayCardProps) {
+function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, recalls, safetyTip, onNavigate, safetyTipDismissed, onDismissSafetyTip }: TodayCardProps) {
   const day = new Date().getDay(); // 0=Sun … 6=Sat
   const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const dayName = DAY_NAMES[day];
@@ -1362,13 +1376,31 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
     return (
       <div style={cardBase}>
         {label}
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-          <span style={{ fontSize: 22, marginTop: 2 }}>🛡️</span>
-          <div>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"DM Sans", system-ui, sans-serif' }}>Quick safety tip</p>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>{safetyTip}</p>
+        {!safetyTipDismissed ? (
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+            <span style={{ fontSize: 22, marginTop: 2 }}>🛡️</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"DM Sans", system-ui, sans-serif' }}>Quick safety tip</p>
+                {onDismissSafetyTip && (
+                  <button
+                    type="button"
+                    onClick={onDismissSafetyTip}
+                    style={{ marginTop: -4, marginRight: -4, padding: 4, borderRadius: 999, background: "transparent", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.6)" }}
+                    aria-label="Dismiss tip"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>{safetyTip}</p>
+            </div>
           </div>
-        </div>
+        ) : (
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", margin: 0, fontStyle: "italic" }}>
+            Safety tip dismissed for today.
+          </p>
+        )}
         {comingUp.length > 0 && (
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
             <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"DM Sans", system-ui, sans-serif' }}>
