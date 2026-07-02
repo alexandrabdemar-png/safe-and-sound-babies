@@ -61,7 +61,7 @@ export const SAFETY_TIPS: SafetyTip[] = [
     id: "t009",
     minMonths: 0,
     maxMonths: 3,
-    text: "You might want to check the safety strap on your changing table is working and that essentials are always within arm's reach before you lay your baby down.",
+    text: "You might want to check the safety strap on your changing table is working and that essentials are within arm's reach before you lay your baby down.",
   },
   {
     id: "t010",

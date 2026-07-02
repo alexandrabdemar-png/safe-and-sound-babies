@@ -1238,7 +1238,7 @@ function weekendReminder(dobStr: string | null): string {
   const birth = parseDateLocal(dobStr);
   const months = Math.max(0, Math.floor((Date.now() - birth.getTime()) / (30.44 * 86400000)));
   if (months < 6) return "If you're heading out this weekend, double-check that the car seat is rear-facing and installed at the correct angle.";
-  if (months < 12) return "Planning an outing? Babies over 6 months need SPF 30+ sunscreen on exposed skin — and it's always worth packing more wipes than you think you'll need.";
+  if (months < 12) return "Planning an outing? Babies over 6 months need SPF 30+ sunscreen on exposed skin — and it's usually worth packing more wipes than you think you'll need.";
   if (months < 18) return "Visiting family or friends this weekend? A quick baby-proofing scan of the space — stairs, cabinets, small objects at floor level — takes about two minutes.";
   if (months < 30) return "Any outdoor time this weekend means helmet time for balance bikes or ride-ons — the habit is much easier to build before they're old enough to argue about it.";
   return "If you're planning outdoor play this weekend, sunscreen, water, and shade are the essentials — toddlers dehydrate faster than adults.";

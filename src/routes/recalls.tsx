@@ -9,9 +9,9 @@ export const Route = createFileRoute("/recalls")({
   head: () => ({
     meta: [
       { title: "Latest Baby Product Recalls — Peace of Mine" },
-      { name: "description", content: "Free, always-updated list of CPSC baby and kids product recalls from the last 30 days. No login required." },
+      { name: "description", content: "Free list of CPSC baby and kids product recalls from the last 30 days. No login required." },
       { property: "og:title", content: "Latest Baby Product Recalls — Peace of Mine" },
-      { property: "og:description", content: "Free list of CPSC baby product recalls updated daily. Powered by Peace of Mine." },
+      { property: "og:description", content: "Free list of CPSC baby product recalls. Powered by Peace of Mine." },
     ],
   }),
 });
@@ -144,6 +144,11 @@ function PublicRecallsPage() {
           <a href="https://cpsc.gov/Recalls" target="_blank" rel="noopener noreferrer" style={{ color: "#8A8078" }}>
             cpsc.gov/Recalls
           </a>
+        </p>
+        <p style={{ marginTop: 8, fontSize: 11, color: "#A89888", textAlign: "center" }}>
+          <Link to="/terms" style={{ color: "#8A8078" }}>
+            Terms &amp; disclaimers
+          </Link>
         </p>
       </main>
     </div>
