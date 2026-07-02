@@ -228,7 +228,7 @@ function ScanPage() {
                     <p className="font-mono text-sm">{barcode}</p>
                     {foundProduct ? (
                       <p className="mt-1 font-body text-xs text-emerald-700 dark:text-emerald-400">
-                        Found in Open Food Facts
+                        Found — review and edit below
                       </p>
                     ) : (
                       <p className="mt-1 font-body text-xs text-amber-700 dark:text-amber-400">
