@@ -26,6 +26,7 @@ export const Route = createFileRoute("/_authenticated/products_/scan")({
 
 import { CATEGORIES, CATEGORY_BY_KEY, guessCategoryFromText, type CategoryKey } from "@/lib/productCategories";
 import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
+import { lookupBarcode } from "@/lib/barcodeLookup";
 
 const CATEGORY_ORDER: CategoryKey[] = CATEGORIES.map((c) => c.key);
 
