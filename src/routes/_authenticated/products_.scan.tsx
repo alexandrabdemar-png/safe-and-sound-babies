@@ -89,19 +89,15 @@ function ScanPage() {
     setStep("looking-up");
     setLookupError(null);
     try {
-      const res = await fetch(
-        `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json`,
-      );
-      const json = await res.json();
-      if (json.status === 1 && json.product) {
-        const p = json.product as OffProduct;
+      const p = await lookupBarcode(code);
+      if (p) {
         setFoundProduct(p);
         setName(p.product_name?.trim() || p.generic_name?.trim() || "");
         setBrand(p.brands?.split(",")[0]?.trim() || "");
         setCategory(guessCategory(p));
       } else {
         setFoundProduct(null);
-        setLookupError("We couldn't find this product. Add the details manually below.");
+        setLookupError("We couldn't find this product in any database. Add the details manually below.");
       }
     } catch (e) {
       setFoundProduct(null);
