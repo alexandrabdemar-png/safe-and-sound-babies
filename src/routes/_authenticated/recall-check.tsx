@@ -59,12 +59,17 @@ async function searchCpsc(query: string): Promise<CpscRecall[]> {
   return all.filter(isBabyRelated);
 }
 
-async function lookupBarcode(barcode: string): Promise<string | null> {
+async function lookupBarcodeName(barcode: string): Promise<string | null> {
   try {
-    const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.product?.product_name || data?.product?.brands || null;
+    const { lookupBarcode } = await import("@/lib/barcodeLookup");
+    const p = await lookupBarcode(barcode);
+    if (!p) return null;
+    const brand = p.brands?.split(",")[0]?.trim();
+    const name = p.product_name?.trim() || p.generic_name?.trim();
+    if (name && brand && !name.toLowerCase().includes(brand.toLowerCase())) {
+      return `${brand} ${name}`;
+    }
+    return name || brand || null;
   } catch {
     return null;
   }
@@ -105,7 +110,7 @@ function RecallCheckPage() {
     setError(null);
     setResolvedName(null);
     try {
-      const name = await lookupBarcode(barcode);
+      const name = await lookupBarcodeName(barcode);
       if (name) {
         setQuery(name);
         setResolvedName(name);

@@ -26,6 +26,7 @@ export const Route = createFileRoute("/_authenticated/products_/scan")({
 
 import { CATEGORIES, CATEGORY_BY_KEY, guessCategoryFromText, type CategoryKey } from "@/lib/productCategories";
 import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
+import { lookupBarcode } from "@/lib/barcodeLookup";
 
 const CATEGORY_ORDER: CategoryKey[] = CATEGORIES.map((c) => c.key);
 
@@ -88,19 +89,15 @@ function ScanPage() {
     setStep("looking-up");
     setLookupError(null);
     try {
-      const res = await fetch(
-        `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json`,
-      );
-      const json = await res.json();
-      if (json.status === 1 && json.product) {
-        const p = json.product as OffProduct;
+      const p = await lookupBarcode(code);
+      if (p) {
         setFoundProduct(p);
         setName(p.product_name?.trim() || p.generic_name?.trim() || "");
         setBrand(p.brands?.split(",")[0]?.trim() || "");
         setCategory(guessCategory(p));
       } else {
         setFoundProduct(null);
-        setLookupError("We couldn't find this product. Add the details manually below.");
+        setLookupError("We couldn't find this product in any database. Add the details manually below.");
       }
     } catch (e) {
       setFoundProduct(null);
@@ -231,7 +228,7 @@ function ScanPage() {
                     <p className="font-mono text-sm">{barcode}</p>
                     {foundProduct ? (
                       <p className="mt-1 font-body text-xs text-emerald-700 dark:text-emerald-400">
-                        Found in Open Food Facts
+                        Found — review and edit below
                       </p>
                     ) : (
                       <p className="mt-1 font-body text-xs text-amber-700 dark:text-amber-400">
@@ -397,7 +394,7 @@ function ScanPage() {
             Scan a barcode
           </h1>
           <p className="mt-1.5 font-body text-sm text-muted-foreground">
-            Point at any UPC/EAN. We'll fetch the name from Open Food Facts.
+            Point at any UPC/EAN — we search food, baby-gear, and general product databases.
           </p>
         </div>
       </header>
