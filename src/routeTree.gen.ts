@@ -44,7 +44,6 @@ import { Route as AuthenticatedMomentsNewRouteImport } from './routes/_authentic
 import { Route as AuthenticatedBottlesNewRouteImport } from './routes/_authenticated/bottles.new'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksProductAlertsCheckRouteImport } from './routes/api/public/hooks/product-alerts-check'
-import { Route as ApiPublicHooksCpscSyncRouteImport } from './routes/api/public/hooks/cpsc-sync'
 import { Route as ApiPublicHooksCheckRecallsRouteImport } from './routes/api/public/hooks/check-recalls'
 import { Route as ApiPublicHooksCheckProductAlertsRouteImport } from './routes/api/public/hooks/check-product-alerts'
 
@@ -235,11 +234,6 @@ const ApiPublicHooksProductAlertsCheckRoute =
     path: '/api/public/hooks/product-alerts-check',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksCpscSyncRoute = ApiPublicHooksCpscSyncRouteImport.update({
-  id: '/api/public/hooks/cpsc-sync',
-  path: '/api/public/hooks/cpsc-sync',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicHooksCheckRecallsRoute =
   ApiPublicHooksCheckRecallsRouteImport.update({
     id: '/api/public/hooks/check-recalls',
@@ -288,7 +282,6 @@ export interface FileRoutesByFullPath {
   '/profile/support': typeof AuthenticatedProfileSupportRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
-  '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -327,7 +320,6 @@ export interface FileRoutesByTo {
   '/profile/support': typeof AuthenticatedProfileSupportRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
-  '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -368,7 +360,6 @@ export interface FileRoutesById {
   '/_authenticated/profile_/support': typeof AuthenticatedProfileSupportRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
-  '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -409,7 +400,6 @@ export interface FileRouteTypes {
     | '/profile/support'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
-    | '/api/public/hooks/cpsc-sync'
     | '/api/public/hooks/product-alerts-check'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -448,7 +438,6 @@ export interface FileRouteTypes {
     | '/profile/support'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
-    | '/api/public/hooks/cpsc-sync'
     | '/api/public/hooks/product-alerts-check'
     | '/api/public/payments/webhook'
   id:
@@ -488,7 +477,6 @@ export interface FileRouteTypes {
     | '/_authenticated/profile_/support'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
-    | '/api/public/hooks/cpsc-sync'
     | '/api/public/hooks/product-alerts-check'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -502,7 +490,6 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   ApiPublicHooksCheckProductAlertsRoute: typeof ApiPublicHooksCheckProductAlertsRoute
   ApiPublicHooksCheckRecallsRoute: typeof ApiPublicHooksCheckRecallsRoute
-  ApiPublicHooksCpscSyncRoute: typeof ApiPublicHooksCpscSyncRoute
   ApiPublicHooksProductAlertsCheckRoute: typeof ApiPublicHooksProductAlertsCheckRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -754,13 +741,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksProductAlertsCheckRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/cpsc-sync': {
-      id: '/api/public/hooks/cpsc-sync'
-      path: '/api/public/hooks/cpsc-sync'
-      fullPath: '/api/public/hooks/cpsc-sync'
-      preLoaderRoute: typeof ApiPublicHooksCpscSyncRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/hooks/check-recalls': {
       id: '/api/public/hooks/check-recalls'
       path: '/api/public/hooks/check-recalls'
@@ -879,7 +859,6 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   ApiPublicHooksCheckProductAlertsRoute: ApiPublicHooksCheckProductAlertsRoute,
   ApiPublicHooksCheckRecallsRoute: ApiPublicHooksCheckRecallsRoute,
-  ApiPublicHooksCpscSyncRoute: ApiPublicHooksCpscSyncRoute,
   ApiPublicHooksProductAlertsCheckRoute: ApiPublicHooksProductAlertsCheckRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
