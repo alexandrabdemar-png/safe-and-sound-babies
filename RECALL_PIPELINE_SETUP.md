@@ -1,13 +1,23 @@
 # Recall pipeline setup checklist
 
-Four things need to happen outside the code before daily recall checks and
+Five things need to happen outside the code before daily recall checks and
 push notifications actually run. Do them in order — each step needs the one
 before it.
 
+## ☐ Step 0 — Publish the app so it has a web address
+
+This app was built in Lovable's editor. Until you publish it, it only
+exists inside the editor and has no public address — nothing outside
+(Supabase, Apple, your phone) can reach it yet.
+
+- [ ] In the Lovable editor, click **Publish** (usually top-right)
+- [ ] Copy the web address Lovable gives you (something like
+      `https://your-project-name.lovable.app`) — you'll need this in Step 2
+
 ## ☐ Step 1 — Set a secret password for the app
 
-Where: your hosting platform's environment variable settings (wherever this
-app is deployed).
+Where: Lovable's project settings — look for a "Secrets" or "Environment
+Variables" panel (this is Lovable's own settings, not a separate service).
 
 - [ ] Add a variable named `HOOK_SECRET`
 - [ ] Set it to any long random string (like a strong Wi-Fi password) — you
@@ -62,7 +72,7 @@ Requires an Apple Developer account ($99/year if you don't have one).
 - [ ] Note the **Key ID** shown on that page
 - [ ] Note your **Team ID** (Apple Developer account → Membership page)
 
-Back in your hosting platform's environment variables (same place as Step 1),
+Back in Lovable's Secrets/Environment Variables panel (same place as Step 1),
 add three more:
 
 - [ ] `APNS_KEY_ID` = the Key ID from above
