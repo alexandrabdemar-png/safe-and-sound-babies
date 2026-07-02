@@ -245,6 +245,11 @@ function HomePage() {
   // Bottle weaning reminder dismiss
   const [bottleWeaningDismissed, setBottleWeaningDismissed] = useState(false);
 
+  // Daily safety tip dismiss (resets daily)
+  const [dailyTipDismissed, setDailyTipDismissed] = useState(() => {
+    try { return localStorage.getItem(`safesound.dailyTipDismissed.${todayKey()}`) === "true"; } catch { return false; }
+  });
+
   // Home profile personalization
   type HomeProfile = {
     has_stairs: boolean;
