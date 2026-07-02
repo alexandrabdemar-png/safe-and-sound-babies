@@ -135,6 +135,37 @@ export async function searchFdaRecalls(query: string): Promise<FdaRecall[]> {
   }
 }
 
+export async function fetchRecentFdaBabyRecalls(daysBack = 30): Promise<FdaRecall[]> {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - daysBack);
+  const fmt = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, "");
+  const url = `https://api.fda.gov/food/enforcement.json?search=recall_initiation_date:[${fmt(start)}+TO+${fmt(end)}]&limit=100`;
+  const res = await fetchWithTimeout(url);
+  if (!res.ok) return [];
+  const data = await res.json();
+  const results: Array<{
+    recall_number?: string;
+    product_description?: string;
+    reason_for_recall?: string;
+    recall_initiation_date?: string;
+    status?: string;
+  }> = data?.results ?? [];
+  return results
+    .filter((r) => {
+      const text = `${r.product_description ?? ""} ${r.reason_for_recall ?? ""}`.toLowerCase();
+      return FDA_BABY_KEYWORDS.some((kw) => text.includes(kw));
+    })
+    .map((r) => ({
+      id: r.recall_number ?? Math.random().toString(36).slice(2),
+      productDescription: r.product_description ?? "",
+      reasonForRecall: r.reason_for_recall ?? "",
+      recallDate: r.recall_initiation_date ?? "",
+      status: r.status ?? "",
+      url: "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts",
+    }));
+}
+
 export async function fetchFdaBabyRecallCount(daysBack = 30): Promise<number> {
   const end = new Date();
   const start = new Date();

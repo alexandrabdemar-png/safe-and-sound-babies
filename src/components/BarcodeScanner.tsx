@@ -1,8 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
+import { BarcodeFormat, DecodeHintType } from '@zxing/library';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Camera, Loader2 } from 'lucide-react';
+
+// Restrict to the formats real product barcodes use — decoding every
+// supported format (PDF417, Data Matrix, Aztec, etc.) on every frame is
+// what makes this feel slow. No loss of coverage for retail products.
+const SCAN_HINTS = new Map([
+  [
+    DecodeHintType.POSSIBLE_FORMATS,
+    [BarcodeFormat.UPC_A, BarcodeFormat.UPC_E, BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.QR_CODE],
+  ],
+]);
 
 interface Props {
   open: boolean;
@@ -24,7 +35,7 @@ export function BarcodeScanner({ open, onClose, onDetected }: Props) {
 
     (async () => {
       try {
-        const reader = new BrowserMultiFormatReader();
+        const reader = new BrowserMultiFormatReader(SCAN_HINTS);
         const devices = await BrowserMultiFormatReader.listVideoInputDevices();
         const back = devices.find((d) => /back|rear|environment/i.test(d.label)) ?? devices[0];
         if (!back) throw new Error('No camera available');

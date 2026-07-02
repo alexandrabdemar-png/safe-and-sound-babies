@@ -240,6 +240,15 @@ function ScanPage() {
                     )}
                   </div>
                 </div>
+                {!foundProduct && (
+                  <p className="mt-3 font-body text-xs text-muted-foreground">
+                    Not every product is in the barcode database yet.{" "}
+                    <Link to="/products/new" className="font-semibold text-primary underline underline-offset-2">
+                      Try searching by name instead
+                    </Link>
+                    , or fill in the details below.
+                  </p>
+                )}
               </div>
 
               <Field label="Product name" required>
@@ -411,6 +420,11 @@ function ScanView({ onDetected }: { onDetected: (code: string) => void }) {
 
   const { ref } = useZxing({
     paused,
+    // Restrict to the formats real product barcodes use. Scanning every
+    // supported format (PDF417, Data Matrix, Aztec, etc.) on every frame is
+    // what makes barcode-detector scans feel slow — this cuts scan time
+    // substantially with no loss of coverage for retail products.
+    formats: ["upc_a", "upc_e", "ean_13", "ean_8", "qr_code"],
     onDecodeResult(result) {
       setPaused(true);
       onDetected(result.rawValue);

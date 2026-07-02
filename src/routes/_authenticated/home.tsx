@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { evaluateInsights, type Insight, type ProductInput } from "@/lib/insights";
 import { friendlyError } from "@/lib/errors";
 import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
-import { checkCriticalRecalls } from "@/lib/recallCheck";
+import { checkCriticalRecalls, CRITICAL_RECALLS } from "@/lib/recallCheck";
 import { selectWeeklyTip, getIsoWeekNumber, weekKey as getTipWeekKey } from "@/lib/safetyTips";
 import { getDevelopmentBand } from "@/lib/developmentContent";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
@@ -829,11 +829,11 @@ function HomePage() {
         </div>
       )}
 
-      {/* Recall Radar — live 30-day CPSC count */}
+      {/* Recall Radar — live 30-day CPSC + FDA count, plus always-relevant critical recalls */}
       {recallRadarCount !== null && recallRadarCount !== -1 && (
         <div className="px-5 pt-3 sm:px-6">
           <div className="mx-auto max-w-md">
-            <RecallRadarCard count={recallRadarCount} />
+            <RecallRadarCard count={recallRadarCount + (fdaRecallCount ?? 0) + CRITICAL_RECALLS.length} />
           </div>
         </div>
       )}
@@ -1281,7 +1281,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
           <span style={{ fontSize: 24 }}>👶</span>
           <div>
             <p style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.95)", margin: 0 }}>Add your first child to get started</p>
-            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>Peace of Mine personalises every tip, alert, and insight to your baby's age.</p>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>Peace of Mine personalizes every tip, alert, and insight to your baby's age.</p>
           </div>
         </div>
         <button
@@ -1735,7 +1735,7 @@ function HomePersonalizationCard({
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-primary">
               <Sparkles className="h-3.5 w-3.5" />
             </span>
-            <p className="font-display text-sm font-semibold tracking-tight">Help us personalise your reminders</p>
+            <p className="font-display text-sm font-semibold tracking-tight">Help us personalize your reminders</p>
           </div>
           <button type="button" onClick={onSkip} className="rounded-full p-1 text-muted-foreground hover:bg-muted" aria-label="Skip">
             <X className="h-3.5 w-3.5" />

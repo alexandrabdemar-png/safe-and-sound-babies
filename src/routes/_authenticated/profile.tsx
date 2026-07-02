@@ -106,7 +106,7 @@ function ProfilePage() {
       const tables = [
         "milestones", "first_foods", "products", "product_recalls",
         "children", "insight_dismissals", "completed_tips",
-        "child_measurements",
+        "child_measurements", "home_profile",
       ];
       for (const table of tables) {
         await (supabase as any).from(table).delete().eq("user_id", uid);
