@@ -435,7 +435,10 @@ function ScanView({ onDetected }: { onDetected: (code: string) => void }) {
     },
     constraints: {
       audio: false,
-      video: { facingMode: "environment" },
+      // Cap resolution — decoding runs on every frame, and phone cameras
+      // otherwise default to much higher resolutions than a barcode needs,
+      // which is the other big contributor to slow scans alongside format count.
+      video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
     },
   });
 

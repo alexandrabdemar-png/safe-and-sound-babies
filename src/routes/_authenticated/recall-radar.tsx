@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowUpRight, Loader2, Radio, ShieldAlert, ShieldCheck } fro
 import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/BottomNav";
 import { fetchRecentBabyRecalls, fetchRecentFdaBabyRecalls } from "@/lib/cpscSearch";
-import { CRITICAL_RECALLS } from "@/lib/recallCheck";
+import { CRITICAL_RECALLS, recallFallbackUrl } from "@/lib/recallCheck";
 
 export const Route = createFileRoute("/_authenticated/recall-radar")({
   ssr: false,
@@ -179,14 +179,12 @@ function RecallCard({ recall }: { recall: RadarRecall }) {
       {recall.description && (
         <p className="font-body text-xs text-muted-foreground leading-relaxed pl-10 line-clamp-3">{recall.description}</p>
       )}
-      {recall.url && (
-        <div className="pl-10">
-          <a href={recall.url} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive underline underline-offset-2">
-            Full recall details <ArrowUpRight className="h-3 w-3" />
-          </a>
-        </div>
-      )}
+      <div className="pl-10">
+        <a href={recall.url || recallFallbackUrl(recall.title)} target="_blank" rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive underline underline-offset-2">
+          Full recall details <ArrowUpRight className="h-3 w-3" />
+        </a>
+      </div>
     </li>
   );
 }

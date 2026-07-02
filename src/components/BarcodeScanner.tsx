@@ -40,8 +40,13 @@ export function BarcodeScanner({ open, onClose, onDetected }: Props) {
         const back = devices.find((d) => /back|rear|environment/i.test(d.label)) ?? devices[0];
         if (!back) throw new Error('No camera available');
         if (cancelled || !videoRef.current) return;
-        controlsRef.current = await reader.decodeFromVideoDevice(
-          back.deviceId,
+        controlsRef.current = await reader.decodeFromConstraints(
+          {
+            audio: false,
+            // Cap resolution — every extra pixel is decoded on every frame,
+            // and phone cameras default far higher than a barcode needs.
+            video: { deviceId: { exact: back.deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } },
+          },
           videoRef.current,
           (result) => {
             if (result) {

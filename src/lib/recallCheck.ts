@@ -23,6 +23,16 @@ export type RecallHit = {
   recallDate?: string;
 };
 
+/**
+ * Every recall alert must be clickable so a parent can verify it against the
+ * official source themselves. Some recall rows (older CPSC records, edge
+ * cases in the sync jobs) can end up with no direct article URL — this gives
+ * a guaranteed fallback that always resolves to a real, relevant page.
+ */
+export function recallFallbackUrl(title: string): string {
+  return `https://www.cpsc.gov/Recalls?combine=${encodeURIComponent(title)}`;
+}
+
 // ── Noise words stripped before fuzzy token matching ─────────────────────────
 const NOISE_WORDS = new Set([
   "baby", "babies", "organic", "organics", "natural", "formula", "bottle",
