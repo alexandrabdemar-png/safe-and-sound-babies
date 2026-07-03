@@ -170,7 +170,6 @@ function NewMomentPage() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) { toast.error("Sign in to log moments"); setSaving(false); return; }
     const { error } = await (supabase as any).from("milestones").insert({
-      user_id: session.user.id,
       child_id: activeChildId,
       title: title.trim(),
       logged_at: loggedAt,
@@ -178,7 +177,11 @@ function NewMomentPage() {
       completed: true,
     });
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      console.error("[moments.new] insert failed", error);
+      toast.error(error.message || "Couldn't save that moment");
+      return;
+    }
     trackEvent("milestone_completed");
     toast.success("Saved that moment 💛");
     const tip = getSafetyTip(title.trim());
