@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { useZxing } from "react-zxing";
+import { useMemo, useState } from "react";
+import { BarcodeScannerView } from "@/components/BarcodeScannerView";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -24,7 +24,12 @@ export const Route = createFileRoute("/_authenticated/products_/scan")({
   head: () => ({ meta: [{ title: "Scan a barcode — Peace of Mine" }] }),
 });
 
-import { CATEGORIES, CATEGORY_BY_KEY, guessCategoryFromText, type CategoryKey } from "@/lib/productCategories";
+import {
+  CATEGORIES,
+  CATEGORY_BY_KEY,
+  guessCategoryFromText,
+  type CategoryKey,
+} from "@/lib/productCategories";
 import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
 import { lookupBarcode, type BarcodeLookupResult } from "@/lib/barcodeLookup";
 
@@ -41,7 +46,11 @@ function toISODate(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
-function computeReplaceAt(category: CategoryKey, _purchasedAt: string, carSeatExpiry: string): string {
+function computeReplaceAt(
+  category: CategoryKey,
+  _purchasedAt: string,
+  carSeatExpiry: string,
+): string {
   if (category === "car_seat") return carSeatExpiry || "";
   return "";
 }
@@ -99,7 +108,9 @@ function ScanPage() {
       } else {
         setFoundProduct(null);
         setFoundSource(null);
-        setLookupError("We couldn't find this product in any database. Add the details manually below.");
+        setLookupError(
+          "We couldn't find this product in any database. Add the details manually below.",
+        );
       }
     } catch {
       setFoundProduct(null);
@@ -125,21 +136,30 @@ function ScanPage() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Not signed in");
       const nowIso = new Date().toISOString();
-      const { data: inserted, error } = await supabase.from("products").insert({
-        user_id: u.user.id,
-        child_id: activeChildId,
-        name: name.trim(),
-        brand: brand.trim() || null,
-        category: CATEGORY_BY_KEY[category].label,
-        barcode: barcode || null,
-        purchased_at: purchasedAt ? new Date(purchasedAt).toISOString() : null,
-        added_at: nowIso,
-        replace_at: computedReplaceAt || null,
-      } as never).select("id").single();
+      const { data: inserted, error } = await supabase
+        .from("products")
+        .insert({
+          user_id: u.user.id,
+          child_id: activeChildId,
+          name: name.trim(),
+          brand: brand.trim() || null,
+          category: CATEGORY_BY_KEY[category].label,
+          barcode: barcode || null,
+          purchased_at: purchasedAt ? new Date(purchasedAt).toISOString() : null,
+          added_at: nowIso,
+          replace_at: computedReplaceAt || null,
+        } as never)
+        .select("id")
+        .single();
       if (error) throw error;
       const productId = (inserted as { id: string } | null)?.id;
       if (productId) {
-        lookupAndSaveGuidelines({ data: { productId } }).catch((err) => console.warn("[guidelines] lookup failed:", err instanceof Error ? err.message : "unknown"));
+        lookupAndSaveGuidelines({ data: { productId } }).catch((err) =>
+          console.warn(
+            "[guidelines] lookup failed:",
+            err instanceof Error ? err.message : "unknown",
+          ),
+        );
       }
       setSavedReplaceAt(computedReplaceAt || null);
       setStep("success");
@@ -185,9 +205,13 @@ function ScanPage() {
               Barcode scanner is a Pro feature
             </h2>
             <p className="mt-2 font-body text-sm text-muted-foreground">
-              Everything in free, plus expert features, tips and tricks, safety insights, and pediatrician-reviewed guidance. Try free for 7 days.
+              Everything in free, plus expert features, tips and tricks, safety insights, and
+              pediatrician-reviewed guidance. Try free for 7 days.
             </p>
-            <Button asChild className="mt-6 h-12 w-full rounded-full font-body text-sm font-semibold">
+            <Button
+              asChild
+              className="mt-6 h-12 w-full rounded-full font-body text-sm font-semibold"
+            >
               <Link to="/pricing">Start free trial</Link>
             </Button>
           </div>
@@ -244,7 +268,10 @@ function ScanPage() {
                 {!foundProduct && (
                   <p className="mt-3 font-body text-xs text-muted-foreground">
                     Not every product is in the barcode database yet.{" "}
-                    <Link to="/products/new" className="font-semibold text-primary underline underline-offset-2">
+                    <Link
+                      to="/products/new"
+                      className="font-semibold text-primary underline underline-offset-2"
+                    >
                       Try searching by name instead
                     </Link>
                     , or fill in the details below.
@@ -369,7 +396,9 @@ function ScanPage() {
                     .
                   </>
                 ) : (
-                  <>No automatic reminder for this category — we'll keep it in your products list.</>
+                  <>
+                    No automatic reminder for this category — we'll keep it in your products list.
+                  </>
                 )}
               </div>
               <div className="mt-6 flex flex-col gap-2">
@@ -398,7 +427,12 @@ function ScanPage() {
     return (
       <header className="px-5 pt-8 pb-4 sm:px-6">
         <div className="mx-auto max-w-md">
-          <Button asChild variant="ghost" size="sm" className="-ml-2 rounded-full font-body text-xs">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="-ml-2 rounded-full font-body text-xs"
+          >
             <Link to="/products">
               <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Products
             </Link>
@@ -417,45 +451,23 @@ function ScanPage() {
 
 function ScanView({ onDetected }: { onDetected: (code: string) => void }) {
   const [error, setError] = useState<string | null>(null);
-  const [paused, setPaused] = useState(false);
+  const [detected, setDetected] = useState(false);
 
-  const { ref } = useZxing({
-    paused,
-    // Restrict to the formats real product barcodes use. Scanning every
-    // supported format (PDF417, Data Matrix, Aztec, etc.) on every frame is
-    // what makes barcode-detector scans feel slow — this cuts scan time
-    // substantially with no loss of coverage for retail products.
-    formats: ["upc_a", "upc_e", "ean_13", "ean_8", "qr_code"],
-    onDecodeResult(result) {
-      setPaused(true);
-      onDetected(result.rawValue);
-    },
-    onError(e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
-    },
-    constraints: {
-      audio: false,
-      // Cap resolution — decoding runs on every frame, and phone cameras
-      // otherwise default to much higher resolutions than a barcode needs,
-      // which is the other big contributor to slow scans alongside format count.
-      video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
-    },
-  });
-
-  // Stop camera tracks on unmount
-  useEffect(() => {
-    const node = ref.current;
-    return () => {
-      const stream = node?.srcObject as MediaStream | null;
-      stream?.getTracks().forEach((t) => t.stop());
-    };
-  }, [ref]);
+  function handleDetected(code: string) {
+    if (detected) return;
+    setDetected(true);
+    onDetected(code);
+  }
 
   return (
     <div className="space-y-4">
       <div className="relative aspect-square w-full overflow-hidden rounded-3xl bg-black">
-        <video ref={ref} className="h-full w-full object-cover" muted playsInline />
+        <BarcodeScannerView
+          active={!detected}
+          onDetected={handleDetected}
+          onError={setError}
+          className="relative h-full w-full"
+        />
         <div className="pointer-events-none absolute inset-x-10 top-1/2 h-px -translate-y-1/2 bg-primary/80" />
         <div className="pointer-events-none absolute inset-6 rounded-2xl border-2 border-white/40" />
         <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1 text-xs text-white">

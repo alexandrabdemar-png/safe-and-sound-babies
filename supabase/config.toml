@@ -1,1 +1,11 @@
 project_id = "vgafdyiaxzqwkeixcbcj"
+
+# Both functions require a valid Supabase auth JWT — the platform rejects
+# unauthenticated requests before invoking the function code at all. This
+# also gates access to the paid barcode-lookup APIs behind sign-in, since
+# every request potentially costs money.
+[functions.lookup-product]
+verify_jwt = true
+
+[functions.check-recalls]
+verify_jwt = true
