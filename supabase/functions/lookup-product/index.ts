@@ -4,7 +4,15 @@
 //   { found: true, product: {...} }
 //   { found: false, upgradeAvailable?: true }
 //
-// Order of operations:
+// POST { barcode: string, manualEntry: { name, brand?, category?, imageUrl? } } →
+//   registers a parent's manual "we couldn't find it, here's what it is"
+//   submission into the shared cache instead of running the lookup
+//   pipeline, so the *next* scan of this barcode (by anyone) resolves
+//   instantly. Only ever inserts — never overwrites an existing cached
+//   entry, so this can't be used to clobber a real source's data with a
+//   bogus submission.
+//
+// Order of operations for a normal (non-manual) lookup:
 //   1. Check the shared product_catalog cache (service-role read) — free.
 //   2. Free sources in parallel, first valid match wins — free.
 //   3. Paid sources in parallel (only those with a configured secret),
@@ -19,7 +27,13 @@
 // We still parse the JWT ourselves below because we need the user id (for
 // the Pro-subscription check), not just "some valid token exists".
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { raceFreeSources, racePaidSources, type LookupResult } from "../_shared/lookupProduct.ts";
+import {
+  raceFreeSources,
+  racePaidSources,
+  buildManualCatalogEntry,
+  type LookupResult,
+  type ManualEntryInput,
+} from "../_shared/lookupProduct.ts";
 import { computeIsPro } from "../_shared/subscription.ts";
 
 const CORS_HEADERS = {
@@ -79,9 +93,20 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   let barcode: string | undefined;
+  let manualEntry: ManualEntryInput | undefined;
   try {
     const body = await req.json();
     barcode = typeof body?.barcode === "string" ? body.barcode.trim() : undefined;
+    if (body?.manualEntry && typeof body.manualEntry === "object") {
+      manualEntry = {
+        name: typeof body.manualEntry.name === "string" ? body.manualEntry.name : "",
+        brand: typeof body.manualEntry.brand === "string" ? body.manualEntry.brand : undefined,
+        category:
+          typeof body.manualEntry.category === "string" ? body.manualEntry.category : undefined,
+        imageUrl:
+          typeof body.manualEntry.imageUrl === "string" ? body.manualEntry.imageUrl : undefined,
+      };
+    }
   } catch {
     return json({ error: "Invalid JSON body" }, 400);
   }
@@ -100,6 +125,31 @@ Deno.serve(async (req) => {
   const jwt = authHeader.replace(/^Bearer\s+/i, "");
   const { data: userData, error: userErr } = await supabase.auth.getUser(jwt);
   if (userErr || !userData.user) return json({ error: "Unauthorized" }, 401);
+
+  if (manualEntry) {
+    const entry = buildManualCatalogEntry(barcode, manualEntry);
+    if (!entry) return json({ error: "A valid product name is required" }, 400);
+    // Insert-only (not upsert) — a manual submission must never overwrite
+    // an existing cached entry, whether that entry came from a real source
+    // or an earlier manual submission. If the barcode is already cataloged
+    // (including a race against another parent submitting the same one),
+    // treat it as a harmless no-op rather than an error.
+    const { error: insertErr } = await supabase.from("product_catalog").insert({
+      barcode: entry.barcode,
+      name: entry.name,
+      brand: entry.brand,
+      category: entry.category,
+      is_baby_product: entry.isBabyProduct,
+      image_url: entry.imageUrl,
+      source: entry.source,
+      raw: entry.raw,
+    });
+    if (insertErr && insertErr.code !== "23505" /* unique_violation */) {
+      console.error("[lookup-product] manual entry insert failed:", insertErr.message);
+      return json({ error: "Couldn't save this product" }, 500);
+    }
+    return json({ found: true, product: toResponseProduct(entry) });
+  }
 
   const { data: cached, error: cacheErr } = await supabase
     .from("product_catalog")

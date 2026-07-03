@@ -78,6 +78,49 @@ function guessIsBaby(...fields: Array<string | null | undefined>): boolean {
   return BABY_KEYWORDS.some((kw) => text.includes(kw));
 }
 
+export type ManualEntryInput = {
+  name: string;
+  brand?: string;
+  category?: string;
+  imageUrl?: string;
+};
+
+const MAX_MANUAL_FIELD_LENGTH = 200;
+
+/**
+ * Shapes (and validates) a parent's manual "we couldn't find it, here's what
+ * it is" submission into the same LookupResult shape every automated source
+ * produces, so it can go through the same cacheResult() path. Returns null
+ * for input that isn't worth caching (no name, or a field absurdly long —
+ * real product names/brands are well under this; a much longer string is
+ * more likely a bad paste/bug than a real product name).
+ */
+export function buildManualCatalogEntry(
+  barcode: string,
+  input: ManualEntryInput,
+): LookupResult | null {
+  const name = input.name?.trim();
+  if (!name || name.length > MAX_MANUAL_FIELD_LENGTH) return null;
+  const brand = input.brand?.trim() || null;
+  const category = input.category?.trim() || null;
+  if (
+    (brand?.length ?? 0) > MAX_MANUAL_FIELD_LENGTH ||
+    (category?.length ?? 0) > MAX_MANUAL_FIELD_LENGTH
+  ) {
+    return null;
+  }
+  return {
+    barcode,
+    name,
+    brand,
+    category,
+    isBabyProduct: guessIsBaby(name, brand, category),
+    imageUrl: input.imageUrl?.trim() || null,
+    source: "manual",
+    raw: null,
+  };
+}
+
 /**
  * Resolves as soon as the first non-null result arrives (true parallel
  * race — a fast, low-priority source can win over a slow high-priority

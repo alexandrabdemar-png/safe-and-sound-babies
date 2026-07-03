@@ -8,6 +8,7 @@ import {
   fetchGoUpc,
   fetchBarcodeLookup,
   fetchBarcodeSpider,
+  buildManualCatalogEntry,
 } from "./lookupProduct";
 
 function jsonResponse(body: unknown, ok = true, status = 200): Response {
@@ -324,5 +325,46 @@ describe("lookupProduct orchestration", () => {
         barcodeSpiderApiKey: "k3",
       }),
     ).resolves.toBeNull();
+  });
+});
+
+describe("buildManualCatalogEntry", () => {
+  it("shapes a valid manual submission", () => {
+    const entry = buildManualCatalogEntry("012345678905", {
+      name: "Bobbie Gentle Formula",
+      brand: "Bobbie",
+      category: "Baby Formula",
+      imageUrl: "https://example.com/photo.jpg",
+    });
+    expect(entry).toMatchObject({
+      barcode: "012345678905",
+      name: "Bobbie Gentle Formula",
+      brand: "Bobbie",
+      source: "manual",
+      isBabyProduct: true,
+    });
+  });
+
+  it("trims whitespace and drops empty optional fields to null", () => {
+    const entry = buildManualCatalogEntry("111111111111", { name: "  Widget  ", brand: "  " });
+    expect(entry).toMatchObject({ name: "Widget", brand: null, category: null, imageUrl: null });
+  });
+
+  it("returns null when name is missing or blank", () => {
+    expect(buildManualCatalogEntry("111111111111", { name: "" })).toBeNull();
+    expect(buildManualCatalogEntry("111111111111", { name: "   " })).toBeNull();
+  });
+
+  it("adversarial: rejects an absurdly long name (bad paste / abuse attempt, not a real product)", () => {
+    const entry = buildManualCatalogEntry("111111111111", { name: "x".repeat(500) });
+    expect(entry).toBeNull();
+  });
+
+  it("adversarial: rejects an absurdly long brand even with a valid name", () => {
+    const entry = buildManualCatalogEntry("111111111111", {
+      name: "Widget",
+      brand: "x".repeat(500),
+    });
+    expect(entry).toBeNull();
   });
 });

@@ -1,16 +1,22 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BarcodeScannerView } from "@/components/BarcodeScannerView";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
+  AlertTriangle,
   ArrowLeft,
   Camera,
   CheckCircle2,
+  ExternalLink,
+  ImagePlus,
   Loader2,
   Lock,
   PackageSearch,
   RefreshCw,
+  ShieldCheck,
+  X,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,16 +37,39 @@ import {
   type CategoryKey,
 } from "@/lib/productCategories";
 import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
-import { lookupBarcode, type BarcodeLookupResult } from "@/lib/barcodeLookup";
 
 const CATEGORY_ORDER: CategoryKey[] = CATEGORIES.map((c) => c.key);
 
-const SOURCE_LABEL: Record<BarcodeLookupResult["source"], string> = {
+const SOURCE_LABEL: Record<string, string> = {
   openfoodfacts: "Open Food Facts",
-  openproductsfacts: "Open Products Facts",
   openbeautyfacts: "Open Beauty Facts",
   upcitemdb: "UPCitemdb",
+  "go-upc": "Go-UPC",
+  "barcode-lookup": "Barcode Lookup",
+  "barcode-spider": "Barcode Spider",
+  manual: "Community submission",
 };
+
+type LookupProduct = {
+  barcode: string;
+  name: string | null;
+  brand: string | null;
+  category: string | null;
+  isBabyProduct: boolean;
+  imageUrl: string | null;
+  source: string;
+};
+
+type RecallHit = {
+  source: "cpsc" | "nhtsa";
+  id: string;
+  title: string;
+  reason: string;
+  url: string;
+  recallDate: string | null;
+};
+
+type RecallCheckResult = { recalled: boolean; recalls: RecallHit[] };
 
 function toISODate(d: Date) {
   return d.toISOString().slice(0, 10);
@@ -55,17 +84,10 @@ function computeReplaceAt(
   return "";
 }
 
-function guessCategory(off: OffProduct): CategoryKey {
-  const hay = [
-    ...(off.categories_tags ?? []),
-    off.categories ?? "",
-    off.product_name ?? "",
-    off.generic_name ?? "",
-  ].join(" ");
+function guessCategory(p: LookupProduct): CategoryKey {
+  const hay = [p.category ?? "", p.name ?? ""].join(" ");
   return (guessCategoryFromText(hay) || "other") as CategoryKey;
 }
-
-type OffProduct = BarcodeLookupResult;
 
 type Step = "scanning" | "looking-up" | "form" | "success";
 
@@ -77,8 +99,10 @@ function ScanPage() {
   const [step, setStep] = useState<Step>("scanning");
   const [barcode, setBarcode] = useState("");
   const [lookupError, setLookupError] = useState<string | null>(null);
-  const [foundProduct, setFoundProduct] = useState<OffProduct | null>(null);
-  const [foundSource, setFoundSource] = useState<string | null>(null);
+  const [foundProduct, setFoundProduct] = useState<LookupProduct | null>(null);
+  const [upgradeAvailable, setUpgradeAvailable] = useState(false);
+  const [recallInfo, setRecallInfo] = useState<RecallCheckResult | null>(null);
+  const [checkingRecalls, setCheckingRecalls] = useState(false);
 
   const [name, setName] = useState("");
   const [brand, setBrand] = useState("");
@@ -87,38 +111,129 @@ function ScanPage() {
   const [carSeatExpiry, setCarSeatExpiry] = useState("");
   const [saving, setSaving] = useState(false);
   const [savedReplaceAt, setSavedReplaceAt] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
 
   const computedReplaceAt = useMemo(
     () => computeReplaceAt(category, purchasedAt, carSeatExpiry),
     [category, purchasedAt, carSeatExpiry],
   );
 
+  // Single source of truth for releasing blob URLs: runs whenever the
+  // preview changes (picking a new photo, clearing it, rescanning) *and* on
+  // unmount if the parent navigates away mid-form — otherwise each replaced
+  // preview leaks for the rest of the SPA session.
+  useEffect(() => {
+    return () => {
+      if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+    };
+  }, [photoPreviewUrl]);
+
+  // Bumped on every new scan/reset so an in-flight recall check from a
+  // *previous* scan can't land late and overwrite the banner for whatever
+  // the user has since rescanned to (e.g. rescan quickly while the first
+  // check-recalls call is still in flight).
+  const scanGenerationRef = useRef(0);
+
   async function handleDetected(code: string) {
+    const generation = ++scanGenerationRef.current;
     setBarcode(code);
     setStep("looking-up");
     setLookupError(null);
+    setRecallInfo(null);
+    setUpgradeAvailable(false);
     try {
-      const p = await lookupBarcode(code);
-      if (p) {
+      const { data, error } = await supabase.functions.invoke("lookup-product", {
+        body: { barcode: code },
+      });
+      if (generation !== scanGenerationRef.current) return;
+      if (error) throw error;
+      if (data?.found) {
+        const p = data.product as LookupProduct;
         setFoundProduct(p);
-        setFoundSource(SOURCE_LABEL[p.source] ?? p.source);
-        setName(p.product_name?.trim() || p.generic_name?.trim() || "");
-        setBrand(p.brands?.split(",")[0]?.trim() || "");
-        setCategory(guessCategory(p));
+        setName(p.name?.trim() || "");
+        setBrand(p.brand?.trim() || "");
+        const guessedCategory = guessCategory(p);
+        setCategory(guessedCategory);
+        // Fire the recall check now, while the parent reviews the form —
+        // it's shown as a banner below, not blocking the save button.
+        void checkRecallsFor(
+          p.name?.trim() || "",
+          p.brand?.trim() || null,
+          guessedCategory,
+          generation,
+        );
       } else {
         setFoundProduct(null);
-        setFoundSource(null);
+        setUpgradeAvailable(Boolean(data?.upgradeAvailable));
         setLookupError(
-          "We couldn't find this product in any database. Add the details manually below.",
+          data?.upgradeAvailable
+            ? "We checked our free databases and couldn't find this product. Upgrade searches additional paid databases too."
+            : "We couldn't find this product in any database. Add the details manually below.",
         );
       }
     } catch {
+      if (generation !== scanGenerationRef.current) return;
       setFoundProduct(null);
-      setFoundSource(null);
       setLookupError("Lookup failed — check your connection.");
     } finally {
-      setStep("form");
+      if (generation === scanGenerationRef.current) setStep("form");
     }
+  }
+
+  async function checkRecallsFor(
+    productName: string,
+    brandName: string | null,
+    categoryKey: CategoryKey,
+    generation: number,
+  ) {
+    if (!productName.trim()) return;
+    setCheckingRecalls(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("check-recalls", {
+        body: { name: productName, brand: brandName ?? undefined, category: categoryKey },
+      });
+      if (generation !== scanGenerationRef.current) return;
+      if (error) throw error;
+      setRecallInfo(data as RecallCheckResult);
+    } catch {
+      // Fail silently — a recall-check hiccup shouldn't block the scan flow.
+      // The parent can still check Recall Radar / the daily sync catches it.
+      if (generation === scanGenerationRef.current) setRecallInfo(null);
+    } finally {
+      if (generation === scanGenerationRef.current) setCheckingRecalls(false);
+    }
+  }
+
+  async function submitManualCatalogEntry(
+    scannedBarcode: string,
+    productName: string,
+    brandName: string,
+    categoryLabel: string,
+    photo: File | null,
+  ) {
+    let imageUrl: string | undefined;
+    if (photo) {
+      const ext = photo.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${scannedBarcode}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadErr } = await supabase.storage
+        .from("product-photos")
+        .upload(path, photo, { contentType: photo.type });
+      if (uploadErr) throw uploadErr;
+      imageUrl = supabase.storage.from("product-photos").getPublicUrl(path).data.publicUrl;
+    }
+    const { error } = await supabase.functions.invoke("lookup-product", {
+      body: {
+        barcode: scannedBarcode,
+        manualEntry: {
+          name: productName,
+          brand: brandName || undefined,
+          category: categoryLabel,
+          imageUrl,
+        },
+      },
+    });
+    if (error) throw error;
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -148,6 +263,9 @@ function ScanPage() {
           purchased_at: purchasedAt ? new Date(purchasedAt).toISOString() : null,
           added_at: nowIso,
           replace_at: computedReplaceAt || null,
+          // We already have a fresh answer from check-recalls — no need to
+          // wait for tomorrow's daily sync to flag it.
+          recalled: recallInfo?.recalled ?? false,
         } as never)
         .select("id")
         .single();
@@ -157,6 +275,25 @@ function ScanPage() {
         lookupAndSaveGuidelines({ data: { productId } }).catch((err) =>
           console.warn(
             "[guidelines] lookup failed:",
+            err instanceof Error ? err.message : "unknown",
+          ),
+        );
+      }
+      // Manual entry (we scanned a barcode nothing recognized): submit it to
+      // the shared catalog so the *next* scan of this barcode — by anyone —
+      // resolves instantly instead of hitting every database again. Fails
+      // open: a catalog-submission hiccup shouldn't block the parent's own
+      // save, which already succeeded above.
+      if (!foundProduct && barcode) {
+        submitManualCatalogEntry(
+          barcode,
+          name.trim(),
+          brand.trim(),
+          CATEGORY_BY_KEY[category].label,
+          photoFile,
+        ).catch((err) =>
+          console.warn(
+            "[scan] manual catalog submission failed:",
             err instanceof Error ? err.message : "unknown",
           ),
         );
@@ -171,10 +308,13 @@ function ScanPage() {
   }
 
   function resetForAnother() {
+    scanGenerationRef.current++;
     setStep("scanning");
     setBarcode("");
     setFoundProduct(null);
-    setFoundSource(null);
+    setUpgradeAvailable(false);
+    setRecallInfo(null);
+    setCheckingRecalls(false);
     setLookupError(null);
     setName("");
     setBrand("");
@@ -182,6 +322,13 @@ function ScanPage() {
     setPurchasedAt(toISODate(new Date()));
     setCarSeatExpiry("");
     setSavedReplaceAt(null);
+    setPhotoFile(null);
+    setPhotoPreviewUrl(null); // the useEffect above revokes the outgoing blob URL
+  }
+
+  function handlePhotoSelect(file: File | null) {
+    setPhotoFile(file);
+    setPhotoPreviewUrl(file ? URL.createObjectURL(file) : null); // the useEffect above revokes the outgoing blob URL
   }
 
   // Gate
@@ -238,9 +385,9 @@ function ScanPage() {
             <form onSubmit={handleSave} className="space-y-6">
               <div className="rounded-3xl bg-card border border-border p-5">
                 <div className="flex items-start gap-3">
-                  {foundProduct?.image_front_small_url ? (
+                  {foundProduct?.imageUrl ? (
                     <img
-                      src={foundProduct.image_front_small_url}
+                      src={foundProduct.imageUrl}
                       alt=""
                       className="h-16 w-16 rounded-xl object-cover border border-border"
                     />
@@ -256,7 +403,7 @@ function ScanPage() {
                     <p className="font-mono text-sm">{barcode}</p>
                     {foundProduct ? (
                       <p className="mt-1 font-body text-xs text-emerald-700 dark:text-emerald-400">
-                        Found in {foundSource ?? "Open Food Facts"}
+                        Found — {SOURCE_LABEL[foundProduct.source] ?? foundProduct.source}
                       </p>
                     ) : (
                       <p className="mt-1 font-body text-xs text-amber-700 dark:text-amber-400">
@@ -266,18 +413,64 @@ function ScanPage() {
                   </div>
                 </div>
                 {!foundProduct && (
-                  <p className="mt-3 font-body text-xs text-muted-foreground">
-                    Not every product is in the barcode database yet.{" "}
-                    <Link
-                      to="/products/new"
-                      className="font-semibold text-primary underline underline-offset-2"
-                    >
-                      Try searching by name instead
-                    </Link>
-                    , or fill in the details below.
-                  </p>
+                  <div className="mt-3 space-y-2">
+                    <p className="font-body text-xs text-muted-foreground">
+                      Not every product is in the barcode database yet.{" "}
+                      <Link
+                        to="/products/new"
+                        className="font-semibold text-primary underline underline-offset-2"
+                      >
+                        Try searching by name instead
+                      </Link>
+                      , or fill in the details below.
+                    </p>
+                    {upgradeAvailable && (
+                      <Link
+                        to="/pricing"
+                        className="flex items-center gap-1.5 rounded-xl bg-accent/10 px-3 py-2 font-body text-xs font-semibold text-accent"
+                      >
+                        <Sparkles className="h-3.5 w-3.5" /> Pro searches additional paid product
+                        databases
+                      </Link>
+                    )}
+                  </div>
                 )}
               </div>
+
+              {checkingRecalls && (
+                <div className="flex items-center gap-2 rounded-2xl border border-border/60 bg-sand/30 px-4 py-3 font-body text-xs text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Checking for active recalls…
+                </div>
+              )}
+
+              {recallInfo?.recalled && (
+                <div className="space-y-2 rounded-3xl border border-destructive/40 bg-destructive/5 p-4">
+                  <div className="flex items-center gap-2 font-display text-sm font-semibold text-destructive">
+                    <AlertTriangle className="h-4 w-4" /> Active recall found
+                  </div>
+                  {recallInfo.recalls.map((r) => (
+                    <div key={`${r.source}-${r.id}`} className="rounded-2xl bg-card/60 p-3">
+                      <p className="font-body text-sm font-semibold text-foreground">{r.title}</p>
+                      <p className="mt-1 font-body text-xs text-muted-foreground">{r.reason}</p>
+                      <a
+                        href={r.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-flex items-center gap-1 font-body text-xs font-semibold text-primary underline underline-offset-2"
+                      >
+                        View official recall notice <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {recallInfo && !recallInfo.recalled && !checkingRecalls && (
+                <div className="flex items-center gap-2 rounded-2xl border border-emerald-600/20 bg-emerald-50 px-4 py-3 font-body text-xs text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
+                  <ShieldCheck className="h-3.5 w-3.5" /> No active CPSC or NHTSA recalls found for
+                  this product.
+                </div>
+              )}
 
               <Field label="Product name" required>
                 <Input
@@ -320,6 +513,45 @@ function ScanPage() {
                 </div>
               </Field>
 
+              {!foundProduct && (
+                <Field label="Photo (optional)">
+                  <div className="flex items-center gap-3">
+                    <input
+                      id="product-photo-input"
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      onChange={(e) => handlePhotoSelect(e.target.files?.[0] ?? null)}
+                    />
+                    {photoPreviewUrl ? (
+                      <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-border">
+                        <img src={photoPreviewUrl} alt="" className="h-full w-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => handlePhotoSelect(null)}
+                          className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById("product-photo-input")?.click()}
+                        className="rounded-2xl font-body text-sm"
+                      >
+                        <ImagePlus className="mr-2 h-4 w-4" /> Add photo
+                      </Button>
+                    )}
+                  </div>
+                  <p className="font-body text-xs text-muted-foreground">
+                    Helps other parents recognize this product next time it's scanned.
+                  </p>
+                </Field>
+              )}
+
               <Field label="Purchase date" required>
                 <Input
                   type="date"
@@ -357,6 +589,7 @@ function ScanPage() {
                 <Button
                   type="button"
                   variant="outline"
+                  disabled={saving}
                   onClick={resetForAnother}
                   className="h-12 flex-1 rounded-full font-body text-sm"
                 >
@@ -367,7 +600,11 @@ function ScanPage() {
                   disabled={saving}
                   className="h-12 flex-[2] rounded-full bg-primary font-body text-sm font-semibold"
                 >
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save product"}
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Add to my baby's profile"
+                  )}
                 </Button>
               </div>
             </form>
