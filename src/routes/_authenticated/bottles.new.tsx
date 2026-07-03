@@ -59,11 +59,13 @@ function NewBottlePage() {
     if (!uid) { toast.error("Please sign in again."); setSaving(false); return; }
 
     let activeChildId: string | null = null;
-    try { activeChildId = localStorage.getItem("safesound.activeChildId"); } catch {/* ignore */}
+    try {
+      const raw = localStorage.getItem("safesound.activeChildId");
+      if (raw && raw !== "null" && raw !== "undefined") activeChildId = raw;
+    } catch {/* ignore */}
 
-    const { error } = await supabase.from("bottles").insert({
+    const payload: Record<string, unknown> = {
       user_id: uid,
-      child_id: activeChildId,
       bottle_type: type,
       storage,
       started_at: startedAt.toISOString(),
@@ -71,9 +73,16 @@ function NewBottlePage() {
       alert_minutes_before: isPro ? alertMinutes : 60,
       ounces: ounces ? Number(ounces) : null,
       notes: notes.trim() || null,
-    });
+    };
+    if (activeChildId) payload.child_id = activeChildId;
+
+    const { error } = await supabase.from("bottles").insert(payload as never);
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      console.error("[bottles.new] insert failed", error);
+      toast.error(error.message || "Couldn't save bottle");
+      return;
+    }
     toast.success("Bottle logged");
     navigate({ to: "/bottles" });
   }
