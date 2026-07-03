@@ -152,10 +152,15 @@ export async function fetchCpscRecallsForProduct(productName: string): Promise<R
 
     return data
       .filter((r) => {
+        // Deliberately excludes the free-text Description fields: recall
+        // notices routinely name sibling products only to say they're NOT
+        // affected ("this recall does not include the Pipa, Pipa Lite, or
+        // Pipa RX"), and plain substring matching can't tell that apart from
+        // an actual match. Match only against the structured identifier
+        // fields, which name the actually-recalled product.
         const recallText = [
           r.RecallHeading ?? r.Title ?? "",
-          r.Description ?? "",
-          ...(r.Products ?? []).map((p) => `${p.Name ?? ""} ${p.Description ?? ""}`),
+          ...(r.Products ?? []).map((p) => p.Name ?? ""),
           ...(r.Manufacturers ?? []).map((m) => m.Name ?? ""),
         ].join(" ");
         return fuzzyMatchProduct(productName, recallText);
@@ -225,8 +230,11 @@ export async function fetchFdaRecallsForProduct(productName: string): Promise<Re
 
     return combined
       .filter((r) => {
-        const text = `${r.product_description ?? ""} ${r.reason_for_recall ?? ""}`;
-        return fuzzyMatchProduct(productName, text);
+        // product_description is FDA's structured product identifier;
+        // reason_for_recall is free-text narrative and, like CPSC's
+        // Description field, can name unaffected sibling products —
+        // deliberately excluded from matching for the same reason.
+        return fuzzyMatchProduct(productName, r.product_description ?? "");
       })
       .slice(0, 5)
       .map((r) => ({
