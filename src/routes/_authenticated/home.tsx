@@ -220,7 +220,10 @@ function HomePage() {
   }>({ tip_day: 1, paused_until: null, expiry_advance_days: 30 });
 
   // Weekly safety tip
-  const [tipCompleted, setTipCompleted] = useState(false);
+  const [tipCompleted, setTipCompleted] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try { return !!localStorage.getItem(`safesound.tipDone.${getTipWeekKey()}`); } catch { return false; }
+  });
   const [tipSuccess, setTipSuccess] = useState(false);
 
   // Age jump alert
