@@ -101,7 +101,7 @@ function Index() {
                 replace, resize or double-check the fit.
               </p>
               <p className="mt-3 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
-                Just the information you need, exactly when you need it.
+                Just the information you need, right when you need it.
               </p>
 
               <Link
