@@ -1,5 +1,14 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { Component, lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  Component,
+  lazy,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -27,15 +36,22 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { useActiveChild } from "@/hooks/useActiveChild";
-import { CATEGORIES, type CategoryKey } from "@/lib/productCategories";
+import { CATEGORIES, guessCategoryFromText, type CategoryKey } from "@/lib/productCategories";
+import { ProductCatalogSearch } from "@/components/ProductCatalogSearch";
+import type { CatalogSearchResult } from "@/lib/searchProductCatalog";
 import { trackEvent } from "@/lib/analytics";
 
 // Server functions are imported dynamically to prevent module-level evaluation
 // crashing the page if the server environment or API keys aren't available.
 type ProductSearchResult = {
-  name: string; brand: string; category: string; model: string;
-  safe_use_duration_days: number; safe_use_notes: string;
-  age_range: string; cpsc_product_type: string;
+  name: string;
+  brand: string;
+  category: string;
+  model: string;
+  safe_use_duration_days: number;
+  safe_use_notes: string;
+  age_range: string;
+  cpsc_product_type: string;
 };
 
 async function runSearchProducts(query: string): Promise<ProductSearchResult[]> {
@@ -54,7 +70,7 @@ async function recordRecallInDb(productId: string, hit: RecallHit): Promise<void
       .from("recalls")
       .upsert(
         { source: hit.source, source_id: hit.id, title: hit.title, url: hit.url },
-        { onConflict: "source,source_id" }
+        { onConflict: "source,source_id" },
       )
       .select("id")
       .single();
@@ -63,7 +79,10 @@ async function recordRecallInDb(productId: string, hit: RecallHit): Promise<void
     if (recallId) {
       await (supabase as any)
         .from("product_recalls")
-        .upsert({ product_id: productId, recall_id: recallId, acknowledged: false }, { onConflict: "product_id,recall_id" });
+        .upsert(
+          { product_id: productId, recall_id: recallId, acknowledged: false },
+          { onConflict: "product_id,recall_id" },
+        );
     }
 
     await (supabase as any).from("products").update({ recalled: true }).eq("id", productId);
@@ -73,14 +92,16 @@ async function recordRecallInDb(productId: string, hit: RecallHit): Promise<void
 }
 
 const BarcodeScanner = lazy(() =>
-  import("@/components/BarcodeScanner").then((m) => ({ default: m.BarcodeScanner }))
+  import("@/components/BarcodeScanner").then((m) => ({ default: m.BarcodeScanner })),
 );
 
 // ─── Error boundary for AI search ────────────────────────────────────────────
 
 class SearchErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
-  static getDerivedStateFromError() { return { failed: true }; }
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
   componentDidCatch(err: unknown) {
     console.error("[ProductSearchAI] render error:", err);
   }
@@ -122,6 +143,7 @@ function NewProductPage() {
   const [saving, setSaving] = useState(false);
   const [category, setCategory] = useState<CategoryKey | "">("");
   const [name, setName] = useState("");
+  const [brand, setBrand] = useState("");
   const [barcode, setBarcode] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
   const [purchasedAt, setPurchasedAt] = useState(toISODate(new Date()));
@@ -132,7 +154,24 @@ function NewProductPage() {
   const [sheetProduct, setSheetProduct] = useState<ProductSearchResult | null>(null);
 
   // Recall modal state
-  const [recallModal, setRecallModal] = useState<{ hit: RecallHit; productName: string; productId: string } | null>(null);
+  const [recallModal, setRecallModal] = useState<{
+    hit: RecallHit;
+    productName: string;
+    productId: string;
+  } | null>(null);
+
+  // Picking a catalog search result prefills the manual form below rather
+  // than saving directly — car seats in particular need a manufacturer
+  // expiry date the search result can't supply, and reusing the manual
+  // form's existing, already-tested save path avoids a second one.
+  function handleCatalogPick(result: CatalogSearchResult) {
+    setName(result.name);
+    setBrand(result.brand ?? "");
+    setBarcode(result.barcode ?? "");
+    const guessed = guessCategoryFromText(`${result.category ?? ""} ${result.name}`);
+    if (guessed) setCategory(guessed as CategoryKey);
+    toast.success("Details filled in — review and save below");
+  }
 
   const computedReplaceAt = useMemo(() => {
     if (category === "car_seat") return carSeatExpiry || "";
@@ -143,29 +182,45 @@ function NewProductPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!category) { toast.error("Pick a category"); return; }
-    if (!name.trim()) { toast.error("Give your product a name"); return; }
+    if (!category) {
+      toast.error("Pick a category");
+      return;
+    }
+    if (!name.trim()) {
+      toast.error("Give your product a name");
+      return;
+    }
 
     setSaving(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) throw new Error("Not signed in");
-      const { data: inserted, error } = await supabase.from("products").insert({
-        user_id: session.user.id,
-        child_id: activeChildId,
-        name: name.trim(),
-        category: activeCategory?.label ?? category,
-        barcode: barcode.trim() || null,
-        purchased_at: purchasedAt ? new Date(purchasedAt).toISOString() : null,
-        added_at: new Date().toISOString(),
-        replace_at: computedReplaceAt || null,
-        size: category === "sleep_sack" ? swaddleSize.trim() || null : null,
-      } as never).select("id").single();
+      const { data: inserted, error } = await supabase
+        .from("products")
+        .insert({
+          user_id: session.user.id,
+          child_id: activeChildId,
+          name: name.trim(),
+          brand: brand.trim() || null,
+          category: activeCategory?.label ?? category,
+          barcode: barcode.trim() || null,
+          purchased_at: purchasedAt ? new Date(purchasedAt).toISOString() : null,
+          added_at: new Date().toISOString(),
+          replace_at: computedReplaceAt || null,
+          size: category === "sleep_sack" ? swaddleSize.trim() || null : null,
+        } as never)
+        .select("id")
+        .single();
       if (error) throw error;
       const productId = (inserted as { id: string } | null)?.id;
       if (productId) {
         runLookupGuidelines(productId).catch((err) => {
-          console.warn("[guidelines] lookup failed:", err instanceof Error ? err.message : "unknown");
+          console.warn(
+            "[guidelines] lookup failed:",
+            err instanceof Error ? err.message : "unknown",
+          );
         });
 
         // Inline recall check — must complete before navigating
@@ -183,14 +238,21 @@ function NewProductPage() {
     } catch (err) {
       console.error("[products/new] handleSubmit error:", err);
       toast.error(err instanceof Error ? err.message : "Couldn't save");
-    } finally { setSaving(false); }
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-24">
       <header className="px-5 pt-8 pb-4 sm:px-6">
         <div className="mx-auto max-w-md">
-          <Button asChild variant="ghost" size="sm" className="-ml-2 rounded-full font-body text-xs">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="-ml-2 rounded-full font-body text-xs"
+          >
             <Link to="/products">
               <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Products
             </Link>
@@ -208,6 +270,20 @@ function NewProductPage() {
           <SearchErrorBoundary>
             <ProductSearchAI onPick={(r) => setSheetProduct(r)} />
           </SearchErrorBoundary>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="font-body text-xs text-muted-foreground">
+              or search product databases
+            </span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
+          {/* Product catalog search — separate from barcode scanning and
+              from the AI safety-guidance search above: this searches the
+              shared barcode-lookup cache plus a live product database. */}
+          <ProductCatalogSearch onPick={handleCatalogPick} />
 
           {/* Divider */}
           <div className="flex items-center gap-3">
@@ -254,6 +330,16 @@ function NewProductPage() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Nuna Pipa Lite"
                 maxLength={120}
+                className="h-12 rounded-2xl bg-card px-4 font-body text-base"
+              />
+            </Field>
+
+            <Field label="Brand">
+              <Input
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+                placeholder="e.g. Nuna"
+                maxLength={80}
                 className="h-12 rounded-2xl bg-card px-4 font-body text-base"
               />
             </Field>
@@ -314,8 +400,7 @@ function NewProductPage() {
 
             {computedReplaceAt && (
               <div className="rounded-2xl bg-primary/8 px-4 py-3 font-body text-sm text-foreground/80">
-                Replace by{" "}
-                <span className="font-semibold">{formatDate(computedReplaceAt)}</span>
+                Replace by <span className="font-semibold">{formatDate(computedReplaceAt)}</span>
               </div>
             )}
 
@@ -334,7 +419,10 @@ function NewProductPage() {
         <BarcodeScanner
           open={scannerOpen}
           onClose={() => setScannerOpen(false)}
-          onDetected={(code) => { setBarcode(code); toast.success(`Scanned ${code}`); }}
+          onDetected={(code) => {
+            setBarcode(code);
+            toast.success(`Scanned ${code}`);
+          }}
         />
       </Suspense>
 
@@ -385,7 +473,9 @@ function RecallAlertModal({
         <div className="px-6 py-5" style={{ backgroundColor: "#C8523A" }}>
           <div className="flex items-center gap-2.5">
             <AlertTriangle className="h-5 w-5 text-white" />
-            <span className="font-display text-lg font-semibold text-white">Recall Alert Found</span>
+            <span className="font-display text-lg font-semibold text-white">
+              Recall Alert Found
+            </span>
           </div>
         </div>
 
@@ -466,7 +556,8 @@ function ProductSearchAI({ onPick }: { onPick: (r: ProductSearchResult) => void 
   function daysToLabel(days: number): string {
     if (days <= 7) return `${days} day${days === 1 ? "" : "s"}`;
     if (days < 60) return `${Math.round(days / 7)} week${Math.round(days / 7) === 1 ? "" : "s"}`;
-    if (days < 730) return `${Math.round(days / 30)} month${Math.round(days / 30) === 1 ? "" : "s"}`;
+    if (days < 730)
+      return `${Math.round(days / 30)} month${Math.round(days / 30) === 1 ? "" : "s"}`;
     return `${Math.round(days / 365)} year${Math.round(days / 365) === 1 ? "" : "s"}`;
   }
 
@@ -493,7 +584,12 @@ function ProductSearchAI({ onPick }: { onPick: (r: ProductSearchResult) => void 
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); runSearch(); } }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                runSearch();
+              }
+            }}
             placeholder="e.g. Philips Avent Soothie, Nuna Pipa…"
             className="h-11 rounded-2xl bg-background pl-9 pr-9 font-body text-base"
             maxLength={80}
@@ -543,7 +639,9 @@ function ProductSearchAI({ onPick }: { onPick: (r: ProductSearchResult) => void 
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-body text-sm font-semibold text-foreground">{r.name}</p>
+                    <p className="truncate font-body text-sm font-semibold text-foreground">
+                      {r.name}
+                    </p>
                     <p className="mt-0.5 font-body text-xs text-muted-foreground">
                       {[r.brand, r.category.replace(/_/g, " ")].filter(Boolean).join(" · ")}
                       {r.age_range ? ` · ${r.age_range}` : ""}
@@ -594,23 +692,26 @@ function SaveProductSheet({
 
   // Fetch children once
   useEffect(() => {
-    supabase.from("children").select("id, name").then(({ data }) => {
-      if (data && data.length > 0) {
-        setChildren(data as Child[]);
-        setChildId(data[0].id);
-      }
-    });
+    supabase
+      .from("children")
+      .select("id, name")
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setChildren(data as Child[]);
+          setChildId(data[0].id);
+        }
+      });
   }, []);
 
-  const replaceAt = product
-    ? addDays(purchasedAt, product.safe_use_duration_days)
-    : "";
+  const replaceAt = product ? addDays(purchasedAt, product.safe_use_duration_days) : "";
 
   async function handleSave() {
     if (!product) return;
     setSaving(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) throw new Error("Not signed in");
 
       const replaceDate = addDays(purchasedAt, product.safe_use_duration_days);
@@ -637,7 +738,10 @@ function SaveProductSheet({
       const productId = (inserted as { id: string } | null)?.id;
       if (productId) {
         runLookupGuidelines(productId).catch((err) => {
-          console.warn("[guidelines] lookup failed:", err instanceof Error ? err.message : "unknown");
+          console.warn(
+            "[guidelines] lookup failed:",
+            err instanceof Error ? err.message : "unknown",
+          );
         });
 
         // Inline recall check — must complete before navigating
@@ -662,12 +766,18 @@ function SaveProductSheet({
   function daysToLabel(days: number): string {
     if (days <= 7) return `${days} day${days === 1 ? "" : "s"}`;
     if (days < 60) return `${Math.round(days / 7)} week${Math.round(days / 7) === 1 ? "" : "s"}`;
-    if (days < 730) return `${Math.round(days / 30)} month${Math.round(days / 30) === 1 ? "" : "s"}`;
+    if (days < 730)
+      return `${Math.round(days / 30)} month${Math.round(days / 30) === 1 ? "" : "s"}`;
     return `${Math.round(days / 365)} year${Math.round(days / 365) === 1 ? "" : "s"}`;
   }
 
   return (
-    <Sheet open={!!product} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Sheet
+      open={!!product}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <SheetContent side="bottom" className="rounded-t-3xl px-5 pb-10 pt-6">
         <SheetHeader className="mb-5 text-left">
           <SheetTitle className="font-display text-xl font-semibold">
@@ -687,7 +797,9 @@ function SaveProductSheet({
                 <p className="font-body text-sm font-semibold text-foreground">
                   Safe for {daysToLabel(product.safe_use_duration_days)}
                 </p>
-                <p className="mt-0.5 font-body text-xs text-muted-foreground">{product.safe_use_notes}</p>
+                <p className="mt-0.5 font-body text-xs text-muted-foreground">
+                  {product.safe_use_notes}
+                </p>
               </div>
             </div>
 
@@ -725,7 +837,9 @@ function SaveProductSheet({
                   >
                     <option value="">No child (general)</option>
                     {children.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
                     ))}
                   </select>
                   <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -749,7 +863,15 @@ function SaveProductSheet({
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({
+  label,
+  required,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-2">
       <Label className="font-body text-sm">
