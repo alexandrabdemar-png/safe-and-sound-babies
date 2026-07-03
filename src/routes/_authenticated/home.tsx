@@ -1295,7 +1295,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
           <span style={{ fontSize: 24 }}>👶</span>
           <div>
             <p style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.95)", margin: 0 }}>Add your first child to get started</p>
-            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>Peace of Mine personalises every tip, alert, and insight to your baby's age.</p>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>Peace of Mine personalizes every tip, alert, and insight to your baby's age.</p>
           </div>
         </div>
         <button
