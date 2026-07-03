@@ -556,6 +556,8 @@ function HomePage() {
   }
 
   async function markTipDone() {
+    const wk = getTipWeekKey();
+    try { localStorage.setItem(`safesound.tipDone.${wk}`, "1"); } catch {}
     setTipCompleted(true);
     setTipSuccess(true);
     setTimeout(() => setTipSuccess(false), 3000);
