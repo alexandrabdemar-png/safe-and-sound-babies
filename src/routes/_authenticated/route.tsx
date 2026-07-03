@@ -5,6 +5,7 @@ import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { toast } from "sonner";
 import { AlertTriangle, Users, WifiOff } from "lucide-react";
 import { searchCpsc, searchFdaRecalls, isFoodRelated } from "@/lib/cpscSearch";
+import { usePushRegistration } from "@/hooks/usePushRegistration";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -37,6 +38,8 @@ function AuthenticatedLayout() {
   const navigate = useNavigate();
   const ownChanges = useRef<Set<string>>(new Set());
   const [isOffline, setIsOffline] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
+
+  usePushRegistration(user?.id ?? null);
 
   useEffect(() => {
     function handleOffline() { setIsOffline(true); }

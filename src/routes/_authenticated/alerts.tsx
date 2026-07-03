@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { hapticSuccess, hapticDismiss } from "@/lib/haptic";
 import { friendlyError } from "@/lib/errors";
 import { BellIllustration } from "@/components/EmptyIllustration";
+import { recallFallbackUrl } from "@/lib/recallCheck";
 
 export const Route = createFileRoute("/_authenticated/alerts")({
   ssr: false,
@@ -391,12 +392,10 @@ function RecallHistoryCard({ item }: { item: RecallHistoryItem }) {
           {expanded ? <><ChevronUp className="h-3 w-3" /> Less</> : <><ChevronDown className="h-3 w-3" /> More</>}
         </button>
       )}
-      {item.url && (
-        <a href={item.url} target="_blank" rel="noopener noreferrer"
-          className="mt-2 inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive hover:underline">
-          Verify on CPSC.gov <ArrowUpRight className="h-3 w-3" />
-        </a>
-      )}
+      <a href={item.url || recallFallbackUrl(item.title)} target="_blank" rel="noopener noreferrer"
+        className="mt-2 inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive hover:underline">
+        Verify on CPSC.gov <ArrowUpRight className="h-3 w-3" />
+      </a>
     </li>
   );
 }
@@ -454,16 +453,14 @@ function RecallCard({ item, onDismiss }: { item: RecallMatch; onDismiss: () => v
         </p>
       )}
       <div className="mt-4 flex items-center gap-2">
-        {recall.url && (
-          <a
-            href={recall.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 rounded-full bg-destructive px-3.5 py-1.5 font-body text-xs font-semibold text-destructive-foreground"
-          >
-            Read details <ArrowUpRight className="h-3 w-3" />
-          </a>
-        )}
+        <a
+          href={recall.url || recallFallbackUrl(recall.title)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 rounded-full bg-destructive px-3.5 py-1.5 font-body text-xs font-semibold text-destructive-foreground"
+        >
+          Read details <ArrowUpRight className="h-3 w-3" />
+        </a>
         <Button
           size="sm"
           variant="ghost"
@@ -538,16 +535,14 @@ function BannerRecallItem({ item }: { item: RecallMatch }) {
           {expanded ? <><ChevronUp className="h-3 w-3" /> Show less</> : <><ChevronDown className="h-3 w-3" /> Show more</>}
         </button>
       )}
-      {recall.url && (
-        <a
-          href={recall.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-2 inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive hover:underline"
-        >
-          Verify on CPSC.gov <ArrowUpRight className="h-3 w-3" />
-        </a>
-      )}
+      <a
+        href={recall.url || recallFallbackUrl(recall.title)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-2 inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive hover:underline"
+      >
+        Verify on CPSC.gov <ArrowUpRight className="h-3 w-3" />
+      </a>
     </li>
   );
 }

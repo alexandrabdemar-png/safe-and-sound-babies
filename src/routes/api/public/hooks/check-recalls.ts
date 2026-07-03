@@ -54,9 +54,13 @@ type UserProduct = {
 
 function isMatch(product: UserProduct, recall: CpscRecall): boolean {
   const productName = [product.name, product.brand ?? ""].filter(Boolean).join(" ");
+  // Deliberately excludes recall.Description: recall notices routinely name
+  // sibling products only to say they're NOT affected ("this recall does not
+  // include the Pipa, Pipa Lite, or Pipa RX"), and plain substring matching
+  // can't tell that apart from an actual match. Match only against the
+  // structured identifier fields, which name the actually-recalled product.
   const recallText = [
     recall.Title ?? "",
-    recall.Description ?? "",
     ...(recall.Products ?? []).flatMap((p) => [p.Name ?? "", p.Model ?? "", p.Type ?? ""]),
     ...(recall.Manufacturers ?? []).map((m) => m.Name ?? ""),
   ].join(" ");
@@ -178,8 +182,11 @@ async function runCheck(): Promise<Response> {
         if (!fdaData?.results?.length) continue;
 
         for (const r of fdaData.results as Array<{ recall_number?: string; product_description?: string; reason_for_recall?: string; recall_initiation_date?: string }>) {
-          const text = `${r.product_description ?? ""} ${r.reason_for_recall ?? ""}`;
-          if (!fuzzyMatchProduct(productName, text)) continue;
+          // product_description is FDA's structured product identifier;
+          // reason_for_recall is free-text narrative that can name
+          // unaffected sibling products — deliberately excluded from
+          // matching (same reasoning as isMatch() above for CPSC).
+          if (!fuzzyMatchProduct(productName, r.product_description ?? "")) continue;
 
           const { data: catalogEntry } = await supabaseAdmin
             .from("recalls")

@@ -21,13 +21,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Never miss a safety milestone again. Track car seats, pacifiers, cribs, and more with quiet, kind reminders.",
+          "Stay on top of safety milestones. Track car seats, pacifiers, cribs, and more with quiet, kind reminders.",
       },
       { property: "og:title", content: "Peace of Mine — Baby Safety Tracking" },
       {
         property: "og:description",
         content:
-          "Never miss a safety milestone again. Track car seats, pacifiers, cribs, and more with quiet, kind reminders.",
+          "Stay on top of safety milestones. Track car seats, pacifiers, cribs, and more with quiet, kind reminders.",
       },
       { property: "og:url", content: "/" },
     ],
@@ -63,9 +63,9 @@ const features = [
       "Here to share gentle suggestions on timing — when to consider replacing, sizing up, or checking the fit.",
   },
   {
-    title: "Always one step ahead",
+    title: "Built to keep you ahead",
     description:
-      "Real-time recall alerts for every product you own — so you hear about safety issues the moment they happen, not months later.",
+      "Recall alerts for the products you own, so you're not finding out months later.",
   },
 ];
 
@@ -88,10 +88,10 @@ function Index() {
               </div>
 
               <h1 className="font-display text-5xl font-semibold leading-[1.1] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
-                Never miss a{" "}
+                Stay on top of every{" "}
                 <span className="font-display-italic italic text-primary">safety</span>
                 <br />
-                milestone again.
+                milestone.
               </h1>
 
               <p className="mt-6 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
@@ -101,7 +101,7 @@ function Index() {
                 replace, resize or double-check the fit.
               </p>
               <p className="mt-3 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
-                Just the information you need, exactly when you need it.
+                Just the information you need, right when you need it.
               </p>
 
               <Link

@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronLeft, HelpCircle, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SUPPORT_EMAIL } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/profile_/support")({
   ssr: false,
@@ -11,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/profile_/support")({
 const FAQ = [
   {
     q: "How does recall detection work?",
-    a: "When you add a product, we check it against the CPSC and FDA recall databases as well as our own curated list of critical safety alerts. We also run a daily background check on all products you've saved. If a match is found, you'll see an alert on your home screen and in the Alerts tab.",
+    a: "When you add a product, we check it against the CPSC and FDA recall databases as well as our own curated list of critical safety alerts, and run a daily background check on the products you've saved. If a match is found, you'll see an alert on your home screen and in the Alerts tab.",
   },
   {
     q: "Is my child's data private?",
@@ -35,7 +36,7 @@ const FAQ = [
   },
   {
     q: "How do I report a safety issue or incorrect recall information?",
-    a: "Email us at support@peaceofmineapp.com with the product name and the issue you noticed. We take safety accuracy very seriously and will investigate right away.",
+    a: `Email us at ${SUPPORT_EMAIL} with the product name and the issue you noticed. We take safety accuracy very seriously and will investigate right away.`,
   },
   {
     q: "Can I use Peace of Mine without a subscription?",
@@ -76,11 +77,11 @@ function SupportPage() {
             </div>
           </div>
           <a
-            href="mailto:support@peaceofmineapp.com"
+            href={`mailto:${SUPPORT_EMAIL}`}
             className="inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2.5 font-body text-sm font-medium text-white transition-colors hover:bg-[#485240]"
           >
             <Mail className="h-3.5 w-3.5" />
-            support@peaceofmineapp.com
+            {SUPPORT_EMAIL}
           </a>
         </div>
 
@@ -106,7 +107,7 @@ function SupportPage() {
         <p className="mt-6 text-center font-body text-xs text-muted-foreground pb-8">
           Still need help?{" "}
           <a
-            href="mailto:support@peaceofmineapp.com"
+            href={`mailto:${SUPPORT_EMAIL}`}
             className="text-primary underline underline-offset-2"
           >
             Email our support team

@@ -78,7 +78,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "Peace of Mine — Baby Safety Tracking" },
-      { name: "description", content: "Track recalls, milestones, and product safety for your baby." },
+      { name: "description", content: "Stay on top of safety — track recalls, milestones, and product safety for your baby." },
       { name: "author", content: "Peace of Mine" },
       { name: "theme-color", content: "#FAF8F5" },
       // PWA / Apple
@@ -87,8 +87,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-title", content: "Peace of Mine" },
       { name: "mobile-web-app-capable", content: "yes" },
       // Open Graph
-      { property: "og:title", content: "Peace of Mine — Baby Safety Tracking" },
-      { property: "og:description", content: "Track recalls, milestones, and product safety for your baby." },
+      { property: "og:title", content: "Peace of Mine" },
+      { property: "og:description", content: "Stay on top of safety — track recalls, milestones, and product safety for your baby." },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "/app-icon-1024.png" },
       { property: "og:image:width", content: "1024" },
@@ -96,8 +96,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // Twitter / X
       { name: "twitter:card", content: "app" },
       { name: "twitter:site", content: "@PeaceOfMineApp" },
-      { name: "twitter:title", content: "Peace of Mine — Baby Safety Tracking" },
-      { name: "twitter:description", content: "Track recalls, milestones, and product safety for your baby." },
+      { name: "twitter:title", content: "Peace of Mine" },
+      { name: "twitter:description", content: "Stay on top of safety — track recalls, milestones, and product safety for your baby." },
       { name: "twitter:image", content: "/app-icon-1024.png" },
     ],
     links: [

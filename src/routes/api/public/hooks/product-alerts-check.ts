@@ -4,8 +4,9 @@ import { createFileRoute } from "@tanstack/react-router";
  * Daily product alerts job.
  *
  * Finds products with predicted_sizeup_date or predicted_replacement_date
- * within the next 7 days and sends a push digest to each parent via Expo Push.
- * Also surfaces any newly-matched recalls (set by the CPSC sync job).
+ * within the next 7 days and sends a push digest to each parent directly via
+ * Apple Push Notification service (see src/lib/apns.server.ts).
+ * Also surfaces any newly-matched recalls (set by the check-recalls job).
  * Respects per-user notification settings stored in user_notification_settings.
  */
 export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
@@ -184,95 +185,110 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
         const recipientIds = Array.from(byUser.keys());
         const { data: profiles } = await supabaseAdmin
           .from("profiles")
-          .select("user_id, expo_push_token")
+          .select("user_id, apns_device_token")
           .in("user_id", recipientIds)
-          .not("expo_push_token", "is", null);
+          .not("apns_device_token", "is", null);
 
-        type PushMessage = {
-          to: string;
-          sound: string;
+        type Pending = {
+          userId: string;
+          deviceToken: string;
           title: string;
           body: string;
           data: Record<string, string>;
+          productId: string;
+          alertType: string;
         };
-        const messages: PushMessage[] = [];
-        const alertsToLog: Array<{ product_id: string; user_id: string; alert_type: string }> = [];
+        const pending: Pending[] = [];
 
         for (const profile of (profiles ?? [])) {
-          if (!profile.expo_push_token) continue;
+          if (!profile.apns_device_token) continue;
           const b = byUser.get(profile.user_id);
           if (!b) continue;
 
           for (const recall of b.recalls) {
-            messages.push({
-              to: profile.expo_push_token,
-              sound: "default",
+            pending.push({
+              userId: profile.user_id,
+              deviceToken: profile.apns_device_token,
               title: `⚠️ Safety Recall — ${recall.name}`,
               body: `${recall.name} has been recalled. Tap to see what to do.`,
               data: { type: "recall", productId: recall.productId },
+              productId: recall.productId,
+              alertType: "recall",
             });
-            alertsToLog.push({ product_id: recall.productId, user_id: profile.user_id, alert_type: "recall" });
           }
           for (const item of b.sizeUp) {
-            messages.push({
-              to: profile.expo_push_token,
-              sound: "default",
+            pending.push({
+              userId: profile.user_id,
+              deviceToken: profile.apns_device_token,
               title: `📏 Safety check — ${item.name}`,
               body: `${item.child} may be approaching the size limit for their ${item.name}. A proper fit matters for safety.`,
               data: { type: "size_up", productId: item.productId },
+              productId: item.productId,
+              alertType: "size_up",
             });
-            alertsToLog.push({ product_id: item.productId, user_id: profile.user_id, alert_type: "size_up" });
           }
           for (const item of b.replace) {
-            messages.push({
-              to: profile.expo_push_token,
-              sound: "default",
+            pending.push({
+              userId: profile.user_id,
+              deviceToken: profile.apns_device_token,
               title: `🔄 Safety reminder — ${item.name}`,
               body: `It may be time to replace your ${item.name}. Replacing on schedule keeps your baby safe.`,
               data: { type: "replacement", productId: item.productId },
+              productId: item.productId,
+              alertType: "replacement",
             });
-            alertsToLog.push({ product_id: item.productId, user_id: profile.user_id, alert_type: "replacement" });
           }
         }
 
-        if (messages.length === 0) {
+        if (pending.length === 0) {
           return new Response(
             JSON.stringify({ ok: true, sent: 0, note: "no push tokens" }),
             { headers: { "Content-Type": "application/json" } },
           );
         }
 
-        const expoHeaders: Record<string, string> = {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "Accept-Encoding": "gzip, deflate",
-        };
-        if (process.env.EXPO_ACCESS_TOKEN) {
-          expoHeaders.Authorization = `Bearer ${process.env.EXPO_ACCESS_TOKEN}`;
-        }
-        const expoRes = await fetch("https://exp.host/--/api/v2/push/send", {
-          method: "POST",
-          headers: expoHeaders,
-          body: JSON.stringify(messages),
-        });
-        const expoBody = await expoRes.json().catch(() => ({}));
+        const { sendApnsPush } = await import("@/lib/apns.server");
+        const results = await Promise.all(
+          pending.map((p) => sendApnsPush(p.deviceToken, { title: p.title, body: p.body, data: p.data })),
+        );
 
-        // Log sent alerts for deduplication
-        if (expoRes.ok && alertsToLog.length) {
+        const alertsToLog: Array<{ product_id: string; user_id: string; alert_type: string }> = [];
+        const invalidTokens = new Set<string>();
+        let sentCount = 0;
+        results.forEach((r, i) => {
+          if (r.ok) {
+            sentCount++;
+            alertsToLog.push({
+              product_id: pending[i].productId,
+              user_id: pending[i].userId,
+              alert_type: pending[i].alertType,
+            });
+          } else if (r.invalidToken) {
+            invalidTokens.add(pending[i].deviceToken);
+          }
+        });
+
+        if (alertsToLog.length) {
           await supabaseAdmin.from("product_alerts").insert(alertsToLog as never[]);
+        }
+
+        // Clear device tokens Apple says are no longer valid so we stop retrying them.
+        if (invalidTokens.size) {
+          await supabaseAdmin
+            .from("profiles")
+            .update({ apns_device_token: null })
+            .in("apns_device_token", [...invalidTokens]);
         }
 
         return new Response(
           JSON.stringify({
-            ok: expoRes.ok,
-            sent: messages.length,
+            ok: true,
+            sent: sentCount,
+            failed: results.length - sentCount,
             users: recipientIds.length,
-            expo: expoBody,
+            cleared_invalid_tokens: invalidTokens.size,
           }),
-          {
-            status: expoRes.ok ? 200 : 502,
-            headers: { "Content-Type": "application/json" },
-          },
+          { headers: { "Content-Type": "application/json" } },
         );
       },
     },

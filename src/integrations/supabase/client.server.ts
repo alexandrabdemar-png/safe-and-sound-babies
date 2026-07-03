@@ -1,7 +1,7 @@
 // Server-side Supabase client — uses the service_role key, which bypasses RLS.
 //
 // PERMITTED uses (trusted system operations only):
-//   • CPSC recall sync (check-recalls, cpsc-sync hooks)
+//   • CPSC recall sync (check-recalls hook)
 //   • Product-alert fan-out (product-alerts-check hook)
 //   • Stripe webhook subscription writes (payments/webhook)
 //

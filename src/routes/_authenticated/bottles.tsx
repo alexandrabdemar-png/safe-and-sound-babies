@@ -210,7 +210,7 @@ function EmptyState() {
       <BottleIllustration className="mx-auto mb-1 h-24 w-24" />
       <p className="font-display text-base font-semibold">No bottles on the clock</p>
       <p className="mt-1 font-body text-xs text-muted-foreground">
-        Log a bottle and we'll count down exactly when it needs to be used — no more guessing.
+        Log a bottle and we'll count down when it needs to be used.
       </p>
       <Button asChild className="mt-4 rounded-2xl" size="sm">
         <Link to="/bottles/new"><Plus className="mr-1 h-4 w-4" /> Log a bottle</Link>

@@ -141,7 +141,7 @@ function NotificationSettingsPage() {
           <div className="rounded-3xl border border-border/60 bg-card divide-y divide-border/40">
             <SettingRow
               label="Safety recalls"
-              description="A push alert if a product you've logged is recalled — so you can act quickly."
+              description="A push alert when a product you've logged is recalled."
               checked={alertSettings.recalls_enabled}
               onToggle={() => toggleAlert("recalls_enabled")}
               disabled={loading}

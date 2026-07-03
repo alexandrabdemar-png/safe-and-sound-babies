@@ -129,7 +129,7 @@ function getSafetyTip(momentTitle: string): SafetyTip | null {
   return null;
 }
 
-export const Route = createFileRoute("/_authenticated/moments/new")({
+export const Route = createFileRoute("/_authenticated/moments_/new")({
   ssr: false,
   component: NewMomentPage,
   head: () => ({ meta: [{ title: "Log a moment — Peace of Mine" }] }),
@@ -169,7 +169,7 @@ function NewMomentPage() {
       : rawNotes || null;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) { toast.error("Sign in to log moments"); setSaving(false); return; }
-    const { error } = await (supabase as any).from("milestones").insert({
+    const { error } = await supabase.from("milestones").insert({
       child_id: activeChildId,
       title: title.trim(),
       logged_at: loggedAt,

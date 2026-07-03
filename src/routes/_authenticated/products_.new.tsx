@@ -480,7 +480,7 @@ function ProductSearchAI({ onPick }: { onPick: (r: ProductSearchResult) => void 
         <div>
           <p className="font-body text-sm font-semibold text-foreground">Search by product name</p>
           <p className="font-body text-xs text-muted-foreground">
-            AI looks up safety info instantly — no manual entry needed.
+            AI looks up safety info for you — no manual entry needed.
           </p>
         </div>
       </div>

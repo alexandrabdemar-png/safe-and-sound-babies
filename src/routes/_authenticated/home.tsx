@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { evaluateInsights, type Insight, type ProductInput } from "@/lib/insights";
 import { friendlyError } from "@/lib/errors";
 import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
-import { checkCriticalRecalls } from "@/lib/recallCheck";
+import { checkCriticalRecalls, CRITICAL_RECALLS } from "@/lib/recallCheck";
 import { selectWeeklyTip, getIsoWeekNumber, weekKey as getTipWeekKey } from "@/lib/safetyTips";
 import { getDevelopmentBand } from "@/lib/developmentContent";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
@@ -118,7 +118,7 @@ const WHATS_NEW = [
     date: "June 2025",
     updates: [
       "Recall Radar: live CPSC baby recall count right on your home screen",
-      "Hand-Me-Down Checker catches expired and recalled second-hand gear before you use it",
+      "Hand-Me-Down Checker flags expired and recalled second-hand gear you've logged",
       "Travel Safety Mode — a full 30-item checklist for traveling with baby",
     ],
   },
@@ -846,11 +846,11 @@ function HomePage() {
         </div>
       )}
 
-      {/* Recall Radar — live 30-day CPSC count */}
+      {/* Recall Radar — live 30-day CPSC + FDA count, plus always-relevant critical recalls */}
       {recallRadarCount !== null && recallRadarCount !== -1 && (
         <div className="px-5 pt-3 sm:px-6">
           <div className="mx-auto max-w-md">
-            <RecallRadarCard count={recallRadarCount} />
+            <RecallRadarCard count={recallRadarCount + (fdaRecallCount ?? 0) + CRITICAL_RECALLS.length} />
           </div>
         </div>
       )}
@@ -1255,7 +1255,7 @@ function weekendReminder(dobStr: string | null): string {
   const birth = parseDateLocal(dobStr);
   const months = Math.max(0, Math.floor((Date.now() - birth.getTime()) / (30.44 * 86400000)));
   if (months < 6) return "If you're heading out this weekend, double-check that the car seat is rear-facing and installed at the correct angle.";
-  if (months < 12) return "Planning an outing? Babies over 6 months need SPF 30+ sunscreen on exposed skin — and it's always worth packing more wipes than you think you'll need.";
+  if (months < 12) return "Planning an outing? Babies over 6 months need SPF 30+ sunscreen on exposed skin — and it's usually worth packing more wipes than you think you'll need.";
   if (months < 18) return "Visiting family or friends this weekend? A quick baby-proofing scan of the space — stairs, cabinets, small objects at floor level — takes about two minutes.";
   if (months < 30) return "Any outdoor time this weekend means helmet time for balance bikes or ride-ons — the habit is much easier to build before they're old enough to argue about it.";
   return "If you're planning outdoor play this weekend, sunscreen, water, and shade are the essentials — toddlers dehydrate faster than adults.";

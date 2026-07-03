@@ -1,4 +1,6 @@
-export const BABY_KEYWORDS = [
+import { BABY_BRAND_KEYWORDS } from "@/lib/babyBrands";
+
+const BABY_CATEGORY_KEYWORDS = [
   "baby", "infant", "toddler", "child", "children", "kid", "kids", "nursery",
   "car seat", "carseat", "stroller", "pram", "bassinet", "crib", "cradle",
   "pacifier", "soother", "bouncer", "swing", "high chair", "highchair",
@@ -6,13 +8,15 @@ export const BABY_KEYWORDS = [
   "formula", "breast", "bottle", "nipple", "teether", "teething",
   "play mat", "playmat", "activity mat", "jumper", "walker", "jolly",
   "rocker", "boppy", "dock a tot", "dockatot", "snoo", "mamaroo",
-  "graco", "chicco", "evenflo", "britax", "uppababy", "nuna", "doona",
-  "fisher-price", "fisher price", "4moms", "ergobaby", "babybjorn",
-  "baby bjorn", "bumbo", "joovy", "bob", "thule", "cybex",
   "pack n play", "pack and play", "playard", "playpen",
   "baby food", "puree", "feeding", "sippy", "diaper", "wipe",
   "newborn", "preemie", "layette", "onesie", "sleeper",
 ];
+
+// Category terms + every known baby/child brand and parent company name —
+// a lot of recall titles name only the brand ("Newell Brands Recalls
+// Graco...") with none of the generic category words above.
+export const BABY_KEYWORDS = Array.from(new Set([...BABY_CATEGORY_KEYWORDS, ...BABY_BRAND_KEYWORDS]));
 
 const FOOD_KEYWORDS = ["formula", "food", "puree", "cereal", "snack", "milk", "feeding", "baby food", "infant food", "organic"];
 
@@ -99,7 +103,11 @@ export async function searchCpsc(query: string): Promise<CpscRecall[]> {
     .slice(0, 10);
 }
 
-const FDA_BABY_KEYWORDS = ["infant", "baby", "formula", "breast milk", "toddler", "newborn", "child food", "baby food", "nara", "infant formula", "enfamil", "similac", "gerber", "holle", "hipp", "kendamil"];
+const FDA_BABY_KEYWORDS = [
+  "infant", "baby", "formula", "breast milk", "toddler", "newborn", "child food", "baby food",
+  "nara", "infant formula", "enfamil", "similac", "gerber", "holle", "hipp", "kendamil",
+  "bobbie", "happy baby organics", "earth's best", "serenity kids", "little spoon", "once upon a farm",
+];
 
 export async function searchFdaRecalls(query: string): Promise<FdaRecall[]> {
   try {
@@ -133,6 +141,37 @@ export async function searchFdaRecalls(query: string): Promise<FdaRecall[]> {
   } catch {
     return [];
   }
+}
+
+export async function fetchRecentFdaBabyRecalls(daysBack = 30): Promise<FdaRecall[]> {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - daysBack);
+  const fmt = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, "");
+  const url = `https://api.fda.gov/food/enforcement.json?search=recall_initiation_date:[${fmt(start)}+TO+${fmt(end)}]&limit=100`;
+  const res = await fetchWithTimeout(url);
+  if (!res.ok) return [];
+  const data = await res.json();
+  const results: Array<{
+    recall_number?: string;
+    product_description?: string;
+    reason_for_recall?: string;
+    recall_initiation_date?: string;
+    status?: string;
+  }> = data?.results ?? [];
+  return results
+    .filter((r) => {
+      const text = `${r.product_description ?? ""} ${r.reason_for_recall ?? ""}`.toLowerCase();
+      return FDA_BABY_KEYWORDS.some((kw) => text.includes(kw));
+    })
+    .map((r) => ({
+      id: r.recall_number ?? Math.random().toString(36).slice(2),
+      productDescription: r.product_description ?? "",
+      reasonForRecall: r.reason_for_recall ?? "",
+      recallDate: r.recall_initiation_date ?? "",
+      status: r.status ?? "",
+      url: "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts",
+    }));
 }
 
 export async function fetchFdaBabyRecallCount(daysBack = 30): Promise<number> {

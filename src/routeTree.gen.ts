@@ -40,13 +40,13 @@ import { Route as AuthenticatedProfileNotificationSettingsRouteImport } from './
 import { Route as AuthenticatedProductsScanRouteImport } from './routes/_authenticated/products_.scan'
 import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products_.new'
 import { Route as AuthenticatedProductsIdRouteImport } from './routes/_authenticated/products_.$id'
-import { Route as AuthenticatedMomentsNewRouteImport } from './routes/_authenticated/moments.new'
-import { Route as AuthenticatedBottlesNewRouteImport } from './routes/_authenticated/bottles.new'
+import { Route as AuthenticatedMomentsNewRouteImport } from './routes/_authenticated/moments_.new'
+import { Route as AuthenticatedBottlesNewRouteImport } from './routes/_authenticated/bottles_.new'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksProductAlertsCheckRouteImport } from './routes/api/public/hooks/product-alerts-check'
-import { Route as ApiPublicHooksCpscSyncRouteImport } from './routes/api/public/hooks/cpsc-sync'
 import { Route as ApiPublicHooksCheckRecallsRouteImport } from './routes/api/public/hooks/check-recalls'
 import { Route as ApiPublicHooksCheckProductAlertsRouteImport } from './routes/api/public/hooks/check-product-alerts'
+import { Route as ApiPublicHooksCheckExtraRecallsRouteImport } from './routes/api/public/hooks/check-extra-recalls'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -213,16 +213,18 @@ const AuthenticatedProductsIdRoute = AuthenticatedProductsIdRouteImport.update({
   path: '/products/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedMomentsNewRoute = AuthenticatedMomentsNewRouteImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => AuthenticatedMomentsRoute,
-} as any)
-const AuthenticatedBottlesNewRoute = AuthenticatedBottlesNewRouteImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => AuthenticatedBottlesRoute,
-} as any)
+const AuthenticatedMomentsNewRoute =
+  AuthenticatedMomentsNewRouteImport.update({
+    id: '/moments_/new',
+    path: '/moments/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBottlesNewRoute =
+  AuthenticatedBottlesNewRouteImport.update({
+    id: '/bottles_/new',
+    path: '/bottles/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -235,11 +237,6 @@ const ApiPublicHooksProductAlertsCheckRoute =
     path: '/api/public/hooks/product-alerts-check',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksCpscSyncRoute = ApiPublicHooksCpscSyncRouteImport.update({
-  id: '/api/public/hooks/cpsc-sync',
-  path: '/api/public/hooks/cpsc-sync',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicHooksCheckRecallsRoute =
   ApiPublicHooksCheckRecallsRouteImport.update({
     id: '/api/public/hooks/check-recalls',
@@ -252,6 +249,12 @@ const ApiPublicHooksCheckProductAlertsRoute =
     path: '/api/public/hooks/check-product-alerts',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksCheckExtraRecallsRoute =
+  ApiPublicHooksCheckExtraRecallsRouteImport.update({
+    id: '/api/public/hooks/check-extra-recalls',
+    path: '/api/public/hooks/check-extra-recalls',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -261,13 +264,13 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
-  '/bottles': typeof AuthenticatedBottlesRouteWithChildren
+  '/bottles': typeof AuthenticatedBottlesRoute
   '/caregiver-card': typeof AuthenticatedCaregiverCardRoute
   '/checklists': typeof AuthenticatedChecklistsRoute
   '/first-foods': typeof AuthenticatedFirstFoodsRoute
   '/growth': typeof AuthenticatedGrowthRoute
   '/home': typeof AuthenticatedHomeRoute
-  '/moments': typeof AuthenticatedMomentsRouteWithChildren
+  '/moments': typeof AuthenticatedMomentsRoute
   '/pricing': typeof AuthenticatedPricingRoute
   '/products': typeof AuthenticatedProductsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -287,8 +290,8 @@ export interface FileRoutesByFullPath {
   '/profile/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
   '/profile/support': typeof AuthenticatedProfileSupportRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
+  '/api/public/hooks/check-extra-recalls': typeof ApiPublicHooksCheckExtraRecallsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
-  '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -300,13 +303,13 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
-  '/bottles': typeof AuthenticatedBottlesRouteWithChildren
+  '/bottles': typeof AuthenticatedBottlesRoute
   '/caregiver-card': typeof AuthenticatedCaregiverCardRoute
   '/checklists': typeof AuthenticatedChecklistsRoute
   '/first-foods': typeof AuthenticatedFirstFoodsRoute
   '/growth': typeof AuthenticatedGrowthRoute
   '/home': typeof AuthenticatedHomeRoute
-  '/moments': typeof AuthenticatedMomentsRouteWithChildren
+  '/moments': typeof AuthenticatedMomentsRoute
   '/pricing': typeof AuthenticatedPricingRoute
   '/products': typeof AuthenticatedProductsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -326,8 +329,8 @@ export interface FileRoutesByTo {
   '/profile/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
   '/profile/support': typeof AuthenticatedProfileSupportRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
+  '/api/public/hooks/check-extra-recalls': typeof ApiPublicHooksCheckExtraRecallsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
-  '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -341,13 +344,13 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/_authenticated/add': typeof AuthenticatedAddRoute
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
-  '/_authenticated/bottles': typeof AuthenticatedBottlesRouteWithChildren
+  '/_authenticated/bottles': typeof AuthenticatedBottlesRoute
   '/_authenticated/caregiver-card': typeof AuthenticatedCaregiverCardRoute
   '/_authenticated/checklists': typeof AuthenticatedChecklistsRoute
   '/_authenticated/first-foods': typeof AuthenticatedFirstFoodsRoute
   '/_authenticated/growth': typeof AuthenticatedGrowthRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
-  '/_authenticated/moments': typeof AuthenticatedMomentsRouteWithChildren
+  '/_authenticated/moments': typeof AuthenticatedMomentsRoute
   '/_authenticated/pricing': typeof AuthenticatedPricingRoute
   '/_authenticated/products': typeof AuthenticatedProductsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -357,8 +360,8 @@ export interface FileRoutesById {
   '/_authenticated/tracking': typeof AuthenticatedTrackingRoute
   '/_authenticated/travel-checklist': typeof AuthenticatedTravelChecklistRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/_authenticated/bottles/new': typeof AuthenticatedBottlesNewRoute
-  '/_authenticated/moments/new': typeof AuthenticatedMomentsNewRoute
+  '/_authenticated/bottles_/new': typeof AuthenticatedBottlesNewRoute
+  '/_authenticated/moments_/new': typeof AuthenticatedMomentsNewRoute
   '/_authenticated/products_/$id': typeof AuthenticatedProductsIdRoute
   '/_authenticated/products_/new': typeof AuthenticatedProductsNewRoute
   '/_authenticated/products_/scan': typeof AuthenticatedProductsScanRoute
@@ -367,8 +370,8 @@ export interface FileRoutesById {
   '/_authenticated/profile_/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
   '/_authenticated/profile_/support': typeof AuthenticatedProfileSupportRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
+  '/api/public/hooks/check-extra-recalls': typeof ApiPublicHooksCheckExtraRecallsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
-  '/api/public/hooks/cpsc-sync': typeof ApiPublicHooksCpscSyncRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -408,8 +411,8 @@ export interface FileRouteTypes {
     | '/profile/privacy-promise'
     | '/profile/support'
     | '/api/public/hooks/check-product-alerts'
+    | '/api/public/hooks/check-extra-recalls'
     | '/api/public/hooks/check-recalls'
-    | '/api/public/hooks/cpsc-sync'
     | '/api/public/hooks/product-alerts-check'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -447,8 +450,8 @@ export interface FileRouteTypes {
     | '/profile/privacy-promise'
     | '/profile/support'
     | '/api/public/hooks/check-product-alerts'
+    | '/api/public/hooks/check-extra-recalls'
     | '/api/public/hooks/check-recalls'
-    | '/api/public/hooks/cpsc-sync'
     | '/api/public/hooks/product-alerts-check'
     | '/api/public/payments/webhook'
   id:
@@ -477,8 +480,8 @@ export interface FileRouteTypes {
     | '/_authenticated/tracking'
     | '/_authenticated/travel-checklist'
     | '/auth/callback'
-    | '/_authenticated/bottles/new'
-    | '/_authenticated/moments/new'
+    | '/_authenticated/bottles_/new'
+    | '/_authenticated/moments_/new'
     | '/_authenticated/products_/$id'
     | '/_authenticated/products_/new'
     | '/_authenticated/products_/scan'
@@ -487,8 +490,8 @@ export interface FileRouteTypes {
     | '/_authenticated/profile_/privacy-promise'
     | '/_authenticated/profile_/support'
     | '/api/public/hooks/check-product-alerts'
+    | '/api/public/hooks/check-extra-recalls'
     | '/api/public/hooks/check-recalls'
-    | '/api/public/hooks/cpsc-sync'
     | '/api/public/hooks/product-alerts-check'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -501,8 +504,8 @@ export interface RootRouteChildren {
   RecallsRoute: typeof RecallsRoute
   TermsRoute: typeof TermsRoute
   ApiPublicHooksCheckProductAlertsRoute: typeof ApiPublicHooksCheckProductAlertsRoute
+  ApiPublicHooksCheckExtraRecallsRoute: typeof ApiPublicHooksCheckExtraRecallsRoute
   ApiPublicHooksCheckRecallsRoute: typeof ApiPublicHooksCheckRecallsRoute
-  ApiPublicHooksCpscSyncRoute: typeof ApiPublicHooksCpscSyncRoute
   ApiPublicHooksProductAlertsCheckRoute: typeof ApiPublicHooksProductAlertsCheckRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -726,19 +729,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProductsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/moments/new': {
-      id: '/_authenticated/moments/new'
-      path: '/new'
+    '/_authenticated/moments_/new': {
+      id: '/_authenticated/moments_/new'
+      path: '/moments/new'
       fullPath: '/moments/new'
       preLoaderRoute: typeof AuthenticatedMomentsNewRouteImport
-      parentRoute: typeof AuthenticatedMomentsRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/bottles/new': {
-      id: '/_authenticated/bottles/new'
-      path: '/new'
+    '/_authenticated/bottles_/new': {
+      id: '/_authenticated/bottles_/new'
+      path: '/bottles/new'
       fullPath: '/bottles/new'
       preLoaderRoute: typeof AuthenticatedBottlesNewRouteImport
-      parentRoute: typeof AuthenticatedBottlesRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
@@ -752,13 +755,6 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/product-alerts-check'
       fullPath: '/api/public/hooks/product-alerts-check'
       preLoaderRoute: typeof ApiPublicHooksProductAlertsCheckRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/cpsc-sync': {
-      id: '/api/public/hooks/cpsc-sync'
-      path: '/api/public/hooks/cpsc-sync'
-      fullPath: '/api/public/hooks/cpsc-sync'
-      preLoaderRoute: typeof ApiPublicHooksCpscSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/check-recalls': {
@@ -775,41 +771,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksCheckProductAlertsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/check-extra-recalls': {
+      id: '/api/public/hooks/check-extra-recalls'
+      path: '/api/public/hooks/check-extra-recalls'
+      fullPath: '/api/public/hooks/check-extra-recalls'
+      preLoaderRoute: typeof ApiPublicHooksCheckExtraRecallsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
-
-interface AuthenticatedBottlesRouteChildren {
-  AuthenticatedBottlesNewRoute: typeof AuthenticatedBottlesNewRoute
-}
-
-const AuthenticatedBottlesRouteChildren: AuthenticatedBottlesRouteChildren = {
-  AuthenticatedBottlesNewRoute: AuthenticatedBottlesNewRoute,
-}
-
-const AuthenticatedBottlesRouteWithChildren =
-  AuthenticatedBottlesRoute._addFileChildren(AuthenticatedBottlesRouteChildren)
-
-interface AuthenticatedMomentsRouteChildren {
-  AuthenticatedMomentsNewRoute: typeof AuthenticatedMomentsNewRoute
-}
-
-const AuthenticatedMomentsRouteChildren: AuthenticatedMomentsRouteChildren = {
-  AuthenticatedMomentsNewRoute: AuthenticatedMomentsNewRoute,
-}
-
-const AuthenticatedMomentsRouteWithChildren =
-  AuthenticatedMomentsRoute._addFileChildren(AuthenticatedMomentsRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAddRoute: typeof AuthenticatedAddRoute
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
-  AuthenticatedBottlesRoute: typeof AuthenticatedBottlesRouteWithChildren
+  AuthenticatedBottlesRoute: typeof AuthenticatedBottlesRoute
   AuthenticatedCaregiverCardRoute: typeof AuthenticatedCaregiverCardRoute
   AuthenticatedChecklistsRoute: typeof AuthenticatedChecklistsRoute
   AuthenticatedFirstFoodsRoute: typeof AuthenticatedFirstFoodsRoute
   AuthenticatedGrowthRoute: typeof AuthenticatedGrowthRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
-  AuthenticatedMomentsRoute: typeof AuthenticatedMomentsRouteWithChildren
+  AuthenticatedMomentsRoute: typeof AuthenticatedMomentsRoute
   AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -818,6 +799,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSafetyGuidesRoute: typeof AuthenticatedSafetyGuidesRoute
   AuthenticatedTrackingRoute: typeof AuthenticatedTrackingRoute
   AuthenticatedTravelChecklistRoute: typeof AuthenticatedTravelChecklistRoute
+  AuthenticatedBottlesNewRoute: typeof AuthenticatedBottlesNewRoute
+  AuthenticatedMomentsNewRoute: typeof AuthenticatedMomentsNewRoute
   AuthenticatedProductsIdRoute: typeof AuthenticatedProductsIdRoute
   AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
   AuthenticatedProductsScanRoute: typeof AuthenticatedProductsScanRoute
@@ -830,13 +813,13 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAddRoute: AuthenticatedAddRoute,
   AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
-  AuthenticatedBottlesRoute: AuthenticatedBottlesRouteWithChildren,
+  AuthenticatedBottlesRoute: AuthenticatedBottlesRoute,
   AuthenticatedCaregiverCardRoute: AuthenticatedCaregiverCardRoute,
   AuthenticatedChecklistsRoute: AuthenticatedChecklistsRoute,
   AuthenticatedFirstFoodsRoute: AuthenticatedFirstFoodsRoute,
   AuthenticatedGrowthRoute: AuthenticatedGrowthRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
-  AuthenticatedMomentsRoute: AuthenticatedMomentsRouteWithChildren,
+  AuthenticatedMomentsRoute: AuthenticatedMomentsRoute,
   AuthenticatedPricingRoute: AuthenticatedPricingRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
@@ -845,6 +828,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSafetyGuidesRoute: AuthenticatedSafetyGuidesRoute,
   AuthenticatedTrackingRoute: AuthenticatedTrackingRoute,
   AuthenticatedTravelChecklistRoute: AuthenticatedTravelChecklistRoute,
+  AuthenticatedBottlesNewRoute: AuthenticatedBottlesNewRoute,
+  AuthenticatedMomentsNewRoute: AuthenticatedMomentsNewRoute,
   AuthenticatedProductsIdRoute: AuthenticatedProductsIdRoute,
   AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
   AuthenticatedProductsScanRoute: AuthenticatedProductsScanRoute,
@@ -878,8 +863,8 @@ const rootRouteChildren: RootRouteChildren = {
   RecallsRoute: RecallsRoute,
   TermsRoute: TermsRoute,
   ApiPublicHooksCheckProductAlertsRoute: ApiPublicHooksCheckProductAlertsRoute,
+  ApiPublicHooksCheckExtraRecallsRoute: ApiPublicHooksCheckExtraRecallsRoute,
   ApiPublicHooksCheckRecallsRoute: ApiPublicHooksCheckRecallsRoute,
-  ApiPublicHooksCpscSyncRoute: ApiPublicHooksCpscSyncRoute,
   ApiPublicHooksProductAlertsCheckRoute: ApiPublicHooksProductAlertsCheckRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }

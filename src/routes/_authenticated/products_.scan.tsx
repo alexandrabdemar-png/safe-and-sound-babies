@@ -26,9 +26,16 @@ export const Route = createFileRoute("/_authenticated/products_/scan")({
 
 import { CATEGORIES, CATEGORY_BY_KEY, guessCategoryFromText, type CategoryKey } from "@/lib/productCategories";
 import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
-import { lookupBarcode } from "@/lib/barcodeLookup";
+import { lookupBarcode, type BarcodeLookupResult } from "@/lib/barcodeLookup";
 
 const CATEGORY_ORDER: CategoryKey[] = CATEGORIES.map((c) => c.key);
+
+const SOURCE_LABEL: Record<BarcodeLookupResult["source"], string> = {
+  openfoodfacts: "Open Food Facts",
+  openproductsfacts: "Open Products Facts",
+  openbeautyfacts: "Open Beauty Facts",
+  upcitemdb: "UPCitemdb",
+};
 
 function toISODate(d: Date) {
   return d.toISOString().slice(0, 10);
@@ -49,15 +56,7 @@ function guessCategory(off: OffProduct): CategoryKey {
   return (guessCategoryFromText(hay) || "other") as CategoryKey;
 }
 
-
-type OffProduct = {
-  product_name?: string;
-  generic_name?: string;
-  brands?: string;
-  categories?: string;
-  categories_tags?: string[];
-  image_front_small_url?: string;
-};
+type OffProduct = BarcodeLookupResult;
 
 type Step = "scanning" | "looking-up" | "form" | "success";
 
@@ -70,6 +69,7 @@ function ScanPage() {
   const [barcode, setBarcode] = useState("");
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [foundProduct, setFoundProduct] = useState<OffProduct | null>(null);
+  const [foundSource, setFoundSource] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [brand, setBrand] = useState("");
@@ -92,16 +92,19 @@ function ScanPage() {
       const p = await lookupBarcode(code);
       if (p) {
         setFoundProduct(p);
+        setFoundSource(SOURCE_LABEL[p.source] ?? p.source);
         setName(p.product_name?.trim() || p.generic_name?.trim() || "");
         setBrand(p.brands?.split(",")[0]?.trim() || "");
         setCategory(guessCategory(p));
       } else {
         setFoundProduct(null);
+        setFoundSource(null);
         setLookupError("We couldn't find this product in any database. Add the details manually below.");
       }
-    } catch (e) {
+    } catch {
       setFoundProduct(null);
-      setLookupError(e instanceof Error ? e.message : "Lookup failed");
+      setFoundSource(null);
+      setLookupError("Lookup failed — check your connection.");
     } finally {
       setStep("form");
     }
@@ -151,6 +154,7 @@ function ScanPage() {
     setStep("scanning");
     setBarcode("");
     setFoundProduct(null);
+    setFoundSource(null);
     setLookupError(null);
     setName("");
     setBrand("");
@@ -228,7 +232,7 @@ function ScanPage() {
                     <p className="font-mono text-sm">{barcode}</p>
                     {foundProduct ? (
                       <p className="mt-1 font-body text-xs text-emerald-700 dark:text-emerald-400">
-                        Found — review and edit below
+                        Found in {foundSource ?? "Open Food Facts"}
                       </p>
                     ) : (
                       <p className="mt-1 font-body text-xs text-amber-700 dark:text-amber-400">
@@ -237,6 +241,15 @@ function ScanPage() {
                     )}
                   </div>
                 </div>
+                {!foundProduct && (
+                  <p className="mt-3 font-body text-xs text-muted-foreground">
+                    Not every product is in the barcode database yet.{" "}
+                    <Link to="/products/new" className="font-semibold text-primary underline underline-offset-2">
+                      Try searching by name instead
+                    </Link>
+                    , or fill in the details below.
+                  </p>
+                )}
               </div>
 
               <Field label="Product name" required>
@@ -408,6 +421,11 @@ function ScanView({ onDetected }: { onDetected: (code: string) => void }) {
 
   const { ref } = useZxing({
     paused,
+    // Restrict to the formats real product barcodes use. Scanning every
+    // supported format (PDF417, Data Matrix, Aztec, etc.) on every frame is
+    // what makes barcode-detector scans feel slow — this cuts scan time
+    // substantially with no loss of coverage for retail products.
+    formats: ["upc_a", "upc_e", "ean_13", "ean_8", "qr_code"],
     onDecodeResult(result) {
       setPaused(true);
       onDetected(result.rawValue);
@@ -418,7 +436,10 @@ function ScanView({ onDetected }: { onDetected: (code: string) => void }) {
     },
     constraints: {
       audio: false,
-      video: { facingMode: "environment" },
+      // Cap resolution — decoding runs on every frame, and phone cameras
+      // otherwise default to much higher resolutions than a barcode needs,
+      // which is the other big contributor to slow scans alongside format count.
+      video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
     },
   });
 

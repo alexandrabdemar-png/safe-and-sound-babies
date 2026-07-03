@@ -23,6 +23,16 @@ export type RecallHit = {
   recallDate?: string;
 };
 
+/**
+ * Every recall alert must be clickable so a parent can verify it against the
+ * official source themselves. Some recall rows (older CPSC records, edge
+ * cases in the sync jobs) can end up with no direct article URL — this gives
+ * a guaranteed fallback that always resolves to a real, relevant page.
+ */
+export function recallFallbackUrl(title: string): string {
+  return `https://www.cpsc.gov/Recalls?combine=${encodeURIComponent(title)}`;
+}
+
 // ── Noise words stripped before fuzzy token matching ─────────────────────────
 const NOISE_WORDS = new Set([
   "baby", "babies", "organic", "organics", "natural", "formula", "bottle",
@@ -125,12 +135,16 @@ type RawCpscRecall = {
 };
 
 /**
- * Fetch recalls from the CPSC API (2023–today) and fuzzy-match against productName.
+ * Fetch recalls from the CPSC API matching productName and fuzzy-match the results.
+ *
+ * Uses CPSC's Keyword search (server-side filtered) rather than pulling the
+ * entire multi-year, all-categories recall history and filtering client-side
+ * — that unfiltered fetch was the main reason adding a product manually felt
+ * slow, since this check blocks the save until it completes.
  */
 export async function fetchCpscRecallsForProduct(productName: string): Promise<RecallHit[]> {
   try {
-    const today = new Date().toISOString().slice(0, 10);
-    const url = `https://www.saferproducts.gov/RestWebServices/Recall?format=json&DateRecalledBegin=2023-01-01&DateRecalledEnd=${today}`;
+    const url = `https://www.saferproducts.gov/RestWebServices/Recall?format=json&Keyword=${encodeURIComponent(productName)}`;
     const res = await fetch(url);
     if (!res.ok) return [];
     const data: RawCpscRecall[] = await res.json();
@@ -138,10 +152,15 @@ export async function fetchCpscRecallsForProduct(productName: string): Promise<R
 
     return data
       .filter((r) => {
+        // Deliberately excludes the free-text Description fields: recall
+        // notices routinely name sibling products only to say they're NOT
+        // affected ("this recall does not include the Pipa, Pipa Lite, or
+        // Pipa RX"), and plain substring matching can't tell that apart from
+        // an actual match. Match only against the structured identifier
+        // fields, which name the actually-recalled product.
         const recallText = [
           r.RecallHeading ?? r.Title ?? "",
-          r.Description ?? "",
-          ...(r.Products ?? []).map((p) => `${p.Name ?? ""} ${p.Description ?? ""}`),
+          ...(r.Products ?? []).map((p) => p.Name ?? ""),
           ...(r.Manufacturers ?? []).map((m) => m.Name ?? ""),
         ].join(" ");
         return fuzzyMatchProduct(productName, recallText);
@@ -211,8 +230,11 @@ export async function fetchFdaRecallsForProduct(productName: string): Promise<Re
 
     return combined
       .filter((r) => {
-        const text = `${r.product_description ?? ""} ${r.reason_for_recall ?? ""}`;
-        return fuzzyMatchProduct(productName, text);
+        // product_description is FDA's structured product identifier;
+        // reason_for_recall is free-text narrative and, like CPSC's
+        // Description field, can name unaffected sibling products —
+        // deliberately excluded from matching for the same reason.
+        return fuzzyMatchProduct(productName, r.product_description ?? "");
       })
       .slice(0, 5)
       .map((r) => ({

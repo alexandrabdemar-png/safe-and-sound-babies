@@ -20,7 +20,7 @@ import {
   formatCountdown,
 } from "@/lib/bottleRules";
 
-export const Route = createFileRoute("/_authenticated/bottles/new")({
+export const Route = createFileRoute("/_authenticated/bottles_/new")({
   ssr: false,
   component: NewBottlePage,
   head: () => ({ meta: [{ title: "Log a bottle — Peace of Mine" }] }),
