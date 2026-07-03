@@ -1767,7 +1767,7 @@ function HomePersonalizationCard({
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-primary">
               <Sparkles className="h-3.5 w-3.5" />
             </span>
-            <p className="font-display text-sm font-semibold tracking-tight">Help us personalise your reminders</p>
+            <p className="font-display text-sm font-semibold tracking-tight">Help us personalize your reminders</p>
           </div>
           <button type="button" onClick={onSkip} className="rounded-full p-1 text-muted-foreground hover:bg-muted" aria-label="Skip">
             <X className="h-3.5 w-3.5" />
