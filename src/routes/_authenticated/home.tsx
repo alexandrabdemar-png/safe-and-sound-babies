@@ -220,7 +220,10 @@ function HomePage() {
   }>({ tip_day: 1, paused_until: null, expiry_advance_days: 30 });
 
   // Weekly safety tip
-  const [tipCompleted, setTipCompleted] = useState(false);
+  const [tipCompleted, setTipCompleted] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try { return !!localStorage.getItem(`safesound.tipDone.${getTipWeekKey()}`); } catch { return false; }
+  });
   const [tipSuccess, setTipSuccess] = useState(false);
 
   // Age jump alert
@@ -553,6 +556,8 @@ function HomePage() {
   }
 
   async function markTipDone() {
+    const wk = getTipWeekKey();
+    try { localStorage.setItem(`safesound.tipDone.${wk}`, "1"); } catch {}
     setTipCompleted(true);
     setTipSuccess(true);
     setTimeout(() => setTipSuccess(false), 3000);
@@ -1295,7 +1300,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
           <span style={{ fontSize: 24 }}>👶</span>
           <div>
             <p style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.95)", margin: 0 }}>Add your first child to get started</p>
-            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>Peace of Mine personalises every tip, alert, and insight to your baby's age.</p>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>Peace of Mine personalizes every tip, alert, and insight to your baby's age.</p>
           </div>
         </div>
         <button
@@ -1767,7 +1772,7 @@ function HomePersonalizationCard({
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-primary">
               <Sparkles className="h-3.5 w-3.5" />
             </span>
-            <p className="font-display text-sm font-semibold tracking-tight">Help us personalise your reminders</p>
+            <p className="font-display text-sm font-semibold tracking-tight">Help us personalize your reminders</p>
           </div>
           <button type="button" onClick={onSkip} className="rounded-full p-1 text-muted-foreground hover:bg-muted" aria-label="Skip">
             <X className="h-3.5 w-3.5" />

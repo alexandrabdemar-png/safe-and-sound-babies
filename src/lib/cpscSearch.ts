@@ -155,11 +155,68 @@ export async function fetchRecentBabyRecalls(daysBack = 30): Promise<CpscRecall[
   const start = new Date();
   start.setDate(start.getDate() - daysBack);
   const startStr = start.toISOString().slice(0, 10);
-  const res = await fetchWithTimeout(
-    `https://www.saferproducts.gov/RestWebServices/Recall?format=json&RecallDateStart=${startStr}`
-  );
-  if (!res.ok) throw new Error(`CPSC API error ${res.status}`);
-  const data = await res.json();
-  const all: CpscRecall[] = Array.isArray(data) ? data : [];
-  return all.filter(isBabyRelated);
+
+  const cpscPromise = (async () => {
+    try {
+      const res = await fetchWithTimeout(
+        `https://www.saferproducts.gov/RestWebServices/Recall?format=json&RecallDateStart=${startStr}`
+      );
+      if (!res.ok) return [] as CpscRecall[];
+      const data = await res.json();
+      const all: CpscRecall[] = Array.isArray(data) ? data : [];
+      return all.filter(isBabyRelated);
+    } catch {
+      return [] as CpscRecall[];
+    }
+  })();
+
+  // FDA food recalls (formulas, baby food, breast milk, etc.) — Nara-class recalls live here, not on CPSC.
+  const fdaPromise = (async () => {
+    try {
+      const end = new Date();
+      const fmt = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, "");
+      const url = `https://api.fda.gov/food/enforcement.json?search=recall_initiation_date:[${fmt(start)}+TO+${fmt(end)}]&limit=100`;
+      const res = await fetchWithTimeout(url);
+      if (!res.ok) return [] as CpscRecall[];
+      const data = await res.json();
+      const results: Array<{
+        recall_number?: string;
+        product_description?: string;
+        reason_for_recall?: string;
+        recall_initiation_date?: string;
+        recalling_firm?: string;
+      }> = data?.results ?? [];
+      return results
+        .filter((r) => {
+          const text = `${r.product_description ?? ""} ${r.reason_for_recall ?? ""} ${r.recalling_firm ?? ""}`.toLowerCase();
+          return FDA_BABY_KEYWORDS.some((kw) => text.includes(kw));
+        })
+        .map<CpscRecall>((r) => {
+          const dateIso = r.recall_initiation_date
+            ? `${r.recall_initiation_date.slice(0, 4)}-${r.recall_initiation_date.slice(4, 6)}-${r.recall_initiation_date.slice(6, 8)}`
+            : undefined;
+          const name = r.recalling_firm
+            ? `${r.recalling_firm} — ${(r.product_description ?? "").slice(0, 120)}`
+            : (r.product_description ?? "FDA recall");
+          return {
+            RecallID: `fda-${r.recall_number ?? Math.random().toString(36).slice(2)}`,
+            RecallHeading: name,
+            URL: "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts",
+            RecallDate: dateIso,
+            Products: [{ Name: r.product_description ?? "", Description: r.reason_for_recall ?? "" }],
+          };
+        });
+    } catch {
+      return [] as CpscRecall[];
+    }
+  })();
+
+  const [cpsc, fda] = await Promise.all([cpscPromise, fdaPromise]);
+  // Dedupe by RecallID
+  const seen = new Set<string>();
+  return [...cpsc, ...fda].filter((r) => {
+    if (seen.has(r.RecallID)) return false;
+    seen.add(r.RecallID);
+    return true;
+  });
 }
