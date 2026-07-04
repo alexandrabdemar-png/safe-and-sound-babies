@@ -452,6 +452,14 @@ function NewProductPage() {
 
 // ─── Recall Alert Modal ───────────────────────────────────────────────────────
 
+function recallSourceLabel(hit: RecallHit): string {
+  if (hit.url.includes("cpsc.gov")) return "U.S. Consumer Product Safety Commission (CPSC)";
+  if (hit.url.includes("fda.gov")) return "U.S. Food and Drug Administration (FDA)";
+  if (hit.source === "cpsc") return "U.S. Consumer Product Safety Commission (CPSC)";
+  if (hit.source === "fda") return "U.S. Food and Drug Administration (FDA)";
+  return "the official recall notice linked below";
+}
+
 function RecallAlertModal({
   hit,
   productName,
@@ -469,11 +477,21 @@ function RecallAlertModal({
       <div className="w-full max-w-md overflow-hidden rounded-t-3xl sm:rounded-3xl bg-white">
         {/* Red header */}
         <div className="px-6 py-5" style={{ backgroundColor: "#C8523A" }}>
-          <div className="flex items-center gap-2.5">
-            <AlertTriangle className="h-5 w-5 text-white" />
-            <span className="font-display text-lg font-semibold text-white">
-              Recall Alert Found
-            </span>
+          <div className="flex items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2.5">
+              <AlertTriangle className="h-5 w-5 text-white" />
+              <span className="font-display text-lg font-semibold text-white">
+                Potential Recall Match
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={onDismiss}
+              className="shrink-0 rounded-full p-1 text-white/80 hover:bg-white/20 hover:text-white"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
         </div>
 
@@ -484,11 +502,21 @@ function RecallAlertModal({
             <p className="mt-0.5 font-body text-sm text-muted-foreground">{hit.title}</p>
           </div>
 
+          <div>
+            <p className="font-body text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Official recall summary
+            </p>
+            <p className="mt-1 font-body text-sm leading-relaxed text-foreground">
+              We found an official recall that may relate to this product. Please review the official recall notice to determine whether your specific model is affected.
+            </p>
+          </div>
+
           <div
             className="rounded-2xl px-4 py-3"
             style={{ backgroundColor: "rgba(200,82,58,0.08)" }}
           >
             <p className="font-body text-sm leading-relaxed text-foreground">{hit.reason}</p>
+            <p className="mt-2 font-body text-xs text-muted-foreground">Source: {recallSourceLabel(hit)}</p>
           </div>
 
           {hit.recallDate && (
