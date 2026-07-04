@@ -6,8 +6,14 @@ import { createFileRoute } from "@tanstack/react-router";
  * Finds products with predicted_sizeup_date or predicted_replacement_date
  * within the next 7 days and sends a push digest to each parent directly via
  * Apple Push Notification service (see src/lib/apns.server.ts).
- * Also surfaces any newly-matched recalls (set by the check-recalls job).
  * Respects per-user notification settings stored in user_notification_settings.
+ *
+ * Recall notifications are no longer sent from here — the
+ * scheduled-recall-check Supabase Edge Function now owns recall detection
+ * *and* delivery end to end (see
+ * supabase/migrations/20260705000000_recall_alerts_pipeline.sql), so this
+ * job would otherwise double-notify the same recall via two different code
+ * paths.
  */
 export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
   server: {
@@ -24,9 +30,7 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
           });
         }
 
-        const { supabaseAdmin } = await import(
-          "@/integrations/supabase/client.server"
-        );
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
         const today = new Date();
         const horizon = new Date();
@@ -57,54 +61,48 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
           });
         }
 
-        // Newly-created unacknowledged recall matches (last 7 days)
-        const since = new Date();
-        since.setDate(since.getDate() - 7);
-        const { data: newRecalls } = await supabaseAdmin
-          .from("product_recalls")
-          .select("user_id, product_id, products!inner(name)")
-          .eq("acknowledged", false)
-          .gte("created_at", since.toISOString());
-
-        // Collect all user IDs involved
         const allUserIds = new Set<string>();
         for (const p of (products ?? []) as ProductRow[]) allUserIds.add(p.user_id);
-        for (const r of (newRecalls ?? []) as Array<{ user_id: string }>) allUserIds.add(r.user_id);
 
         if (allUserIds.size === 0) {
-          return new Response(
-            JSON.stringify({ ok: true, sent: 0, note: "nothing due" }),
-            { headers: { "Content-Type": "application/json" } },
-          );
+          return new Response(JSON.stringify({ ok: true, sent: 0, note: "nothing due" }), {
+            headers: { "Content-Type": "application/json" },
+          });
         }
 
         // Load notification settings for all involved users
         const userIds = Array.from(allUserIds);
         const { data: settingsRows } = await (supabaseAdmin as any)
           .from("user_notification_settings")
-          .select("user_id, recalls_enabled, size_up_enabled, replacement_enabled")
+          .select("user_id, size_up_enabled, replacement_enabled")
           .in("user_id", userIds);
 
-        type UserSettings = { recalls_enabled: boolean; size_up_enabled: boolean; replacement_enabled: boolean };
+        type UserSettings = { size_up_enabled: boolean; replacement_enabled: boolean };
         const settingsMap = new Map<string, UserSettings>();
-        for (const s of ((settingsRows ?? []) as unknown) as Array<{ user_id: string } & UserSettings>) {
+        for (const s of (settingsRows ?? []) as unknown as Array<
+          { user_id: string } & UserSettings
+        >) {
           settingsMap.set(s.user_id, s);
         }
         const getSetting = (uid: string): UserSettings =>
-          settingsMap.get(uid) ?? { recalls_enabled: true, size_up_enabled: true, replacement_enabled: true };
+          settingsMap.get(uid) ?? { size_up_enabled: true, replacement_enabled: true };
 
         // Load child names for size-up messages
-        const childIds = [...new Set(
-          (products ?? [])
-            .map((p) => (p as ProductRow).child_id)
-            .filter((id): id is string => !!id),
-        )];
+        const childIds = [
+          ...new Set(
+            (products ?? [])
+              .map((p) => (p as ProductRow).child_id)
+              .filter((id): id is string => !!id),
+          ),
+        ];
         const { data: children } = childIds.length
           ? await supabaseAdmin.from("children").select("id, name").in("id", childIds)
           : { data: [] };
         const childNameMap = new Map((children ?? []).map((c) => [c.id, c.name]));
 
         // Load already-sent alerts to avoid duplicates (last 7 days)
+        const since = new Date();
+        since.setDate(since.getDate() - 7);
         const productIds = (products ?? []).map((p) => (p as ProductRow).id);
         const { data: sentAlerts } = productIds.length
           ? await supabaseAdmin
@@ -114,19 +112,16 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
               .gte("created_at", since.toISOString())
           : { data: [] };
 
-        const sentSet = new Set(
-          (sentAlerts ?? []).map((a) => `${a.product_id}:${a.alert_type}`),
-        );
+        const sentSet = new Set((sentAlerts ?? []).map((a) => `${a.product_id}:${a.alert_type}`));
 
         // Group per-user messages
         type Bucket = {
-          recalls: Array<{ name: string; productId: string }>;
           sizeUp: Array<{ name: string; child: string; productId: string }>;
           replace: Array<{ name: string; productId: string }>;
         };
         const byUser = new Map<string, Bucket>();
         const ensure = (uid: string): Bucket => {
-          const b = byUser.get(uid) ?? { recalls: [], sizeUp: [], replace: [] };
+          const b = byUser.get(uid) ?? { sizeUp: [], replace: [] };
           byUser.set(uid, b);
           return b;
         };
@@ -158,27 +153,15 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
           }
         }
 
-        for (const r of (newRecalls ?? []) as Array<{
-          user_id: string;
-          product_id: string;
-          products: { name: string };
-        }>) {
-          const s = getSetting(r.user_id);
-          if (!s.recalls_enabled) continue;
-          if (sentSet.has(`${r.product_id}:recall`)) continue;
-          ensure(r.user_id).recalls.push({ name: r.products.name, productId: r.product_id });
-        }
-
         // Remove empty buckets
         for (const [uid, b] of byUser) {
-          if (!b.recalls.length && !b.sizeUp.length && !b.replace.length) byUser.delete(uid);
+          if (!b.sizeUp.length && !b.replace.length) byUser.delete(uid);
         }
 
         if (byUser.size === 0) {
-          return new Response(
-            JSON.stringify({ ok: true, sent: 0, note: "nothing to send" }),
-            { headers: { "Content-Type": "application/json" } },
-          );
+          return new Response(JSON.stringify({ ok: true, sent: 0, note: "nothing to send" }), {
+            headers: { "Content-Type": "application/json" },
+          });
         }
 
         // Look up push tokens
@@ -200,22 +183,11 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
         };
         const pending: Pending[] = [];
 
-        for (const profile of (profiles ?? [])) {
+        for (const profile of profiles ?? []) {
           if (!profile.apns_device_token) continue;
           const b = byUser.get(profile.user_id);
           if (!b) continue;
 
-          for (const recall of b.recalls) {
-            pending.push({
-              userId: profile.user_id,
-              deviceToken: profile.apns_device_token,
-              title: `⚠️ Safety Recall — ${recall.name}`,
-              body: `${recall.name} has been recalled. Tap to see what to do.`,
-              data: { type: "recall", productId: recall.productId },
-              productId: recall.productId,
-              alertType: "recall",
-            });
-          }
           for (const item of b.sizeUp) {
             pending.push({
               userId: profile.user_id,
@@ -241,15 +213,16 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
         }
 
         if (pending.length === 0) {
-          return new Response(
-            JSON.stringify({ ok: true, sent: 0, note: "no push tokens" }),
-            { headers: { "Content-Type": "application/json" } },
-          );
+          return new Response(JSON.stringify({ ok: true, sent: 0, note: "no push tokens" }), {
+            headers: { "Content-Type": "application/json" },
+          });
         }
 
         const { sendApnsPush } = await import("@/lib/apns.server");
         const results = await Promise.all(
-          pending.map((p) => sendApnsPush(p.deviceToken, { title: p.title, body: p.body, data: p.data })),
+          pending.map((p) =>
+            sendApnsPush(p.deviceToken, { title: p.title, body: p.body, data: p.data }),
+          ),
         );
 
         const alertsToLog: Array<{ product_id: string; user_id: string; alert_type: string }> = [];

@@ -87,9 +87,53 @@ Store, also add `APNS_ENVIRONMENT` = `sandbox`.
 
 ## Done?
 
-- Steps 1–3 → daily recall sync + in-app alerts are live
-- Step 4 too → push notifications to phones are live
+- Steps 1–3 → in-app size-up/replacement alerts are live
+- Step 4 too → push for size-up/replacement reminders is live
+- Step 5 below → recall detection + recall notifications are live (this
+  moved to its own pipeline, see why below)
 
 If something isn't working, the most common culprits are: `HOOK_SECRET`
 not matching exactly between Step 1 and Step 2, or forgetting to redeploy
 after adding new environment variables.
+
+## ☐ Step 5 — Recall detection (its own Supabase Edge Function)
+
+Recall checking used to be two of the jobs covered by Steps 1–3. It's now a
+single Supabase Edge Function (`scheduled-recall-check`) instead, so it
+needs its own deploy + its own secrets — it runs on Supabase's infrastructure,
+not inside this app, which matters for where you paste the Apple push keys
+below (a different place than Step 4, even though it's the same three values).
+
+1. **Deploy the function** (via the Supabase CLI, or ask Lovable to deploy it
+   — see the message earlier in this session for exact wording):
+   ```
+   supabase functions deploy scheduled-recall-check
+   ```
+
+2. **Tell the database how to call it** — Supabase Dashboard → SQL Editor:
+   ```sql
+   select vault.create_secret('https://<your-project-ref>.supabase.co/functions/v1', 'edge_functions_base_url');
+   select vault.create_secret('<service role key — Project Settings > API>', 'edge_functions_service_key');
+   ```
+   Find `<your-project-ref>` in your Supabase project URL. The service role
+   key is a secret — never share it or commit it; paste it directly into the
+   SQL editor.
+
+3. **(Optional) Push notifications for recalls** — same three Apple values
+   as Step 4, but set as **Supabase Edge Function secrets** this time (Supabase
+   Dashboard → Edge Functions → scheduled-recall-check → Secrets, or via the
+   CLI: `supabase secrets set APNS_KEY_ID=... APNS_TEAM_ID=... APNS_KEY_P8=...`).
+   Setting them in Lovable's own panel (Step 4) does NOT cover this function —
+   it runs on Supabase, not inside the app.
+
+4. **(Optional) Email fallback for users with no push token set up** — set
+   `RESEND_API_KEY` (from a [Resend](https://resend.com) account) and
+   `NOTIFY_FROM_EMAIL` (a verified sending address) the same way as the Apple
+   keys above. Nobody has configured or tested this yet — it's new. Without
+   it, affected users with no device token just don't get notified until
+   they set up push (the recall match itself is still recorded either way,
+   so nothing is lost, it's only delivery that's skipped).
+
+Without step 5, recalls are no longer checked or notified at all — the two
+hooks that used to do this were removed. Steps 1–3 remain required for the
+unrelated size-up/replacement reminders, which are unaffected by this change.

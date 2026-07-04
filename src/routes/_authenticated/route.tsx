@@ -4,13 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { toast } from "sonner";
 import { AlertTriangle, Users, WifiOff } from "lucide-react";
-import { searchCpsc, searchFdaRecalls, isFoodRelated } from "@/lib/cpscSearch";
 import { usePushRegistration } from "@/hooks/usePushRegistration";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) throw redirect({ to: "/auth" });
     return { user: session.user };
   },
@@ -37,13 +38,19 @@ function AuthenticatedLayout() {
   const { user } = Route.useRouteContext();
   const navigate = useNavigate();
   const ownChanges = useRef<Set<string>>(new Set());
-  const [isOffline, setIsOffline] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
+  const [isOffline, setIsOffline] = useState(
+    () => typeof navigator !== "undefined" && !navigator.onLine,
+  );
 
   usePushRegistration(user?.id ?? null);
 
   useEffect(() => {
-    function handleOffline() { setIsOffline(true); }
-    function handleOnline() { setIsOffline(false); }
+    function handleOffline() {
+      setIsOffline(true);
+    }
+    function handleOnline() {
+      setIsOffline(false);
+    }
     window.addEventListener("offline", handleOffline);
     window.addEventListener("online", handleOnline);
     return () => {
@@ -59,7 +66,9 @@ function AuthenticatedLayout() {
       ownChanges.current.add(id);
       setTimeout(() => ownChanges.current.delete(id), 8000);
     };
-    return () => { delete (window as any).__ssOwnChange; };
+    return () => {
+      delete (window as any).__ssOwnChange;
+    };
   }, []);
 
   // ── Recall alert channel (existing) ────────────────────────────────────────
@@ -99,7 +108,9 @@ function AuthenticatedLayout() {
       )
       .subscribe();
 
-    return () => { void supabase.removeChannel(channel); };
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, [user?.id, navigate]);
 
   // ── Co-parent realtime sync ─────────────────────────────────────────────────
@@ -109,10 +120,7 @@ function AuthenticatedLayout() {
   useEffect(() => {
     if (!user?.id) return;
 
-    function handleCoParentChange(
-      table: string,
-      record: Record<string, unknown>,
-    ) {
+    function handleCoParentChange(table: string, record: Record<string, unknown>) {
       const recordId = (record.id as string | undefined) ?? "";
       const recordUserId = record.user_id as string | undefined;
 
@@ -133,14 +141,10 @@ function AuthenticatedLayout() {
     const channels = tables.map((table) =>
       supabase
         .channel(`co-parent:${table}:${user.id}`)
-        .on(
-          "postgres_changes" as any,
-          { event: "*", schema: "public", table },
-          (payload: any) => {
-            const record = (payload.new ?? payload.old ?? {}) as Record<string, unknown>;
-            handleCoParentChange(table, record);
-          },
-        )
+        .on("postgres_changes" as any, { event: "*", schema: "public", table }, (payload: any) => {
+          const record = (payload.new ?? payload.old ?? {}) as Record<string, unknown>;
+          handleCoParentChange(table, record);
+        })
         .subscribe(),
     );
 
@@ -149,61 +153,14 @@ function AuthenticatedLayout() {
     };
   }, [user?.id]);
 
-  // ── Daily retroactive recall check ─────────────────────────────────────────
-  // Once per day, re-check all products saved in the last 90 days against
-  // CPSC and FDA. If a new match is found that isn't already flagged, insert
-  // a product_recalls row and show an in-app toast.
-  useEffect(() => {
-    if (!user?.id) return;
-    const todayKey = new Date().toISOString().slice(0, 10);
-    const lsKey = `safesound.retroRecallCheck.${todayKey}`;
-    try { if (localStorage.getItem(lsKey)) return; } catch {}
-
-    (async () => {
-      try {
-        const since = new Date();
-        since.setDate(since.getDate() - 90);
-        const { data: products } = await supabase
-          .from("products")
-          .select("id, name, category")
-          .gte("created_at", since.toISOString());
-        if (!products?.length) return;
-
-        const { data: existingRecalls } = await supabase
-          .from("product_recalls")
-          .select("product_id");
-        const flaggedIds = new Set((existingRecalls ?? []).map((r: { product_id: string }) => r.product_id));
-
-        for (const product of products) {
-          if (flaggedIds.has(product.id)) continue;
-          try {
-            const [cpscResults, fdaResults] = await Promise.all([
-              searchCpsc(product.name),
-              isFoodRelated(product.name) ? searchFdaRecalls(product.name) : Promise.resolve([]),
-            ]);
-            const hasRecall = cpscResults.length > 0 || fdaResults.length > 0;
-            if (hasRecall) {
-              await (supabase as any).from("product_recalls").insert({
-                product_id: product.id,
-                user_id: user.id,
-                acknowledged: false,
-              });
-              toast.error(`Safety recall: ${product.name}`, {
-                description: "A recall was found for one of your products — tap to review.",
-                icon: <AlertTriangle className="h-4 w-4" />,
-                duration: 12000,
-                action: { label: "View", onClick: () => {} },
-              });
-              flaggedIds.add(product.id);
-            }
-          } catch {}
-          // Small delay to avoid hammering APIs
-          await new Promise((r) => setTimeout(r, 300));
-        }
-        try { localStorage.setItem(lsKey, "1"); } catch {}
-      } catch {}
-    })();
-  }, [user?.id]);
+  // The client-side "daily retroactive recall check" that used to live here
+  // has been retired in favor of the scheduled-recall-check edge function
+  // (runs server-side, daily, for every user via pg_cron — see
+  // supabase/migrations/20260705000000_recall_alerts_pipeline.sql). It also
+  // silently never worked: it inserted into product_recalls using the
+  // regular (non-admin) client, and product_recalls has no INSERT policy
+  // for `authenticated` — every insert attempt was caught and swallowed by
+  // its own try/catch.
 
   return (
     <>

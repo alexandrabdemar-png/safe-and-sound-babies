@@ -11,6 +11,75 @@ CREATE SCHEMA IF NOT EXISTS auth;
 -- (pg_trgm, pg_net, pg_cron, etc.); vanilla Postgres does not.
 CREATE SCHEMA IF NOT EXISTS extensions;
 
+-- pg_cron, pg_net, and Supabase Vault are Supabase-managed extensions not
+-- installable in a vanilla local Postgres (pg_cron needs
+-- shared_preload_libraries at server start; pg_net is Supabase-proprietary).
+-- Minimal functional stand-ins so migrations that schedule cron jobs or call
+-- net.http_post can actually be applied and exercised here, instead of only
+-- being checked by eye.
+CREATE SCHEMA IF NOT EXISTS cron;
+CREATE TABLE IF NOT EXISTS cron.job (
+  jobid bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  jobname text UNIQUE,
+  schedule text,
+  command text
+);
+-- Parameter names match the real pg_cron signature (jobname, schedule,
+-- command) for named-argument call compatibility. Implemented as plain SQL
+-- functions using positional $1/$2/$3 references rather than plpgsql —
+-- plpgsql's variable-substitution pass treats a bare identifier that
+-- matches both a parameter and a same-named column as ambiguous even in
+-- clauses (like ON CONFLICT's target list) where SQL itself has no such
+-- ambiguity; positional references sidestep that entirely.
+CREATE OR REPLACE FUNCTION cron.schedule(jobname text, schedule text, command text) RETURNS bigint
+LANGUAGE sql AS $$
+  INSERT INTO cron.job (jobname, schedule, command) VALUES ($1, $2, $3)
+    ON CONFLICT (jobname) DO UPDATE SET schedule = EXCLUDED.schedule, command = EXCLUDED.command
+    RETURNING jobid;
+$$;
+CREATE OR REPLACE FUNCTION cron.unschedule(jobname text) RETURNS boolean
+LANGUAGE sql AS $$
+  DELETE FROM cron.job WHERE cron.job.jobname = $1 RETURNING true;
+$$;
+
+CREATE SCHEMA IF NOT EXISTS net;
+-- Records every call instead of making a real HTTP request, so a test can
+-- assert on exactly what URL/headers/body a migration's helper function
+-- would have sent.
+CREATE TABLE IF NOT EXISTS net.http_requests (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  url text,
+  headers jsonb,
+  body jsonb,
+  called_at timestamptz NOT NULL DEFAULT now()
+);
+-- Parameter names match the real pg_net signature (url, headers, body); see
+-- the cron.schedule comment above for why this is LANGUAGE sql with
+-- positional references rather than plpgsql.
+CREATE OR REPLACE FUNCTION net.http_post(url text, headers jsonb DEFAULT '{}'::jsonb, body jsonb DEFAULT '{}'::jsonb) RETURNS bigint
+LANGUAGE sql AS $$
+  INSERT INTO net.http_requests (url, headers, body) VALUES ($1, $2, $3) RETURNING id;
+$$;
+
+CREATE SCHEMA IF NOT EXISTS vault;
+CREATE TABLE IF NOT EXISTS vault.decrypted_secrets (
+  name text PRIMARY KEY,
+  decrypted_secret text
+);
+-- Matches the real vault.create_secret(secret, name) signature.
+CREATE OR REPLACE FUNCTION vault.create_secret(secret text, name text) RETURNS void
+LANGUAGE sql AS $$
+  INSERT INTO vault.decrypted_secrets (name, decrypted_secret) VALUES ($2, $1)
+    ON CONFLICT (name) DO UPDATE SET decrypted_secret = EXCLUDED.decrypted_secret;
+$$;
+
+GRANT USAGE ON SCHEMA cron, net, vault TO anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON cron.job TO anon, authenticated, service_role;
+GRANT USAGE ON SEQUENCE cron.job_jobid_seq TO anon, authenticated, service_role;
+GRANT SELECT, INSERT ON net.http_requests TO anon, authenticated, service_role;
+GRANT USAGE ON SEQUENCE net.http_requests_id_seq TO anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON vault.decrypted_secrets TO anon, authenticated, service_role;
+
 CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid
 LANGUAGE sql STABLE AS $$
   SELECT NULLIF(current_setting('request.jwt.claim.sub', true), '')::uuid;
@@ -20,6 +89,16 @@ CREATE OR REPLACE FUNCTION auth.role() RETURNS text
 LANGUAGE sql STABLE AS $$
   SELECT NULLIF(current_setting('request.jwt.claim.role', true), '')::text;
 $$;
+
+-- Minimal stand-in for the real auth.users table, needed once a migration
+-- under test has a FOREIGN KEY ... REFERENCES auth.users(id) (e.g. products,
+-- children) — real Supabase always has this table with many more columns;
+-- tests only ever need the id to exist for the FK to satisfy.
+CREATE TABLE IF NOT EXISTS auth.users (
+  id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  email text,
+  raw_user_meta_data jsonb NOT NULL DEFAULT '{}'::jsonb
+);
 
 DO $$
 BEGIN
