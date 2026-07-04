@@ -91,16 +91,16 @@ function parseDateLocal(dateStr: string): Date {
   return new Date(y, m - 1, d);
 }
 
-function calcAge(dob: string | null): { label: string; subtitle: string } {
-  if (!dob) return { label: "Little one", subtitle: "Add birth date in profile" };
+function calcAge(dob: string | null): { label: string } {
+  if (!dob) return { label: "Little one" };
   const birth = parseDateLocal(dob);
   const days = Math.max(0, Math.floor((Date.now() - birth.getTime()) / 86400000));
   const weeks = Math.floor(days / 7);
-  if (weeks < 12) return { label: `${weeks} ${weeks === 1 ? "week" : "weeks"} old`, subtitle: `${days} days of wonder` };
+  if (weeks < 12) return { label: `${weeks} ${weeks === 1 ? "week" : "weeks"} old` };
   const months = Math.floor(days / 30.44);
-  if (months < 24) return { label: `${months} ${months === 1 ? "month" : "months"} old`, subtitle: `${weeks} weeks together` };
+  if (months < 24) return { label: `${months} ${months === 1 ? "month" : "months"} old` };
   const years = Math.floor(months / 12);
-  return { label: `${years}y ${months % 12}m old`, subtitle: `${months} months together` };
+  return { label: `${years}y ${months % 12}m old` };
 }
 
 function greeting() {
@@ -706,9 +706,7 @@ function HomePage() {
           <h1 className="mt-2 font-display text-4xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl">
             {child?.name}
           </h1>
-          <p className="mt-2 font-body text-base text-muted-foreground">
-            {age.label} · <span className="text-foreground/70">{age.subtitle}</span>
-          </p>
+          <p className="mt-2 font-body text-base text-muted-foreground">{age.label}</p>
           <p
             className="mt-4 text-[10px] font-medium tracking-[0.12em] text-muted-foreground/50"
             style={{ fontFamily: '"Inter", system-ui, sans-serif', textTransform: "uppercase" }}
