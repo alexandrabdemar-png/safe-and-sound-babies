@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as RecallsRouteImport } from './routes/recalls'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as DesignPreviewRouteImport } from './routes/design-preview'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -62,6 +63,11 @@ const RecallsRoute = RecallsRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DesignPreviewRoute = DesignPreviewRouteImport.update({
+  id: '/design-preview',
+  path: '/design-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -262,6 +268,7 @@ const ApiPublicHooksCheckProductAlertsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
+  '/design-preview': typeof DesignPreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
   '/terms': typeof TermsRoute
@@ -302,6 +309,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
+  '/design-preview': typeof DesignPreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
   '/terms': typeof TermsRoute
@@ -344,6 +352,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
+  '/design-preview': typeof DesignPreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
   '/terms': typeof TermsRoute
@@ -386,6 +395,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/design-preview'
     | '/onboarding'
     | '/recalls'
     | '/terms'
@@ -426,6 +436,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/design-preview'
     | '/onboarding'
     | '/recalls'
     | '/terms'
@@ -467,6 +478,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/design-preview'
     | '/onboarding'
     | '/recalls'
     | '/terms'
@@ -509,6 +521,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
+  DesignPreviewRoute: typeof DesignPreviewRoute
   OnboardingRoute: typeof OnboardingRoute
   RecallsRoute: typeof RecallsRoute
   TermsRoute: typeof TermsRoute
@@ -540,6 +553,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/design-preview': {
+      id: '/design-preview'
+      path: '/design-preview'
+      fullPath: '/design-preview'
+      preLoaderRoute: typeof DesignPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -877,6 +897,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
+  DesignPreviewRoute: DesignPreviewRoute,
   OnboardingRoute: OnboardingRoute,
   RecallsRoute: RecallsRoute,
   TermsRoute: TermsRoute,
@@ -889,3 +910,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
