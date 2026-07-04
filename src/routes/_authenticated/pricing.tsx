@@ -30,11 +30,9 @@ const FREE_FEATURES = [
 ];
 
 const PRO_FEATURES = [
-  'Everything in free, plus expert features, tips and tricks, safety insights, and pediatrician-reviewed guidance.',
   'Barcode scanner for instant product entry',
   'Multi-child support',
   'Export & backup your data',
-  'Advanced insights (growth charts, spending)',
 ];
 
 function PricingPage() {
