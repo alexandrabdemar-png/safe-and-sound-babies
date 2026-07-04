@@ -11,7 +11,7 @@ import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { evaluateInsights, type Insight, type ProductInput } from "@/lib/insights";
-import { friendlyError } from "@/lib/errors";
+import { friendlyError, diagnosticDetail } from "@/lib/errors";
 import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
 import { checkCriticalRecalls, CRITICAL_RECALLS } from "@/lib/recallCheck";
 import { selectWeeklyTip, getIsoWeekNumber, weekKey as getTipWeekKey } from "@/lib/safetyTips";
@@ -516,14 +516,19 @@ function HomePage() {
     try {
       const { data: { session: sess } } = await supabase.auth.getSession();
       if (!sess?.user) return;
-      await (supabase as any).from("insight_dismissals").upsert({
+      const { error } = await (supabase as any).from("insight_dismissals").upsert({
         user_id: sess.user.id,
         child_id: child.id,
         rule_id: insightId,
         action: "dismissed",
         until: null,
       }, { onConflict: "child_id,rule_id" });
-    } catch {}
+      if (error) throw error;
+    } catch (err) {
+      console.error("insight_dismissals dismiss failed:", err);
+      setDismissedIds((prev) => { const next = new Set(prev); next.delete(insightId); return next; });
+      toast.error(`Couldn't save: ${diagnosticDetail(err)}`);
+    }
   }
 
   async function snoozeInsight(insightId: string) {
@@ -533,14 +538,19 @@ function HomePage() {
     try {
       const { data: { session: sess } } = await supabase.auth.getSession();
       if (!sess?.user) return;
-      await (supabase as any).from("insight_dismissals").upsert({
+      const { error } = await (supabase as any).from("insight_dismissals").upsert({
         user_id: sess.user.id,
         child_id: child.id,
         rule_id: insightId,
         action: "snoozed",
         until,
       }, { onConflict: "child_id,rule_id" });
-    } catch {}
+      if (error) throw error;
+    } catch (err) {
+      console.error("insight_dismissals snooze failed:", err);
+      setDismissedIds((prev) => { const next = new Set(prev); next.delete(insightId); return next; });
+      toast.error(`Couldn't save: ${diagnosticDetail(err)}`);
+    }
   }
 
   function dismissRecallBanner() {
