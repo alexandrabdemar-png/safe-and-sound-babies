@@ -53,7 +53,7 @@ async function getSigningKey(): Promise<CryptoKey> {
   const der = pemToDer(p8);
   cachedKey = await crypto.subtle.importKey(
     "pkcs8",
-    der,
+    der.buffer.slice(der.byteOffset, der.byteOffset + der.byteLength) as ArrayBuffer,
     { name: "ECDSA", namedCurve: "P-256" },
     false,
     ["sign"],
