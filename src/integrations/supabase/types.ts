@@ -171,6 +171,41 @@ export type Database = {
         }
         Relationships: []
       }
+      completed_tips: {
+        Row: {
+          child_id: string | null
+          created_at: string | null
+          id: string
+          tip_id: string
+          user_id: string
+          week_key: string
+        }
+        Insert: {
+          child_id?: string | null
+          created_at?: string | null
+          id?: string
+          tip_id: string
+          user_id: string
+          week_key: string
+        }
+        Update: {
+          child_id?: string | null
+          created_at?: string | null
+          id?: string
+          tip_id?: string
+          user_id?: string
+          week_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "completed_tips_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emergency_contacts: {
         Row: {
           created_at: string
@@ -194,6 +229,45 @@ export type Database = {
           name?: string
           phone?: string
           relationship?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      home_profile: {
+        Row: {
+          created_at: string | null
+          has_car: boolean | null
+          has_pet: boolean | null
+          has_pool: boolean | null
+          has_stairs: boolean | null
+          home_type: string | null
+          id: string
+          in_daycare: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          has_car?: boolean | null
+          has_pet?: boolean | null
+          has_pool?: boolean | null
+          has_stairs?: boolean | null
+          home_type?: string | null
+          id?: string
+          in_daycare?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          has_car?: boolean | null
+          has_pet?: boolean | null
+          has_pool?: boolean | null
+          has_stairs?: boolean | null
+          home_type?: string | null
+          id?: string
+          in_daycare?: boolean | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -574,28 +648,28 @@ export type Database = {
       }
       profiles: {
         Row: {
+          apns_device_token: string | null
           avatar_url: string | null
           created_at: string
           display_name: string | null
-          expo_push_token: string | null
           id: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          apns_device_token?: string | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
-          expo_push_token?: string | null
           id?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          apns_device_token?: string | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
-          expo_push_token?: string | null
           id?: string
           updated_at?: string
           user_id?: string
@@ -604,6 +678,8 @@ export type Database = {
       }
       recalls: {
         Row: {
+          affected_date_end: string | null
+          affected_date_start: string | null
           brand: string | null
           category: string | null
           created_at: string
@@ -611,6 +687,8 @@ export type Database = {
           hazard: string | null
           id: string
           image_url: string | null
+          model: string | null
+          official: boolean
           product_name: string | null
           recall_date: string | null
           remedy: string | null
@@ -621,6 +699,8 @@ export type Database = {
           url: string | null
         }
         Insert: {
+          affected_date_end?: string | null
+          affected_date_start?: string | null
           brand?: string | null
           category?: string | null
           created_at?: string
@@ -628,6 +708,8 @@ export type Database = {
           hazard?: string | null
           id?: string
           image_url?: string | null
+          model?: string | null
+          official?: boolean
           product_name?: string | null
           recall_date?: string | null
           remedy?: string | null
@@ -638,6 +720,8 @@ export type Database = {
           url?: string | null
         }
         Update: {
+          affected_date_end?: string | null
+          affected_date_start?: string | null
           brand?: string | null
           category?: string | null
           created_at?: string
@@ -645,6 +729,8 @@ export type Database = {
           hazard?: string | null
           id?: string
           image_url?: string | null
+          model?: string | null
+          official?: boolean
           product_name?: string | null
           recall_date?: string | null
           remedy?: string | null
