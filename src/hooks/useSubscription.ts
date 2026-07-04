@@ -86,5 +86,5 @@ export function useSubscription() {
     };
   }, []);
 
-  return { subscription, isPro: true, loading }; // TODO: remove before launch
+  return { subscription, isPro: computeIsPro(subscription), loading };
 }
