@@ -343,6 +343,48 @@ export type Database = {
           },
         ]
       }
+      product_catalog: {
+        Row: {
+          barcode: string
+          brand: string | null
+          category: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          is_baby_product: boolean
+          name: string | null
+          raw: Json | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          barcode: string
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_baby_product?: boolean
+          name?: string | null
+          raw?: Json | null
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          barcode?: string
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_baby_product?: boolean
+          name?: string | null
+          raw?: Json | null
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_guidelines: {
         Row: {
           average_use_months: number | null
