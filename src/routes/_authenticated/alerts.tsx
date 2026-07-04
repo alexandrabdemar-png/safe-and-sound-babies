@@ -193,13 +193,18 @@ function AlertsPage() {
     const prev = recalls;
     setRecalls((r) => r.filter((x) => x.id !== id));
     hapticDismiss();
-    const { error } = await supabase
+    // Chained .select() so an RLS policy silently blocking the update (which
+    // Postgres reports as "0 rows affected", not an error) is still caught
+    // here instead of looking like a success that didn't actually persist.
+    const { data, error } = await supabase
       .from("product_recalls")
       .update({ acknowledged: true })
-      .eq("id", id);
-    if (error) {
+      .eq("id", id)
+      .select("id");
+    if (error || !data?.length) {
+      console.error("product_recalls acknowledge failed:", error ?? "0 rows updated (likely blocked by RLS)");
       setRecalls(prev);
-      toast.error(friendlyError(error.message));
+      toast.error(error ? friendlyError(error.message) : friendlyError("row-level security"));
     }
   }
 

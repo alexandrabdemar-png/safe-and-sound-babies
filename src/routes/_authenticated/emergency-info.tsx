@@ -6,6 +6,7 @@ import { HeartPulse, Copy, Check, Link2, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { computeShareExpiry, generateShareToken, hashShareToken } from "@/lib/emergencyShare";
+import { diagnosticDetail } from "@/lib/errors";
 
 export const Route = createFileRoute("/_authenticated/emergency-info")({
   ssr: false,
@@ -124,13 +125,7 @@ function EmergencyInfoPage() {
       toast.success("Saved");
     } catch (err) {
       console.error("emergency_info save failed:", err);
-      const detail =
-        err && typeof err === "object" && "hint" in err && err.hint
-          ? String(err.hint)
-          : err instanceof Error
-            ? err.message
-            : String(err);
-      toast.error(`Could not save: ${detail}`);
+      toast.error(`Could not save: ${diagnosticDetail(err)}`);
     }
     setSaving(false);
   }
@@ -158,8 +153,9 @@ function EmergencyInfoPage() {
       setActiveLink(data);
       setFreshShareUrl(`${window.location.origin}/emergency-share/${rawToken}`);
       toast.success("Share link created — expires in 24 hours");
-    } catch {
-      toast.error("Could not create a share link. Please try again.");
+    } catch (err) {
+      console.error("emergency_share_links create failed:", err);
+      toast.error(`Could not create a share link: ${diagnosticDetail(err)}`);
     }
     setGenerating(false);
   }
@@ -175,8 +171,9 @@ function EmergencyInfoPage() {
       setActiveLink(null);
       setFreshShareUrl(null);
       toast.success("Link revoked");
-    } catch {
-      toast.error("Could not revoke the link. Please try again.");
+    } catch (err) {
+      console.error("emergency_share_links revoke failed:", err);
+      toast.error(`Could not revoke the link: ${diagnosticDetail(err)}`);
     }
   }
 

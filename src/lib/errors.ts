@@ -31,3 +31,18 @@ export function saveError(): string {
 export function loadError(): string {
   return "Having trouble loading your data. Pull to refresh or try again in a moment.";
 }
+
+/**
+ * Extracts the most actionable detail from a Supabase/PostgREST error for
+ * diagnostic purposes — `hint` (e.g. the literal GRANT/migration fix)
+ * when present, otherwise `message`. Pair with `console.error(err)` for
+ * the full object; this is meant for a toast or log line, not to replace
+ * friendlyError() for regular end-user-facing copy.
+ */
+export function diagnosticDetail(err: unknown): string {
+  if (err && typeof err === "object" && "hint" in err && err.hint) {
+    return String(err.hint);
+  }
+  if (err instanceof Error) return err.message;
+  return String(err);
+}
