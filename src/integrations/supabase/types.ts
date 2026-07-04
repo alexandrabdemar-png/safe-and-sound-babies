@@ -535,7 +535,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
-          apns_device_token: string | null
+          expo_push_token: string | null
           id: string
           updated_at: string
           user_id: string
@@ -544,7 +544,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
-          apns_device_token?: string | null
+          expo_push_token?: string | null
           id?: string
           updated_at?: string
           user_id: string
@@ -553,7 +553,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
-          apns_device_token?: string | null
+          expo_push_token?: string | null
           id?: string
           updated_at?: string
           user_id?: string
@@ -562,8 +562,6 @@ export type Database = {
       }
       recalls: {
         Row: {
-          affected_date_end: string | null
-          affected_date_start: string | null
           brand: string | null
           category: string | null
           created_at: string
@@ -571,8 +569,6 @@ export type Database = {
           hazard: string | null
           id: string
           image_url: string | null
-          model: string | null
-          official: boolean
           product_name: string | null
           recall_date: string | null
           remedy: string | null
@@ -583,8 +579,6 @@ export type Database = {
           url: string | null
         }
         Insert: {
-          affected_date_end?: string | null
-          affected_date_start?: string | null
           brand?: string | null
           category?: string | null
           created_at?: string
@@ -592,8 +586,6 @@ export type Database = {
           hazard?: string | null
           id?: string
           image_url?: string | null
-          model?: string | null
-          official?: boolean
           product_name?: string | null
           recall_date?: string | null
           remedy?: string | null
@@ -604,8 +596,6 @@ export type Database = {
           url?: string | null
         }
         Update: {
-          affected_date_end?: string | null
-          affected_date_start?: string | null
           brand?: string | null
           category?: string | null
           created_at?: string
@@ -613,8 +603,6 @@ export type Database = {
           hazard?: string | null
           id?: string
           image_url?: string | null
-          model?: string | null
-          official?: boolean
           product_name?: string | null
           recall_date?: string | null
           remedy?: string | null
