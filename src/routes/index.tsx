@@ -115,7 +115,7 @@ function Index() {
                 className="mt-5 text-[11px] font-medium tracking-[0.1em] text-muted-foreground/60"
                 style={{ fontFamily: '"DM Sans", system-ui, sans-serif', textTransform: "uppercase" }}
               >
-                Safety guidelines based on AAP and CPSC recommendations
+                Recommendations informed by AAP, CPSC, and other trusted safety guidance
               </p>
             </div>
 
