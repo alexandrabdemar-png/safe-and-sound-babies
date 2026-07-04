@@ -413,6 +413,8 @@ export type Database = {
           acknowledged: boolean
           created_at: string
           id: string
+          notification_channel: string | null
+          notified_at: string | null
           product_id: string
           recall_id: string
           updated_at: string
@@ -422,6 +424,8 @@ export type Database = {
           acknowledged?: boolean
           created_at?: string
           id?: string
+          notification_channel?: string | null
+          notified_at?: string | null
           product_id: string
           recall_id: string
           updated_at?: string
@@ -431,6 +435,8 @@ export type Database = {
           acknowledged?: boolean
           created_at?: string
           id?: string
+          notification_channel?: string | null
+          notified_at?: string | null
           product_id?: string
           recall_id?: string
           updated_at?: string
@@ -453,6 +459,44 @@ export type Database = {
           },
         ]
       }
+      lifecycle_alerts: {
+        Row: {
+          created_at: string
+          id: string
+          notification_channel: string | null
+          notified_at: string | null
+          product_id: string
+          urgency: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notification_channel?: string | null
+          notified_at?: string | null
+          product_id: string
+          urgency: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notification_channel?: string | null
+          notified_at?: string | null
+          product_id?: string
+          urgency?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lifecycle_alerts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           added_at: string
@@ -461,7 +505,9 @@ export type Database = {
           category: string | null
           child_id: string | null
           created_at: string
+          expiration_date: string | null
           id: string
+          manufacture_date: string | null
           model: string | null
           name: string
           next_size_at: string | null
@@ -469,6 +515,7 @@ export type Database = {
           photo_url: string | null
           predicted_replacement_date: string | null
           predicted_sizeup_date: string | null
+          product_type: string
           purchased_at: string | null
           recalled: boolean
           replace_at: string | null
@@ -483,7 +530,9 @@ export type Database = {
           category?: string | null
           child_id?: string | null
           created_at?: string
+          expiration_date?: string | null
           id?: string
+          manufacture_date?: string | null
           model?: string | null
           name: string
           next_size_at?: string | null
@@ -491,6 +540,7 @@ export type Database = {
           photo_url?: string | null
           predicted_replacement_date?: string | null
           predicted_sizeup_date?: string | null
+          product_type?: string
           purchased_at?: string | null
           recalled?: boolean
           replace_at?: string | null
@@ -505,7 +555,9 @@ export type Database = {
           category?: string | null
           child_id?: string | null
           created_at?: string
+          expiration_date?: string | null
           id?: string
+          manufacture_date?: string | null
           model?: string | null
           name?: string
           next_size_at?: string | null
@@ -513,6 +565,7 @@ export type Database = {
           photo_url?: string | null
           predicted_replacement_date?: string | null
           predicted_sizeup_date?: string | null
+          product_type?: string
           purchased_at?: string | null
           recalled?: boolean
           replace_at?: string | null

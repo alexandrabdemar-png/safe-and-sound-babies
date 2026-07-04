@@ -53,8 +53,14 @@ type ComingUpProduct = {
   name: string;
   brand: string | null;
   when: string;
-  type: "replace" | "sizeup";
+  type: "replace" | "sizeup" | "expiring";
 };
+
+function comingUpLabel(p: ComingUpProduct): string {
+  if (p.type === "replace") return `It may be time to replace ${p.name} soon`;
+  if (p.type === "expiring") return `${p.name} is approaching its expiration date`;
+  return `${p.name} might be ready for a size-up`;
+}
 
 // ── Weekly digest helpers ───────────────────────────────────────────────────
 function isoWeekKey(date = new Date()) {
@@ -337,9 +343,8 @@ function HomePage() {
         supabase.from("products").select("id", { count: "exact", head: true }).gte("next_size_at", todayStr).lte("next_size_at", horizon30Str),
         supabase.from("products").select("id, category, purchased_at, size").or(`child_id.eq.${c.id},child_id.is.null`),
         supabase.from("insight_dismissals").select("rule_id, action, until").eq("child_id", c.id),
-        supabase.from("products").select("id, name, brand, replace_at, next_size_at, predicted_replacement_date, predicted_sizeup_date")
-          .or(`replace_at.gte.${todayStr},next_size_at.gte.${todayStr},predicted_replacement_date.gte.${todayStr},predicted_sizeup_date.gte.${todayStr}`)
-          .lte("replace_at", horizon90Str),
+        supabase.from("products").select("id, name, brand, replace_at, next_size_at, predicted_replacement_date, predicted_sizeup_date, expiration_date")
+          .or(`and(replace_at.gte.${todayStr},replace_at.lte.${horizon90Str}),and(next_size_at.gte.${todayStr},next_size_at.lte.${horizon90Str}),and(predicted_replacement_date.gte.${todayStr},predicted_replacement_date.lte.${horizon90Str}),and(predicted_sizeup_date.gte.${todayStr},predicted_sizeup_date.lte.${horizon90Str}),expiration_date.lte.${horizon90Str}`),
       ]);
 
       if (cancelled) return;
@@ -353,7 +358,7 @@ function HomePage() {
 
       // Build coming-up list: pick the earliest date per product, sort, take top 3
       if (comingUpRes.data) {
-        type Raw = { id: string; name: string; brand: string | null; replace_at: string | null; next_size_at: string | null; predicted_replacement_date: string | null; predicted_sizeup_date: string | null };
+        type Raw = { id: string; name: string; brand: string | null; replace_at: string | null; next_size_at: string | null; predicted_replacement_date: string | null; predicted_sizeup_date: string | null; expiration_date: string | null };
         const items: ComingUpProduct[] = [];
         for (const p of comingUpRes.data as Raw[]) {
           const replaceDate = p.predicted_replacement_date ?? p.replace_at;
@@ -363,6 +368,9 @@ function HomePage() {
           }
           if (sizeDate && sizeDate >= todayStr && sizeDate <= horizon90Str) {
             items.push({ id: `sizeup:${p.id}`, name: p.name, brand: p.brand, when: sizeDate, type: "sizeup" });
+          }
+          if (p.expiration_date && p.expiration_date <= horizon90Str) {
+            items.push({ id: `expiring:${p.id}`, name: p.name, brand: p.brand, when: p.expiration_date, type: "expiring" });
           }
         }
         items.sort((a, b) => a.when.localeCompare(b.when));
@@ -1362,9 +1370,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
               return (
                 <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                   <p style={{ fontSize: 13, color: "rgba(255,255,255,0.90)", margin: 0 }}>
-                    {p.type === "replace"
-                      ? `It may be time to replace ${p.name} soon`
-                      : `${p.name} might be ready for a size-up`}
+                    {comingUpLabel(p)}
                   </p>
                   <span style={{ fontSize: 11, color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
                 </div>
@@ -1417,9 +1423,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
               return (
                 <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                   <p style={{ fontSize: 13, color: "rgba(255,255,255,0.90)", margin: 0 }}>
-                    {p.type === "replace"
-                      ? `It may be time to replace ${p.name} soon`
-                      : `${p.name} might be ready for a size-up`}
+                    {comingUpLabel(p)}
                   </p>
                   <span style={{ fontSize: 11, color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
                 </div>
@@ -1471,9 +1475,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
               return (
                 <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                   <p style={{ fontSize: 13, color: "rgba(255,255,255,0.90)", margin: 0 }}>
-                    {p.type === "replace"
-                      ? `It may be time to replace ${p.name} soon`
-                      : `${p.name} might be ready for a size-up`}
+                    {comingUpLabel(p)}
                   </p>
                   <span style={{ fontSize: 11, color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
                 </div>
@@ -1523,9 +1525,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
               return (
                 <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                   <p style={{ fontSize: 13, color: "rgba(255,255,255,0.90)", margin: 0 }}>
-                    {p.type === "replace"
-                      ? `It may be time to replace ${p.name} soon`
-                      : `${p.name} might be ready for a size-up`}
+                    {comingUpLabel(p)}
                   </p>
                   <span style={{ fontSize: 11, color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
                 </div>
@@ -1560,9 +1560,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
               return (
                 <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                   <p style={{ fontSize: 13, color: "rgba(255,255,255,0.90)", margin: 0 }}>
-                    {p.type === "replace"
-                      ? `It may be time to replace ${p.name} soon`
-                      : `${p.name} might be ready for a size-up`}
+                    {comingUpLabel(p)}
                   </p>
                   <span style={{ fontSize: 11, color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
                 </div>
@@ -1613,9 +1611,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
             return (
               <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                 <p style={{ fontSize: 13, color: "rgba(255,255,255,0.90)", margin: 0 }}>
-                  {p.type === "replace"
-                    ? `It may be time to replace ${p.name} soon`
-                    : `${p.name} might be ready for a size-up`}
+                  {comingUpLabel(p)}
                 </p>
                 <span style={{ fontSize: 11, color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
               </div>
