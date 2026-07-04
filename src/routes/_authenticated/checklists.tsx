@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { CheckCircle2, Circle, ClipboardList, ArrowLeft, Gift, Luggage } from "lucide-react";
+import { CheckCircle2, Circle, ClipboardList, ArrowLeft, Gift, Luggage, HeartPulse } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
@@ -198,6 +198,17 @@ function ChecklistsPage() {
             <div>
               <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>Registry Check</p>
               <p className="font-body text-xs" style={{ color: "#8A8078" }}>Recall check before you add</p>
+            </div>
+          </Link>
+          <Link to="/emergency-info"
+            className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[#C4785A]/50"
+            style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: "#F5F0E8" }}>
+              <HeartPulse className="h-5 w-5" style={{ color: "#C4785A" }} />
+            </span>
+            <div>
+              <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>Emergency Info</p>
+              <p className="font-body text-xs" style={{ color: "#8A8078" }}>Card for a babysitter or sitter</p>
             </div>
           </Link>
         </div>

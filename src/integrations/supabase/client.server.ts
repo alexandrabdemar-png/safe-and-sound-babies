@@ -4,11 +4,19 @@
 //   • CPSC recall sync (check-recalls hook)
 //   • Product-alert fan-out (product-alerts-check hook)
 //   • Stripe webhook subscription writes (payments/webhook)
+//   • Emergency-info share-link reads (api/public/emergency-share) — RLS
+//     intentionally has no anon policy for emergency_info, since the whole
+//     point is that a share link (not an authenticated session) is what
+//     grants access. This route substitutes a server-verified, hashed,
+//     expiring token check for RLS before it ever selects a row — it is
+//     not an operator dashboard and never returns a row without one.
 //
 // PROHIBITED uses:
 //   • Admin dashboards or analytics — must NEVER SELECT individual rows from
 //     children, profiles, products, or any other user-data table.
-//   • Any query that returns personally-identifiable data to a human operator.
+//   • Any query that returns personally-identifiable data to a human operator
+//     without an equivalent per-request authorization check like the one
+//     above.
 //
 // For aggregate reporting use the `reporting` Postgres role + admin_stats view
 // defined in migration 20260610140000_admin_reporting_role.sql.

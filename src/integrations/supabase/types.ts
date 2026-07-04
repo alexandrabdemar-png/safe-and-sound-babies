@@ -198,6 +198,100 @@ export type Database = {
         }
         Relationships: []
       }
+      emergency_info: {
+        Row: {
+          allergies: string | null
+          blood_type: string | null
+          child_id: string
+          created_at: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          id: string
+          medications: string | null
+          notes: string | null
+          pediatrician_name: string | null
+          pediatrician_phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allergies?: string | null
+          blood_type?: string | null
+          child_id: string
+          created_at?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          id?: string
+          medications?: string | null
+          notes?: string | null
+          pediatrician_name?: string | null
+          pediatrician_phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allergies?: string | null
+          blood_type?: string | null
+          child_id?: string
+          created_at?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          id?: string
+          medications?: string | null
+          notes?: string | null
+          pediatrician_name?: string | null
+          pediatrician_phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_info_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: true
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emergency_share_links: {
+        Row: {
+          child_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          revoked_at: string | null
+          token_hash: string
+          user_id: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          revoked_at?: string | null
+          token_hash: string
+          user_id: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          revoked_at?: string | null
+          token_hash?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_share_links_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       insight_dismissals: {
         Row: {
           action: string
