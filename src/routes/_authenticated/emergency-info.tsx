@@ -122,8 +122,15 @@ function EmergencyInfoPage() {
         .upsert({ ...info, child_id: child.id, user_id: userId }, { onConflict: "child_id" });
       if (error) throw error;
       toast.success("Saved");
-    } catch {
-      toast.error("Could not save. Please try again.");
+    } catch (err) {
+      console.error("emergency_info save failed:", err);
+      const detail =
+        err && typeof err === "object" && "hint" in err && err.hint
+          ? String(err.hint)
+          : err instanceof Error
+            ? err.message
+            : String(err);
+      toast.error(`Could not save: ${detail}`);
     }
     setSaving(false);
   }
