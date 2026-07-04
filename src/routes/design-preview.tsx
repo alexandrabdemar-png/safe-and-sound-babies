@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AlertTriangle, RefreshCw, Ruler, Sparkles, ArrowRight, Clock3, X } from "lucide-react";
+import { AlertTriangle, RefreshCw, Ruler, Sparkles, ArrowRight, Clock3, X, type LucideIcon } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { SoftBlob } from "@/components/SoftBlob";
 
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/design-preview")({
   component: DesignPreview,
 });
 
-function SummaryTile({ icon: Icon, count, label, tone = "muted" as "muted" | "danger" }) {
+function SummaryTile({ icon: Icon, count, label, tone = "muted" }: { icon: LucideIcon; count: number; label: string; tone?: "muted" | "danger" }) {
   const danger = tone === "danger";
   return (
     <div className={`flex flex-col items-center gap-1.5 rounded-2xl border p-3.5 text-center ${danger ? "border-destructive/30 bg-destructive/5" : "border-border/60 bg-card"}`}>
