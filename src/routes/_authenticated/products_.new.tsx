@@ -297,7 +297,6 @@ function NewProductPage() {
             <Field label="Category" required>
               <div className="grid grid-cols-2 gap-2.5">
                 {CATEGORIES.map((c) => {
-                  const Icon = c.icon;
                   const active = category === c.key;
                   return (
                     <button
@@ -306,11 +305,10 @@ function NewProductPage() {
                       onClick={() => setCategory(c.key)}
                       className={
                         active
-                          ? "flex items-center gap-2 rounded-2xl border border-primary bg-primary px-3 py-3 text-left font-body text-sm font-semibold text-primary-foreground"
-                          : "flex items-center gap-2 rounded-2xl border border-border bg-card px-3 py-3 text-left font-body text-sm text-foreground/80"
+                          ? "rounded-2xl border border-primary bg-primary px-3 py-3 text-left font-body text-sm font-semibold text-primary-foreground"
+                          : "rounded-2xl border border-border bg-card px-3 py-3 text-left font-body text-sm text-foreground/80"
                       }
                     >
-                      <Icon className="h-4 w-4 shrink-0" />
                       <span className="truncate">{c.label}</span>
                     </button>
                   );
