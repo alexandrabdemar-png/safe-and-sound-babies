@@ -115,7 +115,7 @@ function PricingPage() {
         <div className="text-center space-y-2 pt-4">
           <h2 className="text-3xl font-bold">Safety is free</h2>
           <p className="text-muted-foreground">
-            Recall alerts and replacement reminders stay free of charge. Pro unlocks convenience features for power users.
+            Recall alerts and replacement reminders stay free of charge. Pro unlocks convenience features.
           </p>
           <p className="font-body text-xs text-muted-foreground/70">
             Safety guidelines based on AAP recommendations.
