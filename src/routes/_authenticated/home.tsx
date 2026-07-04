@@ -17,6 +17,7 @@ import { checkCriticalRecalls, CRITICAL_RECALLS } from "@/lib/recallCheck";
 import { selectWeeklyTip, getIsoWeekNumber, weekKey as getTipWeekKey } from "@/lib/safetyTips";
 import { getDevelopmentBand } from "@/lib/developmentContent";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
+import { SoftBlob } from "@/components/SoftBlob";
 
 
 export const Route = createFileRoute("/_authenticated/home")({
@@ -684,7 +685,8 @@ function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28 animate-fade-in">
-      <header className="px-5 pt-10 pb-4 sm:px-6">
+      <header className="relative overflow-hidden px-5 pt-10 pb-4 sm:px-6">
+        <SoftBlob className="-right-24 -top-32" />
         <div className="mx-auto max-w-md">
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -709,7 +711,7 @@ function HomePage() {
           </p>
           <p
             className="mt-4 text-[10px] font-medium tracking-[0.12em] text-muted-foreground/50"
-            style={{ fontFamily: '"DM Sans", system-ui, sans-serif', textTransform: "uppercase" }}
+            style={{ fontFamily: '"Inter", system-ui, sans-serif', textTransform: "uppercase" }}
           >
             Safety guidelines based on AAP and CPSC recommendations
           </p>
@@ -1289,12 +1291,12 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
 
   const cardBase: React.CSSProperties = {
     borderRadius: 20,
-    backgroundColor: "#5C6355",
+    backgroundColor: "#5E6B4E",
     border: "1px solid rgba(255,255,255,0.08)",
     padding: "24px",
   };
   const label = (
-    <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 12, fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+    <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 12, fontFamily: '"Inter", system-ui, sans-serif' }}>
       Today · {dayName}
     </p>
   );
@@ -1314,7 +1316,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         <button
           type="button"
           onClick={() => onNavigate({ to: "/onboarding" })}
-          style={{ marginTop: 12, padding: "8px 18px", borderRadius: 999, backgroundColor: "rgba(255,255,255,0.9)", color: "#5C6355", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}
+          style={{ marginTop: 12, padding: "8px 18px", borderRadius: 999, backgroundColor: "rgba(255,255,255,0.9)", color: "#5E6B4E", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}
         >
           Add a child →
         </button>
@@ -1333,7 +1335,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span style={{ fontSize: 22, marginTop: 2 }}>✨</span>
           <div>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"DM Sans", system-ui, sans-serif' }}>Week in review</p>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"Inter", system-ui, sans-serif' }}>Week in review</p>
             <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 5 }}>
               <li style={{ fontSize: 13, color: "rgba(255,255,255,0.88)" }}>{recalls > 0 ? `⚠️ ${recalls} active recall${recalls > 1 ? "s" : ""} — check the Alerts tab` : "✅ No recalls affecting your products this week"}</li>
               {comingUp.length > 0 && (
@@ -1355,13 +1357,13 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span style={{ fontSize: 22, marginTop: 2 }}>🌱</span>
           <div>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"DM Sans", system-ui, sans-serif' }}>Development this week</p>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"Inter", system-ui, sans-serif' }}>Development this week</p>
             <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>{devBand.physical}</p>
           </div>
         </div>
         {comingUp.length > 0 && (
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"Inter", system-ui, sans-serif' }}>
               Coming up for {child?.name ?? "your little one"}
             </p>
             {comingUp.slice(0, 3).map((p) => {
@@ -1392,7 +1394,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
             <span style={{ fontSize: 22, marginTop: 2 }}>🛡️</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"DM Sans", system-ui, sans-serif' }}>Quick safety tip</p>
+                <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"Inter", system-ui, sans-serif' }}>Quick safety tip</p>
                 {onDismissSafetyTip && (
                   <button
                     type="button"
@@ -1414,7 +1416,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         )}
         {comingUp.length > 0 && (
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"Inter", system-ui, sans-serif' }}>
               Coming up for {child?.name ?? "your little one"}
             </p>
             {comingUp.slice(0, 3).map((p) => {
@@ -1445,13 +1447,13 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
       <button
         type="button"
         onClick={() => onNavigate({ to: "/recall-radar" })}
-        style={{ ...cardBase, backgroundColor: total > 0 ? "#C8523A" : "#5C6355", width: "100%", textAlign: "left", cursor: "pointer" }}
+        style={{ ...cardBase, backgroundColor: total > 0 ? "#C04832" : "#5E6B4E", width: "100%", textAlign: "left", cursor: "pointer" }}
       >
         {label}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span style={{ fontSize: 22, marginTop: 2 }}>📡</span>
           <div>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"DM Sans", system-ui, sans-serif' }}>Recall Radar · last 30 days</p>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"Inter", system-ui, sans-serif' }}>Recall Radar · last 30 days</p>
             {loading ? (
               <p style={{ fontSize: 14, color: "#8A8078", margin: 0 }}>Checking CPSC and FDA databases…</p>
             ) : (
@@ -1466,7 +1468,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         </div>
         {comingUp.length > 0 && (
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"Inter", system-ui, sans-serif' }}>
               Coming up for {child?.name ?? "your little one"}
             </p>
             {comingUp.slice(0, 3).map((p) => {
@@ -1496,7 +1498,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span style={{ fontSize: 22, marginTop: 2 }}>📅</span>
           <div>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"DM Sans", system-ui, sans-serif' }}>Coming up</p>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"Inter", system-ui, sans-serif' }}>Coming up</p>
             {next ? (
               <>
                 <p style={{ fontSize: 14, color: "rgba(255,255,255,0.95)", fontWeight: 600, margin: "0 0 2px" }}>{next.name}</p>
@@ -1516,7 +1518,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         </div>
         {comingUp.length > 0 && (
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"Inter", system-ui, sans-serif' }}>
               Coming up for {child?.name ?? "your little one"}
             </p>
             {comingUp.slice(0, 3).map((p) => {
@@ -1545,13 +1547,13 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span style={{ fontSize: 22, marginTop: 2 }}>🌤️</span>
           <div>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"DM Sans", system-ui, sans-serif' }}>Weekend heads-up</p>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"Inter", system-ui, sans-serif' }}>Weekend heads-up</p>
             <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>{weekendReminder(child.date_of_birth ?? null)}</p>
           </div>
         </div>
         {comingUp.length > 0 && (
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"Inter", system-ui, sans-serif' }}>
               Coming up for {child?.name ?? "your little one"}
             </p>
             {comingUp.slice(0, 3).map((p) => {
@@ -1579,7 +1581,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
         <span style={{ fontSize: 22, marginTop: 2 }}>📏</span>
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"DM Sans", system-ui, sans-serif' }}>Measurements check-in</p>
+          <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"Inter", system-ui, sans-serif' }}>Measurements check-in</p>
           {showMeasReminder ? (
             <>
               <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: "0 0 10px" }}>
@@ -1588,7 +1590,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
               <button
                 type="button"
                 onClick={() => onNavigate({ to: "/growth" })}
-                style={{ padding: "7px 16px", borderRadius: 999, backgroundColor: "rgba(255,255,255,0.9)", color: "#5C6355", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}
+                style={{ padding: "7px 16px", borderRadius: 999, backgroundColor: "rgba(255,255,255,0.9)", color: "#5E6B4E", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}
               >
                 Log measurements →
               </button>
@@ -1602,7 +1604,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
       </div>
       {comingUp.length > 0 && (
         <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
-          <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+          <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"Inter", system-ui, sans-serif' }}>
             Coming up for {child?.name ?? "your little one"}
           </p>
           {comingUp.slice(0, 3).map((p) => {
