@@ -10,7 +10,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
-import { evaluateInsights, type Insight, type ProductInput } from "@/lib/insights";
+import { evaluateInsights, URGENCY_LABEL, type Insight, type ProductInput } from "@/lib/insights";
 import { friendlyError, diagnosticDetail } from "@/lib/errors";
 import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
 import { checkCriticalRecalls, CRITICAL_RECALLS } from "@/lib/recallCheck";
@@ -89,6 +89,12 @@ function ageSafetyTip(dobStr: string | null): string {
 function parseDateLocal(dateStr: string): Date {
   const [y, m, d] = dateStr.split("-").map(Number);
   return new Date(y, m - 1, d);
+}
+
+function nextMeasurementReminderLabel(measurementsUpdatedAt: string | null): string {
+  const base = measurementsUpdatedAt ? new Date(measurementsUpdatedAt) : new Date();
+  const next = new Date(base.getTime() + 28 * 24 * 60 * 60 * 1000);
+  return next.toLocaleDateString("en-US", { month: "long", day: "numeric" });
 }
 
 function calcAge(dob: string | null): { label: string } {
@@ -729,7 +735,7 @@ function HomePage() {
             className="mt-4 text-[10px] font-medium tracking-[0.12em] text-muted-foreground/50"
             style={{ fontFamily: '"Inter", system-ui, sans-serif', textTransform: "uppercase" }}
           >
-            Safety guidelines based on AAP and CPSC recommendations
+            Recommendations informed by AAP, CPSC, and other trusted safety guidance
           </p>
         </div>
       </header>
@@ -876,7 +882,11 @@ function HomePage() {
       {recallRadarCount !== null && recallRadarCount !== -1 && (
         <div className="px-5 pt-3 sm:px-6">
           <div className="mx-auto max-w-md">
-            <RecallRadarCard count={recallRadarCount + (fdaRecallCount ?? 0) + CRITICAL_RECALLS.length} />
+            <RecallRadarCard
+              count={recallRadarCount + (fdaRecallCount ?? 0) + CRITICAL_RECALLS.length}
+              matchedCount={alerts.recalls}
+              childName={child?.name ?? "your child"}
+            />
           </div>
         </div>
       )}
@@ -908,9 +918,9 @@ function HomePage() {
               className="flex items-center justify-between rounded-3xl border border-border/60 bg-card p-4 transition-all hover:border-primary/40"
             >
               <div>
-                <p className="font-display text-base font-semibold tracking-tight">Nothing to do today 🌙</p>
+                <p className="font-display text-base font-semibold tracking-tight">✨ You're all caught up</p>
                 <p className="mt-0.5 font-body text-xs text-muted-foreground">
-                  We'll only ping you about recalls, replacements, and size-ups.
+                  No recalls. No replacements. No size changes. We'll let you know if that changes.
                 </p>
               </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground" />
@@ -960,6 +970,9 @@ function HomePage() {
                   />
                 ))}
               </ul>
+              <p className="mt-3 font-body text-[10px] leading-relaxed text-muted-foreground/60">
+                Recommendations are informational and may not apply to every child or home. Always use your judgment and review manufacturer instructions.
+              </p>
             </div>
           </div>
         </section>
@@ -1004,12 +1017,12 @@ function InsightCard({ insight, onDismiss, onSnooze }: { insight: Insight; onDis
         <p className="font-body text-sm font-medium leading-snug">{insight.title}</p>
         <span className={
           insight.urgency === 'now'
-            ? "shrink-0 rounded-full bg-destructive/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-destructive"
+            ? "shrink-0 rounded-full bg-primary/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-primary"
             : insight.urgency === 'soon'
               ? "shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-amber-700 dark:text-amber-400"
               : "shrink-0 rounded-full bg-sand/60 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-accent"
         }>
-          {insight.urgency === 'heads_up' ? 'FYI' : insight.urgency}
+          {URGENCY_LABEL[insight.urgency]}
         </span>
       </div>
       <p className={`mt-1 font-body text-xs text-muted-foreground ${!expanded && isLong ? "line-clamp-2" : ""}`}>{insight.body}</p>
@@ -1040,6 +1053,9 @@ function InsightCard({ insight, onDismiss, onSnooze }: { insight: Insight; onDis
           </button>
         </div>
       </div>
+      <p className="mt-2 font-body text-[10px] text-muted-foreground/60">
+        Based on AAP guidance and developmental milestones.
+      </p>
     </li>
   );
 }
@@ -1248,24 +1264,27 @@ function AgeJumpCard({
   );
 }
 
-function RecallRadarCard({ count }: { count: number }) {
+function RecallRadarCard({ count, matchedCount, childName }: { count: number; matchedCount: number; childName: string }) {
   return (
     <Link
       to="/recall-radar"
       className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3.5 transition-colors hover:border-primary/40"
     >
       <div className="flex items-center gap-3">
-        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${count > 0 ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary"}`}>
+        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${matchedCount > 0 ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary"}`}>
           <Radio className="h-4 w-4" />
         </span>
         <div>
-          <p className="font-body text-sm font-semibold">
-            {count > 0
-              ? `${count} baby product recall${count > 1 ? "s" : ""} this month`
-              : "No new baby recalls this month"}
-          </p>
+          <p className="font-body text-sm font-semibold">Recall Radar</p>
           <p className="font-body text-[11px] text-muted-foreground">
-            Recall Radar · last 30 days · tap to browse
+            {count > 0
+              ? `${count} new recall${count > 1 ? "s" : ""} published this month`
+              : "No new recalls published this month"}
+          </p>
+          <p className="mt-0.5 font-body text-[11px] text-muted-foreground/70">
+            {matchedCount > 0
+              ? `${matchedCount} may match ${childName}'s saved products — tap to review.`
+              : `None currently match ${childName}'s saved products.`}
           </p>
         </div>
       </div>
@@ -1613,7 +1632,11 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
             </>
           ) : (
             <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>
-              {child.name}'s measurements are up to date — nice work. We'll remind you again in about a month.
+              Measurements are up to date.
+              <br />
+              <span style={{ color: "rgba(255,255,255,0.65)" }}>
+                Next reminder: {nextMeasurementReminderLabel(child.measurements_updated_at)}
+              </span>
             </p>
           )}
         </div>

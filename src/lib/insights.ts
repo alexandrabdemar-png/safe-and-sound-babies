@@ -99,8 +99,8 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
     if (months >= 4) {
       out.push({
         id: "babyproof_start",
-        title: "Begin babyproofing",
-        body: `${name} will be on the move sooner than you think — outlet covers, cabinet locks, and anchoring tall furniture are a good starting list.`,
+        title: "Begin thinking about babyproofing",
+        body: `Many babies start becoming mobile around this age. Some families find it helpful to begin looking into outlet covers, cabinet locks, and anchoring tall furniture.`,
         urgency: months >= 6 ? "now" : "soon",
         category: "safety",
       });
@@ -108,8 +108,8 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
     if (months >= 6 && months < 12) {
       out.push({
         id: "crib_mattress_middle",
-        title: "Lower the crib mattress height",
-        body: "When your baby begins pushing up or showing signs of increased mobility, lower the mattress to the middle setting before they can pull to sit.",
+        title: "Consider lowering the crib mattress",
+        body: "Once a baby begins pushing up or shows signs of increased mobility, many families lower the mattress to the middle setting before they can pull to sit.",
         urgency: "now",
         category: "crib",
       });
@@ -117,8 +117,8 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
     if (months >= 7) {
       out.push({
         id: "install_baby_gates",
-        title: "Install baby gates at stairs",
-        body: "When your baby begins showing signs of increased mobility, top-of-stairs gates become essential. Hardware-mount these for the best protection.",
+        title: "Consider installing safety gates near stairs",
+        body: "If your home has stairs, now can be a good time to think about gates once a baby becomes more mobile. Hardware-mounted gates tend to offer the most secure hold.",
         urgency: "now",
         category: "baby_gate",
       });
@@ -126,8 +126,8 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
     if (months >= 9) {
       out.push({
         id: "babyproof_low_cabinets",
-        title: "Babyproof lower cabinets",
-        body: `As ${name} becomes more active and starts exploring new movements, consider preparing your space before they begin pulling to stand. Latch any cabinet under hip-height — especially anything with cleaning supplies.`,
+        title: "Consider securing lower cabinets",
+        body: `Many families begin securing accessible cabinets around this stage, as ${name} becomes more active — especially any that store cleaning supplies.`,
         urgency: "now",
         category: "safety",
       });
@@ -135,8 +135,8 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
     if (months >= 12) {
       out.push({
         id: "crib_mattress_lowest",
-        title: "Lower the crib mattress height to the lowest setting",
-        body: "Once they can pull to stand, the crib mattress height matters. Drop the mattress all the way down so the rail stays high enough to keep them safe.",
+        title: "Consider lowering the crib mattress to its lowest setting",
+        body: "Many families lower the mattress to its lowest setting once a baby can pull to stand, so the rail height stays adequate.",
         urgency: "now",
         category: "crib",
       });
@@ -200,8 +200,8 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
   if (hasCategory(products, "swing") && months !== null && months >= 6) {
     out.push({
       id: "swing_outgrow",
-      title: "When your baby can sit up independently, swings are no longer safe",
-      body: "As soon as your baby can sit up on their own, swings stop being safe to use. Time to retire it or pass it along.",
+      title: "Swings are typically not recommended once a baby can sit up",
+      body: "Once a baby can sit up independently, many manufacturers no longer recommend swing use — this may be a good time to check the manufacturer's guidance and consider retiring it.",
       urgency: "now",
       category: "swing",
     });
@@ -251,8 +251,10 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
   return out;
 }
 
+// Deliberately non-urgent, informational badge copy — see home.tsx InsightCard.
+// Avoid words like "Now" that read as a directive/urgent command.
 export const URGENCY_LABEL: Record<InsightUrgency, string> = {
-  now: "Now",
-  soon: "Soon",
-  heads_up: "Heads-up",
+  now: "Recommended",
+  soon: "Coming up",
+  heads_up: "FYI",
 };
