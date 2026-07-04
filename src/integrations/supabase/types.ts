@@ -171,6 +171,41 @@ export type Database = {
         }
         Relationships: []
       }
+      completed_tips: {
+        Row: {
+          child_id: string | null
+          created_at: string | null
+          id: string
+          tip_id: string
+          user_id: string
+          week_key: string
+        }
+        Insert: {
+          child_id?: string | null
+          created_at?: string | null
+          id?: string
+          tip_id: string
+          user_id: string
+          week_key: string
+        }
+        Update: {
+          child_id?: string | null
+          created_at?: string | null
+          id?: string
+          tip_id?: string
+          user_id?: string
+          week_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "completed_tips_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emergency_contacts: {
         Row: {
           created_at: string
@@ -194,6 +229,45 @@ export type Database = {
           name?: string
           phone?: string
           relationship?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      home_profile: {
+        Row: {
+          created_at: string | null
+          has_car: boolean | null
+          has_pet: boolean | null
+          has_pool: boolean | null
+          has_stairs: boolean | null
+          home_type: string | null
+          id: string
+          in_daycare: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          has_car?: boolean | null
+          has_pet?: boolean | null
+          has_pool?: boolean | null
+          has_stairs?: boolean | null
+          home_type?: string | null
+          id?: string
+          in_daycare?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          has_car?: boolean | null
+          has_pet?: boolean | null
+          has_pool?: boolean | null
+          has_stairs?: boolean | null
+          home_type?: string | null
+          id?: string
+          in_daycare?: boolean | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -342,6 +416,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      product_catalog: {
+        Row: {
+          barcode: string
+          brand: string | null
+          category: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          is_baby_product: boolean
+          name: string | null
+          raw: Json | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          barcode: string
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_baby_product?: boolean
+          name?: string | null
+          raw?: Json | null
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          barcode?: string
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_baby_product?: boolean
+          name?: string | null
+          raw?: Json | null
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       product_guidelines: {
         Row: {
@@ -532,28 +648,28 @@ export type Database = {
       }
       profiles: {
         Row: {
+          apns_device_token: string | null
           avatar_url: string | null
           created_at: string
           display_name: string | null
-          apns_device_token: string | null
           id: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          apns_device_token?: string | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
-          apns_device_token?: string | null
           id?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          apns_device_token?: string | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
-          apns_device_token?: string | null
           id?: string
           updated_at?: string
           user_id?: string

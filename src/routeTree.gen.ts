@@ -213,18 +213,16 @@ const AuthenticatedProductsIdRoute = AuthenticatedProductsIdRouteImport.update({
   path: '/products/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedMomentsNewRoute =
-  AuthenticatedMomentsNewRouteImport.update({
-    id: '/moments_/new',
-    path: '/moments/new',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedBottlesNewRoute =
-  AuthenticatedBottlesNewRouteImport.update({
-    id: '/bottles_/new',
-    path: '/bottles/new',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
+const AuthenticatedMomentsNewRoute = AuthenticatedMomentsNewRouteImport.update({
+  id: '/moments_/new',
+  path: '/moments/new',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBottlesNewRoute = AuthenticatedBottlesNewRouteImport.update({
+  id: '/bottles_/new',
+  path: '/bottles/new',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -289,8 +287,8 @@ export interface FileRoutesByFullPath {
   '/profile/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/profile/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
   '/profile/support': typeof AuthenticatedProfileSupportRoute
-  '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-extra-recalls': typeof ApiPublicHooksCheckExtraRecallsRoute
+  '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -328,8 +326,8 @@ export interface FileRoutesByTo {
   '/profile/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/profile/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
   '/profile/support': typeof AuthenticatedProfileSupportRoute
-  '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-extra-recalls': typeof ApiPublicHooksCheckExtraRecallsRoute
+  '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -369,8 +367,8 @@ export interface FileRoutesById {
   '/_authenticated/profile_/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/_authenticated/profile_/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
   '/_authenticated/profile_/support': typeof AuthenticatedProfileSupportRoute
-  '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-extra-recalls': typeof ApiPublicHooksCheckExtraRecallsRoute
+  '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/check-recalls': typeof ApiPublicHooksCheckRecallsRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -410,8 +408,8 @@ export interface FileRouteTypes {
     | '/profile/privacy-policy'
     | '/profile/privacy-promise'
     | '/profile/support'
-    | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-extra-recalls'
+    | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/product-alerts-check'
     | '/api/public/payments/webhook'
@@ -449,8 +447,8 @@ export interface FileRouteTypes {
     | '/profile/privacy-policy'
     | '/profile/privacy-promise'
     | '/profile/support'
-    | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-extra-recalls'
+    | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/product-alerts-check'
     | '/api/public/payments/webhook'
@@ -489,8 +487,8 @@ export interface FileRouteTypes {
     | '/_authenticated/profile_/privacy-policy'
     | '/_authenticated/profile_/privacy-promise'
     | '/_authenticated/profile_/support'
-    | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-extra-recalls'
+    | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/check-recalls'
     | '/api/public/hooks/product-alerts-check'
     | '/api/public/payments/webhook'
@@ -503,8 +501,8 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   RecallsRoute: typeof RecallsRoute
   TermsRoute: typeof TermsRoute
-  ApiPublicHooksCheckProductAlertsRoute: typeof ApiPublicHooksCheckProductAlertsRoute
   ApiPublicHooksCheckExtraRecallsRoute: typeof ApiPublicHooksCheckExtraRecallsRoute
+  ApiPublicHooksCheckProductAlertsRoute: typeof ApiPublicHooksCheckProductAlertsRoute
   ApiPublicHooksCheckRecallsRoute: typeof ApiPublicHooksCheckRecallsRoute
   ApiPublicHooksProductAlertsCheckRoute: typeof ApiPublicHooksProductAlertsCheckRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -862,8 +860,8 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   RecallsRoute: RecallsRoute,
   TermsRoute: TermsRoute,
-  ApiPublicHooksCheckProductAlertsRoute: ApiPublicHooksCheckProductAlertsRoute,
   ApiPublicHooksCheckExtraRecallsRoute: ApiPublicHooksCheckExtraRecallsRoute,
+  ApiPublicHooksCheckProductAlertsRoute: ApiPublicHooksCheckProductAlertsRoute,
   ApiPublicHooksCheckRecallsRoute: ApiPublicHooksCheckRecallsRoute,
   ApiPublicHooksProductAlertsCheckRoute: ApiPublicHooksProductAlertsCheckRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
