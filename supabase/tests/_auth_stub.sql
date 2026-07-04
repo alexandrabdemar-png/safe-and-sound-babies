@@ -6,6 +6,16 @@
 -- written as `TO authenticated USING (auth.uid() = user_id)` etc. to behave
 -- the same way they do against a real Supabase project.
 
+-- Real Supabase projects always have this publication pre-created for the
+-- Realtime feature; migrations that ALTER PUBLICATION supabase_realtime
+-- ADD/DROP TABLE assume it already exists.
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+    CREATE PUBLICATION supabase_realtime;
+  END IF;
+END $$;
+
 CREATE SCHEMA IF NOT EXISTS auth;
 -- Real Supabase projects always have this schema for extension objects
 -- (pg_trgm, pg_net, pg_cron, etc.); vanilla Postgres does not.
