@@ -510,47 +510,55 @@ function HomePage() {
     return updatedAt < twentyEightDaysAgo;
   }, [child, measReminderDismissed]);
 
-  async function dismissInsight(insightId: string) {
+  // Manual select-then-update-or-insert instead of `.upsert(..., { onConflict })`.
+  // onConflict requires a real unique constraint matching those exact columns —
+  // if the live DB's constraint shape doesn't match what we expect (e.g. an
+  // undeployed migration), the upsert fails outright. This works regardless of
+  // which unique constraint (if any) is currently live.
+  async function saveInsightResponse(insightId: string, action: "dismissed" | "snoozed", until: string | null) {
     if (!child) return;
     setDismissedIds((prev) => new Set([...prev, insightId]));
     try {
       const { data: { session: sess } } = await supabase.auth.getSession();
       if (!sess?.user) return;
-      const { error } = await (supabase as any).from("insight_dismissals").upsert({
-        user_id: sess.user.id,
-        child_id: child.id,
-        rule_id: insightId,
-        action: "dismissed",
-        until: null,
-      }, { onConflict: "child_id,rule_id" });
-      if (error) throw error;
+      const { data: existing, error: selectError } = await (supabase as any)
+        .from("insight_dismissals")
+        .select("id")
+        .eq("child_id", child.id)
+        .eq("rule_id", insightId)
+        .maybeSingle();
+      if (selectError) throw selectError;
+
+      if (existing) {
+        const { error } = await (supabase as any)
+          .from("insight_dismissals")
+          .update({ user_id: sess.user.id, action, until })
+          .eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await (supabase as any).from("insight_dismissals").insert({
+          user_id: sess.user.id,
+          child_id: child.id,
+          rule_id: insightId,
+          action,
+          until,
+        });
+        if (error) throw error;
+      }
     } catch (err) {
-      console.error("insight_dismissals dismiss failed:", err);
+      console.error(`insight_dismissals ${action} failed:`, err);
       setDismissedIds((prev) => { const next = new Set(prev); next.delete(insightId); return next; });
       toast.error(`Couldn't save: ${diagnosticDetail(err)}`);
     }
   }
 
-  async function snoozeInsight(insightId: string) {
-    if (!child) return;
-    setDismissedIds((prev) => new Set([...prev, insightId]));
+  function dismissInsight(insightId: string) {
+    return saveInsightResponse(insightId, "dismissed", null);
+  }
+
+  function snoozeInsight(insightId: string) {
     const until = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-    try {
-      const { data: { session: sess } } = await supabase.auth.getSession();
-      if (!sess?.user) return;
-      const { error } = await (supabase as any).from("insight_dismissals").upsert({
-        user_id: sess.user.id,
-        child_id: child.id,
-        rule_id: insightId,
-        action: "snoozed",
-        until,
-      }, { onConflict: "child_id,rule_id" });
-      if (error) throw error;
-    } catch (err) {
-      console.error("insight_dismissals snooze failed:", err);
-      setDismissedIds((prev) => { const next = new Set(prev); next.delete(insightId); return next; });
-      toast.error(`Couldn't save: ${diagnosticDetail(err)}`);
-    }
+    return saveInsightResponse(insightId, "snoozed", until);
   }
 
   function dismissRecallBanner() {
