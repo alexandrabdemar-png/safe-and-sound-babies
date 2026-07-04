@@ -90,7 +90,6 @@ function FirstFoodsPage() {
     if (!session?.user) { toast.error("Sign in to log foods"); setSaving(false); return; }
 
     const { error } = await supabase.from("first_foods" as any).insert({
-      user_id: session.user.id,
       child_id: child.id,
       food_name: finalName,
       date_introduced: dateIntroduced,
