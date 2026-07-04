@@ -38,6 +38,7 @@ import {
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { CATEGORIES, guessCategoryFromText, type CategoryKey } from "@/lib/productCategories";
 import { ProductCatalogSearch } from "@/components/ProductCatalogSearch";
+import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 import type { CatalogSearchResult } from "@/lib/searchProductCatalog";
 import { trackEvent } from "@/lib/analytics";
 
@@ -259,7 +260,7 @@ function NewProductPage() {
           </Button>
           <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight">Add a product</h1>
           <p className="mt-1.5 font-body text-sm text-muted-foreground">
-            Search by name for instant safety info, or fill in manually below.
+            Search to find your product and available safety information.
           </p>
         </div>
       </header>
@@ -271,11 +272,15 @@ function NewProductPage() {
             <ProductSearchAI onPick={(r) => setSheetProduct(r)} />
           </SearchErrorBoundary>
 
+          <p className="-mt-2 font-body text-[11px] leading-relaxed text-muted-foreground/70">
+            Product information is matched using trusted databases when available. Please verify that the model and details match your product before relying on reminders.
+          </p>
+
           {/* Divider */}
           <div className="flex items-center gap-3">
             <div className="h-px flex-1 bg-border" />
             <span className="font-body text-xs text-muted-foreground">
-              or search product databases
+              or browse products
             </span>
             <div className="h-px flex-1 bg-border" />
           </div>
@@ -288,7 +293,7 @@ function NewProductPage() {
           {/* Divider */}
           <div className="flex items-center gap-3">
             <div className="h-px flex-1 bg-border" />
-            <span className="font-body text-xs text-muted-foreground">or add manually</span>
+            <span className="font-body text-xs text-muted-foreground">or continue manually</span>
             <div className="h-px flex-1 bg-border" />
           </div>
 
@@ -322,7 +327,7 @@ function NewProductPage() {
               )}
             </Field>
 
-            <Field label="Name" required>
+            <Field label="Product name" required>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -332,7 +337,7 @@ function NewProductPage() {
               />
             </Field>
 
-            <Field label="Brand">
+            <Field label="Brand (optional)">
               <Input
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
@@ -342,7 +347,7 @@ function NewProductPage() {
               />
             </Field>
 
-            <Field label="Barcode">
+            <Field label="Barcode (optional)">
               <div className="flex gap-2">
                 <Input
                   value={barcode}
@@ -361,13 +366,16 @@ function NewProductPage() {
               </div>
             </Field>
 
-            <Field label="Purchase date" required>
+            <Field label="Purchase date (if known)">
               <Input
                 type="date"
                 value={purchasedAt}
                 onChange={(e) => setPurchasedAt(e.target.value)}
                 className="h-12 rounded-2xl bg-card px-4 font-body text-base"
               />
+              <p className="mt-1.5 font-body text-xs text-muted-foreground">
+                Used to help estimate reminders when manufacturer dates aren't available.
+              </p>
             </Field>
 
             {category === "car_seat" && (
@@ -407,9 +415,11 @@ function NewProductPage() {
               disabled={saving}
               className="mt-2 h-12 w-full rounded-full bg-primary font-body text-sm font-semibold"
             >
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save product"}
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add to My Products"}
             </Button>
           </form>
+
+          <ProductInfoFooter className="pb-2 text-center" />
         </div>
       </main>
 
@@ -595,9 +605,9 @@ function ProductSearchAI({ onPick }: { onPick: (r: ProductSearchResult) => void 
           <Sparkles className="h-4 w-4" />
         </div>
         <div>
-          <p className="font-body text-sm font-semibold text-foreground">Search by product name</p>
+          <p className="font-body text-sm font-semibold text-foreground">Find your product</p>
           <p className="font-body text-xs text-muted-foreground">
-            AI looks up safety info for you — no manual entry needed.
+            We'll look up available product information and safety alerts when available, and fill in the details for you.
           </p>
         </div>
       </div>
@@ -806,6 +816,9 @@ function SaveProductSheet({
     >
       <SheetContent side="bottom" className="rounded-t-3xl px-5 pb-10 pt-6">
         <SheetHeader className="mb-5 text-left">
+          <p className="flex items-center gap-1.5 font-body text-xs font-semibold text-primary">
+            <ShieldCheck className="h-3.5 w-3.5" /> Product found
+          </p>
           <SheetTitle className="font-display text-xl font-semibold">
             {product?.name ?? ""}
           </SheetTitle>
@@ -816,6 +829,18 @@ function SaveProductSheet({
 
         {product && (
           <div className="space-y-5">
+            {/* Found-details checklist — reassuring without overclaiming;
+                the recall check itself only runs on save (handleSave), so
+                we don't say it's "checked" until it actually has been. */}
+            <ul className="space-y-1 font-body text-xs text-muted-foreground">
+              <li className="flex items-center gap-1.5">
+                <ShieldCheck className="h-3 w-3 shrink-0 text-primary" /> Manufacturer identified
+              </li>
+              <li className="flex items-center gap-1.5">
+                <ShieldCheck className="h-3 w-3 shrink-0 text-primary" /> We'll check official recalls when you save
+              </li>
+            </ul>
+
             {/* Safety summary */}
             <div className="flex items-start gap-3 rounded-2xl bg-primary/8 px-4 py-3">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />

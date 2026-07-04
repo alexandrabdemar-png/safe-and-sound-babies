@@ -37,6 +37,7 @@ import {
   type CategoryKey,
 } from "@/lib/productCategories";
 import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
+import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 
 const CATEGORY_ORDER: CategoryKey[] = CATEGORIES.map((c) => c.key);
 
@@ -655,6 +656,7 @@ function ScanPage() {
               </div>
             </div>
           )}
+          <ProductInfoFooter className="text-center" />
         </div>
       </main>
     </div>

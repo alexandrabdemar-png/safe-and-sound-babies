@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { CATEGORY_BY_KEY, categoryFromLabel } from "@/lib/productCategories";
 import { formatMonthYear, daysBetween } from "@/lib/predictions";
 import { lookupAndSaveGuidelines, recomputePredictions } from "@/lib/guidelines.functions";
+import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 
 export const Route = createFileRoute("/_authenticated/products_/$id")({
   ssr: false,
@@ -205,6 +206,8 @@ function ProductDetailPage() {
           <Button variant="ghost" onClick={deleteProduct} className="w-full rounded-full text-destructive">
             <Trash2 className="h-4 w-4 mr-2" /> Delete product
           </Button>
+
+          <ProductInfoFooter className="text-center" />
         </div>
       </main>
     </div>

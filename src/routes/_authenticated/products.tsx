@@ -8,6 +8,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Button } from "@/components/ui/button";
 import { useActiveChild } from "@/hooks/useActiveChild";
+import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 
 import { formatMonthYear, daysBetween } from "@/lib/predictions";
 import { CATEGORY_BY_KEY, categoryFromLabel, type CategoryKey } from "@/lib/productCategories";
@@ -100,9 +101,12 @@ function ProductsPage() {
           ) : products.length === 0 ? (
             <EmptyProducts onAdd={() => navigate({ to: "/products/new" })} />
           ) : (
-            <ul className="space-y-3">
-              {products.map((p) => <ProductCard key={p.id} product={p} />)}
-            </ul>
+            <>
+              <ul className="space-y-3">
+                {products.map((p) => <ProductCard key={p.id} product={p} />)}
+              </ul>
+              <ProductInfoFooter className="mt-5 text-center" />
+            </>
           )}
         </div>
       </main>
