@@ -23,7 +23,7 @@ export function Logo({ className, size = "md", iconOnly = false }: LogoProps) {
       {/* Shield body */}
       <path
         d="M14 1.5L2.5 6.5V16C2.5 22.9 7.6 28.6 14 30.2C20.4 28.6 25.5 22.9 25.5 16V6.5L14 1.5Z"
-        fill="#2C5F5A"
+        fill="#586C81"
       />
       {/* Leaf / droplet accent */}
       <path
@@ -56,11 +56,12 @@ export function Logo({ className, size = "md", iconOnly = false }: LogoProps) {
       {shield}
       <span
         style={{
-          fontFamily: '"DM Serif Display", Georgia, serif',
+          fontFamily: '"Playfair Display", Georgia, serif',
+          fontStyle: "italic",
           fontSize: ts.fontSize,
           letterSpacing: ts.letterSpacing,
-          color: "#1C2B2B",
-          fontWeight: 400,
+          color: "#2B2622",
+          fontWeight: 600,
           lineHeight: 1,
         }}
       >

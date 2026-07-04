@@ -7,36 +7,39 @@
 /*
  * Design system — Peace of Mine
  *
- * Philosophy: soft, calming, reassuring — never clinical or alarming.
- * This is a baby-safety app: the everyday UI should feel gentle enough to
- * use one-handed at 2am, while staying highly legible the moment something
- * needs attention (recall warnings, expiration urgency, the emergency info
- * card). Red/orange are held in reserve for exactly those moments so they
- * actually stand out — everything else lives in the warm, muted palette.
+ * Philosophy: editorial and quietly confident — a paper-toned, gallery-like
+ * calm rather than a "baby app" palette. This is still a safety app, so
+ * legibility and urgency cues are non-negotiable: terracotta is held in
+ * reserve for recall warnings, expiration urgency, and the emergency info
+ * card, while everyday UI lives in muted stone, sand, and dusty blue-gray.
  *
  * Typography:
- *   Display / Headings : Quicksand — rounded, warm, friendly geometric sans
+ *   Display / Headings : Playfair Display — high-contrast editorial serif,
+ *                        used for page titles and section headings; its
+ *                        italic (see .font-display-italic) is used sparingly
+ *                        for the wordmark and small accent phrases
  *   Body / UI labels   : Inter — clean, highly legible, never decorative
  *   Captions / accents : Inter (same family as body — one fewer font to
  *                        load, and nothing about a tiny caption benefits
  *                        from being in a third typeface)
  *
  * Palette (hex → oklch):
- *   #F1EBE1  background — warm cream, not stark white
- *   #FDFAF6  card — near-white, warm
- *   #3A3028  text — deep warm brown (never pure black)
- *   #5E6B4E  primary — soft muted sage (softer than the old deep sage,
- *            re-tuned so white-on-primary buttons and primary-as-text both
- *            still clear WCAG AA — see contrast notes below)
- *   #C4A98C  accent — warm taupe (accent-foreground uses the dark brown
- *            text color, not white — white-on-taupe fails AA outright)
- *   #E8DFCC  muted/secondary — warm champagne
- *   #CEBFAB  border — soft, barely-there warm tan
- *   #B4BFC5  misty — cool blue-gray info tint
- *   #C04832  terracotta — safety alerts & recalls ONLY (deepened slightly
- *            from the original #C8523A, which measured 4.45:1 on white —
- *            just under the 4.5 AA floor; this measures 4.98:1)
- *   #D4C3B2  sand — hover fills, section backgrounds
+ *   #F7F4EF  background — warm off-white, paper-toned
+ *   #FFFFFF  card — true white, for contrast against the paper background
+ *   #2B2622  text — warm near-black (never pure black)
+ *   #586C81  primary — dusty blue-gray (calm, editorial; clears AA as a
+ *            white-on-primary button fill and as primary-as-text — see
+ *            contrast notes below)
+ *   #7A6248  accent — warm caramel/toffee (accent-foreground is white;
+ *            deep enough to also work as the icon/text color used on the
+ *            light "sand" chip backgrounds throughout the app)
+ *   #EFE3D0 / #EDEAE0  secondary / muted — warm tan-beige and stone tints
+ *   #DDD3C4  border — soft, barely-there warm tan line
+ *   #AEBBC4  mist — dusty blue-gray info tint (lighter than primary)
+ *   #A8562E  terracotta — safety alerts & recalls ONLY
+ *   #E4D3B5  sand — chip/section backgrounds (used at low opacity)
+ *   #E7D2C7  blush — dusty blush tint, decorative
+ *   #6F7864  sage — muted sage-gray, decorative/icon accent
  */
 
 @theme inline {
@@ -83,7 +86,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   /* Typography */
-  --font-display: "Quicksand", system-ui, sans-serif;
+  --font-display: "Playfair Display", Georgia, serif;
   --font-body: "Inter", system-ui, sans-serif;
   --font-caption: "Inter", system-ui, sans-serif;
 
@@ -109,83 +112,84 @@
   --radius: 1rem;
 
   /* ── Backgrounds ─────────────────────────────────────────────────────── */
-  /* #F1EBE1 Marshmellow */ --background: oklch(0.937 0.018 84);
-  /* #3A3028            */ --foreground: oklch(0.228 0.022 72);
+  /* #F7F4EF paper off-white */ --background: oklch(0.968 0.007 81);
+  /* #2B2622                */ --foreground: oklch(0.273 0.010 61);
 
-  /* #FDFAF6 warm near-white */ --card: oklch(0.990 0.007 80);
-               --card-foreground: oklch(0.228 0.022 72);
-  /* #FDFAF6 */ --popover: oklch(0.990 0.007 80);
-               --popover-foreground: oklch(0.228 0.022 72);
+  /* #FFFFFF true white */ --card: oklch(1.000 0.000 90);
+               --card-foreground: oklch(0.273 0.010 61);
+  /* #FFFFFF */ --popover: oklch(1.000 0.000 90);
+               --popover-foreground: oklch(0.273 0.010 61);
 
-  /* ── Primary: #5E6B4E soft muted sage ─────────────────────────────────
-     Re-tuned lighter/softer than the old #5C6355. Passes AA both as a
-     white-text button fill (5.7:1) and as text-on-card (5.5:1) / text-on-
-     cream (4.8:1), since `text-primary` is used directly as a text color
-     in outline/ghost/link button variants and inline links. */
-  /* #5E6B4E */ --primary: oklch(0.508 0.047 128);
-               --primary-foreground: oklch(1.000 0 0);
+  /* ── Primary: #586C81 dusty blue-gray ─────────────────────────────────
+     Clears AA both as a white-text button fill (5.4:1) and as text-on-
+     card (5.4:1) / text-on-background (4.9:1), since `text-primary` is
+     used directly as a text color in outline/ghost/link button variants
+     and inline links. */
+  /* #586C81 */ --primary: oklch(0.523 0.041 250);
+               --primary-foreground: oklch(1.000 0.000 90);
 
-  /* ── Secondary: #E8DFCC Champagne ───────────────────────────────────── */
-  /* #E8DFCC */ --secondary: oklch(0.893 0.028 83);
-               --secondary-foreground: oklch(0.228 0.022 72);
+  /* ── Secondary: #EFE3D0 warm tan-beige ──────────────────────────────── */
+  /* #EFE3D0 */ --secondary: oklch(0.920 0.028 79);
+               --secondary-foreground: oklch(0.273 0.010 61);
 
   /* ── Muted ───────────────────────────────────────────────────────────── */
-  /* #E8DFCC Champagne */ --muted: oklch(0.893 0.028 83);
-  /* #6E6555 — darkened slightly from the previous value for a safer AA
-     margin (5.3:1 on card vs. the old ~4.5:1, right at the AA floor) */
-  --muted-foreground: oklch(0.510 0.027 82);
+  /* #EDEAE0 stone tint */ --muted: oklch(0.937 0.014 93);
+  /* #5F675C — clears AA on muted (4.9:1) and on background (5.3:1) */
+  --muted-foreground: oklch(0.503 0.020 137);
 
-  /* ── Accent: #C4A98C Malted Milk ────────────────────────────────────── */
-  /* Foreground uses the dark brown text color, not white — white-on-taupe
-     measures 2.2:1, nowhere near AA. */
-  /* #C4A98C */ --accent: oklch(0.714 0.052 68);
-               --accent-foreground: oklch(0.228 0.022 72);
+  /* ── Accent: #7A6248 warm caramel/toffee ──────────────────────────────
+     Deep enough that white-on-accent clears AA (5.7:1) as a button/hover
+     fill, AND that the accent color itself is legible used directly as
+     text/icon color on the light "sand" chip backgrounds used across the
+     app (5.2:1 on background, 5.7:1 on card). */
+  /* #7A6248 */ --accent: oklch(0.513 0.049 69);
+               --accent-foreground: oklch(1.000 0.000 90);
 
-  /* ── Destructive: #C04832 terracotta (safety alerts only) ────────────
-     Deepened from #C8523A (4.45:1 on white — just under the 4.5 AA floor)
-     to #C04832 (4.98:1), so recall/expiration alert text stays compliant. */
-  /* #C04832 */ --destructive: oklch(0.562 0.159 32);
-               --destructive-foreground: oklch(1.000 0 0);
+  /* ── Destructive: #A8562E terracotta (safety alerts only) ─────────────
+     4.7:1 on background, 5.2:1 as a white-text fill — recall/expiration
+     alert text stays AA compliant. */
+  /* #A8562E */ --destructive: oklch(0.545 0.120 45);
+               --destructive-foreground: oklch(1.000 0.000 90);
 
   /* ── Borders ─────────────────────────────────────────────────────────── */
-  /* #CEBFAB Solstice */ --border: oklch(0.800 0.030 76);
-               --input: oklch(0.800 0.030 76);
-  /* #5E6B4E */ --ring: oklch(0.508 0.047 128);
+  /* #DDD3C4 */ --border: oklch(0.871 0.023 78);
+               --input: oklch(0.871 0.023 78);
+  /* #586C81 */ --ring: oklch(0.523 0.041 250);
 
   /* ── Charts ─────────────────────────────────────────────────────────── */
-  /* #5E6B4E */ --chart-1: oklch(0.508 0.047 128);
-  /* #C4A98C */ --chart-2: oklch(0.714 0.052 68);
-  /* #C04832 */ --chart-3: oklch(0.562 0.159 32);
-  /* #B4BFC5 */ --chart-4: oklch(0.762 0.018 220);
-  /* #D4C3B2 */ --chart-5: oklch(0.820 0.030 76);
+  /* #586C81 */ --chart-1: oklch(0.523 0.041 250);
+  /* #7A6248 */ --chart-2: oklch(0.513 0.049 69);
+  /* #A8562E */ --chart-3: oklch(0.545 0.120 45);
+  /* #AEBBC4 */ --chart-4: oklch(0.785 0.019 238);
+  /* #E4D3B5 */ --chart-5: oklch(0.873 0.044 82);
 
   /* ── Sidebar ─────────────────────────────────────────────────────────── */
-  --sidebar: oklch(0.937 0.018 84);
-  --sidebar-foreground: oklch(0.228 0.022 72);
-  --sidebar-primary: oklch(0.508 0.047 128);
-  --sidebar-primary-foreground: oklch(1.000 0 0);
-  --sidebar-accent: oklch(0.714 0.052 68);
-  --sidebar-accent-foreground: oklch(0.228 0.022 72);
-  --sidebar-border: oklch(0.800 0.030 76);
-  --sidebar-ring: oklch(0.508 0.047 128);
+  --sidebar: oklch(0.968 0.007 81);
+  --sidebar-foreground: oklch(0.273 0.010 61);
+  --sidebar-primary: oklch(0.523 0.041 250);
+  --sidebar-primary-foreground: oklch(1.000 0.000 90);
+  --sidebar-accent: oklch(0.513 0.049 69);
+  --sidebar-accent-foreground: oklch(1.000 0.000 90);
+  --sidebar-border: oklch(0.871 0.023 78);
+  --sidebar-ring: oklch(0.523 0.041 250);
 
   /* ── Extended brand tokens ──────────────────────────────────────────── */
-  /* #D4C3B2 Solstice  */ --sand:        oklch(0.820 0.030 76);
-  /* #C04832 terracotta */ --terracotta: oklch(0.562 0.159 32);
-  /* #5E6B4E sage       */ --forest:     oklch(0.508 0.047 128);
-  /* #F1EBE1 marshmellow*/ --cream:      oklch(0.937 0.018 84);
-               --card-surface: oklch(0.990 0.007 80);
-  /* #F1EBE1            */ --butter:     oklch(0.937 0.018 84);
-  /* #5E6B4E soft sage  */ --sage:       oklch(0.508 0.047 128);
-  /* #B4BFC5 misty      */ --mist:       oklch(0.762 0.018 220);
-  /* #CEBFAB solstice   */ --blush:      oklch(0.800 0.030 76);
-  /* #C4A98C malted milk*/ --amber:      oklch(0.714 0.052 68);
-  /* #C4A98C malted milk*/ --gold:       oklch(0.714 0.052 68);
+  /* #E4D3B5 sand        */ --sand:        oklch(0.873 0.044 82);
+  /* #A8562E terracotta  */ --terracotta:  oklch(0.545 0.120 45);
+  /* #586C81 dusty blue  */ --forest:      oklch(0.523 0.041 250);
+  /* #F7F4EF paper       */ --cream:       oklch(0.968 0.007 81);
+               --card-surface: oklch(1.000 0.000 90);
+  /* #F7F4EF             */ --butter:      oklch(0.968 0.007 81);
+  /* #6F7864 muted sage  */ --sage:        oklch(0.559 0.032 127);
+  /* #AEBBC4 dusty mist  */ --mist:        oklch(0.785 0.019 238);
+  /* #E7D2C7 dusty blush */ --blush:       oklch(0.878 0.028 50);
+  /* #7A6248 caramel     */ --amber:       oklch(0.513 0.049 69);
+  /* #7A6248 caramel     */ --gold:        oklch(0.513 0.049 69);
 
   /* Status semantic tokens */
-  /* #5E6B4E */ --status-good:   oklch(0.508 0.047 128);
-  /* #C4A98C */ --status-warn:   oklch(0.714 0.052 68);
-  /* #C04832 */ --status-action: oklch(0.562 0.159 32);
+  /* #586C81 */ --status-good:   oklch(0.523 0.041 250);
+  /* #7A6248 */ --status-warn:   oklch(0.513 0.049 69);
+  /* #A8562E */ --status-action: oklch(0.545 0.120 45);
 }
 
 /* Dark mode */
