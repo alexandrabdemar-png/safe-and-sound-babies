@@ -73,6 +73,38 @@ export type Database = {
           },
         ]
       }
+      caregiver_access: {
+        Row: {
+          caregiver_user_id: string
+          child_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          caregiver_user_id: string
+          child_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          caregiver_user_id?: string
+          child_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caregiver_access_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checklist_completions: {
         Row: {
           created_at: string
@@ -233,6 +265,100 @@ export type Database = {
         }
         Relationships: []
       }
+      emergency_info: {
+        Row: {
+          allergies: string | null
+          blood_type: string | null
+          child_id: string
+          created_at: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          id: string
+          medications: string | null
+          notes: string | null
+          pediatrician_name: string | null
+          pediatrician_phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allergies?: string | null
+          blood_type?: string | null
+          child_id: string
+          created_at?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          id?: string
+          medications?: string | null
+          notes?: string | null
+          pediatrician_name?: string | null
+          pediatrician_phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allergies?: string | null
+          blood_type?: string | null
+          child_id?: string
+          created_at?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          id?: string
+          medications?: string | null
+          notes?: string | null
+          pediatrician_name?: string | null
+          pediatrician_phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_info_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: true
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emergency_share_links: {
+        Row: {
+          child_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          revoked_at: string | null
+          token_hash: string
+          user_id: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          revoked_at?: string | null
+          token_hash: string
+          user_id: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          revoked_at?: string | null
+          token_hash?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_share_links_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       home_profile: {
         Row: {
           created_at: string | null
@@ -309,6 +435,44 @@ export type Database = {
             columns: ["child_id"]
             isOneToOne: false
             referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lifecycle_alerts: {
+        Row: {
+          created_at: string
+          id: string
+          notification_channel: string | null
+          notified_at: string | null
+          product_id: string
+          urgency: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notification_channel?: string | null
+          notified_at?: string | null
+          product_id: string
+          urgency: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notification_channel?: string | null
+          notified_at?: string | null
+          product_id?: string
+          urgency?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lifecycle_alerts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -577,7 +741,9 @@ export type Database = {
           category: string | null
           child_id: string | null
           created_at: string
+          expiration_date: string | null
           id: string
+          manufacture_date: string | null
           model: string | null
           name: string
           next_size_at: string | null
@@ -585,6 +751,7 @@ export type Database = {
           photo_url: string | null
           predicted_replacement_date: string | null
           predicted_sizeup_date: string | null
+          product_type: string
           purchased_at: string | null
           recalled: boolean
           replace_at: string | null
@@ -599,7 +766,9 @@ export type Database = {
           category?: string | null
           child_id?: string | null
           created_at?: string
+          expiration_date?: string | null
           id?: string
+          manufacture_date?: string | null
           model?: string | null
           name: string
           next_size_at?: string | null
@@ -607,6 +776,7 @@ export type Database = {
           photo_url?: string | null
           predicted_replacement_date?: string | null
           predicted_sizeup_date?: string | null
+          product_type?: string
           purchased_at?: string | null
           recalled?: boolean
           replace_at?: string | null
@@ -621,7 +791,9 @@ export type Database = {
           category?: string | null
           child_id?: string | null
           created_at?: string
+          expiration_date?: string | null
           id?: string
+          manufacture_date?: string | null
           model?: string | null
           name?: string
           next_size_at?: string | null
@@ -629,6 +801,7 @@ export type Database = {
           photo_url?: string | null
           predicted_replacement_date?: string | null
           predicted_sizeup_date?: string | null
+          product_type?: string
           purchased_at?: string | null
           recalled?: boolean
           replace_at?: string | null
@@ -801,6 +974,14 @@ export type Database = {
       generate_milestones_for_child: {
         Args: { p_child_id: string; p_dob: string }
         Returns: undefined
+      }
+      has_child_access: {
+        Args: { p_child_id: string; p_min_role?: string }
+        Returns: boolean
+      }
+      has_product_access: {
+        Args: { p_min_role?: string; p_product_id: string }
+        Returns: boolean
       }
     }
     Enums: {
