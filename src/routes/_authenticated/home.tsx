@@ -15,7 +15,6 @@ import { friendlyError, diagnosticDetail } from "@/lib/errors";
 import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
 import { checkCriticalRecalls, CRITICAL_RECALLS } from "@/lib/recallCheck";
 import { selectWeeklyTip, getIsoWeekNumber, weekKey as getTipWeekKey } from "@/lib/safetyTips";
-import { getDevelopmentBand } from "@/lib/developmentContent";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
 import { SoftBlob } from "@/components/SoftBlob";
 
@@ -1359,9 +1358,6 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
     );
   }
 
-  const ageWeeks = Math.floor(Math.max(0, Date.now() - parseDateLocal(child.date_of_birth ?? "").getTime()) / (7 * 86400000));
-  const devBand = getDevelopmentBand(ageWeeks);
-
   // Sunday: week-in-review snapshot (no separate "this week" section)
   if (day === 0) {
     return (
@@ -1384,43 +1380,8 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
     );
   }
 
-  // Monday: development observation
-  if (day === 1) {
-    return (
-      <div style={cardBase}>
-        {label}
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-          <span style={{ fontSize: 22, marginTop: 2 }}>🌱</span>
-          <div>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"Inter", system-ui, sans-serif' }}>Development this week</p>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>{devBand.physical}</p>
-          </div>
-        </div>
-        {comingUp.length > 0 && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"Inter", system-ui, sans-serif' }}>
-              Coming up for {child?.name ?? "your little one"}
-            </p>
-            {comingUp.slice(0, 3).map((p) => {
-              const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
-              const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
-              return (
-                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                  <p style={{ fontSize: 13, color: "rgba(255,255,255,0.90)", margin: 0 }}>
-                    {comingUpLabel(p)}
-                  </p>
-                  <span style={{ fontSize: 11, color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // Tuesday: age-relevant safety tip
-  if (day === 2) {
+  // Monday & Tuesday: age-relevant safety tip
+  if (day === 1 || day === 2) {
     return (
       <div style={cardBase}>
         {label}
