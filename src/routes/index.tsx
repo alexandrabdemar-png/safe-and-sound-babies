@@ -65,7 +65,7 @@ const features = [
   {
     title: "Built to keep you ahead",
     description:
-      "Recall alerts for the products you own, so you're not finding out months later.",
+      "Recall alerts for the products you own",
   },
 ];
 
