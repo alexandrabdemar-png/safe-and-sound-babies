@@ -21,6 +21,7 @@ import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedTravelChecklistRouteImport } from './routes/_authenticated/travel-checklist'
 import { Route as AuthenticatedTrackingRouteImport } from './routes/_authenticated/tracking'
 import { Route as AuthenticatedSafetyGuidesRouteImport } from './routes/_authenticated/safety-guides'
+import { Route as AuthenticatedRegistryCheckRouteImport } from './routes/_authenticated/registry-check'
 import { Route as AuthenticatedRecallRadarRouteImport } from './routes/_authenticated/recall-radar'
 import { Route as AuthenticatedRecallCheckRouteImport } from './routes/_authenticated/recall-check'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -109,6 +110,12 @@ const AuthenticatedSafetyGuidesRoute =
   AuthenticatedSafetyGuidesRouteImport.update({
     id: '/safety-guides',
     path: '/safety-guides',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRegistryCheckRoute =
+  AuthenticatedRegistryCheckRouteImport.update({
+    id: '/registry-check',
+    path: '/registry-check',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedRecallRadarRoute =
@@ -287,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/recall-check': typeof AuthenticatedRecallCheckRoute
   '/recall-radar': typeof AuthenticatedRecallRadarRoute
+  '/registry-check': typeof AuthenticatedRegistryCheckRoute
   '/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/tracking': typeof AuthenticatedTrackingRoute
   '/travel-checklist': typeof AuthenticatedTravelChecklistRoute
@@ -328,6 +336,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/recall-check': typeof AuthenticatedRecallCheckRoute
   '/recall-radar': typeof AuthenticatedRecallRadarRoute
+  '/registry-check': typeof AuthenticatedRegistryCheckRoute
   '/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/tracking': typeof AuthenticatedTrackingRoute
   '/travel-checklist': typeof AuthenticatedTravelChecklistRoute
@@ -371,6 +380,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/recall-check': typeof AuthenticatedRecallCheckRoute
   '/_authenticated/recall-radar': typeof AuthenticatedRecallRadarRoute
+  '/_authenticated/registry-check': typeof AuthenticatedRegistryCheckRoute
   '/_authenticated/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/_authenticated/tracking': typeof AuthenticatedTrackingRoute
   '/_authenticated/travel-checklist': typeof AuthenticatedTravelChecklistRoute
@@ -414,6 +424,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/recall-check'
     | '/recall-radar'
+    | '/registry-check'
     | '/safety-guides'
     | '/tracking'
     | '/travel-checklist'
@@ -455,6 +466,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/recall-check'
     | '/recall-radar'
+    | '/registry-check'
     | '/safety-guides'
     | '/tracking'
     | '/travel-checklist'
@@ -497,6 +509,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/recall-check'
     | '/_authenticated/recall-radar'
+    | '/_authenticated/registry-check'
     | '/_authenticated/safety-guides'
     | '/_authenticated/tracking'
     | '/_authenticated/travel-checklist'
@@ -616,6 +629,13 @@ declare module '@tanstack/react-router' {
       path: '/safety-guides'
       fullPath: '/safety-guides'
       preLoaderRoute: typeof AuthenticatedSafetyGuidesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/registry-check': {
+      id: '/_authenticated/registry-check'
+      path: '/registry-check'
+      fullPath: '/registry-check'
+      preLoaderRoute: typeof AuthenticatedRegistryCheckRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/recall-radar': {
@@ -833,6 +853,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRecallCheckRoute: typeof AuthenticatedRecallCheckRoute
   AuthenticatedRecallRadarRoute: typeof AuthenticatedRecallRadarRoute
+  AuthenticatedRegistryCheckRoute: typeof AuthenticatedRegistryCheckRoute
   AuthenticatedSafetyGuidesRoute: typeof AuthenticatedSafetyGuidesRoute
   AuthenticatedTrackingRoute: typeof AuthenticatedTrackingRoute
   AuthenticatedTravelChecklistRoute: typeof AuthenticatedTravelChecklistRoute
@@ -863,6 +884,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRecallCheckRoute: AuthenticatedRecallCheckRoute,
   AuthenticatedRecallRadarRoute: AuthenticatedRecallRadarRoute,
+  AuthenticatedRegistryCheckRoute: AuthenticatedRegistryCheckRoute,
   AuthenticatedSafetyGuidesRoute: AuthenticatedSafetyGuidesRoute,
   AuthenticatedTrackingRoute: AuthenticatedTrackingRoute,
   AuthenticatedTravelChecklistRoute: AuthenticatedTravelChecklistRoute,
@@ -910,13 +932,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

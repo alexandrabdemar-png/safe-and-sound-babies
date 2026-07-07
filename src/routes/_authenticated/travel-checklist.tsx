@@ -47,7 +47,7 @@ const TRAVEL_SECTIONS: TravelSection[] = [
       { key: "travel_cs_rear_facing", label: "Baby is rear-facing (until 2+ years or seat max weight)" },
       { key: "travel_cs_harness_snug", label: "Harness straps are snug — you can't pinch the webbing at the shoulder" },
       { key: "travel_cs_chest_clip", label: "Chest clip is at armpit level, not on the belly" },
-      { key: "travel_cs_no_coat", label: "No puffy coat under the harness — use a blanket over the top instead" },
+      { key: "travel_cs_no_coat", label: "No puffy coat under the harness" },
       { key: "travel_cs_tether", label: "Top tether strap attached and tight (forward-facing only)" },
       { key: "travel_cs_base_angle", label: "Infant seat recline angle is correct (check indicator on seat)" },
       { key: "travel_cs_no_accessories", label: "No aftermarket inserts, mirrors, or toys attached to the seat" },
