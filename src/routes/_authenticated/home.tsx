@@ -1585,7 +1585,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
               </p>
               <button
                 type="button"
-                onClick={() => onNavigate({ to: "/growth" })}
+                onClick={() => onNavigate({ to: "/products" })}
                 style={{ padding: "7px 16px", borderRadius: 999, backgroundColor: "rgba(255,255,255,0.9)", color: "#586C81", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}
               >
                 Log measurements →
