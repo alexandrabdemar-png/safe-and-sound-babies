@@ -164,7 +164,7 @@ function AlertsPage() {
     if (!userId) return;
     const { error } = await supabase.from("insight_dismissals").upsert(
       { user_id: userId, child_id: activeChildId, rule_id: ruleId, action: "done", until: null },
-      { onConflict: "child_id,rule_id" }
+      { onConflict: "user_id,child_id,rule_id" }
     );
     if (error) {
       setDismissedRuleIds((prev) => { const next = new Set(prev); next.delete(ruleId); return next; });
