@@ -79,7 +79,7 @@ function MomentsPage() {
     (async () => {
       setLoading(true);
       const [mRes, cRes] = await Promise.all([
-        supabase.from("milestones").select("id, title, logged_at, notes").eq("child_id", activeChildId).order("logged_at", { ascending: false }),
+        supabase.from("milestones").select("id, title, logged_at, notes").eq("child_id", activeChildId).order("logged_at", { ascending: false }).order("created_at", { ascending: false }),
         supabase.from("children").select("name, date_of_birth").eq("id", activeChildId).maybeSingle(),
       ]);
       if (mRes.error) toast.error(mRes.error.message);

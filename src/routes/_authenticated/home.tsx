@@ -343,7 +343,7 @@ function HomePage() {
       const nowIso = new Date().toISOString();
 
       const [mRes, recallRes, replaceRes, sizeRes, productRes, dismRes, comingUpRes] = await Promise.all([
-        supabase.from("milestones").select("id, title, logged_at, notes").eq("child_id", c.id).order("logged_at", { ascending: false }).limit(5),
+        supabase.from("milestones").select("id, title, logged_at, notes").eq("child_id", c.id).order("logged_at", { ascending: false }).order("created_at", { ascending: false }).limit(5),
         supabase.from("product_recalls").select("id", { count: "exact", head: true }).eq("acknowledged", false),
         supabase.from("products").select("id", { count: "exact", head: true }).gte("replace_at", todayStr).lte("replace_at", horizon30Str),
         supabase.from("products").select("id", { count: "exact", head: true }).gte("next_size_at", todayStr).lte("next_size_at", horizon30Str),
