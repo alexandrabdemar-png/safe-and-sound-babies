@@ -65,7 +65,7 @@ const features = [
   {
     title: "Built to keep you ahead",
     description:
-      "Recall alerts for the products you own",
+      "We check your products against CPSC, FDA, and other official recall databases and let you know if there's a match",
   },
 ];
 
