@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, TrendingUp, Utensils, ClipboardList } from "lucide-react";
+import { ArrowRight, Utensils, ClipboardList } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 
 export const Route = createFileRoute("/_authenticated/tracking")({
@@ -18,7 +18,7 @@ function TrackingPage() {
             Tracking
           </h1>
           <p className="mt-2 font-body text-base text-muted-foreground">
-            Log growth, first foods, and checklists in one place.
+            Log first foods and checklists in one place.
           </p>
         </div>
       </header>
@@ -26,26 +26,8 @@ function TrackingPage() {
       <main className="px-5 sm:px-6">
         <div className="mx-auto max-w-md space-y-3">
           <Link
-            to="/growth"
-            className="flex items-center justify-between rounded-3xl border border-border/60 bg-card p-5 transition-all hover:border-primary/40 animate-fade-up stagger-1"
-          >
-            <div className="flex items-center gap-4">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-                <TrendingUp className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="font-display text-base font-semibold tracking-tight">Growth Tracker</p>
-                <p className="mt-0.5 font-body text-sm text-muted-foreground">
-                  Weight, height, and WHO percentiles
-                </p>
-              </div>
-            </div>
-            <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-          </Link>
-
-          <Link
             to="/first-foods"
-            className="flex items-center justify-between rounded-3xl border border-border/60 bg-card p-5 transition-all hover:border-primary/40 animate-fade-up stagger-2"
+            className="flex items-center justify-between rounded-3xl border border-border/60 bg-card p-5 transition-all hover:border-primary/40 animate-fade-up stagger-1"
           >
             <div className="flex items-center gap-4">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary">
@@ -63,7 +45,7 @@ function TrackingPage() {
 
           <Link
             to="/checklists"
-            className="flex items-center justify-between rounded-3xl border border-border/60 bg-card p-5 transition-all hover:border-primary/40 animate-fade-up stagger-3"
+            className="flex items-center justify-between rounded-3xl border border-border/60 bg-card p-5 transition-all hover:border-primary/40 animate-fade-up stagger-2"
           >
             <div className="flex items-center gap-4">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary">

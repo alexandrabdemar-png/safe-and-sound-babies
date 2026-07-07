@@ -27,7 +27,7 @@ export function BottomNav() {
             {...t}
             active={
               t.to === "/tracking"
-                ? pathname === "/tracking" || pathname === "/growth" || pathname === "/first-foods"
+                ? pathname === "/tracking" || pathname === "/first-foods"
                 : pathname === t.to
             }
           />

@@ -166,12 +166,6 @@ function FirstFoodsPage() {
                 First foods tracking will be available as {child?.name} grows — many babies begin exploring solids around
                 4 to 6 months, though every baby is different. Always follow your pediatrician's guidance.
               </p>
-              <Link
-                to="/growth"
-                className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2 font-body text-xs font-semibold text-primary-foreground"
-              >
-                View growth tracker
-              </Link>
             </div>
           ) : (
             <>
@@ -380,24 +374,6 @@ function FirstFoodsPage() {
             </>
           )}
 
-          {/* Quick link to Growth */}
-          {!tooYoung && (
-            <Link
-              to="/growth"
-              className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3.5 transition-colors hover:border-primary/40"
-            >
-              <div className="flex items-center gap-3">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-primary">
-                  <span style={{ fontSize: 16 }}>📈</span>
-                </span>
-                <div>
-                  <p className="font-body text-sm font-semibold">Growth Tracker</p>
-                  <p className="font-body text-[11px] text-muted-foreground">Log weight & height, see percentiles</p>
-                </div>
-              </div>
-              <ArrowLeft className="h-4 w-4 rotate-180 text-muted-foreground" />
-            </Link>
-          )}
         </div>
       </main>
 

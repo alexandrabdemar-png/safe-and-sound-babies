@@ -29,7 +29,6 @@ import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
 import { Route as AuthenticatedMomentsRouteImport } from './routes/_authenticated/moments'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
-import { Route as AuthenticatedGrowthRouteImport } from './routes/_authenticated/growth'
 import { Route as AuthenticatedFirstFoodsRouteImport } from './routes/_authenticated/first-foods'
 import { Route as AuthenticatedEmergencyInfoRouteImport } from './routes/_authenticated/emergency-info'
 import { Route as AuthenticatedChecklistsRouteImport } from './routes/_authenticated/checklists'
@@ -153,11 +152,6 @@ const AuthenticatedMomentsRoute = AuthenticatedMomentsRouteImport.update({
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedGrowthRoute = AuthenticatedGrowthRouteImport.update({
-  id: '/growth',
-  path: '/growth',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedFirstFoodsRoute = AuthenticatedFirstFoodsRouteImport.update({
@@ -286,7 +280,6 @@ export interface FileRoutesByFullPath {
   '/checklists': typeof AuthenticatedChecklistsRoute
   '/emergency-info': typeof AuthenticatedEmergencyInfoRoute
   '/first-foods': typeof AuthenticatedFirstFoodsRoute
-  '/growth': typeof AuthenticatedGrowthRoute
   '/home': typeof AuthenticatedHomeRoute
   '/moments': typeof AuthenticatedMomentsRoute
   '/pricing': typeof AuthenticatedPricingRoute
@@ -328,7 +321,6 @@ export interface FileRoutesByTo {
   '/checklists': typeof AuthenticatedChecklistsRoute
   '/emergency-info': typeof AuthenticatedEmergencyInfoRoute
   '/first-foods': typeof AuthenticatedFirstFoodsRoute
-  '/growth': typeof AuthenticatedGrowthRoute
   '/home': typeof AuthenticatedHomeRoute
   '/moments': typeof AuthenticatedMomentsRoute
   '/pricing': typeof AuthenticatedPricingRoute
@@ -372,7 +364,6 @@ export interface FileRoutesById {
   '/_authenticated/checklists': typeof AuthenticatedChecklistsRoute
   '/_authenticated/emergency-info': typeof AuthenticatedEmergencyInfoRoute
   '/_authenticated/first-foods': typeof AuthenticatedFirstFoodsRoute
-  '/_authenticated/growth': typeof AuthenticatedGrowthRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/moments': typeof AuthenticatedMomentsRoute
   '/_authenticated/pricing': typeof AuthenticatedPricingRoute
@@ -416,7 +407,6 @@ export interface FileRouteTypes {
     | '/checklists'
     | '/emergency-info'
     | '/first-foods'
-    | '/growth'
     | '/home'
     | '/moments'
     | '/pricing'
@@ -458,7 +448,6 @@ export interface FileRouteTypes {
     | '/checklists'
     | '/emergency-info'
     | '/first-foods'
-    | '/growth'
     | '/home'
     | '/moments'
     | '/pricing'
@@ -501,7 +490,6 @@ export interface FileRouteTypes {
     | '/_authenticated/checklists'
     | '/_authenticated/emergency-info'
     | '/_authenticated/first-foods'
-    | '/_authenticated/growth'
     | '/_authenticated/home'
     | '/_authenticated/moments'
     | '/_authenticated/pricing'
@@ -687,13 +675,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/growth': {
-      id: '/_authenticated/growth'
-      path: '/growth'
-      fullPath: '/growth'
-      preLoaderRoute: typeof AuthenticatedGrowthRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/first-foods': {
       id: '/_authenticated/first-foods'
       path: '/first-foods'
@@ -845,7 +826,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedChecklistsRoute: typeof AuthenticatedChecklistsRoute
   AuthenticatedEmergencyInfoRoute: typeof AuthenticatedEmergencyInfoRoute
   AuthenticatedFirstFoodsRoute: typeof AuthenticatedFirstFoodsRoute
-  AuthenticatedGrowthRoute: typeof AuthenticatedGrowthRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedMomentsRoute: typeof AuthenticatedMomentsRoute
   AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
@@ -876,7 +856,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChecklistsRoute: AuthenticatedChecklistsRoute,
   AuthenticatedEmergencyInfoRoute: AuthenticatedEmergencyInfoRoute,
   AuthenticatedFirstFoodsRoute: AuthenticatedFirstFoodsRoute,
-  AuthenticatedGrowthRoute: AuthenticatedGrowthRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedMomentsRoute: AuthenticatedMomentsRoute,
   AuthenticatedPricingRoute: AuthenticatedPricingRoute,
