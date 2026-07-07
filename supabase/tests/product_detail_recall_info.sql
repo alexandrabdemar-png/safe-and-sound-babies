@@ -10,6 +10,13 @@
 --      exact same query — product_recalls' existing "Users view own
 --      product recalls" policy already restricts by user_id; this proves
 --      selecting the additional columns doesn't change that.
+--   3. Regression: the query must NOT filter on acknowledged. A user-
+--      reported bug showed the recall banner (product.recalled = true)
+--      with no clickable link/details once the recall had been
+--      acknowledged (dismissed) via the Alerts tab elsewhere — the
+--      original query filtered `.eq("acknowledged", false)`, so an
+--      acknowledged row silently vanished from this page too, even
+--      though the product is still flagged recalled.
 \set ON_ERROR_STOP on
 
 INSERT INTO auth.users (id) VALUES
@@ -57,5 +64,26 @@ SELECT test.assert(
      JOIN public.recalls r ON r.id = pr.recall_id
      WHERE pr.product_id = 'ddddd111-dddd-dddd-dddd-dddddddddddd') = 0,
   'Stranger: sees zero product_recalls rows for a product they do not own'
+);
+SELECT test.logout();
+
+-- ── 3. Regression: acknowledged recalls must still show full detail ─────
+SELECT test.login('service_role');
+UPDATE public.product_recalls SET acknowledged = true
+  WHERE product_id = 'ddddd111-dddd-dddd-dddd-dddddddddddd';
+SELECT test.logout();
+
+SELECT test.login('authenticated', 'a1111111-1111-1111-1111-111111111111');
+SELECT test.assert(
+  (SELECT count(*) FROM public.product_recalls pr
+     JOIN public.recalls r ON r.id = pr.recall_id
+     WHERE pr.product_id = 'ddddd111-dddd-dddd-dddd-dddddddddddd') = 1,
+  'Owner: an acknowledged recall still returns a row (the product detail page query has no acknowledged filter)'
+);
+SELECT test.assert(
+  (SELECT r.url FROM public.product_recalls pr
+     JOIN public.recalls r ON r.id = pr.recall_id
+     WHERE pr.product_id = 'ddddd111-dddd-dddd-dddd-dddddddddddd') = 'https://www.cpsc.gov/Recalls/2024/babyswede-recalls-bouncer',
+  'Owner: the url is still readable even once acknowledged — this is the exact bug that made the link disappear'
 );
 SELECT test.logout();
