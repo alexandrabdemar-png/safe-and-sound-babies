@@ -24,7 +24,7 @@ import {
   ScanLine,
   X,
 } from "lucide-react";
-import { checkRecallsForProduct, type RecallHit } from "@/lib/recallCheck";
+import { checkRecallsForProduct, recallSourceLabel, type RecallHit } from "@/lib/recallCheck";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -461,14 +461,6 @@ function NewProductPage() {
 }
 
 // ─── Recall Alert Modal ───────────────────────────────────────────────────────
-
-function recallSourceLabel(hit: RecallHit): string {
-  if (hit.url.includes("cpsc.gov")) return "U.S. Consumer Product Safety Commission (CPSC)";
-  if (hit.url.includes("fda.gov")) return "U.S. Food and Drug Administration (FDA)";
-  if (hit.source === "cpsc") return "U.S. Consumer Product Safety Commission (CPSC)";
-  if (hit.source === "fda") return "U.S. Food and Drug Administration (FDA)";
-  return "the official recall notice linked below";
-}
 
 function RecallAlertModal({
   hit,

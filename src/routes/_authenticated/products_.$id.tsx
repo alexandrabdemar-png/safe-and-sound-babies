@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, AlertTriangle, Ruler, RefreshCw, Trash2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, Ruler, RefreshCw, Trash2, ShieldCheck, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,7 @@ import { CATEGORY_BY_KEY, categoryFromLabel } from "@/lib/productCategories";
 import { formatMonthYear, daysBetween } from "@/lib/predictions";
 import { lookupAndSaveGuidelines, recomputePredictions } from "@/lib/guidelines.functions";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
+import { recallFallbackUrl, recallSourceLabel } from "@/lib/recallCheck";
 
 export const Route = createFileRoute("/_authenticated/products_/$id")({
   ssr: false,
@@ -49,6 +50,14 @@ type Child = {
   measurements_updated_at: string | null;
 };
 
+type RecallInfo = {
+  title: string;
+  url: string | null;
+  description: string | null;
+  recallDate: string | null;
+  source: string | null;
+};
+
 function ProductDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
@@ -56,7 +65,7 @@ function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [guideline, setGuideline] = useState<Guideline | null>(null);
   const [child, setChild] = useState<Child | null>(null);
-  const [recallNames, setRecallNames] = useState<string[]>([]);
+  const [recalls, setRecalls] = useState<RecallInfo[]>([]);
   const [refreshingAI, setRefreshingAI] = useState(false);
 
   async function load() {
@@ -75,11 +84,17 @@ function ProductDetailPage() {
 
     const [{ data: g }, { data: r }, kidRes] = await Promise.all([
       supabase.from("product_guidelines").select("max_weight_lbs, max_height_inches, average_use_months, replacement_interval_months, size_up_trigger, replacement_trigger, source").eq("product_id", id).maybeSingle(),
-      supabase.from("product_recalls").select("recalls(title)").eq("product_id", id).eq("acknowledged", false),
+      supabase.from("product_recalls").select("recalls(title, url, description, recall_date, source)").eq("product_id", id).eq("acknowledged", false),
       p.child_id ? supabase.from("children").select("id, name, height_inches, weight_lbs, measurements_updated_at").eq("id", p.child_id).maybeSingle() : Promise.resolve({ data: null }),
     ]);
     setGuideline((g as Guideline) ?? null);
-    setRecallNames(((r ?? []) as Array<{ recalls: { title: string } | null }>).map((x) => x.recalls?.title ?? "Active recall"));
+    type RecallRow = { recalls: { title: string; url: string | null; description: string | null; recall_date: string | null; source: string | null } | null };
+    setRecalls(
+      ((r ?? []) as RecallRow[])
+        .map((x) => x.recalls)
+        .filter((x): x is NonNullable<typeof x> => x !== null)
+        .map((x) => ({ title: x.title, url: x.url, description: x.description, recallDate: x.recall_date, source: x.source }))
+    );
     setChild((kidRes?.data as Child) ?? null);
     setLoading(false);
   }
@@ -132,15 +147,38 @@ function ProductDetailPage() {
       <main className="flex-1 px-5 sm:px-6">
         <div className="mx-auto max-w-md space-y-5">
           {/* Recall banner */}
-          {(product.recalled || recallNames.length > 0) && (
+          {(product.recalled || recalls.length > 0) && (
             <div className="rounded-3xl bg-destructive/15 border border-destructive/30 p-4">
               <div className="flex items-center gap-2 font-body text-sm font-semibold text-destructive">
                 <AlertTriangle className="h-4 w-4" /> RECALL
               </div>
-              {recallNames.length > 0 && (
-                <ul className="mt-2 space-y-1 font-body text-xs text-destructive/90">
-                  {recallNames.map((t, i) => <li key={i}>· {t}</li>)}
+              {recalls.length > 0 ? (
+                <ul className="mt-2 space-y-3">
+                  {recalls.map((rc, i) => (
+                    <li key={i} className="space-y-1">
+                      <p className="font-body text-sm font-semibold text-destructive">{rc.title}</p>
+                      {rc.description && (
+                        <p className="font-body text-xs leading-relaxed text-destructive/90">{rc.description}</p>
+                      )}
+                      {rc.recallDate && (
+                        <p className="font-body text-[11px] text-destructive/70">Recall date: {rc.recallDate}</p>
+                      )}
+                      <a
+                        href={rc.url || recallFallbackUrl(rc.title)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive underline underline-offset-2"
+                      >
+                        View official recall notice <ExternalLink className="h-3 w-3" />
+                      </a>
+                      <p className="font-body text-[11px] text-destructive/60">Source: {recallSourceLabel(rc)}</p>
+                    </li>
+                  ))}
                 </ul>
+              ) : (
+                <p className="mt-1 font-body text-xs text-destructive/80">
+                  This product was flagged for a recall, but details aren't available yet.
+                </p>
               )}
             </div>
           )}

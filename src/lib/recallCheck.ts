@@ -33,6 +33,19 @@ export function recallFallbackUrl(title: string): string {
   return `https://www.cpsc.gov/Recalls?combine=${encodeURIComponent(title)}`;
 }
 
+/**
+ * Attribute a recall to its actual issuing agency (CPSC/FDA) based on the
+ * recall's own URL/source, rather than assuming CPSC for everything — used
+ * anywhere a recall's official source is shown to a parent.
+ */
+export function recallSourceLabel(hit: { url?: string | null; source?: string | null }): string {
+  if (hit.url?.includes("cpsc.gov")) return "U.S. Consumer Product Safety Commission (CPSC)";
+  if (hit.url?.includes("fda.gov")) return "U.S. Food and Drug Administration (FDA)";
+  if (hit.source === "cpsc") return "U.S. Consumer Product Safety Commission (CPSC)";
+  if (hit.source === "fda") return "U.S. Food and Drug Administration (FDA)";
+  return "the official recall notice linked below";
+}
+
 // ── Noise words stripped before fuzzy token matching ─────────────────────────
 const NOISE_WORDS = new Set([
   "baby", "babies", "organic", "organics", "natural", "formula", "bottle",
