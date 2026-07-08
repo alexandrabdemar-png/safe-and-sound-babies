@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as RecallsRouteImport } from './routes/recalls'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as MomentsTimelinePreviewRouteImport } from './routes/moments-timeline-preview'
 import { Route as DesignPreviewRouteImport } from './routes/design-preview'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -63,6 +64,11 @@ const RecallsRoute = RecallsRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MomentsTimelinePreviewRoute = MomentsTimelinePreviewRouteImport.update({
+  id: '/moments-timeline-preview',
+  path: '/moments-timeline-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DesignPreviewRoute = DesignPreviewRouteImport.update({
@@ -270,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/design-preview': typeof DesignPreviewRoute
+  '/moments-timeline-preview': typeof MomentsTimelinePreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
   '/terms': typeof TermsRoute
@@ -311,6 +318,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/design-preview': typeof DesignPreviewRoute
+  '/moments-timeline-preview': typeof MomentsTimelinePreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
   '/terms': typeof TermsRoute
@@ -354,6 +362,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
   '/design-preview': typeof DesignPreviewRoute
+  '/moments-timeline-preview': typeof MomentsTimelinePreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
   '/terms': typeof TermsRoute
@@ -397,6 +406,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/design-preview'
+    | '/moments-timeline-preview'
     | '/onboarding'
     | '/recalls'
     | '/terms'
@@ -438,6 +448,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/design-preview'
+    | '/moments-timeline-preview'
     | '/onboarding'
     | '/recalls'
     | '/terms'
@@ -480,6 +491,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/design-preview'
+    | '/moments-timeline-preview'
     | '/onboarding'
     | '/recalls'
     | '/terms'
@@ -523,6 +535,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   DesignPreviewRoute: typeof DesignPreviewRoute
+  MomentsTimelinePreviewRoute: typeof MomentsTimelinePreviewRoute
   OnboardingRoute: typeof OnboardingRoute
   RecallsRoute: typeof RecallsRoute
   TermsRoute: typeof TermsRoute
@@ -554,6 +567,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moments-timeline-preview': {
+      id: '/moments-timeline-preview'
+      path: '/moments-timeline-preview'
+      fullPath: '/moments-timeline-preview'
+      preLoaderRoute: typeof MomentsTimelinePreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/design-preview': {
@@ -899,6 +919,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   DesignPreviewRoute: DesignPreviewRoute,
+  MomentsTimelinePreviewRoute: MomentsTimelinePreviewRoute,
   OnboardingRoute: OnboardingRoute,
   RecallsRoute: RecallsRoute,
   TermsRoute: TermsRoute,
@@ -911,3 +932,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
