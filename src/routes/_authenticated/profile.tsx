@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   LogOut, User as UserIcon, Sparkles, Loader2, Plus, Trash2,
-  Download, CreditCard, Shield, Bell, Share2, Gift, Copy, Check, HelpCircle, AlertTriangle, MessageSquare,
+  Download, CreditCard, Shield, Bell, Share2, Gift, Copy, Check, HelpCircle, MessageSquare,
 } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useProGate } from "@/hooks/useProGate";
@@ -17,6 +17,7 @@ import { exportUserData } from "@/utils/export.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { openUrl } from "@/lib/browser";
 import { APP_VERSION, SHARE_URL } from "@/lib/constants";
+import { extractFunctionsErrorMessage } from "@/lib/functionsError";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   ssr: false,
@@ -126,13 +127,32 @@ function ProfilePage() {
     setExporting(true);
     try {
       const data = await exportUserData();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `safesound-export-${new Date().toISOString().slice(0,10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const json = JSON.stringify(data, null, 2);
+
+      // A plain blob: URL handed to an anchor's .click() is unreliable in
+      // Capacitor's native WebView (iOS in particular — programmatic file
+      // downloads there are largely a no-op with no error, which matches
+      // "export doesn't work": nothing throws, nothing happens). Detect the
+      // native app and route through the same Capacitor Browser opener
+      // already used for the Stripe portal link (src/lib/browser.ts),
+      // using a self-contained data: URI since blob: URLs from this
+      // WebView's own origin can't be resolved by the native browser sheet
+      // it opens. The user can save/share the JSON from there.
+      const { Capacitor } = await import('@capacitor/core');
+      if (Capacitor.isNativePlatform()) {
+        const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(json)}`;
+        await openUrl(dataUri);
+      } else {
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `safesound-export-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Export failed');
     } finally { setExporting(false); }
@@ -274,12 +294,8 @@ function ProfilePage() {
         {/* Feedback */}
         <FeedbackSection />
 
-        {/* Danger Zone */}
+        {/* Delete account */}
         <section className="rounded-3xl border border-destructive/30 bg-card p-5 mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="h-4 w-4 text-destructive" />
-            <p className="font-display text-base font-semibold text-destructive">Danger zone</p>
-          </div>
           {!deleteConfirm ? (
             <Button
               onClick={handleDeleteAccount}
@@ -532,20 +548,20 @@ function CoParentInvite({ children }: { children: { id: string; name: string }[]
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim()) return;
+    if (children.length === 0) {
+      toast.error("Add a child before sharing access");
+      return;
+    }
     setSending(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({ email: email.trim() });
+      const { data, error } = await supabase.functions.invoke("send-caregiver-invite", {
+        body: { childIds: children.map((c) => c.id), email: email.trim(), role: "editor" },
+      });
       if (error) throw error;
-      // Store invite locally so we remember who was invited
-      try {
-        const key = `safesound.coParentInvites`;
-        const existing = JSON.parse(localStorage.getItem(key) ?? "[]");
-        existing.push({ email: email.trim(), childIds: children.map((c) => c.id), ts: Date.now() });
-        localStorage.setItem(key, JSON.stringify(existing));
-      } catch {}
+      if (data?.error) throw new Error(data.error);
       setSent(true);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not send invite");
+      toast.error(await extractFunctionsErrorMessage(err, "Could not send invite"));
     } finally {
       setSending(false);
     }
@@ -565,15 +581,15 @@ function CoParentInvite({ children }: { children: { id: string; name: string }[]
         </div>
       </div>
       <p className="mb-3 font-body text-xs text-muted-foreground leading-relaxed">
-        Enter their email and they'll receive a magic link giving them full access to view and edit{childNames ? ` ${childNames}'s` : ""} child profiles, products, milestones, and alerts — under your shared subscription.
+        Enter their email and they'll receive an invite link giving them access to view and edit{childNames ? ` ${childNames}'s` : ""} child profiles, products, milestones, and alerts.
       </p>
       {sent ? (
         <div className="rounded-2xl bg-primary/10 px-4 py-3">
           <p className="font-body text-sm text-foreground">
-            Invite sent to <span className="font-semibold">{email}</span>. They'll get a magic link to sign in — no password needed.
+            Invite sent to <span className="font-semibold">{email}</span>. Once they open the link and sign in, they'll have access right away.
           </p>
           <p className="mt-1 font-body text-xs text-muted-foreground">
-            Once they sign in, contact us to link your accounts. Full automatic sync coming soon.
+            The invite link expires in 7 days.
           </p>
           <button
             type="button"
