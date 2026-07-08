@@ -46,6 +46,29 @@ export function recallSourceLabel(hit: { url?: string | null; source?: string | 
   return "the official recall notice linked below";
 }
 
+const ALLOWED_RECALL_HOSTS = ["cpsc.gov", "saferproducts.gov", "fda.gov"];
+
+/**
+ * Whitelist check used before a recall hit is ever persisted to the shared
+ * `recalls` catalog table (readable by every user). Only https:// URLs on an
+ * official agency domain (or a direct subdomain of one) pass — this is what
+ * stands between a crafted recordProductRecall call and an arbitrary URL
+ * being shown to every user as an "official recall notice". Exact-suffix
+ * matching (`hostname === host || hostname.endsWith("." + host)`) rejects
+ * lookalikes like "cpsc.gov.evil.com" or "evilcpsc.gov".
+ */
+export function isAllowedRecallUrl(url: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "https:") return false;
+  const hostname = parsed.hostname.toLowerCase();
+  return ALLOWED_RECALL_HOSTS.some((host) => hostname === host || hostname.endsWith(`.${host}`));
+}
+
 // ── Noise words stripped before fuzzy token matching ─────────────────────────
 const NOISE_WORDS = new Set([
   "baby", "babies", "organic", "organics", "natural", "formula", "bottle",
