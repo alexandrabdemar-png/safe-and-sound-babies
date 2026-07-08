@@ -354,7 +354,15 @@ function HomePage() {
       ]);
 
       if (cancelled) return;
-      if (mRes.data) setMoments(mRes.data as Moment[]);
+      if (mRes.error) {
+        // Previously silent: mRes.data is null on error, so setMoments simply
+        // never ran — a newly-logged moment would just never appear here,
+        // with zero indication anything failed.
+        console.error("[home] failed to load recent moments:", mRes.error.message);
+        toast.error(friendlyError(mRes.error.message));
+      } else if (mRes.data) {
+        setMoments(mRes.data as Moment[]);
+      }
       setAlerts({
         recalls: recallRes.count ?? 0,
         replace: replaceRes.count ?? 0,
