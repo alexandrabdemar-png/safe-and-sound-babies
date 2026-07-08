@@ -1,11 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowUpRight, Loader2, Radio, ShieldAlert, ShieldCheck } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { ArrowLeft, ArrowUpRight, Loader2, Radio, RotateCw, ShieldAlert, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchRecentBabyRecalls } from "@/lib/cpscSearch";
-import { CRITICAL_RECALLS, recallFallbackUrl } from "@/lib/recallCheck";
+import { recallFallbackUrl } from "@/lib/recallCheck";
+import {
+  mapCpscResults,
+  mapCriticalRecalls,
+  mapExtraResults,
+  mergeRecallSources,
+  type ExtraRecallRow,
+  type RadarRecall,
+} from "@/lib/recallRadarMerge";
 
 export const Route = createFileRoute("/_authenticated/recall-radar")({
   ssr: false,
@@ -23,113 +31,95 @@ const SOURCE_LABEL: Record<string, string> = {
   eu_safety_gate: "EU Safety Gate",
 };
 
-// Unified shape so every source (live CPSC/FDA fetches, manually-curated
-// critical recalls, and the extra sources synced daily into our own
-// `recalls` table — USDA FSIS, NHTSA, Health Canada, EU Safety Gate) can
-// render in the same list.
-type RadarRecall = {
-  id: string;
-  source: string;
-  title: string;
-  description: string;
-  dateLabel: string | null;
-  sortDate: number;
-  url: string;
-  /** false only for the EU Safety Gate feed — no official EC API exists, so
-   * that source runs through an unofficial third-party mirror. Surfaced so
-   * a miss there is never read as "definitely no EU recall." */
-  official: boolean;
-};
-
 function RecallRadarPage() {
   const [loading, setLoading] = useState(true);
   const [recalls, setRecalls] = useState<RadarRecall[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [degraded, setDegraded] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const retry = useCallback(() => {
+    setReloadKey((k) => k + 1);
+  }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
     (async () => {
-      try {
-        const [cpscResults, extraResult] = await Promise.all([
-          // fetchRecentBabyRecalls already merges CPSC + FDA internally
-          // (FDA results are mapped into the same shape, RecallID prefixed
-          // "fda-") — this is where Nara-class food/formula recalls live,
-          // since FDA and CPSC are separate agencies with separate data.
-          fetchRecentBabyRecalls(30).catch(() => []),
-          // USDA FSIS, NHTSA, Health Canada, and EU Safety Gate are synced
-          // daily into our own recalls table by check-extra-recalls.ts
-          // rather than fetched live here — Health Canada is a multi-MB
-          // bulk dump unsuitable for a page load, and USDA/NHTSA/EU CORS
-          // support couldn't be confirmed from this build environment.
-          supabase
-            .from("recalls")
-            .select("id, source, title, description, hazard, url, recall_date, official")
-            .in("source", ["usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"])
-            .order("recall_date", { ascending: false })
-            .limit(50),
-        ]);
+      setLoading(true);
+      setError(null);
+      setDegraded(false);
 
-        const cpscItems: RadarRecall[] = cpscResults.map((r) => ({
-          id: r.RecallID.startsWith("fda-") ? r.RecallID : `cpsc-${r.RecallID}`,
-          source: r.RecallID.startsWith("fda-") ? "fda" : "cpsc",
-          title: r.RecallHeading,
-          description: r.Products?.map((p) => p.Description || p.Name).filter(Boolean).join("; ") ?? "",
-          dateLabel: r.RecallDate
-            ? new Date(r.RecallDate).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
-            : null,
-          sortDate: r.RecallDate ? new Date(r.RecallDate).getTime() : 0,
-          url: r.URL,
-          official: true,
-        }));
+      // Critical recalls are manually curated, synchronous, and can never
+      // fail — always available regardless of what happens below.
+      const criticalItems = mapCriticalRecalls();
 
-        // Critical recalls are manually curated because they may not reliably
-        // appear via CPSC/FDA keyword search, or may fall outside a 30-day
-        // window while still being actively relevant (e.g. Nara infant
-        // formula — a product could still be sitting in someone's pantry).
-        // Always show them regardless of date.
-        const criticalItems: RadarRecall[] = CRITICAL_RECALLS.map((c) => ({
-          id: `critical-${c.id}`,
-          source: "critical",
-          title: c.title,
-          description: c.reason,
-          dateLabel: c.date || null,
-          sortDate: Number.MAX_SAFE_INTEGER, // always sort to the top
-          url: c.url,
-          official: true,
-        }));
+      // Each remote source is isolated so one failing source degrades
+      // gracefully instead of blanking the whole page. Both promises always
+      // resolve (never reject) — failures are caught here and logged.
+      const [cpscSettled, extraSettled] = await Promise.allSettled([
+        // fetchRecentBabyRecalls already merges CPSC + FDA internally
+        // (FDA results are mapped into the same shape, RecallID prefixed
+        // "fda-") — this is where Nara-class food/formula recalls live,
+        // since FDA and CPSC are separate agencies with separate data.
+        // It's already internally error-safe (returns [] on failure), but
+        // Promise.allSettled gives us a second layer of protection.
+        fetchRecentBabyRecalls(30),
+        // USDA FSIS, NHTSA, Health Canada, and EU Safety Gate are synced
+        // daily into our own recalls table by check-extra-recalls.ts
+        // rather than fetched live here — Health Canada is a multi-MB
+        // bulk dump unsuitable for a page load, and USDA/NHTSA/EU CORS
+        // support couldn't be confirmed from this build environment.
+        supabase
+          .from("recalls")
+          .select("id, source, title, description, hazard, url, recall_date, official")
+          .in("source", ["usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"])
+          .order("recall_date", { ascending: false })
+          .limit(50),
+      ]);
 
-        const extraItems: RadarRecall[] = ((extraResult.data ?? []) as Array<{
-          id: string; source: string; title: string; description: string | null;
-          hazard: string | null; url: string | null; recall_date: string | null; official: boolean;
-        }>).map((r) => ({
-          id: `${r.source}-${r.id}`,
-          source: r.source,
-          title: r.title,
-          description: r.hazard ?? r.description ?? "",
-          dateLabel: r.recall_date
-            ? new Date(r.recall_date).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
-            : null,
-          sortDate: r.recall_date ? new Date(r.recall_date).getTime() : 0,
-          url: r.url ?? "",
-          official: r.official,
-        }));
+      if (cancelled) return;
 
-        const seen = new Set<string>();
-        const merged = [...criticalItems, ...cpscItems, ...extraItems].filter((item) => {
-          const key = item.title.toLowerCase().trim();
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        });
-        merged.sort((a, b) => b.sortDate - a.sortDate);
+      let anySourceFailed = false;
 
-        setRecalls(merged);
-      } catch {
-        setError("Couldn't reach the recall databases right now. Try again in a moment or visit cpsc.gov/Recalls directly.");
-      } finally {
-        setLoading(false);
+      let cpscItems: RadarRecall[] = [];
+      if (cpscSettled.status === "fulfilled") {
+        cpscItems = mapCpscResults(cpscSettled.value);
+      } else {
+        console.error("Recall Radar: CPSC/FDA fetch failed", cpscSettled.reason);
+        anySourceFailed = true;
       }
+
+      let extraItems: RadarRecall[] = [];
+      if (extraSettled.status === "fulfilled") {
+        if (extraSettled.value.error) {
+          console.error("Recall Radar: extra-sources query failed", extraSettled.value.error);
+          anySourceFailed = true;
+        } else {
+          extraItems = mapExtraResults((extraSettled.value.data ?? []) as ExtraRecallRow[]);
+        }
+      } else {
+        console.error("Recall Radar: extra-sources query rejected", extraSettled.reason);
+        anySourceFailed = true;
+      }
+
+      const merged = mergeRecallSources(criticalItems, cpscItems, extraItems);
+
+      setRecalls(merged);
+      // Only show a hard error if literally nothing loaded — otherwise
+      // degrade gracefully and show what we have, with a small notice.
+      if (anySourceFailed && merged.length === 0) {
+        setError("Couldn't reach the recall databases right now. Try again in a moment or visit cpsc.gov/Recalls directly.");
+      } else if (anySourceFailed) {
+        setDegraded(true);
+      }
+      setLoading(false);
     })();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadKey]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28 animate-fade-in">
@@ -158,8 +148,17 @@ function RecallRadarPage() {
               Scanning recall databases…
             </div>
           ) : error ? (
-            <div className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-4 font-body text-sm text-destructive">
-              {error}
+            <div className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-4 font-body text-sm text-destructive space-y-3">
+              <p>{error}</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={retry}
+                className="rounded-full border-destructive/40 font-body text-xs text-destructive hover:bg-destructive/10"
+              >
+                <RotateCw className="mr-1.5 h-3.5 w-3.5" /> Try again
+              </Button>
             </div>
           ) : recalls.length === 0 ? (
             <div className="rounded-3xl border border-border/60 bg-card px-5 py-10 text-center animate-scale-in">
@@ -179,6 +178,18 @@ function RecallRadarPage() {
                 </p>
                 <span className="font-body text-xs text-muted-foreground">6 agencies + brand watch</span>
               </div>
+              {degraded && (
+                <div className="flex items-center justify-between gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 font-body text-xs text-amber-800 dark:text-amber-400">
+                  <span>One or more recall sources didn't respond — this list may be incomplete.</span>
+                  <button
+                    type="button"
+                    onClick={retry}
+                    className="shrink-0 font-semibold underline underline-offset-2"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
               <ul className="space-y-3">
                 {recalls.map((r) => <RecallCard key={r.id} recall={r} />)}
               </ul>
