@@ -67,28 +67,24 @@ async function runLookupGuidelines(productId: string): Promise<void> {
 
 async function recordRecallInDb(productId: string, hit: RecallHit): Promise<void> {
   try {
-    const { data: catalogEntry } = await (supabase as any)
-      .from("recalls")
-      .upsert(
-        { source: hit.source, source_id: hit.id, title: hit.title, url: hit.url },
-        { onConflict: "source,source_id" },
-      )
-      .select("id")
-      .single();
-
-    const recallId = (catalogEntry as { id: string } | null)?.id;
-    if (recallId) {
-      await (supabase as any)
-        .from("product_recalls")
-        .upsert(
-          { product_id: productId, recall_id: recallId, acknowledged: false },
-          { onConflict: "product_id,recall_id" },
-        );
-    }
-
-    await (supabase as any).from("products").update({ recalled: true }).eq("id", productId);
+    const { recordProductRecall } = await import("@/lib/recallRecord.functions");
+    await recordProductRecall({
+      data: {
+        productId,
+        source: hit.source,
+        sourceId: hit.id,
+        title: hit.title,
+        url: hit.url,
+        recallDate: hit.recallDate ?? null,
+      },
+    });
   } catch (err) {
-    console.warn("[recall-db] failed:", err instanceof Error ? err.message : "unknown");
+    // Non-fatal: the recall alert modal (built from `hit`, fetched live) has
+    // already shown the parent the recall regardless of whether this write
+    // succeeds. But this used to fail silently 100% of the time (RLS
+    // rejected the old direct client-side writes without the caller ever
+    // checking `error`) — log loudly now so a real regression is visible.
+    console.error("[recall-db] failed to persist recall for product", productId, err);
   }
 }
 
