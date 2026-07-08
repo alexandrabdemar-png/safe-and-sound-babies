@@ -72,9 +72,19 @@ function FirstFoodsPage() {
       .from("first_foods" as any)
       .select("id, child_id, food_name, date_introduced, is_allergen, reaction_notes, created_at")
       .eq("child_id", c.id)
-      .order("date_introduced", { ascending: false });
+      .order("date_introduced", { ascending: false })
+      .order("created_at", { ascending: false });
 
-    if (!error && data) setFoods(data as unknown as FoodEntry[]);
+    if (error) {
+      // Previously silent: a failed read here just left `foods` at its
+      // previous value with zero indication anything went wrong — a newly
+      // saved food would look like it "didn't save" even though the insert
+      // itself (a few lines up in handleAdd) had already succeeded.
+      console.error("[first-foods] failed to load foods:", error.message);
+      toast.error(friendlyError(error.message));
+    } else if (data) {
+      setFoods(data as unknown as FoodEntry[]);
+    }
     setLoading(false);
   }
 
