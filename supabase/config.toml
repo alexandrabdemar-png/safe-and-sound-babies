@@ -9,3 +9,6 @@ verify_jwt = true
 
 [functions.check-recalls]
 verify_jwt = true
+
+[functions.send-caregiver-invite]
+verify_jwt = true

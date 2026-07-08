@@ -10,7 +10,10 @@ import { Loader2 } from "lucide-react";
  * Supabase v2 (PKCE flow) appends ?code=<verifier> to the redirect URL.
  * We call supabase.auth.getSession() here which internally detects the code
  * in the URL via detectSessionInUrl and exchanges it for a real session.
- * Once onAuthStateChange fires with a valid session we send the user to /home.
+ * Once onAuthStateChange fires with a valid session we send the user to
+ * /home (or wherever the optional ?next= param points, e.g. a caregiver
+ * invite waiting to be accepted at /caregiver-invite/:token — bypasses
+ * onboarding, since that flow expects the invitee is already a real user).
  * On error we bounce back to /auth with a toast-friendly error param.
  */
 export const Route = createFileRoute("/auth/callback")({
@@ -18,11 +21,39 @@ export const Route = createFileRoute("/auth/callback")({
   component: AuthCallbackPage,
 });
 
+function getNextParam(): string | null {
+  if (typeof window === "undefined") return null;
+  const next = new URLSearchParams(window.location.search).get("next");
+  // Only ever allow an in-app relative path — never an absolute/external
+  // URL, which would make this an open redirect.
+  return next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+}
+
 function AuthCallbackPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
     let done = false;
+    const next = getNextParam();
+
+    function routeAfterSignIn(userId: string) {
+      if (next) {
+        navigate({ to: next } as never);
+        return;
+      }
+      supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", userId)
+        .maybeSingle()
+        .then(({ data: profile }) => {
+          if (!profile?.display_name) {
+            navigate({ to: "/onboarding" });
+          } else {
+            navigate({ to: "/home" });
+          }
+        });
+    }
 
     // getSession() triggers the PKCE code exchange when detectSessionInUrl is
     // true and a ?code= param is present in the current URL.
@@ -36,22 +67,8 @@ function AuthCallbackPage() {
         } as never);
         return;
       }
-      // Session is live — determine where to send the user
-      // New users (no display name yet) go through onboarding; everyone else → home
-      supabase
-        .from("profiles")
-        .select("display_name")
-        .eq("user_id", data.session.user.id)
-        .maybeSingle()
-        .then(({ data: profile }) => {
-          if (done) return;
-          done = true;
-          if (!profile?.display_name) {
-            navigate({ to: "/onboarding" });
-          } else {
-            navigate({ to: "/home" });
-          }
-        });
+      done = true;
+      routeAfterSignIn(data.session.user.id);
     });
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
@@ -63,18 +80,7 @@ function AuthCallbackPage() {
       }
       if (event === "SIGNED_IN" && session) {
         done = true;
-        supabase
-          .from("profiles")
-          .select("display_name")
-          .eq("user_id", session.user.id)
-          .maybeSingle()
-          .then(({ data: profile }) => {
-            if (!profile?.display_name) {
-              navigate({ to: "/onboarding" });
-            } else {
-              navigate({ to: "/home" });
-            }
-          });
+        routeAfterSignIn(session.user.id);
       }
     });
 
