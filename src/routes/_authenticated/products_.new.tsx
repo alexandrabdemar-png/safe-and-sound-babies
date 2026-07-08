@@ -263,6 +263,17 @@ function NewProductPage() {
 
       <main className="flex-1 px-5 sm:px-6">
         <div className="mx-auto max-w-md space-y-6">
+          {/* Scan a barcode — fastest path when the product is in hand */}
+          <Button
+            asChild
+            variant="outline"
+            className="h-12 w-full gap-2 rounded-2xl border-primary/25 bg-card font-body text-sm font-semibold text-foreground"
+          >
+            <Link to="/products/scan">
+              <ScanLine className="h-4 w-4 text-primary" /> Scan a barcode instead
+            </Link>
+          </Button>
+
           {/* AI Product Search — primary flow */}
           <SearchErrorBoundary>
             <ProductSearchAI onPick={(r) => setSheetProduct(r)} />

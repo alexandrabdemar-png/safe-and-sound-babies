@@ -194,65 +194,77 @@ function MomentsPage() {
             </div>
           ) : (
             <div className="relative pb-4">
-              {/* Timeline line */}
-              <div className="absolute left-[11px] top-3 bottom-3 w-px bg-border/60" />
-              <ul className="space-y-5">
-                {filtered.map((m) => {
+              {/* Dashed center spine */}
+              <div
+                className="absolute left-1/2 top-2 bottom-2 w-px -translate-x-1/2"
+                style={{
+                  backgroundImage: "linear-gradient(var(--border) 60%, transparent 0%)",
+                  backgroundSize: "1px 9px",
+                  backgroundRepeat: "repeat-y",
+                }}
+              />
+              <ul className="space-y-7">
+                {filtered.map((m, i) => {
                   const s = TYPE_STYLES[m.type];
                   const isLetter = (m.type as string) === "Letter";
                   const age = childDob && m.logged_at ? calcAgeAt(childDob, m.logged_at) : null;
+                  const onLeft = i % 2 === 0;
                   return (
-                    <li key={m.id} className="relative pl-7">
-                      {/* Timeline dot */}
+                    <li key={m.id} className="relative flex items-start">
+                      {/* Icon badge on the spine */}
                       <span
-                        className="absolute left-0 top-4 flex h-[22px] w-[22px] items-center justify-center rounded-full text-[11px]"
-                        style={{ backgroundColor: s.bg, border: `1.5px solid ${s.border}` }}
+                        className="absolute left-1/2 top-2 z-10 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full text-xs shadow-sm"
+                        style={{ backgroundColor: s.bg, border: `1.5px solid ${s.accent}` }}
                       >
                         {s.emoji}
                       </span>
 
-                      <div
-                        className="rounded-2xl p-4"
-                        style={{ backgroundColor: s.bg, border: `1px solid ${s.border}` }}
-                      >
-                        {/* Type tag + date row */}
-                        <div className="flex items-center justify-between gap-2 mb-2">
-                          <span
-                            className="rounded-full px-2.5 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wider"
-                            style={{ backgroundColor: s.accent + "22", color: s.accent }}
-                          >
-                            {m.type}
-                          </span>
-                          <span className="font-body text-[11px] text-muted-foreground">
-                            {formatDateLarge(m.logged_at)}
-                          </span>
-                        </div>
-
-                        {/* Age label */}
-                        {age && (
-                          <p className="font-body text-[11px] italic text-muted-foreground mb-1.5">
-                            {childName} at {age}
-                          </p>
-                        )}
-
-                        {/* Title */}
-                        <p
-                          className="font-display text-lg font-semibold tracking-tight leading-snug"
-                          style={{ color: "#3D3935" }}
+                      {/* Card, alternating side */}
+                      <div className={`flex w-1/2 ${onLeft ? "justify-end pr-6" : "order-2 justify-start pl-6"}`}>
+                        <div
+                          className="w-full max-w-[210px] rounded-2xl p-3.5"
+                          style={{ backgroundColor: s.bg, border: `1px solid ${s.border}` }}
                         >
-                          {m.title}
-                        </p>
+                          {/* Type tag + date */}
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1.5">
+                            <span
+                              className="rounded-full px-2 py-0.5 font-body text-[9px] font-semibold uppercase tracking-wider"
+                              style={{ backgroundColor: s.accent + "22", color: s.accent }}
+                            >
+                              {m.type}
+                            </span>
+                            <span className="font-body text-[10px] text-muted-foreground">
+                              {formatDateLarge(m.logged_at)}
+                            </span>
+                          </div>
 
-                        {/* Notes / letter */}
-                        {m.displayNotes && (
+                          {/* Age label */}
+                          {age && (
+                            <p className="font-body text-[10px] italic text-muted-foreground mb-1">
+                              {childName} at {age}
+                            </p>
+                          )}
+
+                          {/* Title */}
                           <p
-                            className={`mt-2 font-body text-sm leading-relaxed ${isLetter ? "italic" : ""}`}
-                            style={{ color: "#5C5248" }}
+                            className="font-display text-sm font-semibold tracking-tight leading-snug"
+                            style={{ color: "#3D3935" }}
                           >
-                            {m.displayNotes}
+                            {m.title}
                           </p>
-                        )}
+
+                          {/* Notes / letter */}
+                          {m.displayNotes && (
+                            <p
+                              className={`mt-1.5 font-body text-xs leading-relaxed line-clamp-4 ${isLetter ? "italic" : ""}`}
+                              style={{ color: "#5C5248" }}
+                            >
+                              {m.displayNotes}
+                            </p>
+                          )}
+                        </div>
                       </div>
+                      <div className={onLeft ? "order-2 w-1/2" : "w-1/2"} />
                     </li>
                   );
                 })}
