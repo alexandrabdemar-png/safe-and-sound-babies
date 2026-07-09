@@ -43,16 +43,14 @@ function PrivacyPromisePage() {
     if (!confirming) { setConfirming(true); return; }
     setDeleting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not signed in");
-      // Delete all user-owned data (RLS enforces user_id match)
-      await supabase.from("insight_dismissals").delete().eq("user_id", user.id);
-      await supabase.from("checklist_completions").delete().eq("user_id", user.id);
-      await supabase.from("child_measurements").delete().eq("user_id", user.id);
-      // Deleting children cascades to milestones, products, recall_matches, etc.
-      await supabase.from("children").delete().eq("user_id", user.id);
+      const { deleteMyAccount } = await import("@/utils/deleteAccount.functions");
+      const result = await deleteMyAccount();
       await supabase.auth.signOut();
-      toast.success("All your data has been removed.");
+      if (result.stripeErrors && result.stripeErrors.length > 0) {
+        toast.warning("Account deleted, but we couldn't cancel your subscription automatically. Please contact support.");
+      } else {
+        toast.success("All your data has been removed.");
+      }
       navigate({ to: "/auth" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
@@ -60,6 +58,7 @@ function PrivacyPromisePage() {
       setConfirming(false);
     }
   }
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background">

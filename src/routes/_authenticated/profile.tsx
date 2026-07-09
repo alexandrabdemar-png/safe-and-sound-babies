@@ -14,6 +14,7 @@ import { useProGate } from "@/hooks/useProGate";
 import { useActiveChild, setActiveChildId } from "@/hooks/useActiveChild";
 import { createPortalSession } from "@/utils/payments.functions";
 import { exportUserData } from "@/utils/export.functions";
+import { deleteMyAccount } from "@/utils/deleteAccount.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { openUrl } from "@/lib/browser";
 import { APP_VERSION, SHARE_URL } from "@/lib/constants";
@@ -101,26 +102,25 @@ function ProfilePage() {
     if (!deleteConfirm) { setDeleteConfirm(true); return; }
     setDeleting(true);
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      const uid = userData.user?.id;
-      if (!uid) throw new Error("Not signed in");
-      const tables = [
-        "milestones", "first_foods", "products", "product_recalls",
-        "children", "insight_dismissals", "completed_tips",
-        "child_measurements", "home_profile",
-      ];
-      for (const table of tables) {
-        await (supabase as any).from(table).delete().eq("user_id", uid);
-      }
+      // Server function cancels any Stripe subscription and deletes the
+      // auth user; every public table cascades via ON DELETE CASCADE from
+      // auth.users, so this removes children, emergency info, share links,
+      // caregiver access, profiles (apns token), etc. in one go.
+      const result = await deleteMyAccount();
       await supabase.auth.signOut();
       navigate({ to: "/auth" });
-      toast.success("Account deleted. We're sorry to see you go.");
+      if (result.stripeErrors && result.stripeErrors.length > 0) {
+        toast.warning("Account deleted, but we couldn't cancel your subscription automatically. Please contact support.");
+      } else {
+        toast.success("Account deleted. We're sorry to see you go.");
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not delete account");
       setDeleting(false);
       setDeleteConfirm(false);
     }
   }
+
 
   async function handleExport() {
     if (!requirePro('Export your data', 'Download a complete backup of your children, products and moments as JSON.')) return;
