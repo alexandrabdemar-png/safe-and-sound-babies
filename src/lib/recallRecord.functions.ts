@@ -3,7 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { isAllowedRecallUrl } from "@/lib/recallCheck";
 
-const ALLOWED_SOURCES = new Set(["cpsc", "fda", "critical"]);
+const ALLOWED_SOURCES = new Set(["cpsc", "fda", "critical", "nhtsa"]);
 
 export type RecordRecallInput = {
   productId: string;
