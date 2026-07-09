@@ -17,10 +17,14 @@ export type MomentType = "First" | "Funny" | "Milestone";
 
 export const ALL_TYPES: MomentType[] = ["First", "Funny", "Milestone"];
 
+// Card backgrounds/borders are deliberately the same neutral white/warm-gray
+// across every type — only the accent (badge pill + spine-icon ring color)
+// stays type-specific, so the type is still identifiable at a glance without
+// tinting the whole card.
 export const TYPE_STYLES: Record<MomentType, { accent: string; bg: string; border: string; emoji: string }> = {
-  First:     { accent: "#C47B2B", bg: "#FEF9F0", border: "#F0D5A0", emoji: "⭐" },
-  Funny:     { accent: "#6A7FBF", bg: "#F0F2FA", border: "#C5CCEC", emoji: "😄" },
-  Milestone: { accent: "#4A7A47", bg: "#F0F6F0", border: "#B5D5B2", emoji: "🎯" },
+  First:     { accent: "#C47B2B", bg: "#FFFFFF", border: "#E8E1D4", emoji: "⭐" },
+  Funny:     { accent: "#6A7FBF", bg: "#FFFFFF", border: "#E8E1D4", emoji: "😄" },
+  Milestone: { accent: "#4A7A47", bg: "#FFFFFF", border: "#E8E1D4", emoji: "🎯" },
 };
 
 export function parseMomentType(notes: string | null): { type: MomentType; displayNotes: string } {
