@@ -368,7 +368,16 @@ function HomePage() {
         replace: replaceRes.count ?? 0,
         sizeUp: sizeRes.count ?? 0,
       });
-      setProducts((productRes.data ?? []) as ProductInput[]);
+      if (productRes.error) {
+        // Previously silent: a failed read here left `products` at its
+        // previous value (empty on first load) with no indication — every
+        // insight/alert derived from products (recalls, size-up, replace)
+        // would silently look like nothing had ever been added.
+        console.error("[home] failed to load products:", productRes.error.message);
+        toast.error(friendlyError(productRes.error.message));
+      } else {
+        setProducts((productRes.data ?? []) as ProductInput[]);
+      }
 
       // Build coming-up list: pick the earliest date per product, sort, take top 3
       if (comingUpRes.data) {
@@ -390,12 +399,22 @@ function HomePage() {
         items.sort((a, b) => a.when.localeCompare(b.when));
         setComingUp(items.slice(0, 3));
       }
-      const blocked = new Set<string>();
-      for (const d of (dismRes.data ?? []) as { rule_id: string; action: string; until: string | null }[]) {
-        if (d.action === 'done' || d.action === 'dismissed') blocked.add(d.rule_id);
-        else if (d.action === 'snoozed' && d.until && d.until > nowIso) blocked.add(d.rule_id);
+      if (dismRes.error) {
+        // Previously silent: a failed read here just left `blocked` empty,
+        // so every "Done"/"Snooze 1 week" a parent had already saved would
+        // silently reappear as if it had never been recorded — exactly the
+        // "done and snooze not saving" symptom, even though the write
+        // itself (saveInsightResponse above) had actually succeeded.
+        console.error("[home] failed to load insight_dismissals:", dismRes.error.message);
+        toast.error(friendlyError(dismRes.error.message));
+      } else {
+        const blocked = new Set<string>();
+        for (const d of (dismRes.data ?? []) as { rule_id: string; action: string; until: string | null }[]) {
+          if (d.action === 'done' || d.action === 'dismissed') blocked.add(d.rule_id);
+          else if (d.action === 'snoozed' && d.until && d.until > nowIso) blocked.add(d.rule_id);
+        }
+        setDismissedIds(blocked);
       }
-      setDismissedIds(blocked);
 
       // Load home profile
       try {
