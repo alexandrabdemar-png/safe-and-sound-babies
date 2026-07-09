@@ -14,6 +14,7 @@ import { useProGate } from "@/hooks/useProGate";
 import { useActiveChild, setActiveChildId } from "@/hooks/useActiveChild";
 import { createPortalSession } from "@/utils/payments.functions";
 import { exportUserData } from "@/utils/export.functions";
+import { deleteMyAccount } from "@/utils/deleteAccount.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { openUrl } from "@/lib/browser";
 import { APP_VERSION, SHARE_URL } from "@/lib/constants";
