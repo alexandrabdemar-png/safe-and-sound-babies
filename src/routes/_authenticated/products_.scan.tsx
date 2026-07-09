@@ -94,7 +94,11 @@ type Step = "scanning" | "looking-up" | "form" | "success";
 
 function ScanPage() {
   const navigate = useNavigate();
-  const { isPro, loading: subLoading } = useSubscription();
+  // TEMP: paywall disabled for testing at user's request — REMOVE this
+  // override (restore `const { isPro, loading: subLoading } = useSubscription();`)
+  // before launch.
+  const { loading: subLoading } = useSubscription();
+  const isPro = true;
   const { activeChildId } = useActiveChild();
 
   const [step, setStep] = useState<Step>("scanning");
