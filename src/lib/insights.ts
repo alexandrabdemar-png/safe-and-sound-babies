@@ -153,8 +153,12 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
   }
 
   // ── Product + age rules ──────────────────────────────────────────────────
+  // Infant (bucket-style) car seats are essentially never still in use past
+  // 18 months — families have moved to a convertible seat by then whether
+  // or not they've removed the old infant seat from their product list, so
+  // these need an upper bound or they'd keep firing indefinitely.
   const carSeat = hasCategory(products, "car_seat");
-  if (carSeat && (months !== null && months >= 9 || (height !== null && height >= 29.5))) {
+  if (carSeat && months !== null && months < 18 && (months >= 9 || (height !== null && height >= 29.5))) {
     out.push({
       id: "infant_carseat_outgrow",
       title: "Approaching infant car seat limit",
@@ -163,7 +167,7 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
       category: "car_seat",
     });
   }
-  if (carSeat && months !== null && months >= 12) {
+  if (carSeat && months !== null && months >= 12 && months < 18) {
     out.push({
       id: "infant_carseat_weight",
       title: "Check infant car seat weight limit",
@@ -173,7 +177,13 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
     });
   }
 
-  if (hasCategory(products, "bassinet") && months !== null && months >= 4) {
+  // Bassinets are typically outgrown by 4-6 months (most manufacturer
+  // weight/mobility limits land in that window) — this was firing for any
+  // age >= 4mo with no upper bound, so a family who logged a bassinet early
+  // on would keep seeing "plan the crib transition" indefinitely, including
+  // well past a baby's first birthday. Capped to the actual relevant
+  // window; by 7 months virtually every baby has already transitioned.
+  if (hasCategory(products, "bassinet") && months !== null && months >= 4 && months < 7) {
     out.push({
       id: "bassinet_transition",
       title: "Plan the crib transition",
@@ -197,7 +207,12 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
     }
   }
 
-  if (hasCategory(products, "swing") && months !== null && months >= 6) {
+  // Swings/bouncers are sitting-stage gear — manufacturers stop
+  // recommending them once a baby sits up independently (~6-9mo) and
+  // families have essentially always retired them by 15 months. Both were
+  // unbounded, so "consider retiring" and "approaching the weight limit"
+  // would keep appearing indefinitely for a toddler long past using either.
+  if (hasCategory(products, "swing") && months !== null && months >= 6 && months < 15) {
     out.push({
       id: "swing_outgrow",
       title: "Swings are typically not recommended once a baby can sit up",
@@ -206,7 +221,7 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
       category: "swing",
     });
   }
-  if (hasCategory(products, "bouncer") && (months !== null && months >= 6 || (weight !== null && weight >= 20))) {
+  if (hasCategory(products, "bouncer") && months !== null && months < 15 && (months >= 6 || (weight !== null && weight >= 20))) {
     out.push({
       id: "bouncer_outgrow",
       title: "Approaching bouncer weight limit",
