@@ -37,6 +37,7 @@ import {
   type CategoryKey,
 } from "@/lib/productCategories";
 import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
+import { recordRecallInDb } from "@/lib/recallCheck";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 
 const CATEGORY_ORDER: CategoryKey[] = CATEGORIES.map((c) => c.key);
@@ -283,6 +284,22 @@ function ScanPage() {
             err instanceof Error ? err.message : "unknown",
           ),
         );
+        // check-recalls only returns an ephemeral answer for this screen's
+        // banner — it never writes to the shared recalls catalog. Without
+        // this, `recalled` would be true but no product_recalls row would
+        // ever exist until tomorrow's daily sync, so the product detail
+        // page would show "flagged for a recall, but details aren't
+        // available yet" in the meantime (the same bug already fixed for
+        // the manual/AI-search add flow in recallRecord.functions.ts).
+        for (const hit of recallInfo?.recalls ?? []) {
+          recordRecallInDb(productId, hit).catch((err) =>
+            console.error(
+              "[recall-db] failed to persist recall for scanned product",
+              productId,
+              err,
+            ),
+          );
+        }
       }
       // Manual entry (we scanned a barcode nothing recognized): submit it to
       // the shared catalog so the *next* scan of this barcode — by anyone —

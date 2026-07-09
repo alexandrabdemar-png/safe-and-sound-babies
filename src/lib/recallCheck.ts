@@ -46,7 +46,7 @@ export function recallSourceLabel(hit: { url?: string | null; source?: string | 
   return "the official recall notice linked below";
 }
 
-const ALLOWED_RECALL_HOSTS = ["cpsc.gov", "saferproducts.gov", "fda.gov"];
+const ALLOWED_RECALL_HOSTS = ["cpsc.gov", "saferproducts.gov", "fda.gov", "nhtsa.gov"];
 
 /**
  * Whitelist check used before a recall hit is ever persisted to the shared
@@ -328,4 +328,46 @@ export async function checkRecallsForProduct(productName: string): Promise<Recal
   ]);
 
   return cpscHits[0] ?? fdaHits[0] ?? null;
+}
+
+// ── Persisting a recall hit against a saved product ──────────────────────────
+
+type PersistableRecallHit = {
+  source: string;
+  id: string;
+  title: string;
+  url: string;
+  recallDate?: string | null;
+};
+
+/**
+ * Persists a recall hit (from checkRecallsForProduct or the check-recalls
+ * edge function) against a just-saved product — shared by both the
+ * manual/AI-search add flow (products_.new.tsx) and the barcode-scan flow
+ * (products_.scan.tsx), which each get their recall hit from a different
+ * source but need the exact same write. Delegates to the recordProductRecall
+ * server function (service-role write + URL/source allowlist — see
+ * recallRecord.functions.ts for why this can't be a direct client write).
+ *
+ * Non-fatal by design: whatever screen is calling this has already shown
+ * the parent the recall (from the live hit data, not this write), so a
+ * failure here shouldn't block or roll back the save that already
+ * succeeded — just log it loudly so a real regression is visible.
+ */
+export async function recordRecallInDb(productId: string, hit: PersistableRecallHit): Promise<void> {
+  try {
+    const { recordProductRecall } = await import("@/lib/recallRecord.functions");
+    await recordProductRecall({
+      data: {
+        productId,
+        source: hit.source,
+        sourceId: hit.id,
+        title: hit.title,
+        url: hit.url,
+        recallDate: hit.recallDate ?? null,
+      },
+    });
+  } catch (err) {
+    console.error("[recall-db] failed to persist recall for product", productId, err);
+  }
 }

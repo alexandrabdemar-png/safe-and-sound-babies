@@ -24,7 +24,7 @@ import {
   ScanLine,
   X,
 } from "lucide-react";
-import { checkRecallsForProduct, recallSourceLabel, type RecallHit } from "@/lib/recallCheck";
+import { checkRecallsForProduct, recallSourceLabel, recordRecallInDb, type RecallHit } from "@/lib/recallCheck";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,29 +63,6 @@ async function runSearchProducts(query: string): Promise<ProductSearchResult[]> 
 async function runLookupGuidelines(productId: string): Promise<void> {
   const { lookupAndSaveGuidelines } = await import("@/lib/guidelines.functions");
   await lookupAndSaveGuidelines({ data: { productId } });
-}
-
-async function recordRecallInDb(productId: string, hit: RecallHit): Promise<void> {
-  try {
-    const { recordProductRecall } = await import("@/lib/recallRecord.functions");
-    await recordProductRecall({
-      data: {
-        productId,
-        source: hit.source,
-        sourceId: hit.id,
-        title: hit.title,
-        url: hit.url,
-        recallDate: hit.recallDate ?? null,
-      },
-    });
-  } catch (err) {
-    // Non-fatal: the recall alert modal (built from `hit`, fetched live) has
-    // already shown the parent the recall regardless of whether this write
-    // succeeds. But this used to fail silently 100% of the time (RLS
-    // rejected the old direct client-side writes without the caller ever
-    // checking `error`) — log loudly now so a real regression is visible.
-    console.error("[recall-db] failed to persist recall for product", productId, err);
-  }
 }
 
 const BarcodeScanner = lazy(() =>

@@ -14,6 +14,10 @@ describe("isAllowedRecallUrl", () => {
     expect(isAllowedRecallUrl("https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts/example")).toBe(true);
   });
 
+  it("allows an official nhtsa.gov URL", () => {
+    expect(isAllowedRecallUrl("https://www.nhtsa.gov/recalls?nhtsaId=12345")).toBe(true);
+  });
+
   it("allows a bare (no subdomain) allowed host", () => {
     expect(isAllowedRecallUrl("https://cpsc.gov/Recalls")).toBe(true);
   });
