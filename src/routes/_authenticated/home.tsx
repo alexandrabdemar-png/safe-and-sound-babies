@@ -14,6 +14,11 @@ import { friendlyError, diagnosticDetail } from "@/lib/errors";
 import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
 import { checkCriticalRecalls, CRITICAL_RECALLS } from "@/lib/recallCheck";
 import { selectWeeklyTip, getIsoWeekNumber, weekKey as getTipWeekKey } from "@/lib/safetyTips";
+import {
+  isLastHomeProfileQuestionStep,
+  buildHomeProfileAnswers,
+  type HomeProfileAnswers,
+} from "@/lib/homeProfile";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
 import { SoftBlob } from "@/components/SoftBlob";
 
@@ -270,7 +275,7 @@ function HomePage() {
     home_type: string;
     has_pet: boolean;
     has_car: boolean;
-    in_daycare: boolean;
+    in_daycare: "daycare" | "home" | "both" | null;
     has_pool: boolean;
   };
   const [homeProfile, setHomeProfile] = useState<HomeProfile | null>(null);
@@ -416,19 +421,29 @@ function HomePage() {
       try {
         const { data: { session: sess2 } } = await supabase.auth.getSession();
         if (sess2?.user) {
-          const { data: hp } = await (supabase as any)
+          const { data: hp, error: hpError } = await (supabase as any)
             .from("home_profile")
             .select("has_stairs, home_type, has_pet, has_car, in_daycare, has_pool")
             .eq("user_id", sess2.user.id)
             .maybeSingle();
-          if (hp) {
+          if (hpError) {
+            // Previously silent (error wasn't even destructured): a failed
+            // read here is indistinguishable from "no profile saved yet",
+            // so the setup card would keep reappearing even for someone
+            // who'd already answered every question, looking exactly like
+            // "not remembering my answers".
+            console.error("[home] failed to load home_profile:", hpError.message);
+            toast.error(friendlyError(hpError.message));
+          } else if (hp) {
             setHomeProfile(hp as HomeProfile);
             // If we have a profile, mark setup done
             try { localStorage.setItem("safesound.homeProfileSetup", "done"); } catch {}
             setHomeProfileSetup("done");
           }
         }
-      } catch {}
+      } catch (err) {
+        console.error("[home] failed to load home_profile (network):", err);
+      }
 
       // Load notification preferences
       try {
@@ -703,17 +718,33 @@ function HomePage() {
   }
 
   async function saveHomeProfile(answers: HomeProfile) {
+    // Optimistic — closes the card immediately rather than blocking on
+    // network latency — but rolled back below if the write actually fails,
+    // instead of silently pretending it saved (the previous empty catch{}
+    // meant a failed write was completely invisible: the card wouldn't
+    // reappear this session since localStorage said "done", but the
+    // answers were never actually in the database, so a new session/device
+    // would prompt again with no memory of them — exactly the reported
+    // "keeps prompting and not remembering my answers").
     setHomeProfile(answers);
     setHomeProfileSetup("done");
     try { localStorage.setItem("safesound.homeProfileSetup", "done"); } catch {}
     try {
       const { data: { session: sess } } = await supabase.auth.getSession();
-      if (!sess?.user) return;
-      await (supabase as any).from("home_profile").upsert({
+      if (!sess?.user) throw new Error("Not signed in");
+      const { error } = await (supabase as any).from("home_profile").upsert({
         user_id: sess.user.id,
         ...answers,
       }, { onConflict: "user_id" });
-    } catch {}
+      if (error) throw error;
+    } catch (err) {
+      console.error("[home] failed to save home_profile:", err);
+      toast.error(
+        err instanceof Error ? friendlyError(err.message) : "Couldn't save your answers — please try again.",
+      );
+      setHomeProfileSetup("pending");
+      try { localStorage.setItem("safesound.homeProfileSetup", "pending"); } catch {}
+    }
   }
 
   function skipHomeProfile() {
@@ -1710,15 +1741,6 @@ function EmptyMoments() {
 }
 
 // ── Home Personalization Card ────────────────────────────────────────────────
-type HomeProfileAnswers = {
-  has_stairs: boolean;
-  home_type: string;
-  has_pet: boolean;
-  has_car: boolean;
-  in_daycare: boolean;
-  has_pool: boolean;
-};
-
 function HomePersonalizationCard({
   step,
   onStep,
@@ -1739,16 +1761,8 @@ function HomePersonalizationCard({
     if (step < 6) {
       onStep(next);
     }
-    if (step === 5) {
-      // Last question — save
-      onSave({
-        has_stairs: updated.has_stairs ?? false,
-        home_type: updated.home_type ?? "Other",
-        has_pet: updated.has_pet ?? false,
-        has_car: updated.has_car ?? true,
-        in_daycare: updated.in_daycare ?? false,
-        has_pool: updated.has_pool ?? false,
-      });
+    if (isLastHomeProfileQuestionStep(step)) {
+      onSave(buildHomeProfileAnswers(updated));
     }
   }
 
@@ -1776,7 +1790,11 @@ function HomePersonalizationCard({
     {
       key: "in_daycare",
       text: "Is your baby in daycare or cared for at home?",
-      options: [{ label: "Daycare", value: true }, { label: "At home", value: false }],
+      options: [
+        { label: "Daycare", value: "daycare" },
+        { label: "At home", value: "home" },
+        { label: "Both", value: "both" },
+      ],
     },
     {
       key: "has_pool",
