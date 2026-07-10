@@ -14,6 +14,7 @@ import { friendlyError, diagnosticDetail } from "@/lib/errors";
 import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
 import { checkCriticalRecalls, CRITICAL_RECALLS } from "@/lib/recallCheck";
 import { selectWeeklyTip, getIsoWeekNumber, weekKey as getTipWeekKey } from "@/lib/safetyTips";
+import { ageSafetyTip, weekendReminder, monthsFromDob } from "@/lib/dailyContent";
 import {
   isLastHomeProfileQuestionStep,
   buildHomeProfileAnswers,
@@ -76,18 +77,6 @@ function isoWeekKey(date = new Date()) {
 }
 
 function isSunday() { return new Date().getDay() === 0; }
-
-function ageSafetyTip(dobStr: string | null): string {
-  if (!dobStr) return "Always place your baby on their back for every sleep — it's the single most important safe sleep rule.";
-  const birth = new Date(dobStr + "T00:00:00");
-  const months = Math.max(0, (new Date().getFullYear() - birth.getFullYear()) * 12 + (new Date().getMonth() - birth.getMonth()));
-  if (months < 4) return "Firm, flat, empty crib — no pillows, bumpers, or loose blankets. Back to sleep, every time.";
-  if (months < 8) return "Before your baby can push up on all fours, lower the crib mattress to the next setting.";
-  if (months < 13) return "Install hardware-mounted gates at the top of every staircase before they start crawling.";
-  if (months < 24) return "Anchor every bookshelf, dresser, and TV stand to the wall — toddlers pull on everything.";
-  if (months < 36) return "Keep cleaning products and laundry pods in a locked cabinet or on the highest shelf.";
-  return "Put a properly fitted helmet on your child for every bike, scooter, or balance bike ride — no exceptions.";
-}
 
 function parseDateLocal(dateStr: string): Date {
   const [y, m, d] = dateStr.split("-").map(Number);
@@ -819,7 +808,7 @@ function HomePage() {
             fdaCount={fdaRecallCount}
             showMeasReminder={showMeasReminder}
             recalls={alerts.recalls}
-            safetyTip={ageSafetyTip(child?.date_of_birth ?? null)}
+            safetyTip={ageSafetyTip(monthsFromDob(child?.date_of_birth ?? null), getIsoWeekNumber())}
             onNavigate={navigate}
             safetyTipDismissed={dailyTipDismissed}
             onDismissSafetyTip={dismissDailyTip}
@@ -1348,17 +1337,6 @@ function RecallRadarCard({ count, matchedCount, childName }: { count: number; ma
 
 // ── Today card ──────────────────────────────────────────────────────────────
 
-function weekendReminder(dobStr: string | null): string {
-  if (!dobStr) return "Weekends are a great time for a quick home safety walk-through — five minutes, room by room.";
-  const birth = parseDateLocal(dobStr);
-  const months = Math.max(0, Math.floor((Date.now() - birth.getTime()) / (30.44 * 86400000)));
-  if (months < 6) return "If you're heading out this weekend, double-check that the car seat is rear-facing and installed at the correct angle.";
-  if (months < 12) return "Planning an outing? Babies over 6 months need SPF 30+ sunscreen on exposed skin — and it's usually worth packing more wipes than you think you'll need.";
-  if (months < 18) return "Visiting family or friends this weekend? A quick baby-proofing scan of the space — stairs, cabinets, small objects at floor level — takes about two minutes.";
-  if (months < 30) return "Any outdoor time this weekend means helmet time for balance bikes or ride-ons — the habit is much easier to build before they're old enough to argue about it.";
-  return "If you're planning outdoor play this weekend, sunscreen, water, and shade are the essentials — toddlers dehydrate faster than adults.";
-}
-
 type TodayCardProps = {
   child: Child | null;
   comingUp: ComingUpProduct[];
@@ -1598,7 +1576,7 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
           <span style={{ fontSize: 22, marginTop: 2 }}>🌤️</span>
           <div>
             <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"Inter", system-ui, sans-serif' }}>Weekend heads-up</p>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>{weekendReminder(child.date_of_birth ?? null)}</p>
+            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>{weekendReminder(monthsFromDob(child.date_of_birth ?? null), getIsoWeekNumber())}</p>
           </div>
         </div>
         {comingUp.length > 0 && (
