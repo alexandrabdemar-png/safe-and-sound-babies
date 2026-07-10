@@ -131,7 +131,7 @@ export const CRITICAL_RECALLS: CriticalRecall[] = [
     reason:
       "All lots of Nara infant formula have been recalled due to a possible health risk — stop using immediately and do not feed to your baby.",
     url: "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts/nara-organics-recalls-all-lots-nara-infant-formula-because-possible-health-risk",
-    date: "2024",
+    date: "Jun 13, 2026",
   },
 ];
 
