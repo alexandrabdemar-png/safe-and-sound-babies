@@ -13,7 +13,6 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as RecallsRouteImport } from './routes/recalls'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MomentsTimelinePreviewRouteImport } from './routes/moments-timeline-preview'
-import { Route as LogoMockupPreviewRouteImport } from './routes/logo-mockup-preview'
 import { Route as DesignPreviewRouteImport } from './routes/design-preview'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -72,11 +71,6 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const MomentsTimelinePreviewRoute = MomentsTimelinePreviewRouteImport.update({
   id: '/moments-timeline-preview',
   path: '/moments-timeline-preview',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LogoMockupPreviewRoute = LogoMockupPreviewRouteImport.update({
-  id: '/logo-mockup-preview',
-  path: '/logo-mockup-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DesignPreviewRoute = DesignPreviewRouteImport.update({
@@ -295,7 +289,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/design-preview': typeof DesignPreviewRoute
-  '/logo-mockup-preview': typeof LogoMockupPreviewRoute
   '/moments-timeline-preview': typeof MomentsTimelinePreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
@@ -340,7 +333,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/design-preview': typeof DesignPreviewRoute
-  '/logo-mockup-preview': typeof LogoMockupPreviewRoute
   '/moments-timeline-preview': typeof MomentsTimelinePreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
@@ -387,7 +379,6 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
   '/design-preview': typeof DesignPreviewRoute
-  '/logo-mockup-preview': typeof LogoMockupPreviewRoute
   '/moments-timeline-preview': typeof MomentsTimelinePreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
@@ -434,7 +425,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/design-preview'
-    | '/logo-mockup-preview'
     | '/moments-timeline-preview'
     | '/onboarding'
     | '/recalls'
@@ -479,7 +469,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/design-preview'
-    | '/logo-mockup-preview'
     | '/moments-timeline-preview'
     | '/onboarding'
     | '/recalls'
@@ -525,7 +514,6 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/design-preview'
-    | '/logo-mockup-preview'
     | '/moments-timeline-preview'
     | '/onboarding'
     | '/recalls'
@@ -572,7 +560,6 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   DesignPreviewRoute: typeof DesignPreviewRoute
-  LogoMockupPreviewRoute: typeof LogoMockupPreviewRoute
   MomentsTimelinePreviewRoute: typeof MomentsTimelinePreviewRoute
   OnboardingRoute: typeof OnboardingRoute
   RecallsRoute: typeof RecallsRoute
@@ -614,13 +601,6 @@ declare module '@tanstack/react-router' {
       path: '/moments-timeline-preview'
       fullPath: '/moments-timeline-preview'
       preLoaderRoute: typeof MomentsTimelinePreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/logo-mockup-preview': {
-      id: '/logo-mockup-preview'
-      path: '/logo-mockup-preview'
-      fullPath: '/logo-mockup-preview'
-      preLoaderRoute: typeof LogoMockupPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/design-preview': {
@@ -980,7 +960,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   DesignPreviewRoute: DesignPreviewRoute,
-  LogoMockupPreviewRoute: LogoMockupPreviewRoute,
   MomentsTimelinePreviewRoute: MomentsTimelinePreviewRoute,
   OnboardingRoute: OnboardingRoute,
   RecallsRoute: RecallsRoute,
