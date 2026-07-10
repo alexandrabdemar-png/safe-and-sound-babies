@@ -9,7 +9,6 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { createPortalSession } from '@/utils/payments.functions';
 import { getStripeEnvironment } from '@/lib/stripe';
 import { openUrl } from '@/lib/browser';
-import { trackEvent } from '@/lib/analytics';
 import { toast } from 'sonner';
 
 export const Route = createFileRoute('/_authenticated/pricing')({
@@ -47,7 +46,6 @@ function PricingPage() {
   useEffect(() => {
     if (checkout === 'success') {
       toast.success('Payment received — unlocking Pro features…');
-      trackEvent("subscription_started");
       setCheckoutOpen(false);
     }
   }, [checkout]);

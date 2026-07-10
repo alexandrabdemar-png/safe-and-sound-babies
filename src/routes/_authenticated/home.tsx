@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AlertTriangle, ArrowRight, Calendar, ChevronDown, ChevronUp, Gift, Loader2, Package, Plus, Radio, RefreshCw, Ruler, Sparkles, Sun, Zap, X } from "lucide-react";
-import { trackEvent } from "@/lib/analytics";
 import { MomentTimeline } from "@/components/MomentTimeline";
 import { SparkleIllustration } from "@/components/EmptyIllustration";
 import { BottomNav } from "@/components/BottomNav";
@@ -283,9 +282,6 @@ function HomePage() {
     return "pending";
   });
   const [hpStep, setHpStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6>(0);
-
-  // Track app open once per session
-  useEffect(() => { trackEvent("app_opened"); }, []);
 
   useEffect(() => {
     let cancelled = false;
