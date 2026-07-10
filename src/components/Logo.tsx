@@ -1,71 +1,78 @@
 import { cn } from "@/lib/utils";
+import "@fontsource/marcellus/400.css";
 
 interface LogoProps {
   className?: string;
   size?: "sm" | "md" | "lg";
-  /** When true, renders only the shield icon (no wordmark) */
+  /** When true, renders only the bottle icon (no wordmark) */
   iconOnly?: boolean;
 }
 
 export function Logo({ className, size = "md", iconOnly = false }: LogoProps) {
-  const iconSizes = { sm: 22, md: 28, lg: 36 };
+  // Bigger than the old shield mark (bottle reads smaller than a solid
+  // shield shape at the same box size since it's thin line art).
+  const iconSizes = { sm: 32, md: 42, lg: 54 };
   const px = iconSizes[size];
 
-  const shield = (
+  const bottle = (
     <svg
       width={px}
-      height={Math.round(px * 1.14)}
-      viewBox="0 0 28 32"
+      height={px}
+      viewBox="0 0 200 200"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      {/* Shield body */}
-      <path
-        d="M14 1.5L2.5 6.5V16C2.5 22.9 7.6 28.6 14 30.2C20.4 28.6 25.5 22.9 25.5 16V6.5L14 1.5Z"
-        fill="#586C81"
-      />
-      {/* Leaf / droplet accent */}
-      <path
-        d="M14 8.5C14 8.5 10 13.5 10 16.5C10 18.7 11.8 20.5 14 20.5C16.2 20.5 18 18.7 18 16.5C18 13.5 14 8.5 14 8.5Z"
-        fill="white"
-        fillOpacity="0.88"
-      />
-      {/* Small inner highlight */}
-      <path
-        d="M13 12C13 12 11.2 14.8 11.2 16.5C11.2 17.5 11.8 18.4 12.7 18.9"
-        stroke="white"
-        strokeOpacity="0.4"
-        strokeWidth="0.8"
-        strokeLinecap="round"
-      />
+      <g stroke="#586C81" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        {/* Nipple top */}
+        <path d="M92 42 Q92 32 100 30 Q108 32 108 42" strokeWidth="4" />
+        <line x1="92" y1="42" x2="92" y2="50" strokeWidth="4" />
+        <line x1="108" y1="42" x2="108" y2="50" strokeWidth="4" />
+        {/* Collar ring */}
+        <rect x="86" y="50" width="28" height="10" rx="4" strokeWidth="4" />
+        {/* Bottle body */}
+        <path
+          d="M82 60 Q72 72 70 90 L70 148 Q70 164 100 164 Q130 164 130 148 L130 90 Q128 72 118 60 Z"
+          strokeWidth="4.5"
+        />
+        {/* Measurement lines */}
+        <line x1="82" y1="110" x2="90" y2="110" strokeWidth="3" />
+        <line x1="82" y1="122" x2="90" y2="122" strokeWidth="3" />
+        <line x1="82" y1="134" x2="90" y2="134" strokeWidth="3" />
+        <line x1="82" y1="146" x2="90" y2="146" strokeWidth="3" />
+        {/* Cloud decoration */}
+        <path
+          d="M90 88 Q90 82 95 82 Q97 78 101 78 Q106 78 108 82 Q112 82 112 88 Q112 93 90 93 Z"
+          strokeWidth="3.2"
+        />
+      </g>
     </svg>
   );
 
-  if (iconOnly) return <span className={cn("inline-flex", className)}>{shield}</span>;
+  if (iconOnly) return <span className={cn("inline-flex", className)}>{bottle}</span>;
 
   const textSizes = {
-    sm: { fontSize: 15, letterSpacing: "-0.2px" },
-    md: { fontSize: 19, letterSpacing: "-0.3px" },
-    lg: { fontSize: 24, letterSpacing: "-0.4px" },
+    sm: { fontSize: 17 },
+    md: { fontSize: 21 },
+    lg: { fontSize: 26 },
   };
   const ts = textSizes[size];
 
   return (
     <span className={cn("inline-flex select-none items-center gap-2", className)}>
-      {shield}
+      {bottle}
       <span
         style={{
-          fontFamily: '"Playfair Display", Georgia, serif',
-          fontStyle: "italic",
+          fontFamily: '"Marcellus", Georgia, serif',
           fontSize: ts.fontSize,
-          letterSpacing: ts.letterSpacing,
+          letterSpacing: "0px",
           color: "#2B2622",
-          fontWeight: 600,
+          fontWeight: 400,
           lineHeight: 1,
         }}
       >
-        Peace of Mine
+        Peace of{" "}
+        <span style={{ fontStyle: "italic" }}>Mine</span>
       </span>
     </span>
   );
