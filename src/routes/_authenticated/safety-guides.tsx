@@ -551,9 +551,15 @@ function MilestonesTab({
                   ))}
                 </ul>
                 <div className="mt-3 flex items-center justify-between border-t border-border/30 pt-2">
-                  <span className="font-body text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-                    Source: {m.source} · Updated {m.lastUpdated}
-                  </span>
+                  <a
+                    href={m.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-body text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 underline underline-offset-2 hover:text-foreground"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Source: {m.source} · Updated {m.lastUpdated} · Verify at source
+                  </a>
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); shareTip(m.title, m.items, m.source); }}
