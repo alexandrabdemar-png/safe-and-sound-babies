@@ -2400,8 +2400,8 @@ function EmptyMoments() {
         Every first is worth remembering
       </p>
       <p className="mx-auto mt-1.5 max-w-xs font-body text-sm text-muted-foreground">
-        Log a milestone and we'll surface safety tips that are actually relevant to where your child
-        is right now.
+        Log a milestone and we'll surface safety tips that are relevant to where your child is right
+        now.
       </p>
       <Button asChild className="mt-5 rounded-full bg-primary px-5 font-body text-xs font-semibold">
         <Link to="/moments/new">

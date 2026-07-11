@@ -1,7 +1,8 @@
 import {
-  ShieldCheck, Bed, Moon, Footprints, Utensils, Music, Armchair, Grid3x3, Wind, DoorClosed,
+  ShieldCheck, Bed, Moon, Utensils, Music, Armchair, Grid3x3, Wind, DoorClosed,
   Baby, Milk, Cookie, Brush, Radio, Tent, Package,
 } from "lucide-react";
+import { StrollerIcon } from "@/components/StrollerIcon";
 
 export type CategoryKey =
   | "car_seat"
@@ -32,7 +33,7 @@ export const CATEGORIES: {
   { key: "car_seat",        label: "Car seat",        icon: ShieldCheck, hint: "We'll track recalls and the manufacturer expiry date" },
   { key: "crib",            label: "Crib",            icon: Bed,         hint: "We'll remind you when to lower the mattress" },
   { key: "bassinet",        label: "Bassinet",        icon: Moon,        hint: "Outgrown when your baby can push up or exceeds the weight limit" },
-  { key: "stroller",        label: "Stroller",        icon: Footprints,  hint: "Tracked for recalls" },
+  { key: "stroller",        label: "Stroller",        icon: StrollerIcon, hint: "Tracked for recalls" },
   { key: "high_chair",      label: "High chair",      icon: Utensils,    hint: "Add when your baby shows readiness for solids" },
   { key: "swing",           label: "Swing",           icon: Music,       hint: "Outgrown when your baby can sit up independently" },
   { key: "bouncer",         label: "Bouncer",         icon: Armchair,    hint: "We'll flag the weight limit" },
