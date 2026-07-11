@@ -13,6 +13,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as RecallsRouteImport } from './routes/recalls'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MomentsTimelinePreviewRouteImport } from './routes/moments-timeline-preview'
+import { Route as MomentsHanddrawnPreviewRouteImport } from './routes/moments-handdrawn-preview'
 import { Route as DesignPreviewRouteImport } from './routes/design-preview'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -71,6 +72,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const MomentsTimelinePreviewRoute = MomentsTimelinePreviewRouteImport.update({
   id: '/moments-timeline-preview',
   path: '/moments-timeline-preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MomentsHanddrawnPreviewRoute = MomentsHanddrawnPreviewRouteImport.update({
+  id: '/moments-handdrawn-preview',
+  path: '/moments-handdrawn-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DesignPreviewRoute = DesignPreviewRouteImport.update({
@@ -289,6 +295,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/design-preview': typeof DesignPreviewRoute
+  '/moments-handdrawn-preview': typeof MomentsHanddrawnPreviewRoute
   '/moments-timeline-preview': typeof MomentsTimelinePreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
@@ -333,6 +340,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/design-preview': typeof DesignPreviewRoute
+  '/moments-handdrawn-preview': typeof MomentsHanddrawnPreviewRoute
   '/moments-timeline-preview': typeof MomentsTimelinePreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
@@ -379,6 +387,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
   '/design-preview': typeof DesignPreviewRoute
+  '/moments-handdrawn-preview': typeof MomentsHanddrawnPreviewRoute
   '/moments-timeline-preview': typeof MomentsTimelinePreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
@@ -425,6 +434,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/design-preview'
+    | '/moments-handdrawn-preview'
     | '/moments-timeline-preview'
     | '/onboarding'
     | '/recalls'
@@ -469,6 +479,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/design-preview'
+    | '/moments-handdrawn-preview'
     | '/moments-timeline-preview'
     | '/onboarding'
     | '/recalls'
@@ -514,6 +525,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/design-preview'
+    | '/moments-handdrawn-preview'
     | '/moments-timeline-preview'
     | '/onboarding'
     | '/recalls'
@@ -560,6 +572,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   DesignPreviewRoute: typeof DesignPreviewRoute
+  MomentsHanddrawnPreviewRoute: typeof MomentsHanddrawnPreviewRoute
   MomentsTimelinePreviewRoute: typeof MomentsTimelinePreviewRoute
   OnboardingRoute: typeof OnboardingRoute
   RecallsRoute: typeof RecallsRoute
@@ -601,6 +614,13 @@ declare module '@tanstack/react-router' {
       path: '/moments-timeline-preview'
       fullPath: '/moments-timeline-preview'
       preLoaderRoute: typeof MomentsTimelinePreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moments-handdrawn-preview': {
+      id: '/moments-handdrawn-preview'
+      path: '/moments-handdrawn-preview'
+      fullPath: '/moments-handdrawn-preview'
+      preLoaderRoute: typeof MomentsHanddrawnPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/design-preview': {
@@ -960,6 +980,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   DesignPreviewRoute: DesignPreviewRoute,
+  MomentsHanddrawnPreviewRoute: MomentsHanddrawnPreviewRoute,
   MomentsTimelinePreviewRoute: MomentsTimelinePreviewRoute,
   OnboardingRoute: OnboardingRoute,
   RecallsRoute: RecallsRoute,
