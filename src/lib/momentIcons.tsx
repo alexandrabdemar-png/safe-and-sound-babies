@@ -3,6 +3,8 @@
 // (First/Funny/Milestone) with a flat set of 7 hand-inked icons the user
 // picks directly per moment.
 
+import { supabase } from "@/integrations/supabase/client";
+
 export type MomentIconKey = "star" | "smiley" | "heart" | "target";
 
 export const MOMENT_ICON_KEYS: MomentIconKey[] = ["star", "smiley", "heart", "target"];
@@ -167,4 +169,56 @@ export function isIconColumnUnavailableError(error: {
   if (!/icon/i.test(error.message)) return false;
   if (error.code === "42703") return true; // Postgres: undefined_column
   return /schema cache/i.test(error.message) || /does not exist/i.test(error.message);
+}
+
+type RawMilestoneRow = {
+  id: string;
+  title: string;
+  logged_at: string | null;
+  notes: string | null;
+  icon: string | null;
+};
+
+/**
+ * Reads recent milestones ("moments") for a child, tolerating the live
+ * icon-column-unavailable bug: if the select including `icon` fails for
+ * that specific reason, transparently retries without it (icon defaults to
+ * null on every row) instead of surfacing an error and leaving the page
+ * looking like nothing was ever saved. Used by both the Home page's
+ * moments widget and the full Moments timeline page so the fallback only
+ * has to be written — and tested — once.
+ */
+export async function fetchMilestonesResilient(
+  childId: string,
+  opts: { limit?: number } = {},
+): Promise<{
+  data: RawMilestoneRow[] | null;
+  error: { message: string; code?: string | null } | null;
+}> {
+  const baseQuery = supabase
+    .from("milestones")
+    .select("id, title, logged_at, notes, icon")
+    .eq("child_id", childId)
+    .order("logged_at", { ascending: false })
+    .order("created_at", { ascending: false });
+  const first = await (opts.limit ? baseQuery.limit(opts.limit) : baseQuery);
+
+  if (first.error && isIconColumnUnavailableError(first.error)) {
+    console.error(
+      "[fetchMilestonesResilient] icon column unavailable — retrying without it",
+      first.error,
+    );
+    const fallbackQuery = supabase
+      .from("milestones")
+      .select("id, title, logged_at, notes")
+      .eq("child_id", childId)
+      .order("logged_at", { ascending: false })
+      .order("created_at", { ascending: false });
+    const retry = await (opts.limit ? fallbackQuery.limit(opts.limit) : fallbackQuery);
+    return {
+      data: retry.data ? retry.data.map((m) => ({ ...m, icon: null })) : null,
+      error: retry.error,
+    };
+  }
+  return first;
 }

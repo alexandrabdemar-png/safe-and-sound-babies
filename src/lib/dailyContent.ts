@@ -148,3 +148,59 @@ export function ageSafetyTip(months: number | null, weekNumber: number): string 
 export function weekendReminder(months: number | null, weekNumber: number): string {
   return pickVariant(months, WEEKEND_BRACKETS, WEEKEND_FALLBACK, weekNumber);
 }
+
+const GROWTH_CHECK_FALLBACK = [
+  "It's worth a quick check that every product with a weight or height limit still fits comfortably.",
+  "Growth spurts can be quick — a fit check on gear with straps or harnesses is worth doing regularly.",
+  "A fresh measurement makes size-up and replacement predictions more accurate across the whole app.",
+];
+
+// Themed around growth/fit checks specifically, so Saturday's rotating tip
+// reads distinctly from Monday/Tuesday's general safety tip and Friday's
+// outing-focused reminder rather than repeating the same ground.
+const GROWTH_CHECK_BRACKETS: AgeBracket[] = [
+  {
+    maxMonths: 4,
+    variants: [
+      "Newborns grow fast — recheck the car seat harness fit every few weeks; straps should sit at or just below the shoulders.",
+      "A swaddle that's gotten snug around the hips is a sign it's time to size up or switch to a hip-healthy style.",
+      "Bassinet or crib mattress fit is worth a glance now — no more than two fingers of gap along the sides.",
+    ],
+  },
+  {
+    maxMonths: 8,
+    variants: [
+      "Bouncer and swing weight limits are easy to lose track of — a quick label check confirms there's still room to grow.",
+      "As they fill out, double-check that high chair or floor seat straps still snug up properly with no slack.",
+      "Clothing that's snug at the snaps is often the first sign a size-up is coming before gear limits catch up.",
+    ],
+  },
+  {
+    maxMonths: 15,
+    variants: [
+      "Once crawling turns to cruising, stroller and carrier weight limits are worth a fresh look.",
+      "Shoes for new walkers should have a thumb's width of room at the toe — worth checking every few weeks at this age.",
+      "Car seat straps need rechecking often around this age — growth here tends to be quick and uneven.",
+    ],
+  },
+  {
+    maxMonths: 24,
+    variants: [
+      "Convertible car seats often need a height or weight adjustment around now — the label shows current limits.",
+      "A stroller or carrier that felt roomy a few months ago is worth a fit check as toddlers grow in spurts.",
+      "Helmets (bike, scooter) should be rechecked for fit every few months — a snug fit matters more than looking loose and 'roomy'.",
+    ],
+  },
+  {
+    maxMonths: Infinity,
+    variants: [
+      "Booster seat fit is worth rechecking periodically — the belt should sit across the shoulder, not the neck.",
+      "Shoes and helmets are easy to outgrow unnoticed — a quick check every couple of months catches it early.",
+      "If growth has been quick lately, it's a good time to update height and weight so predictions stay accurate.",
+    ],
+  },
+];
+
+export function growthCheckTip(months: number | null, weekNumber: number): string {
+  return pickVariant(months, GROWTH_CHECK_BRACKETS, GROWTH_CHECK_FALLBACK, weekNumber);
+}
