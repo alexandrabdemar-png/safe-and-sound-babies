@@ -38,6 +38,9 @@ import {
 } from "@/lib/productCategories";
 import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
 import { recordRecallInDb } from "@/lib/recallCheck";
+import { validateBarcode } from "@/lib/barcodeValidation";
+import { DataAsOf } from "@/components/DataAsOf";
+import { SeverityBadge } from "@/components/SeverityBadge";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 import { resolveCarSeatReplaceAt } from "@/lib/carSeatExpiration";
 
