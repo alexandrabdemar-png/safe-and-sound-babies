@@ -220,5 +220,8 @@ export async function fetchMilestonesResilient(
       error: retry.error,
     };
   }
-  return first;
+  return first as unknown as {
+    data: RawMilestoneRow[] | null;
+    error: { message: string; code?: string | null } | null;
+  };
 }

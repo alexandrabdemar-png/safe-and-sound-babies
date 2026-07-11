@@ -203,7 +203,9 @@ function NewMomentPage() {
       notes: rawNotes,
       completed: true,
     };
-    let { error } = await supabase.from("milestones").insert({ ...basePayload, icon: momentIcon });
+    let { error } = await supabase
+      .from("milestones")
+      .insert({ ...basePayload, icon: momentIcon } as typeof basePayload);
     if (error && isIconColumnUnavailableError(error)) {
       // The `icon` column isn't usable on the live database yet — either
       // the migration hasn't deployed there, or PostgREST's schema cache
