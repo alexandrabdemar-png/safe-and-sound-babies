@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ageSafetyTip, weekendReminder, monthsFromDob } from "./dailyContent";
+import { ageSafetyTip, weekendReminder, growthCheckTip, monthsFromDob } from "./dailyContent";
 
 describe("ageSafetyTip", () => {
   it("regression: does NOT return the same text every week for a fixed age — the reported bug", () => {
@@ -59,6 +59,43 @@ describe("weekendReminder", () => {
 
   it("is a pure function: same age + same week always returns the same reminder", () => {
     expect(weekendReminder(15, 40)).toBe(weekendReminder(15, 40));
+  });
+});
+
+describe("growthCheckTip", () => {
+  it("varies text week to week for a fixed age (Saturday's new rotating tip, alongside the measurements status)", () => {
+    const seen = new Set<string>();
+    for (let week = 1; week <= 6; week++) {
+      seen.add(growthCheckTip(10, week));
+    }
+    expect(seen.size).toBeGreaterThan(1);
+  });
+
+  it("stays within the correct age bracket across all weeks", () => {
+    for (let week = 1; week <= 10; week++) {
+      const tip = growthCheckTip(2, week);
+      expect(tip).not.toMatch(/booster seat|convertible car seat/i);
+    }
+  });
+
+  it("falls back to a rotating (not fixed) set of tips when no DOB is known", () => {
+    const seen = new Set<string>();
+    for (let week = 1; week <= 6; week++) {
+      seen.add(growthCheckTip(null, week));
+    }
+    expect(seen.size).toBeGreaterThan(1);
+  });
+
+  it("is a pure function: same age + same week always returns the same tip", () => {
+    expect(growthCheckTip(20, 12)).toBe(growthCheckTip(20, 12));
+  });
+
+  it("reads distinctly from the Monday/Tuesday and Friday tip pools (no accidental text overlap) for a shared age/week", () => {
+    const growth = growthCheckTip(12, 5);
+    const quick = ageSafetyTip(12, 5);
+    const weekend = weekendReminder(12, 5);
+    expect(growth).not.toBe(quick);
+    expect(growth).not.toBe(weekend);
   });
 });
 

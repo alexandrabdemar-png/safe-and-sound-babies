@@ -2,7 +2,24 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowRight, Calendar, ChevronDown, ChevronUp, Gift, Loader2, Package, Plus, Radio, RefreshCw, Ruler, Sparkles, Sun, Zap, X } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  Gift,
+  Loader2,
+  Package,
+  Plus,
+  Radio,
+  RefreshCw,
+  Ruler,
+  Sparkles,
+  Sun,
+  Zap,
+  X,
+} from "lucide-react";
 import { MomentTimeline } from "@/components/MomentTimeline";
 import { SparkleIllustration } from "@/components/EmptyIllustration";
 import { BottomNav } from "@/components/BottomNav";
@@ -14,7 +31,8 @@ import { friendlyError, diagnosticDetail } from "@/lib/errors";
 import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
 import { checkCriticalRecalls, CRITICAL_RECALLS } from "@/lib/recallCheck";
 import { selectWeeklyTip, getIsoWeekNumber, weekKey as getTipWeekKey } from "@/lib/safetyTips";
-import { ageSafetyTip, weekendReminder, monthsFromDob } from "@/lib/dailyContent";
+import { ageSafetyTip, weekendReminder, growthCheckTip, monthsFromDob } from "@/lib/dailyContent";
+import { fetchMilestonesResilient } from "@/lib/momentIcons";
 import {
   isLastHomeProfileQuestionStep,
   buildHomeProfileAnswers,
@@ -22,7 +40,6 @@ import {
 } from "@/lib/homeProfile";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
 import { SoftBlob } from "@/components/SoftBlob";
-
 
 export const Route = createFileRoute("/_authenticated/home")({
   ssr: false,
@@ -38,7 +55,6 @@ type Child = {
   weight_lbs: number | null;
   measurements_updated_at: string | null;
 };
-
 
 type Moment = {
   id: string;
@@ -72,11 +88,13 @@ function isoWeekKey(date = new Date()) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const week = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
   return `${d.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
 }
 
-function isSunday() { return new Date().getDay() === 0; }
+function isSunday() {
+  return new Date().getDay() === 0;
+}
 
 function parseDateLocal(dateStr: string): Date {
   const [y, m, d] = dateStr.split("-").map(Number);
@@ -208,7 +226,11 @@ function HomePage() {
 
   // What's New card
   const [whatsNewDismissed, setWhatsNewDismissed] = useState(() => {
-    try { return localStorage.getItem(`safesound.whatsNew.${LATEST_VERSION}`) === "true"; } catch { return false; }
+    try {
+      return localStorage.getItem(`safesound.whatsNew.${LATEST_VERSION}`) === "true";
+    } catch {
+      return false;
+    }
   });
 
   // Recall radar: live 30-day CPSC count, cached daily
@@ -227,7 +249,11 @@ function HomePage() {
   // Weekly safety tip
   const [tipCompleted, setTipCompleted] = useState(() => {
     if (typeof window === "undefined") return false;
-    try { return !!localStorage.getItem(`safesound.tipDone.${getTipWeekKey()}`); } catch { return false; }
+    try {
+      return !!localStorage.getItem(`safesound.tipDone.${getTipWeekKey()}`);
+    } catch {
+      return false;
+    }
   });
   const [tipSuccess, setTipSuccess] = useState(false);
 
@@ -237,14 +263,20 @@ function HomePage() {
   // Weekly digest: show on Sundays, dismiss per-week
   const currentWeekKey = isoWeekKey();
   const [digestDismissed, setDigestDismissed] = useState(() => {
-    try { return localStorage.getItem(`safesound.weeklyDigest.${currentWeekKey}`) === "true"; } catch { return false; }
+    try {
+      return localStorage.getItem(`safesound.weeklyDigest.${currentWeekKey}`) === "true";
+    } catch {
+      return false;
+    }
   });
 
   // Recall banner dismiss (resets daily)
   const [recallBannerDismissed, setRecallBannerDismissed] = useState(() => {
     try {
       return localStorage.getItem(`safesound.recallBannerDismissed.${todayKey()}`) === "true";
-    } catch { return false; }
+    } catch {
+      return false;
+    }
   });
 
   // Measurements reminder dismiss (resets after 7 days)
@@ -255,7 +287,11 @@ function HomePage() {
 
   // Daily safety tip dismiss (resets daily)
   const [dailyTipDismissed, setDailyTipDismissed] = useState(() => {
-    try { return localStorage.getItem(`safesound.dailyTipDismissed.${todayKey()}`) === "true"; } catch { return false; }
+    try {
+      return localStorage.getItem(`safesound.dailyTipDismissed.${todayKey()}`) === "true";
+    } catch {
+      return false;
+    }
   });
 
   // Home profile personalization
@@ -281,14 +317,23 @@ function HomePage() {
     let cancelled = false;
     (async () => {
       let activeId: string | null = null;
-      try { activeId = localStorage.getItem('safesound.activeChildId'); } catch {}
+      try {
+        activeId = localStorage.getItem("safesound.activeChildId");
+      } catch {}
       const { data: kids, error } = await supabase
         .from("children")
         .select("id, name, date_of_birth, height_inches, weight_lbs, measurements_updated_at")
         .order("created_at", { ascending: true });
       if (cancelled) return;
-      if (error) { toast.error(friendlyError(error.message)); setLoading(false); return; }
-      if (!kids || kids.length === 0) { navigate({ to: "/onboarding" }); return; }
+      if (error) {
+        toast.error(friendlyError(error.message));
+        setLoading(false);
+        return;
+      }
+      if (!kids || kids.length === 0) {
+        navigate({ to: "/onboarding" });
+        return;
+      }
       const c = (kids.find((k) => k.id === activeId) ?? kids[0]) as Child;
       setChild(c);
 
@@ -332,16 +377,37 @@ function HomePage() {
       const horizon90Str = horizon90.toISOString().slice(0, 10);
       const nowIso = new Date().toISOString();
 
-      const [mRes, recallRes, replaceRes, sizeRes, productRes, dismRes, comingUpRes] = await Promise.all([
-        supabase.from("milestones").select("id, title, logged_at, notes, icon").eq("child_id", c.id).order("logged_at", { ascending: false }).order("created_at", { ascending: false }).limit(5),
-        supabase.from("product_recalls").select("id", { count: "exact", head: true }).eq("acknowledged", false),
-        supabase.from("products").select("id", { count: "exact", head: true }).gte("replace_at", todayStr).lte("replace_at", horizon30Str),
-        supabase.from("products").select("id", { count: "exact", head: true }).gte("next_size_at", todayStr).lte("next_size_at", horizon30Str),
-        supabase.from("products").select("id, category, purchased_at, size").or(`child_id.eq.${c.id},child_id.is.null`),
-        supabase.from("insight_dismissals").select("rule_id, action, until").eq("child_id", c.id),
-        supabase.from("products").select("id, name, brand, replace_at, next_size_at, predicted_replacement_date, predicted_sizeup_date, expiration_date")
-          .or(`and(replace_at.gte.${todayStr},replace_at.lte.${horizon90Str}),and(next_size_at.gte.${todayStr},next_size_at.lte.${horizon90Str}),and(predicted_replacement_date.gte.${todayStr},predicted_replacement_date.lte.${horizon90Str}),and(predicted_sizeup_date.gte.${todayStr},predicted_sizeup_date.lte.${horizon90Str}),expiration_date.lte.${horizon90Str}`),
-      ]);
+      const [mRes, recallRes, replaceRes, sizeRes, productRes, dismRes, comingUpRes] =
+        await Promise.all([
+          fetchMilestonesResilient(c.id, { limit: 5 }),
+          supabase
+            .from("product_recalls")
+            .select("id", { count: "exact", head: true })
+            .eq("acknowledged", false),
+          supabase
+            .from("products")
+            .select("id", { count: "exact", head: true })
+            .gte("replace_at", todayStr)
+            .lte("replace_at", horizon30Str),
+          supabase
+            .from("products")
+            .select("id", { count: "exact", head: true })
+            .gte("next_size_at", todayStr)
+            .lte("next_size_at", horizon30Str),
+          supabase
+            .from("products")
+            .select("id, category, purchased_at, size")
+            .or(`child_id.eq.${c.id},child_id.is.null`),
+          supabase.from("insight_dismissals").select("rule_id, action, until").eq("child_id", c.id),
+          supabase
+            .from("products")
+            .select(
+              "id, name, brand, replace_at, next_size_at, predicted_replacement_date, predicted_sizeup_date, expiration_date",
+            )
+            .or(
+              `and(replace_at.gte.${todayStr},replace_at.lte.${horizon90Str}),and(next_size_at.gte.${todayStr},next_size_at.lte.${horizon90Str}),and(predicted_replacement_date.gte.${todayStr},predicted_replacement_date.lte.${horizon90Str}),and(predicted_sizeup_date.gte.${todayStr},predicted_sizeup_date.lte.${horizon90Str}),expiration_date.lte.${horizon90Str}`,
+            ),
+        ]);
 
       if (cancelled) return;
       if (mRes.error) {
@@ -371,19 +437,46 @@ function HomePage() {
 
       // Build coming-up list: pick the earliest date per product, sort, take top 3
       if (comingUpRes.data) {
-        type Raw = { id: string; name: string; brand: string | null; replace_at: string | null; next_size_at: string | null; predicted_replacement_date: string | null; predicted_sizeup_date: string | null; expiration_date: string | null };
+        type Raw = {
+          id: string;
+          name: string;
+          brand: string | null;
+          replace_at: string | null;
+          next_size_at: string | null;
+          predicted_replacement_date: string | null;
+          predicted_sizeup_date: string | null;
+          expiration_date: string | null;
+        };
         const items: ComingUpProduct[] = [];
         for (const p of comingUpRes.data as Raw[]) {
           const replaceDate = p.predicted_replacement_date ?? p.replace_at;
           const sizeDate = p.predicted_sizeup_date ?? p.next_size_at;
           if (replaceDate && replaceDate >= todayStr && replaceDate <= horizon90Str) {
-            items.push({ id: `replace:${p.id}`, name: p.name, brand: p.brand, when: replaceDate, type: "replace" });
+            items.push({
+              id: `replace:${p.id}`,
+              name: p.name,
+              brand: p.brand,
+              when: replaceDate,
+              type: "replace",
+            });
           }
           if (sizeDate && sizeDate >= todayStr && sizeDate <= horizon90Str) {
-            items.push({ id: `sizeup:${p.id}`, name: p.name, brand: p.brand, when: sizeDate, type: "sizeup" });
+            items.push({
+              id: `sizeup:${p.id}`,
+              name: p.name,
+              brand: p.brand,
+              when: sizeDate,
+              type: "sizeup",
+            });
           }
           if (p.expiration_date && p.expiration_date <= horizon90Str) {
-            items.push({ id: `expiring:${p.id}`, name: p.name, brand: p.brand, when: p.expiration_date, type: "expiring" });
+            items.push({
+              id: `expiring:${p.id}`,
+              name: p.name,
+              brand: p.brand,
+              when: p.expiration_date,
+              type: "expiring",
+            });
           }
         }
         items.sort((a, b) => a.when.localeCompare(b.when));
@@ -399,16 +492,22 @@ function HomePage() {
         toast.error(friendlyError(dismRes.error.message));
       } else {
         const blocked = new Set<string>();
-        for (const d of (dismRes.data ?? []) as { rule_id: string; action: string; until: string | null }[]) {
-          if (d.action === 'done' || d.action === 'dismissed') blocked.add(d.rule_id);
-          else if (d.action === 'snoozed' && d.until && d.until > nowIso) blocked.add(d.rule_id);
+        for (const d of (dismRes.data ?? []) as {
+          rule_id: string;
+          action: string;
+          until: string | null;
+        }[]) {
+          if (d.action === "done" || d.action === "dismissed") blocked.add(d.rule_id);
+          else if (d.action === "snoozed" && d.until && d.until > nowIso) blocked.add(d.rule_id);
         }
         setDismissedIds(blocked);
       }
 
       // Load home profile
       try {
-        const { data: { session: sess2 } } = await supabase.auth.getSession();
+        const {
+          data: { session: sess2 },
+        } = await supabase.auth.getSession();
         if (sess2?.user) {
           const { data: hp, error: hpError } = await (supabase as any)
             .from("home_profile")
@@ -426,7 +525,9 @@ function HomePage() {
           } else if (hp) {
             setHomeProfile(hp as HomeProfile);
             // If we have a profile, mark setup done
-            try { localStorage.setItem("safesound.homeProfileSetup", "done"); } catch {}
+            try {
+              localStorage.setItem("safesound.homeProfileSetup", "done");
+            } catch {}
             setHomeProfileSetup("done");
           }
         }
@@ -436,7 +537,9 @@ function HomePage() {
 
       // Load notification preferences
       try {
-        const { data: { session: sess } } = await supabase.auth.getSession();
+        const {
+          data: { session: sess },
+        } = await supabase.auth.getSession();
         if (sess?.user) {
           const { data: prefData } = await (supabase as any)
             .from("notification_preferences")
@@ -459,19 +562,24 @@ function HomePage() {
 
       setLoading(false);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [navigate]);
 
   // Re-fetch moments when tab regains visibility (e.g. returning from /moments/new)
   useEffect(() => {
     function onVisible() {
       if (document.visibilityState !== "visible") return;
-      supabase.from("milestones")
+      supabase
+        .from("milestones")
         .select("id, title, logged_at, notes")
         .eq("child_id", (child as any)?.id)
         .order("logged_at", { ascending: false })
         .limit(5)
-        .then(({ data }) => { if (data) setMoments(data as Moment[]); });
+        .then(({ data }) => {
+          if (data) setMoments(data as Moment[]);
+        });
     }
     document.addEventListener("visibilitychange", onVisible);
     return () => document.removeEventListener("visibilitychange", onVisible);
@@ -483,9 +591,7 @@ function HomePage() {
     (async () => {
       try {
         // Fetch id + name for all products to check against critical recalls
-        const { data } = await (supabase as any)
-          .from("products")
-          .select("id, name, recalled");
+        const { data } = await (supabase as any).from("products").select("id, name, recalled");
         if (!Array.isArray(data)) return;
 
         let newRecalls = 0;
@@ -499,7 +605,7 @@ function HomePage() {
             .from("recalls")
             .upsert(
               { source: "critical", source_id: hit.id, title: hit.title, url: hit.url },
-              { onConflict: "source,source_id" }
+              { onConflict: "source,source_id" },
             )
             .select("id")
             .single();
@@ -507,7 +613,10 @@ function HomePage() {
           if (recallId) {
             await (supabase as any)
               .from("product_recalls")
-              .upsert({ product_id: p.id, recall_id: recallId, acknowledged: false }, { onConflict: "product_id,recall_id" });
+              .upsert(
+                { product_id: p.id, recall_id: recallId, acknowledged: false },
+                { onConflict: "product_id,recall_id" },
+              );
           }
           await (supabase as any).from("products").update({ recalled: true }).eq("id", p.id);
           newRecalls++;
@@ -547,11 +656,17 @@ function HomePage() {
   // if the live DB's constraint shape doesn't match what we expect (e.g. an
   // undeployed migration), the upsert fails outright. This works regardless of
   // which unique constraint (if any) is currently live.
-  async function saveInsightResponse(insightId: string, action: "dismissed" | "snoozed", until: string | null) {
+  async function saveInsightResponse(
+    insightId: string,
+    action: "dismissed" | "snoozed",
+    until: string | null,
+  ) {
     if (!child) return;
     setDismissedIds((prev) => new Set([...prev, insightId]));
     try {
-      const { data: { session: sess } } = await supabase.auth.getSession();
+      const {
+        data: { session: sess },
+      } = await supabase.auth.getSession();
       if (!sess?.user) return;
       const { data: existing, error: selectError } = await (supabase as any)
         .from("insight_dismissals")
@@ -579,7 +694,11 @@ function HomePage() {
       }
     } catch (err) {
       console.error(`insight_dismissals ${action} failed:`, err);
-      setDismissedIds((prev) => { const next = new Set(prev); next.delete(insightId); return next; });
+      setDismissedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(insightId);
+        return next;
+      });
       toast.error(`Couldn't save: ${diagnosticDetail(err)}`);
     }
   }
@@ -594,59 +713,84 @@ function HomePage() {
   }
 
   function dismissRecallBanner() {
-    try { localStorage.setItem(`safesound.recallBannerDismissed.${todayKey()}`, "true"); } catch {}
+    try {
+      localStorage.setItem(`safesound.recallBannerDismissed.${todayKey()}`, "true");
+    } catch {}
     setRecallBannerDismissed(true);
   }
 
   function dismissDigest() {
-    try { localStorage.setItem(`safesound.weeklyDigest.${currentWeekKey}`, "true"); } catch {}
+    try {
+      localStorage.setItem(`safesound.weeklyDigest.${currentWeekKey}`, "true");
+    } catch {}
     setDigestDismissed(true);
   }
 
   function dismissWhatsNew() {
-    try { localStorage.setItem(`safesound.whatsNew.${LATEST_VERSION}`, "true"); } catch {}
+    try {
+      localStorage.setItem(`safesound.whatsNew.${LATEST_VERSION}`, "true");
+    } catch {}
     setWhatsNewDismissed(true);
   }
 
   function dismissAgeJump() {
     if (!child || !recentMilestone) return;
-    try { localStorage.setItem(`safesound.ageJump.${child.id}.${recentMilestone.months}`, "1"); } catch {}
+    try {
+      localStorage.setItem(`safesound.ageJump.${child.id}.${recentMilestone.months}`, "1");
+    } catch {}
     setAgeJumpDismissed(true);
   }
 
   async function markTipDone() {
     const wk = getTipWeekKey();
-    try { localStorage.setItem(`safesound.tipDone.${wk}`, "1"); } catch {}
+    try {
+      localStorage.setItem(`safesound.tipDone.${wk}`, "1");
+    } catch {}
     setTipCompleted(true);
     setTipSuccess(true);
     setTimeout(() => setTipSuccess(false), 3000);
     try {
-      const { data: { session: sess } } = await supabase.auth.getSession();
+      const {
+        data: { session: sess },
+      } = await supabase.auth.getSession();
       if (!sess?.user) return;
       const wk = getTipWeekKey();
-      const tip = child ? selectWeeklyTip(
-        Math.floor((Date.now() - new Date(child.date_of_birth ?? new Date().toISOString()).getTime()) / (30.44 * 86400000)),
-        getIsoWeekNumber(),
-      ) : null;
-      await (supabase as any).from("completed_tips").upsert({
-        user_id: sess.user.id,
-        child_id: child?.id ?? null,
-        tip_id: tip?.id ?? "unknown",
-        week_key: wk,
-      }, { onConflict: "user_id,week_key" });
+      const tip = child
+        ? selectWeeklyTip(
+            Math.floor(
+              (Date.now() - new Date(child.date_of_birth ?? new Date().toISOString()).getTime()) /
+                (30.44 * 86400000),
+            ),
+            getIsoWeekNumber(),
+          )
+        : null;
+      await (supabase as any).from("completed_tips").upsert(
+        {
+          user_id: sess.user.id,
+          child_id: child?.id ?? null,
+          tip_id: tip?.id ?? "unknown",
+          week_key: wk,
+        },
+        { onConflict: "user_id,week_key" },
+      );
     } catch {}
   }
 
   function dismissMeasReminder() {
     if (!child) return;
     try {
-      localStorage.setItem(`safesound.measReminderDismissed.${child.id}`, JSON.stringify({ ts: Date.now() }));
+      localStorage.setItem(
+        `safesound.measReminderDismissed.${child.id}`,
+        JSON.stringify({ ts: Date.now() }),
+      );
     } catch {}
     setMeasReminderDismissed(true);
   }
 
   function dismissDailyTip() {
-    try { localStorage.setItem(`safesound.dailyTipDismissed.${todayKey()}`, "true"); } catch {}
+    try {
+      localStorage.setItem(`safesound.dailyTipDismissed.${todayKey()}`, "true");
+    } catch {}
     setDailyTipDismissed(true);
   }
 
@@ -655,16 +799,23 @@ function HomePage() {
     const key = `safesound.recallRadar.${todayKey()}`;
     try {
       const cached = localStorage.getItem(key);
-      if (cached !== null) { setRecallRadarCount(parseInt(cached, 10)); return; }
+      if (cached !== null) {
+        setRecallRadarCount(parseInt(cached, 10));
+        return;
+      }
     } catch {}
     const start30 = new Date();
     start30.setDate(start30.getDate() - 30);
     const startStr = start30.toISOString().slice(0, 10);
-    fetch(`https://www.saferproducts.gov/RestWebServices/Recall?format=json&RecallDateStart=${startStr}`)
-      .then((r) => r.ok ? r.json() : Promise.reject())
+    fetch(
+      `https://www.saferproducts.gov/RestWebServices/Recall?format=json&RecallDateStart=${startStr}`,
+    )
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((data: CpscRecall[]) => {
         const count = (Array.isArray(data) ? data : []).filter(isBabyRelated).length;
-        try { localStorage.setItem(key, String(count)); } catch {}
+        try {
+          localStorage.setItem(key, String(count));
+        } catch {}
         setRecallRadarCount(count);
       })
       .catch(() => setRecallRadarCount(-1));
@@ -675,11 +826,16 @@ function HomePage() {
     const key = `safesound.fdaRecalls.${todayKey()}`;
     try {
       const cached = localStorage.getItem(key);
-      if (cached !== null) { setFdaRecallCount(parseInt(cached, 10)); return; }
+      if (cached !== null) {
+        setFdaRecallCount(parseInt(cached, 10));
+        return;
+      }
     } catch {}
     fetchFdaBabyRecallCount(30)
       .then((count) => {
-        try { localStorage.setItem(key, String(count)); } catch {}
+        try {
+          localStorage.setItem(key, String(count));
+        } catch {}
         setFdaRecallCount(count);
       })
       .catch(() => setFdaRecallCount(0));
@@ -698,11 +854,14 @@ function HomePage() {
   const ageMonthsForBottle = child?.date_of_birth
     ? Math.floor((Date.now() - new Date(child.date_of_birth).getTime()) / (30.44 * 86400000))
     : 0;
-  const showBottleWeaning = !bottleWeaningDismissed && ageMonthsForBottle >= 12 && ageMonthsForBottle <= 15;
+  const showBottleWeaning =
+    !bottleWeaningDismissed && ageMonthsForBottle >= 12 && ageMonthsForBottle <= 15;
 
   function dismissBottleWeaning() {
     if (!child) return;
-    try { localStorage.setItem(`safesound.bottleWeaning.${child.id}`, "true"); } catch {}
+    try {
+      localStorage.setItem(`safesound.bottleWeaning.${child.id}`, "true");
+    } catch {}
     setBottleWeaningDismissed(true);
   }
 
@@ -717,28 +876,41 @@ function HomePage() {
     // "keeps prompting and not remembering my answers").
     setHomeProfile(answers);
     setHomeProfileSetup("done");
-    try { localStorage.setItem("safesound.homeProfileSetup", "done"); } catch {}
     try {
-      const { data: { session: sess } } = await supabase.auth.getSession();
+      localStorage.setItem("safesound.homeProfileSetup", "done");
+    } catch {}
+    try {
+      const {
+        data: { session: sess },
+      } = await supabase.auth.getSession();
       if (!sess?.user) throw new Error("Not signed in");
-      const { error } = await (supabase as any).from("home_profile").upsert({
-        user_id: sess.user.id,
-        ...answers,
-      }, { onConflict: "user_id" });
+      const { error } = await (supabase as any).from("home_profile").upsert(
+        {
+          user_id: sess.user.id,
+          ...answers,
+        },
+        { onConflict: "user_id" },
+      );
       if (error) throw error;
     } catch (err) {
       console.error("[home] failed to save home_profile:", err);
       toast.error(
-        err instanceof Error ? friendlyError(err.message) : "Couldn't save your answers — please try again.",
+        err instanceof Error
+          ? friendlyError(err.message)
+          : "Couldn't save your answers — please try again.",
       );
       setHomeProfileSetup("pending");
-      try { localStorage.setItem("safesound.homeProfileSetup", "pending"); } catch {}
+      try {
+        localStorage.setItem("safesound.homeProfileSetup", "pending");
+      } catch {}
     }
   }
 
   function skipHomeProfile() {
     setHomeProfileSetup("skipped");
-    try { localStorage.setItem("safesound.homeProfileSetup", "skipped"); } catch {}
+    try {
+      localStorage.setItem("safesound.homeProfileSetup", "skipped");
+    } catch {}
   }
   // Weekly safety tip
   const alertsPaused = notifPrefs.paused_until && new Date(notifPrefs.paused_until) > new Date();
@@ -756,7 +928,8 @@ function HomePage() {
         <div className="mx-auto max-w-md">
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Logo /></div>
+              <Logo />
+            </div>
             <div className="flex items-center gap-2">
               <ChildSwitcher />
               <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 font-body text-[11px] font-medium text-muted-foreground shadow-sm">
@@ -808,7 +981,10 @@ function HomePage() {
             fdaCount={fdaRecallCount}
             showMeasReminder={showMeasReminder}
             recalls={alerts.recalls}
-            safetyTip={ageSafetyTip(monthsFromDob(child?.date_of_birth ?? null), getIsoWeekNumber())}
+            safetyTip={ageSafetyTip(
+              monthsFromDob(child?.date_of_birth ?? null),
+              getIsoWeekNumber(),
+            )}
             onNavigate={navigate}
             safetyTipDismissed={dailyTipDismissed}
             onDismissSafetyTip={dismissDailyTip}
@@ -831,9 +1007,14 @@ function HomePage() {
           <div className="mx-auto max-w-md">
             <div className="flex items-start justify-between gap-3 rounded-2xl border border-[#8FAF8C]/40 bg-[#F2F7F1] px-4 py-3.5">
               <div className="min-w-0 flex-1">
-                <p className="font-body text-xs font-semibold uppercase tracking-wider text-[#4A7A47] mb-1">A gentle heads-up</p>
+                <p className="font-body text-xs font-semibold uppercase tracking-wider text-[#4A7A47] mb-1">
+                  A gentle heads-up
+                </p>
                 <p className="font-body text-sm leading-snug text-foreground/80">
-                  Many pediatric dentists suggest beginning to transition away from bottle use around 12 to 15 months to support healthy tooth development — every child is different so check with your own dentist or pediatrician about what feels right for your family.
+                  Many pediatric dentists suggest beginning to transition away from bottle use
+                  around 12 to 15 months to support healthy tooth development — every child is
+                  different so check with your own dentist or pediatrician about what feels right
+                  for your family.
                 </p>
               </div>
               <button
@@ -858,11 +1039,15 @@ function HomePage() {
               className="flex items-center justify-between rounded-2xl bg-destructive/90 px-4 py-3 text-white"
             >
               <span className="font-body text-sm font-semibold">
-                ⚠️ {alerts.recalls} recall{alerts.recalls > 1 ? "s" : ""} affecting your products — tap to review
+                ⚠️ {alerts.recalls} recall{alerts.recalls > 1 ? "s" : ""} affecting your products —
+                tap to review
               </span>
               <button
                 type="button"
-                onClick={(e) => { e.preventDefault(); dismissRecallBanner(); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  dismissRecallBanner();
+                }}
                 className="ml-3 shrink-0 rounded-full p-1 hover:bg-white/20"
                 aria-label="Dismiss recall banner"
               >
@@ -880,7 +1065,8 @@ function HomePage() {
             <div className="flex items-start justify-between gap-3 rounded-2xl border border-[#8FAF8C]/40 bg-[#F2F7F1] px-4 py-3.5">
               <div className="min-w-0 flex-1">
                 <p className="font-body text-sm leading-snug text-foreground/80">
-                  Time to update {child.name}'s measurements — keeping them current helps predict the right size-ups.
+                  Time to update {child.name}'s measurements — keeping them current helps predict
+                  the right size-ups.
                 </p>
                 <Link
                   to="/profile"
@@ -910,9 +1096,7 @@ function HomePage() {
               childName={child.name}
               months={recentMilestone.months}
               actions={recentMilestone.actions.filter((a) =>
-                homeProfile?.has_stairs === false
-                  ? !/stair|gate/i.test(a)
-                  : true
+                homeProfile?.has_stairs === false ? !/stair|gate/i.test(a) : true,
               )}
               onDismiss={dismissAgeJump}
             />
@@ -940,16 +1124,19 @@ function HomePage() {
             <div className="flex items-start gap-3 rounded-3xl border border-blue-200 bg-blue-50 px-4 py-4">
               <span className="mt-0.5 text-xl">🏊</span>
               <div className="flex-1 min-w-0">
-                <p className="font-body text-sm font-semibold text-foreground">Pool alarm recommended</p>
+                <p className="font-body text-sm font-semibold text-foreground">
+                  Pool alarm recommended
+                </p>
                 <p className="mt-0.5 font-body text-xs leading-relaxed text-muted-foreground">
-                  Since you have a pool, the AAP recommends a pool alarm as a secondary layer of protection alongside a four-sided fence. Alarms can alert you if a child enters the water unexpectedly.
+                  Since you have a pool, the AAP recommends a pool alarm as a secondary layer of
+                  protection alongside a four-sided fence. Alarms can alert you if a child enters
+                  the water unexpectedly.
                 </p>
               </div>
             </div>
           </div>
         </div>
       )}
-
 
       {/* Alert summary cards — ABOVE "Up next" */}
       <section className="px-5 pt-4 sm:px-6 animate-fade-up stagger-1">
@@ -960,7 +1147,9 @@ function HomePage() {
               className="flex items-center justify-between rounded-3xl border border-border/60 bg-card p-4 transition-all hover:border-primary/40"
             >
               <div>
-                <p className="font-display text-base font-semibold tracking-tight">✨ You're all caught up</p>
+                <p className="font-display text-base font-semibold tracking-tight">
+                  ✨ You're all caught up
+                </p>
                 <p className="mt-0.5 font-body text-xs text-muted-foreground">
                   No recalls. No replacements. No size changes. We'll let you know if that changes.
                 </p>
@@ -1000,7 +1189,9 @@ function HomePage() {
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sand/60 text-accent">
                   <Sparkles className="h-3.5 w-3.5" />
                 </span>
-                <p className="font-display text-sm font-semibold tracking-tight">Up next for {child?.name}</p>
+                <p className="font-display text-sm font-semibold tracking-tight">
+                  Up next for {child?.name}
+                </p>
               </div>
               <ul className="space-y-2.5">
                 {upNext.map((i) => (
@@ -1013,7 +1204,8 @@ function HomePage() {
                 ))}
               </ul>
               <p className="mt-3 font-body text-[10px] leading-relaxed text-muted-foreground/60">
-                Recommendations are informational and may not apply to every child or home. Always use your judgment and review manufacturer instructions.
+                Recommendations are informational and may not apply to every child or home. Always
+                use your judgment and review manufacturer instructions.
               </p>
             </div>
           </div>
@@ -1040,7 +1232,11 @@ function HomePage() {
           {moments.length === 0 ? (
             <EmptyMoments />
           ) : (
-            <MomentTimeline moments={moments} childName={child?.name} childDob={child?.date_of_birth} />
+            <MomentTimeline
+              moments={moments}
+              childName={child?.name}
+              childDob={child?.date_of_birth}
+            />
           )}
         </div>
       </section>
@@ -1050,24 +1246,38 @@ function HomePage() {
   );
 }
 
-function InsightCard({ insight, onDismiss, onSnooze }: { insight: Insight; onDismiss: () => void; onSnooze: () => void }) {
+function InsightCard({
+  insight,
+  onDismiss,
+  onSnooze,
+}: {
+  insight: Insight;
+  onDismiss: () => void;
+  onSnooze: () => void;
+}) {
   const [expanded, setExpanded] = useState(false);
   const isLong = insight.body.length > 100;
   return (
     <li className="rounded-2xl bg-muted/40 px-3 py-2.5">
       <div className="flex items-start justify-between gap-2">
         <p className="font-body text-sm font-medium leading-snug">{insight.title}</p>
-        <span className={
-          insight.urgency === 'now'
-            ? "shrink-0 rounded-full bg-primary/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-primary"
-            : insight.urgency === 'soon'
-              ? "shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-amber-700 dark:text-amber-400"
-              : "shrink-0 rounded-full bg-sand/60 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-accent"
-        }>
+        <span
+          className={
+            insight.urgency === "now"
+              ? "shrink-0 rounded-full bg-primary/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-primary"
+              : insight.urgency === "soon"
+                ? "shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-amber-700 dark:text-amber-400"
+                : "shrink-0 rounded-full bg-sand/60 px-2 py-0.5 font-body text-[10px] font-semibold uppercase text-accent"
+          }
+        >
           {URGENCY_LABEL[insight.urgency]}
         </span>
       </div>
-      <p className={`mt-1 font-body text-xs text-muted-foreground ${!expanded && isLong ? "line-clamp-2" : ""}`}>{insight.body}</p>
+      <p
+        className={`mt-1 font-body text-xs text-muted-foreground ${!expanded && isLong ? "line-clamp-2" : ""}`}
+      >
+        {insight.body}
+      </p>
       <div className="mt-2 flex items-center gap-2">
         {isLong && (
           <button
@@ -1075,7 +1285,15 @@ function InsightCard({ insight, onDismiss, onSnooze }: { insight: Insight; onDis
             onClick={() => setExpanded((e) => !e)}
             className="inline-flex items-center gap-0.5 font-body text-[11px] font-semibold text-accent/80 hover:underline"
           >
-            {expanded ? <><ChevronUp className="h-3 w-3" /> Show less</> : <><ChevronDown className="h-3 w-3" /> Show more</>}
+            {expanded ? (
+              <>
+                <ChevronUp className="h-3 w-3" /> Show less
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-3 w-3" /> Show more
+              </>
+            )}
           </button>
         )}
         <div className="ml-auto flex items-center gap-1.5">
@@ -1128,7 +1346,9 @@ function SummaryTile({
         <Icon className="h-3.5 w-3.5" />
       </span>
       <p className="font-display text-2xl font-semibold tracking-tight">{count}</p>
-      <p className="font-body text-[11px] uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
+      <p className="font-body text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
+        {label}
+      </p>
     </Link>
   );
 }
@@ -1154,8 +1374,12 @@ function WeeklyDigestCard({
             <Sparkles className="h-3.5 w-3.5" />
           </span>
           <div>
-            <p className="font-display text-sm font-semibold tracking-tight">This week for {childName}</p>
-            <p className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">Weekly digest</p>
+            <p className="font-display text-sm font-semibold tracking-tight">
+              This week for {childName}
+            </p>
+            <p className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">
+              Weekly digest
+            </p>
           </div>
         </div>
         <button
@@ -1173,24 +1397,35 @@ function WeeklyDigestCard({
           <li className="flex items-start gap-2">
             <span className="mt-0.5 text-sm">⚠️</span>
             <p className="font-body text-sm text-foreground">
-              <span className="font-semibold text-destructive">{recalls} active recall{recalls > 1 ? "s" : ""}</span> — check the Alerts tab.
+              <span className="font-semibold text-destructive">
+                {recalls} active recall{recalls > 1 ? "s" : ""}
+              </span>{" "}
+              — check the Alerts tab.
             </p>
           </li>
         ) : (
           <li className="flex items-start gap-2">
             <span className="mt-0.5 text-sm">✅</span>
-            <p className="font-body text-sm text-foreground">No new recalls this week — all clear.</p>
+            <p className="font-body text-sm text-foreground">
+              No new recalls this week — all clear.
+            </p>
           </li>
         )}
         {comingUp.length > 0 ? (
           <li className="flex items-start gap-2">
             <p className="font-body text-sm text-foreground">
-              It may be time to take a look at {comingUp[0].name}{comingUp.length > 1 ? ` and ${comingUp.length - 1} other product${comingUp.length - 1 > 1 ? "s" : ""}` : ""} — {comingUp.length > 1 ? "they" : "it"} could be due for a refresh soon.
+              It may be time to take a look at {comingUp[0].name}
+              {comingUp.length > 1
+                ? ` and ${comingUp.length - 1} other product${comingUp.length - 1 > 1 ? "s" : ""}`
+                : ""}{" "}
+              — {comingUp.length > 1 ? "they" : "it"} could be due for a refresh soon.
             </p>
           </li>
         ) : (
           <li className="flex items-start gap-2">
-            <p className="font-body text-sm text-foreground">No replacements or size-ups due in the next 90 days.</p>
+            <p className="font-body text-sm text-foreground">
+              No replacements or size-ups due in the next 90 days.
+            </p>
           </li>
         )}
         <li className="flex items-start gap-2">
@@ -1220,11 +1455,17 @@ function WhatsNewCard({
           </span>
           <div>
             <p className="font-display text-sm font-semibold tracking-tight">What's new</p>
-            <p className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">{latest.version} · {latest.date}</p>
+            <p className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">
+              {latest.version} · {latest.date}
+            </p>
           </div>
         </div>
-        <button type="button" onClick={onDismiss}
-          className="rounded-full p-1 text-muted-foreground hover:bg-muted" aria-label="Dismiss">
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="rounded-full p-1 text-muted-foreground hover:bg-muted"
+          aria-label="Dismiss"
+        >
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
@@ -1238,23 +1479,37 @@ function WhatsNewCard({
       </ul>
       {updates.length > 1 && (
         <>
-          <button type="button" onClick={() => setExpanded((e) => !e)}
-            className="mt-2 inline-flex items-center gap-1 font-body text-xs font-semibold text-primary/70 hover:underline">
-            {expanded ? <><ChevronUp className="h-3 w-3" /> Hide older updates</> : <><ChevronDown className="h-3 w-3" /> See older updates</>}
+          <button
+            type="button"
+            onClick={() => setExpanded((e) => !e)}
+            className="mt-2 inline-flex items-center gap-1 font-body text-xs font-semibold text-primary/70 hover:underline"
+          >
+            {expanded ? (
+              <>
+                <ChevronUp className="h-3 w-3" /> Hide older updates
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-3 w-3" /> See older updates
+              </>
+            )}
           </button>
-          {expanded && updates.slice(1).map((rel) => (
-            <div key={rel.version} className="mt-3 border-t border-border/30 pt-3">
-              <p className="mb-1.5 font-body text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{rel.version} · {rel.date}</p>
-              <ul className="space-y-1.5">
-                {rel.updates.map((u, i) => (
-                  <li key={i} className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/40" />
-                    <p className="font-body text-xs text-muted-foreground">{u}</p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {expanded &&
+            updates.slice(1).map((rel) => (
+              <div key={rel.version} className="mt-3 border-t border-border/30 pt-3">
+                <p className="mb-1.5 font-body text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {rel.version} · {rel.date}
+                </p>
+                <ul className="space-y-1.5">
+                  {rel.updates.map((u, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/40" />
+                      <p className="font-body text-xs text-muted-foreground">{u}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
         </>
       )}
     </div>
@@ -1272,9 +1527,7 @@ function AgeJumpCard({
   actions: string[];
   onDismiss: () => void;
 }) {
-  const label = months < 12
-    ? `${months} months`
-    : months === 12 ? "1 year" : `${months} months`;
+  const label = months < 12 ? `${months} months` : months === 12 ? "1 year" : `${months} months`;
   return (
     <div className="rounded-3xl border border-accent/40 bg-card p-5 animate-scale-in">
       <div className="mb-3 flex items-start justify-between gap-2">
@@ -1286,11 +1539,17 @@ function AgeJumpCard({
             <p className="font-display text-sm font-semibold tracking-tight">
               {childName} just turned {label} 🎉
             </p>
-            <p className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">Here's what to check now</p>
+            <p className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">
+              Here's what to check now
+            </p>
           </div>
         </div>
-        <button type="button" onClick={onDismiss}
-          className="rounded-full p-1 text-muted-foreground hover:bg-muted" aria-label="Dismiss">
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="rounded-full p-1 text-muted-foreground hover:bg-muted"
+          aria-label="Dismiss"
+        >
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
@@ -1306,14 +1565,24 @@ function AgeJumpCard({
   );
 }
 
-function RecallRadarCard({ count, matchedCount, childName }: { count: number; matchedCount: number; childName: string }) {
+function RecallRadarCard({
+  count,
+  matchedCount,
+  childName,
+}: {
+  count: number;
+  matchedCount: number;
+  childName: string;
+}) {
   return (
     <Link
       to="/recall-radar"
       className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3.5 transition-colors hover:border-primary/40"
     >
       <div className="flex items-center gap-3">
-        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${matchedCount > 0 ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary"}`}>
+        <span
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${matchedCount > 0 ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary"}`}
+        >
           <Radio className="h-4 w-4" />
         </span>
         <div>
@@ -1350,7 +1619,18 @@ type TodayCardProps = {
   onDismissSafetyTip?: () => void;
 };
 
-function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, recalls, safetyTip, onNavigate, safetyTipDismissed, onDismissSafetyTip }: TodayCardProps) {
+function TodayCard({
+  child,
+  comingUp,
+  cpscCount,
+  fdaCount,
+  showMeasReminder,
+  recalls,
+  safetyTip,
+  onNavigate,
+  safetyTipDismissed,
+  onDismissSafetyTip,
+}: TodayCardProps) {
   const day = new Date().getDay(); // 0=Sun … 6=Sat
   const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const dayName = DAY_NAMES[day];
@@ -1362,7 +1642,17 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
     padding: "24px",
   };
   const label = (
-    <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 12, fontFamily: '"Inter", system-ui, sans-serif' }}>
+    <p
+      style={{
+        fontSize: 11,
+        fontWeight: 500,
+        color: "rgba(255,255,255,0.5)",
+        textTransform: "uppercase",
+        letterSpacing: "0.12em",
+        marginBottom: 12,
+        fontFamily: '"Inter", system-ui, sans-serif',
+      }}
+    >
       Today · {dayName}
     </p>
   );
@@ -1375,14 +1665,30 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 24 }}>👶</span>
           <div>
-            <p style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.95)", margin: 0 }}>Add your first child to get started</p>
-            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>Peace of Mine personalizes every tip, alert, and insight to your baby's age.</p>
+            <p
+              style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.95)", margin: 0 }}
+            >
+              Add your first child to get started
+            </p>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>
+              Peace of Mine personalizes every tip, alert, and insight to your baby's age.
+            </p>
           </div>
         </div>
         <button
           type="button"
           onClick={() => onNavigate({ to: "/onboarding" })}
-          style={{ marginTop: 12, padding: "8px 18px", borderRadius: 999, backgroundColor: "rgba(255,255,255,0.9)", color: "#586C81", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}
+          style={{
+            marginTop: 12,
+            padding: "8px 18px",
+            borderRadius: 999,
+            backgroundColor: "rgba(255,255,255,0.9)",
+            color: "#586C81",
+            fontSize: 12,
+            fontWeight: 600,
+            border: "none",
+            cursor: "pointer",
+          }}
         >
           Add a child →
         </button>
@@ -1398,11 +1704,38 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span style={{ fontSize: 22, marginTop: 2 }}>✨</span>
           <div>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"Inter", system-ui, sans-serif' }}>Week in review</p>
-            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 5 }}>
-              <li style={{ fontSize: 13, color: "rgba(255,255,255,0.88)" }}>{recalls > 0 ? `⚠️ ${recalls} active recall${recalls > 1 ? "s" : ""} — check the Alerts tab` : "✅ No recalls affecting your products this week"}</li>
+            <p
+              style={{
+                fontSize: 11,
+                fontWeight: 500,
+                color: "rgba(255,255,255,0.55)",
+                margin: "0 0 8px",
+                textTransform: "uppercase",
+                letterSpacing: "0.10em",
+                fontFamily: '"Inter", system-ui, sans-serif',
+              }}
+            >
+              Week in review
+            </p>
+            <ul
+              style={{
+                margin: 0,
+                padding: 0,
+                listStyle: "none",
+                display: "flex",
+                flexDirection: "column",
+                gap: 5,
+              }}
+            >
+              <li style={{ fontSize: 13, color: "rgba(255,255,255,0.88)" }}>
+                {recalls > 0
+                  ? `⚠️ ${recalls} active recall${recalls > 1 ? "s" : ""} — check the Alerts tab`
+                  : "✅ No recalls affecting your products this week"}
+              </li>
               {comingUp.length > 0 && (
-                <li style={{ fontSize: 13, color: "rgba(255,255,255,0.88)" }}>It may be time to take a look at {comingUp[0].name} soon</li>
+                <li style={{ fontSize: 13, color: "rgba(255,255,255,0.88)" }}>
+                  It may be time to take a look at {comingUp[0].name} soon
+                </li>
               )}
               <li style={{ fontSize: 13, color: "rgba(255,255,255,0.88)" }}>🛡️ {safetyTip}</li>
             </ul>
@@ -1421,41 +1754,120 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
           <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
             <span style={{ fontSize: 22, marginTop: 2 }}>🛡️</span>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"Inter", system-ui, sans-serif' }}>Quick safety tip</p>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
+                  gap: 8,
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 500,
+                    color: "rgba(255,255,255,0.55)",
+                    margin: "0 0 8px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.10em",
+                    fontFamily: '"Inter", system-ui, sans-serif',
+                  }}
+                >
+                  Quick safety tip
+                </p>
                 {onDismissSafetyTip && (
                   <button
                     type="button"
                     onClick={onDismissSafetyTip}
-                    style={{ marginTop: -4, marginRight: -4, padding: 4, borderRadius: 999, background: "transparent", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.6)" }}
+                    style={{
+                      marginTop: -4,
+                      marginRight: -4,
+                      padding: 4,
+                      borderRadius: 999,
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "rgba(255,255,255,0.6)",
+                    }}
                     aria-label="Dismiss tip"
                   >
                     <X className="h-4 w-4" />
                   </button>
                 )}
               </div>
-              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>{safetyTip}</p>
+              <p
+                style={{
+                  fontSize: 14,
+                  color: "rgba(255,255,255,0.92)",
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
+                {safetyTip}
+              </p>
             </div>
           </div>
         ) : (
-          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", margin: 0, fontStyle: "italic" }}>
+          <p
+            style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", margin: 0, fontStyle: "italic" }}
+          >
             Safety tip dismissed for today.
           </p>
         )}
         {comingUp.length > 0 && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"Inter", system-ui, sans-serif' }}>
+          <div
+            style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}
+          >
+            <p
+              style={{
+                fontSize: 11,
+                fontWeight: 500,
+                color: "rgba(255,255,255,0.5)",
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+                marginBottom: 8,
+                fontFamily: '"Inter", system-ui, sans-serif',
+              }}
+            >
               Coming up for {child?.name ?? "your little one"}
             </p>
             {comingUp.slice(0, 3).map((p) => {
-              const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
-              const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
+              const days = Math.round(
+                (new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000,
+              );
+              const timeLabel =
+                days <= 0
+                  ? "today"
+                  : days === 1
+                    ? "tomorrow"
+                    : days < 14
+                      ? `in ${days} days`
+                      : `in about ${Math.round(days / 7)} weeks`;
               return (
-                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <div
+                  key={p.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 6,
+                  }}
+                >
                   <p style={{ fontSize: 13, color: "rgba(255,255,255,0.90)", margin: 0 }}>
                     {comingUpLabel(p)}
                   </p>
-                  <span style={{ fontSize: 11, color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color:
+                        days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)",
+                      fontWeight: 600,
+                      marginLeft: 8,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {timeLabel}
+                  </span>
                 </div>
               );
             })}
@@ -1475,39 +1887,110 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
       <button
         type="button"
         onClick={() => onNavigate({ to: "/recall-radar" })}
-        style={{ ...cardBase, backgroundColor: total > 0 ? "#A8562E" : "#586C81", width: "100%", textAlign: "left", cursor: "pointer" }}
+        style={{
+          ...cardBase,
+          backgroundColor: total > 0 ? "#A8562E" : "#586C81",
+          width: "100%",
+          textAlign: "left",
+          cursor: "pointer",
+        }}
       >
         {label}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span style={{ fontSize: 22, marginTop: 2 }}>📡</span>
           <div>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"Inter", system-ui, sans-serif' }}>Recall Radar · last 30 days</p>
+            <p
+              style={{
+                fontSize: 11,
+                fontWeight: 500,
+                color: "rgba(255,255,255,0.55)",
+                margin: "0 0 8px",
+                textTransform: "uppercase",
+                letterSpacing: "0.10em",
+                fontFamily: '"Inter", system-ui, sans-serif',
+              }}
+            >
+              Recall Radar · last 30 days
+            </p>
             {loading ? (
-              <p style={{ fontSize: 14, color: "#8A8078", margin: 0 }}>Checking CPSC and FDA databases…</p>
+              <p style={{ fontSize: 14, color: "#8A8078", margin: 0 }}>
+                Checking CPSC and FDA databases…
+              </p>
             ) : (
               <>
-                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.95)", fontWeight: 600, margin: "0 0 2px" }}>
-                  {total === 0 ? "No baby or infant product recalls this month" : `${total} baby & infant recall${total > 1 ? "s" : ""} this month`}
+                <p
+                  style={{
+                    fontSize: 14,
+                    color: "rgba(255,255,255,0.95)",
+                    fontWeight: 600,
+                    margin: "0 0 2px",
+                  }}
+                >
+                  {total === 0
+                    ? "No baby or infant product recalls this month"
+                    : `${total} baby & infant recall${total > 1 ? "s" : ""} this month`}
                 </p>
-                <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", margin: 0 }}>{cpsc} consumer products (CPSC) · {fda} food & formula (FDA) · tap to browse</p>
+                <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", margin: 0 }}>
+                  {cpsc} consumer products (CPSC) · {fda} food & formula (FDA) · tap to browse
+                </p>
               </>
             )}
           </div>
         </div>
         {comingUp.length > 0 && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"Inter", system-ui, sans-serif' }}>
+          <div
+            style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}
+          >
+            <p
+              style={{
+                fontSize: 11,
+                fontWeight: 500,
+                color: "rgba(255,255,255,0.5)",
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+                marginBottom: 8,
+                fontFamily: '"Inter", system-ui, sans-serif',
+              }}
+            >
               Coming up for {child?.name ?? "your little one"}
             </p>
             {comingUp.slice(0, 3).map((p) => {
-              const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
-              const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
+              const days = Math.round(
+                (new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000,
+              );
+              const timeLabel =
+                days <= 0
+                  ? "today"
+                  : days === 1
+                    ? "tomorrow"
+                    : days < 14
+                      ? `in ${days} days`
+                      : `in about ${Math.round(days / 7)} weeks`;
               return (
-                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <div
+                  key={p.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 6,
+                  }}
+                >
                   <p style={{ fontSize: 13, color: "rgba(255,255,255,0.90)", margin: 0 }}>
                     {comingUpLabel(p)}
                   </p>
-                  <span style={{ fontSize: 11, color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color:
+                        days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)",
+                      fontWeight: 600,
+                      marginLeft: 8,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {timeLabel}
+                  </span>
                 </div>
               );
             })}
@@ -1526,38 +2009,108 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span style={{ fontSize: 22, marginTop: 2 }}>📅</span>
           <div>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"Inter", system-ui, sans-serif' }}>Coming up</p>
+            <p
+              style={{
+                fontSize: 11,
+                fontWeight: 500,
+                color: "rgba(255,255,255,0.55)",
+                margin: "0 0 8px",
+                textTransform: "uppercase",
+                letterSpacing: "0.10em",
+                fontFamily: '"Inter", system-ui, sans-serif',
+              }}
+            >
+              Coming up
+            </p>
             {next ? (
               <>
-                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.95)", fontWeight: 600, margin: "0 0 2px" }}>{next.name}</p>
+                <p
+                  style={{
+                    fontSize: 14,
+                    color: "rgba(255,255,255,0.95)",
+                    fontWeight: 600,
+                    margin: "0 0 2px",
+                  }}
+                >
+                  {next.name}
+                </p>
                 <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", margin: 0 }}>
-                  {next.type === "replace" ? "Replacement" : "Size-up"} · {
-                    (() => {
-                      const d = Math.round((new Date(next.when + "T00:00:00").getTime() - Date.now()) / 86400000);
-                      return d <= 0 ? "today" : d === 1 ? "tomorrow" : d < 14 ? `in ${d} days` : `in about ${Math.round(d / 7)} weeks`;
-                    })()
-                  }
+                  {next.type === "replace" ? "Replacement" : "Size-up"} ·{" "}
+                  {(() => {
+                    const d = Math.round(
+                      (new Date(next.when + "T00:00:00").getTime() - Date.now()) / 86400000,
+                    );
+                    return d <= 0
+                      ? "today"
+                      : d === 1
+                        ? "tomorrow"
+                        : d < 14
+                          ? `in ${d} days`
+                          : `in about ${Math.round(d / 7)} weeks`;
+                  })()}
                 </p>
               </>
             ) : (
-              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", margin: 0 }}>No size-ups or replacements coming up in the next 90 days.</p>
+              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", margin: 0 }}>
+                No size-ups or replacements coming up in the next 90 days.
+              </p>
             )}
           </div>
         </div>
         {comingUp.length > 0 && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"Inter", system-ui, sans-serif' }}>
+          <div
+            style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}
+          >
+            <p
+              style={{
+                fontSize: 11,
+                fontWeight: 500,
+                color: "rgba(255,255,255,0.5)",
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+                marginBottom: 8,
+                fontFamily: '"Inter", system-ui, sans-serif',
+              }}
+            >
               Coming up for {child?.name ?? "your little one"}
             </p>
             {comingUp.slice(0, 3).map((p) => {
-              const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
-              const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
+              const days = Math.round(
+                (new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000,
+              );
+              const timeLabel =
+                days <= 0
+                  ? "today"
+                  : days === 1
+                    ? "tomorrow"
+                    : days < 14
+                      ? `in ${days} days`
+                      : `in about ${Math.round(days / 7)} weeks`;
               return (
-                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <div
+                  key={p.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 6,
+                  }}
+                >
                   <p style={{ fontSize: 13, color: "rgba(255,255,255,0.90)", margin: 0 }}>
                     {comingUpLabel(p)}
                   </p>
-                  <span style={{ fontSize: 11, color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color:
+                        days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)",
+                      fontWeight: 600,
+                      marginLeft: 8,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {timeLabel}
+                  </span>
                 </div>
               );
             })}
@@ -1575,24 +2128,80 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span style={{ fontSize: 22, marginTop: 2 }}>🌤️</span>
           <div>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"Inter", system-ui, sans-serif' }}>Weekend heads-up</p>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>{weekendReminder(monthsFromDob(child.date_of_birth ?? null), getIsoWeekNumber())}</p>
+            <p
+              style={{
+                fontSize: 11,
+                fontWeight: 500,
+                color: "rgba(255,255,255,0.55)",
+                margin: "0 0 8px",
+                textTransform: "uppercase",
+                letterSpacing: "0.10em",
+                fontFamily: '"Inter", system-ui, sans-serif',
+              }}
+            >
+              Weekend heads-up
+            </p>
+            <p
+              style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}
+            >
+              {weekendReminder(monthsFromDob(child.date_of_birth ?? null), getIsoWeekNumber())}
+            </p>
           </div>
         </div>
         {comingUp.length > 0 && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"Inter", system-ui, sans-serif' }}>
+          <div
+            style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}
+          >
+            <p
+              style={{
+                fontSize: 11,
+                fontWeight: 500,
+                color: "rgba(255,255,255,0.5)",
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+                marginBottom: 8,
+                fontFamily: '"Inter", system-ui, sans-serif',
+              }}
+            >
               Coming up for {child?.name ?? "your little one"}
             </p>
             {comingUp.slice(0, 3).map((p) => {
-              const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
-              const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
+              const days = Math.round(
+                (new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000,
+              );
+              const timeLabel =
+                days <= 0
+                  ? "today"
+                  : days === 1
+                    ? "tomorrow"
+                    : days < 14
+                      ? `in ${days} days`
+                      : `in about ${Math.round(days / 7)} weeks`;
               return (
-                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <div
+                  key={p.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 6,
+                  }}
+                >
                   <p style={{ fontSize: 13, color: "rgba(255,255,255,0.90)", margin: 0 }}>
                     {comingUpLabel(p)}
                   </p>
-                  <span style={{ fontSize: 11, color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color:
+                        days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)",
+                      fontWeight: 600,
+                      marginLeft: 8,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {timeLabel}
+                  </span>
                 </div>
               );
             })}
@@ -1609,22 +2218,53 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
         <span style={{ fontSize: 22, marginTop: 2 }}>📏</span>
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: '"Inter", system-ui, sans-serif' }}>Measurements check-in</p>
+          <p
+            style={{
+              fontSize: 11,
+              fontWeight: 500,
+              color: "rgba(255,255,255,0.55)",
+              margin: "0 0 8px",
+              textTransform: "uppercase",
+              letterSpacing: "0.10em",
+              fontFamily: '"Inter", system-ui, sans-serif',
+            }}
+          >
+            Measurements check-in
+          </p>
           {showMeasReminder ? (
             <>
-              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: "0 0 10px" }}>
-                It's been a while since you updated {child.name}'s height and weight. Fresh measurements help predict size-ups more accurately.
+              <p
+                style={{
+                  fontSize: 14,
+                  color: "rgba(255,255,255,0.92)",
+                  lineHeight: 1.6,
+                  margin: "0 0 10px",
+                }}
+              >
+                It's been a while since you updated {child.name}'s height and weight. Fresh
+                measurements help predict size-ups more accurately.
               </p>
               <button
                 type="button"
                 onClick={() => onNavigate({ to: "/products" })}
-                style={{ padding: "7px 16px", borderRadius: 999, backgroundColor: "rgba(255,255,255,0.9)", color: "#586C81", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}
+                style={{
+                  padding: "7px 16px",
+                  borderRadius: 999,
+                  backgroundColor: "rgba(255,255,255,0.9)",
+                  color: "#586C81",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  border: "none",
+                  cursor: "pointer",
+                }}
               >
                 Log measurements →
               </button>
             </>
           ) : (
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>
+            <p
+              style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}
+            >
               Measurements are up to date.
               <br />
               <span style={{ color: "rgba(255,255,255,0.65)" }}>
@@ -1632,22 +2272,73 @@ function TodayCard({ child, comingUp, cpscCount, fdaCount, showMeasReminder, rec
               </span>
             </p>
           )}
+          <p
+            style={{
+              fontSize: 13,
+              color: "rgba(255,255,255,0.75)",
+              lineHeight: 1.5,
+              margin: "10px 0 0",
+              paddingTop: 10,
+              borderTop: "1px solid rgba(255,255,255,0.14)",
+            }}
+          >
+            {growthCheckTip(monthsFromDob(child.date_of_birth ?? null), getIsoWeekNumber())}
+          </p>
         </div>
       </div>
       {comingUp.length > 0 && (
-        <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}>
-          <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontFamily: '"Inter", system-ui, sans-serif' }}>
+        <div
+          style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)" }}
+        >
+          <p
+            style={{
+              fontSize: 11,
+              fontWeight: 500,
+              color: "rgba(255,255,255,0.5)",
+              textTransform: "uppercase",
+              letterSpacing: "0.12em",
+              marginBottom: 8,
+              fontFamily: '"Inter", system-ui, sans-serif',
+            }}
+          >
             Coming up for {child?.name ?? "your little one"}
           </p>
           {comingUp.slice(0, 3).map((p) => {
-            const days = Math.round((new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000);
-            const timeLabel = days <= 0 ? "today" : days === 1 ? "tomorrow" : days < 14 ? `in ${days} days` : `in about ${Math.round(days / 7)} weeks`;
+            const days = Math.round(
+              (new Date(p.when + "T00:00:00").getTime() - Date.now()) / 86400000,
+            );
+            const timeLabel =
+              days <= 0
+                ? "today"
+                : days === 1
+                  ? "tomorrow"
+                  : days < 14
+                    ? `in ${days} days`
+                    : `in about ${Math.round(days / 7)} weeks`;
             return (
-              <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <div
+                key={p.id}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 6,
+                }}
+              >
                 <p style={{ fontSize: 13, color: "rgba(255,255,255,0.90)", margin: 0 }}>
                   {comingUpLabel(p)}
                 </p>
-                <span style={{ fontSize: 11, color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)", fontWeight: 600, marginLeft: 8, whiteSpace: "nowrap" }}>{timeLabel}</span>
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: days <= 7 ? "#FF9D8C" : days <= 21 ? "#FFD095" : "rgba(255,255,255,0.8)",
+                    fontWeight: 600,
+                    marginLeft: 8,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {timeLabel}
+                </span>
               </div>
             );
           })}
@@ -1705,9 +2396,12 @@ function EmptyMoments() {
   return (
     <div className="rounded-3xl border border-dashed border-border bg-card/40 px-6 py-10 text-center animate-scale-in">
       <SparkleIllustration className="mx-auto mb-2 h-24 w-24" />
-      <p className="font-display text-lg font-semibold tracking-tight">Every first is worth remembering</p>
+      <p className="font-display text-lg font-semibold tracking-tight">
+        Every first is worth remembering
+      </p>
       <p className="mx-auto mt-1.5 max-w-xs font-body text-sm text-muted-foreground">
-        Log a milestone and we'll surface safety tips that are actually relevant to where your child is right now.
+        Log a milestone and we'll surface safety tips that are actually relevant to where your child
+        is right now.
       </p>
       <Button asChild className="mt-5 rounded-full bg-primary px-5 font-body text-xs font-semibold">
         <Link to="/moments/new">
@@ -1744,26 +2438,43 @@ function HomePersonalizationCard({
     }
   }
 
-  const questions: { key: keyof HomeProfileAnswers; text: string; options: { label: string; value: boolean | string }[] }[] = [
+  const questions: {
+    key: keyof HomeProfileAnswers;
+    text: string;
+    options: { label: string; value: boolean | string }[];
+  }[] = [
     {
       key: "has_stairs",
       text: "Do you have stairs at home?",
-      options: [{ label: "Yes", value: true }, { label: "No", value: false }],
+      options: [
+        { label: "Yes", value: true },
+        { label: "No", value: false },
+      ],
     },
     {
       key: "home_type",
       text: "What type of home do you live in?",
-      options: [{ label: "House", value: "house" }, { label: "Apartment", value: "apartment" }, { label: "Other", value: "other" }],
+      options: [
+        { label: "House", value: "house" },
+        { label: "Apartment", value: "apartment" },
+        { label: "Other", value: "other" },
+      ],
     },
     {
       key: "has_pet",
       text: "Do you have a pet?",
-      options: [{ label: "Yes", value: true }, { label: "No", value: false }],
+      options: [
+        { label: "Yes", value: true },
+        { label: "No", value: false },
+      ],
     },
     {
       key: "has_car",
       text: "Do you have a car?",
-      options: [{ label: "Yes", value: true }, { label: "No", value: false }],
+      options: [
+        { label: "Yes", value: true },
+        { label: "No", value: false },
+      ],
     },
     {
       key: "in_daycare",
@@ -1777,7 +2488,10 @@ function HomePersonalizationCard({
     {
       key: "has_pool",
       text: "Do you have a pool or spa at home?",
-      options: [{ label: "Yes", value: true }, { label: "No", value: false }],
+      options: [
+        { label: "Yes", value: true },
+        { label: "No", value: false },
+      ],
     },
   ];
 
@@ -1789,24 +2503,33 @@ function HomePersonalizationCard({
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-primary">
               <Sparkles className="h-3.5 w-3.5" />
             </span>
-            <p className="font-display text-sm font-semibold tracking-tight">Help us personalize your reminders</p>
+            <p className="font-display text-sm font-semibold tracking-tight">
+              Help us personalize your reminders
+            </p>
           </div>
-          <button type="button" onClick={onSkip} className="rounded-full p-1 text-muted-foreground hover:bg-muted" aria-label="Skip">
+          <button
+            type="button"
+            onClick={onSkip}
+            className="rounded-full p-1 text-muted-foreground hover:bg-muted"
+            aria-label="Skip"
+          >
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
         <p className="font-body text-sm text-muted-foreground leading-relaxed mb-4">
-          A few quick questions so we only show you the reminders that actually apply to your home and family — no forms, just taps.
+          A few quick questions so we only show you the reminders that actually apply to your home
+          and family — no forms, just taps.
         </p>
         <div className="flex gap-2">
-          <Button
-            size="sm"
-            className="rounded-full font-body text-xs"
-            onClick={() => onStep(1)}
-          >
+          <Button size="sm" className="rounded-full font-body text-xs" onClick={() => onStep(1)}>
             Get started →
           </Button>
-          <Button size="sm" variant="ghost" className="rounded-full font-body text-xs text-muted-foreground" onClick={onSkip}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="rounded-full font-body text-xs text-muted-foreground"
+            onClick={onSkip}
+          >
             Skip
           </Button>
         </div>
@@ -1822,7 +2545,12 @@ function HomePersonalizationCard({
         <p className="font-body text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Question {step} of {questions.length}
         </p>
-        <button type="button" onClick={onSkip} className="rounded-full p-1 text-muted-foreground hover:bg-muted" aria-label="Skip">
+        <button
+          type="button"
+          onClick={onSkip}
+          className="rounded-full p-1 text-muted-foreground hover:bg-muted"
+          aria-label="Skip"
+        >
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
@@ -1854,13 +2582,19 @@ function HomePersonalizationCard({
 
 function BetaBanner() {
   const [dismissed, setDismissed] = useState(() => {
-    try { return localStorage.getItem("pomBetaBannerDismissed") === "1"; } catch { return false; }
+    try {
+      return localStorage.getItem("pomBetaBannerDismissed") === "1";
+    } catch {
+      return false;
+    }
   });
 
   if (dismissed) return null;
 
   function dismiss() {
-    try { localStorage.setItem("pomBetaBannerDismissed", "1"); } catch {}
+    try {
+      localStorage.setItem("pomBetaBannerDismissed", "1");
+    } catch {}
     setDismissed(true);
   }
 

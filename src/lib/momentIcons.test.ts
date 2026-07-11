@@ -1,4 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+const mockFrom = vi.fn();
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: { from: (...args: unknown[]) => mockFrom(...args) },
+}));
+
 import {
   MOMENT_ICON_KEYS,
   MOMENT_ICON_LABELS,
@@ -7,7 +13,22 @@ import {
   parseLegacyNotes,
   resolveMomentIcon,
   isIconColumnUnavailableError,
+  fetchMilestonesResilient,
 } from "./momentIcons";
+
+// Minimal thenable chain mimicking Supabase's query builder — every
+// intermediate call (select/eq/order/limit) returns the same object, and
+// `await`-ing it at any point resolves to the given {data, error}.
+function makeChain(result: { data: unknown; error: unknown }) {
+  const chain = {
+    select: vi.fn(() => chain),
+    eq: vi.fn(() => chain),
+    order: vi.fn(() => chain),
+    limit: vi.fn(() => chain),
+    then: (resolve: (v: typeof result) => void) => Promise.resolve(result).then(resolve),
+  };
+  return chain;
+}
 
 describe("MOMENT_ICON_KEYS", () => {
   it("has exactly the 4 requested icons (bear/feet/waving removed per user feedback)", () => {
@@ -145,5 +166,97 @@ describe("isIconColumnUnavailableError", () => {
     expect(
       isIconColumnUnavailableError({ message: "column milestones.notes does not exist" }),
     ).toBe(false);
+  });
+});
+
+describe("fetchMilestonesResilient", () => {
+  beforeEach(() => {
+    mockFrom.mockReset();
+  });
+
+  it("returns data directly, with a single query, when the icon-inclusive select succeeds", async () => {
+    const row = {
+      id: "1",
+      title: "First smile",
+      logged_at: "2026-07-01",
+      notes: null,
+      icon: "star",
+    };
+    mockFrom.mockReturnValue(makeChain({ data: [row], error: null }));
+
+    const result = await fetchMilestonesResilient("child-1");
+
+    expect(result).toEqual({ data: [row], error: null });
+    expect(mockFrom).toHaveBeenCalledTimes(1);
+  });
+
+  it("regression: retries without icon when the live icon-column-unavailable error occurs, defaulting icon to null — this is the actual live bug reported twice", async () => {
+    const failing = makeChain({
+      data: null,
+      error: { message: "column milestones.icon does not exist", code: "42703" },
+    });
+    const retryRow = { id: "2", title: "Rolled over", logged_at: "2026-07-02", notes: "so proud" };
+    const succeeding = makeChain({ data: [retryRow], error: null });
+    mockFrom.mockReturnValueOnce(failing).mockReturnValueOnce(succeeding);
+
+    const result = await fetchMilestonesResilient("child-1");
+
+    expect(mockFrom).toHaveBeenCalledTimes(2);
+    expect(result.error).toBeNull();
+    expect(result.data).toEqual([{ ...retryRow, icon: null }]);
+  });
+
+  it("does NOT retry and surfaces the error as-is when it's unrelated to the icon column (e.g. RLS denial)", async () => {
+    const denied = makeChain({
+      data: null,
+      error: { message: "permission denied for table milestones" },
+    });
+    mockFrom.mockReturnValue(denied);
+
+    const result = await fetchMilestonesResilient("child-1");
+
+    expect(mockFrom).toHaveBeenCalledTimes(1);
+    expect(result.data).toBeNull();
+    expect(result.error).toEqual({ message: "permission denied for table milestones" });
+  });
+
+  it("passes the limit option through to both the primary and the fallback query", async () => {
+    const failing = makeChain({
+      data: null,
+      error: { message: "column milestones.icon does not exist" },
+    });
+    const succeeding = makeChain({ data: [], error: null });
+    mockFrom.mockReturnValueOnce(failing).mockReturnValueOnce(succeeding);
+
+    await fetchMilestonesResilient("child-1", { limit: 5 });
+
+    expect(failing.limit).toHaveBeenCalledWith(5);
+    expect(succeeding.limit).toHaveBeenCalledWith(5);
+  });
+
+  it("does not call limit() at all when no limit option is given", async () => {
+    mockFrom.mockReturnValue(makeChain({ data: [], error: null }));
+
+    await fetchMilestonesResilient("child-1");
+
+    const chain = mockFrom.mock.results[0].value;
+    expect(chain.limit).not.toHaveBeenCalled();
+  });
+
+  it("still returns an error (not a crash) if the fallback retry ALSO fails", async () => {
+    const failing1 = makeChain({
+      data: null,
+      error: { message: "column milestones.icon does not exist" },
+    });
+    const failing2 = makeChain({
+      data: null,
+      error: { message: 'relation "milestones" does not exist' },
+    });
+    mockFrom.mockReturnValueOnce(failing1).mockReturnValueOnce(failing2);
+
+    const result = await fetchMilestonesResilient("child-1");
+
+    expect(result.data).toBeNull();
+    expect(result.error).toEqual({ message: 'relation "milestones" does not exist' });
   });
 });

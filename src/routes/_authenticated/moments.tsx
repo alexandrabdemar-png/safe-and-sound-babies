@@ -14,6 +14,7 @@ import {
   SketchDefs,
   parseLegacyNotes,
   resolveMomentIcon,
+  fetchMilestonesResilient,
   type MomentIconKey,
 } from "@/lib/momentIcons";
 
@@ -74,12 +75,7 @@ function MomentsPage() {
     (async () => {
       setLoading(true);
       const [mRes, cRes] = await Promise.all([
-        supabase
-          .from("milestones")
-          .select("id, title, logged_at, notes, icon")
-          .eq("child_id", activeChildId)
-          .order("logged_at", { ascending: false })
-          .order("created_at", { ascending: false }),
+        fetchMilestonesResilient(activeChildId),
         supabase
           .from("children")
           .select("name, date_of_birth")
