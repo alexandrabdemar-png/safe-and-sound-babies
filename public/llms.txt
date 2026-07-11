@@ -1,0 +1,12 @@
+# Peace of Mine
+
+> Peace of Mine helps parents stay on top of baby safety — tracking product recalls, expiration dates, milestones, and safety reminders for car seats, cribs, pacifiers, formula, and more.
+
+Peace of Mine is a baby-safety tracking app. Parents log the products their child uses and the app watches for CPSC and FDA recalls, expiration dates (car seats, formula, breast milk), and age-based safety milestones, sending quiet reminders when action is needed.
+
+## Pages
+
+- [Home](/): Overview of Peace of Mine and the product categories it tracks.
+- [Latest Baby Product Recalls](/recalls): Free public list of CPSC baby and kids product recalls from the last 30 days, updated daily.
+- [Sign in](/auth): Sign in or create an account.
+- [Terms & Conditions](/terms): Terms of use, disclaimers, and limitations of liability.

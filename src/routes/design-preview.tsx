@@ -10,6 +10,13 @@ import { SoftBlob } from "@/components/SoftBlob";
 export const Route = createFileRoute("/design-preview")({
   ssr: false,
   component: DesignPreview,
+  head: () => ({
+    meta: [
+      { title: "Design Preview — Peace of Mine (internal)" },
+      { name: "description", content: "Internal design preview route for Peace of Mine. Not indexed." },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
 });
 
 function SummaryTile({ icon: Icon, count, label, tone = "muted" }: { icon: LucideIcon; count: number; label: string; tone?: "muted" | "danger" }) {

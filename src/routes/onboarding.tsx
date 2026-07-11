@@ -23,6 +23,13 @@ export const Route = createFileRoute("/onboarding")({
         content:
           "Set up your little one's profile so Peace of Mine can send the right reminders at the right time.",
       },
+      { property: "og:title", content: "Welcome — Peace of Mine" },
+      {
+        property: "og:description",
+        content:
+          "Set up your baby's Peace of Mine profile to get personalized safety reminders and recall alerts.",
+      },
+      { property: "og:url", content: "https://peace-of-mine.lovable.app/onboarding" },
     ],
   }),
 });

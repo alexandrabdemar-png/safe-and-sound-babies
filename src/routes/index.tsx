@@ -31,9 +31,28 @@ export const Route = createFileRoute("/")({
         content:
           "Stay on top of safety milestones. Track car seats, pacifiers, cribs, and more with quiet, kind reminders.",
       },
-      { property: "og:url", content: "/" },
+      { property: "og:url", content: "https://peace-of-mine.lovable.app/" },
     ],
-    links: [{ rel: "canonical", href: "/" }],
+    links: [{ rel: "canonical", href: "https://peace-of-mine.lovable.app/" }],
+    scripts: [{
+      type: "application/ld+json",
+      children: JSON.stringify([
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Peace of Mine",
+          url: "https://peace-of-mine.lovable.app/",
+          description: "Baby safety tracking — recalls, milestones, and product safety reminders for parents.",
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Peace of Mine",
+          url: "https://peace-of-mine.lovable.app/",
+          logo: "https://peace-of-mine.lovable.app/app-icon-1024.png",
+        },
+      ]),
+    }],
   }),
   component: Index,
 });

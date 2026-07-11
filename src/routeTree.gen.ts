@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RecallsRouteImport } from './routes/recalls'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as DesignPreviewRouteImport } from './routes/design-preview'
@@ -55,6 +56,11 @@ import { Route as ApiPublicHooksCheckProductAlertsRouteImport } from './routes/a
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecallsRoute = RecallsRouteImport.update({
@@ -285,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/design-preview': typeof DesignPreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
@@ -328,6 +335,7 @@ export interface FileRoutesByTo {
   '/design-preview': typeof DesignPreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
@@ -373,6 +381,7 @@ export interface FileRoutesById {
   '/design-preview': typeof DesignPreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/_authenticated/add': typeof AuthenticatedAddRoute
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
@@ -418,6 +427,7 @@ export interface FileRouteTypes {
     | '/design-preview'
     | '/onboarding'
     | '/recalls'
+    | '/sitemap.xml'
     | '/terms'
     | '/add'
     | '/alerts'
@@ -461,6 +471,7 @@ export interface FileRouteTypes {
     | '/design-preview'
     | '/onboarding'
     | '/recalls'
+    | '/sitemap.xml'
     | '/terms'
     | '/add'
     | '/alerts'
@@ -505,6 +516,7 @@ export interface FileRouteTypes {
     | '/design-preview'
     | '/onboarding'
     | '/recalls'
+    | '/sitemap.xml'
     | '/terms'
     | '/_authenticated/add'
     | '/_authenticated/alerts'
@@ -550,6 +562,7 @@ export interface RootRouteChildren {
   DesignPreviewRoute: typeof DesignPreviewRoute
   OnboardingRoute: typeof OnboardingRoute
   RecallsRoute: typeof RecallsRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   CaregiverInviteTokenRoute: typeof CaregiverInviteTokenRoute
   EmergencyShareTokenRoute: typeof EmergencyShareTokenRoute
@@ -567,6 +580,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recalls': {
@@ -942,6 +962,7 @@ const rootRouteChildren: RootRouteChildren = {
   DesignPreviewRoute: DesignPreviewRoute,
   OnboardingRoute: OnboardingRoute,
   RecallsRoute: RecallsRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   CaregiverInviteTokenRoute: CaregiverInviteTokenRoute,
   EmergencyShareTokenRoute: EmergencyShareTokenRoute,
