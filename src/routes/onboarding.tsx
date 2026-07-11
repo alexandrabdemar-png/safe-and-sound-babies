@@ -52,7 +52,6 @@ type SafetyAction = { icon: string; title: string; body: string };
 
 function getSafetyFirstLook(dobStr: string | null, dueDateStr: string | null = null): SafetyAction[] {
   // Use adjusted age for preemies (per AAP guidance until 24 months chrono).
-  const { computeAdjustedAge } = require("@/lib/adjustedAge") as typeof import("@/lib/adjustedAge");
   const age = computeAdjustedAge({ dateOfBirth: dobStr, dueDate: dueDateStr });
   const ageMonths = age?.adjustedMonths ?? 0;
 
