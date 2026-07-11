@@ -509,7 +509,10 @@ function ScanPage() {
                   </div>
                   {recallInfo.recalls.map((r) => (
                     <div key={`${r.source}-${r.id}`} className="rounded-2xl bg-card/60 p-3">
-                      <p className="font-body text-sm font-semibold text-foreground">{r.title}</p>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-body text-sm font-semibold text-foreground">{r.title}</p>
+                        <SeverityBadge fields={{ title: r.title, hazard: r.reason }} />
+                      </div>
                       <p className="mt-1 font-body text-xs text-muted-foreground">{r.reason}</p>
                       <a
                         href={r.url}
@@ -521,13 +524,30 @@ function ScanPage() {
                       </a>
                     </div>
                   ))}
+                  <DataAsOf sources={["cpsc", "nhtsa"]} className="pt-1" />
                 </div>
               )}
 
-              {recallInfo && !recallInfo.recalled && !checkingRecalls && (
-                <div className="flex items-center gap-2 rounded-2xl border border-emerald-600/20 bg-emerald-50 px-4 py-3 font-body text-xs text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
-                  <ShieldCheck className="h-3.5 w-3.5" /> No active CPSC or NHTSA recalls found for
-                  this product.
+              {recallCheckError && !checkingRecalls && (
+                <div className="space-y-1 rounded-2xl border border-amber-500/40 bg-amber-50 px-4 py-3 font-body text-xs text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                    <span>{recallCheckError}</span>
+                  </div>
+                </div>
+              )}
+
+              {recallInfo && !recallInfo.recalled && !checkingRecalls && !recallCheckError && (
+                <div className="space-y-1 rounded-2xl border border-emerald-600/20 bg-emerald-50 px-4 py-3 font-body text-xs text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
+                  <div className="flex items-start gap-2">
+                    <ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                    <span>
+                      No matching recall found in CPSC or NHTSA at scan time. This is not a
+                      guarantee of safety — verify with the manufacturer and cpsc.gov/Recalls
+                      before relying on it.
+                    </span>
+                  </div>
+                  <DataAsOf sources={["cpsc", "nhtsa"]} />
                 </div>
               )}
 
