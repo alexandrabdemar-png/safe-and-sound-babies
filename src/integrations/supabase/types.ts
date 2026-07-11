@@ -169,6 +169,7 @@ export type Database = {
           birth_week: number | null
           created_at: string
           date_of_birth: string | null
+          due_date: string | null
           height_inches: number | null
           id: string
           measurements_updated_at: string | null
@@ -181,6 +182,7 @@ export type Database = {
           birth_week?: number | null
           created_at?: string
           date_of_birth?: string | null
+          due_date?: string | null
           height_inches?: number | null
           id?: string
           measurements_updated_at?: string | null
@@ -193,6 +195,7 @@ export type Database = {
           birth_week?: number | null
           created_at?: string
           date_of_birth?: string | null
+          due_date?: string | null
           height_inches?: number | null
           id?: string
           measurements_updated_at?: string | null
@@ -693,6 +696,7 @@ export type Database = {
           acknowledged: boolean
           created_at: string
           id: string
+          notified_content_hash: string | null
           product_id: string
           recall_id: string
           updated_at: string
@@ -702,6 +706,7 @@ export type Database = {
           acknowledged?: boolean
           created_at?: string
           id?: string
+          notified_content_hash?: string | null
           product_id: string
           recall_id: string
           updated_at?: string
@@ -711,6 +716,7 @@ export type Database = {
           acknowledged?: boolean
           created_at?: string
           id?: string
+          notified_content_hash?: string | null
           product_id?: string
           recall_id?: string
           updated_at?: string
@@ -849,15 +855,50 @@ export type Database = {
         }
         Relationships: []
       }
+      recall_source_status: {
+        Row: {
+          consecutive_failures: number
+          last_attempt_at: string | null
+          last_error: string | null
+          last_success_at: string | null
+          matches_last_run: number | null
+          records_last_run: number | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          consecutive_failures?: number
+          last_attempt_at?: string | null
+          last_error?: string | null
+          last_success_at?: string | null
+          matches_last_run?: number | null
+          records_last_run?: number | null
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          consecutive_failures?: number
+          last_attempt_at?: string | null
+          last_error?: string | null
+          last_success_at?: string | null
+          matches_last_run?: number | null
+          records_last_run?: number | null
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       recalls: {
         Row: {
           affected_date_end: string | null
           affected_date_start: string | null
           brand: string | null
           category: string | null
+          content_hash: string | null
           created_at: string
           description: string | null
           hazard: string | null
+          hazard_fingerprint: string | null
           id: string
           image_url: string | null
           model: string | null
@@ -865,6 +906,7 @@ export type Database = {
           product_name: string | null
           recall_date: string | null
           remedy: string | null
+          severity_tier: string | null
           source: string
           source_id: string | null
           title: string
@@ -876,9 +918,11 @@ export type Database = {
           affected_date_start?: string | null
           brand?: string | null
           category?: string | null
+          content_hash?: string | null
           created_at?: string
           description?: string | null
           hazard?: string | null
+          hazard_fingerprint?: string | null
           id?: string
           image_url?: string | null
           model?: string | null
@@ -886,6 +930,7 @@ export type Database = {
           product_name?: string | null
           recall_date?: string | null
           remedy?: string | null
+          severity_tier?: string | null
           source?: string
           source_id?: string | null
           title: string
@@ -897,9 +942,11 @@ export type Database = {
           affected_date_start?: string | null
           brand?: string | null
           category?: string | null
+          content_hash?: string | null
           created_at?: string
           description?: string | null
           hazard?: string | null
+          hazard_fingerprint?: string | null
           id?: string
           image_url?: string | null
           model?: string | null
@@ -907,6 +954,7 @@ export type Database = {
           product_name?: string | null
           recall_date?: string | null
           remedy?: string | null
+          severity_tier?: string | null
           source?: string
           source_id?: string | null
           title?: string
@@ -968,7 +1016,16 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      recall_brand_coverage: {
+        Row: {
+          brand_lower: string | null
+          earliest_recall_date: string | null
+          latest_recall_date: string | null
+          sources_seen: number | null
+          total_recalls: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       generate_milestones_for_child: {
