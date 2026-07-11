@@ -49,13 +49,11 @@ const CATEGORIES: { key: string; name: string; icon: React.ComponentType<{ class
 // Age-appropriate safety first-look content
 type SafetyAction = { icon: string; title: string; body: string };
 
-function getSafetyFirstLook(dobStr: string | null): SafetyAction[] {
-  let ageMonths = 0;
-  if (dobStr) {
-    const birth = new Date(dobStr + "T00:00:00");
-    const now = new Date();
-    ageMonths = Math.max(0, (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth()));
-  }
+function getSafetyFirstLook(dobStr: string | null, dueDateStr: string | null = null): SafetyAction[] {
+  // Use adjusted age for preemies (per AAP guidance until 24 months chrono).
+  const { computeAdjustedAge } = require("@/lib/adjustedAge") as typeof import("@/lib/adjustedAge");
+  const age = computeAdjustedAge({ dateOfBirth: dobStr, dueDate: dueDateStr });
+  const ageMonths = age?.adjustedMonths ?? 0;
 
   if (ageMonths < 3) return [
     { icon: "🛏️", title: "Always back to sleep", body: "Place your baby on their back for every nap and every night — even when they look comfortable on their side." },
