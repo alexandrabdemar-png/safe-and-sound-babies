@@ -97,11 +97,9 @@ type Step = "scanning" | "looking-up" | "form" | "success";
 
 function ScanPage() {
   const navigate = useNavigate();
-  // TEMP: paywall disabled for testing at user's request — REMOVE this
-  // override (restore `const { isPro, loading: subLoading } = useSubscription();`)
-  // before launch.
-  const { loading: subLoading } = useSubscription();
-  const isPro = true;
+  // Paywall re-enabled — the previous TEMP override is removed. Free tier
+  // gets the CPSC/NHTSA scan; Pro gets the extended lookup pipeline.
+  const { isPro, loading: subLoading } = useSubscription();
   const { activeChildId } = useActiveChild();
 
   const [step, setStep] = useState<Step>("scanning");
@@ -111,6 +109,10 @@ function ScanPage() {
   const [upgradeAvailable, setUpgradeAvailable] = useState(false);
   const [recallInfo, setRecallInfo] = useState<RecallCheckResult | null>(null);
   const [checkingRecalls, setCheckingRecalls] = useState(false);
+  // Distinct "couldn't check" state — separate from `recallInfo === null`
+  // which is the pre-check idle state. Rendered as an amber banner so the
+  // user is never left staring at a green/red-less form when a source down.
+  const [recallCheckError, setRecallCheckError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [brand, setBrand] = useState("");
