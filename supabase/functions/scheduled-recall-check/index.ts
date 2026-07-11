@@ -301,21 +301,25 @@ async function writeSourceStatus(
 
 type ProductRow = { id: string; name: string };
 
+type NewMatch = { user_id: string; product_id: string; recall_id: string; reason: "new" | "updated" };
+
 async function notifyAffectedUsers(
   supabase: ReturnType<typeof createClient>,
-  newMatches: Array<{ user_id: string; product_id: string; recall_id: string }>,
+  newMatches: NewMatch[],
   products: ProductRow[],
+  contentHashByRecallId: Map<string, string>,
 ): Promise<{ notified: number; notify_skipped_unconfigured: boolean }> {
   if (newMatches.length === 0) return { notified: 0, notify_skipped_unconfigured: false };
 
   const productNameById = new Map(products.map((p) => [p.id, p.name]));
-  const byUser = new Map<string, Array<{ product_id: string; recall_id: string; name: string }>>();
+  const byUser = new Map<string, Array<{ product_id: string; recall_id: string; name: string; reason: "new" | "updated" }>>();
   for (const m of newMatches) {
     const arr = byUser.get(m.user_id) ?? [];
     arr.push({
       product_id: m.product_id,
       recall_id: m.recall_id,
       name: productNameById.get(m.product_id) ?? "one of your products",
+      reason: m.reason,
     });
     byUser.set(m.user_id, arr);
   }
@@ -343,10 +347,19 @@ async function notifyAffectedUsers(
   const fromAddress = Deno.env.get("NOTIFY_FROM_EMAIL") || "alerts@peaceofmine.app";
   const notifySkippedUnconfigured = !apnsConfig && !resendApiKey;
 
+  // APNs provider JWTs are valid for ~1h. In a large batch, refresh every
+  // 50 minutes so we don't 403 mid-run.
   let apnsJwt: string | null = null;
-  if (apnsConfig) {
-    const { token } = await getProviderJwt(apnsConfig, null);
-    apnsJwt = token;
+  let apnsJwtMintedAt = 0;
+  const JWT_REFRESH_MS = 50 * 60 * 1000;
+  async function currentApnsJwt(): Promise<string | null> {
+    if (!apnsConfig) return null;
+    if (!apnsJwt || Date.now() - apnsJwtMintedAt > JWT_REFRESH_MS) {
+      const { token } = await getProviderJwt(apnsConfig, null);
+      apnsJwt = token;
+      apnsJwtMintedAt = Date.now();
+    }
+    return apnsJwt;
   }
 
   const invalidTokens = new Set<string>();
@@ -355,6 +368,7 @@ async function notifyAffectedUsers(
     recall_id: string;
     notified_at: string;
     notification_channel: string;
+    notified_content_hash: string | null;
   }> = [];
 
   for (const [userId, items] of byUser) {
@@ -362,26 +376,32 @@ async function notifyAffectedUsers(
     try {
       const { data: userResp } = await supabase.auth.admin.getUserById(userId);
       email = userResp?.user?.email ?? null;
-    } catch {
-      // admin lookup can fail for a stale/deleted auth user — fall through
-      // with email: null, which just means this user can only get push.
-    }
+    } catch { /* stale/deleted user; email stays null */ }
 
-    const title =
-      items.length === 1
-        ? `⚠️ Safety Recall — ${items[0].name}`
-        : `⚠️ ${items.length} safety recalls need your attention`;
-    const body =
-      items.length === 1
-        ? `${items[0].name} has been recalled. Tap to see what to do.`
-        : `${items.map((i) => i.name).join(", ")} have active recalls. Tap to review.`;
+    // Split items into "new" and "updated" so the copy is honest about
+    // which is which — an "Updated recall" push is different from a new one.
+    const newOnes = items.filter((i) => i.reason === "new");
+    const updatedOnes = items.filter((i) => i.reason === "updated");
 
+    const titleParts: string[] = [];
+    if (newOnes.length === 1) titleParts.push(`⚠️ Safety Recall — ${newOnes[0].name}`);
+    else if (newOnes.length > 1) titleParts.push(`⚠️ ${newOnes.length} new safety recalls`);
+    if (updatedOnes.length === 1) titleParts.push(`🔄 Updated recall — ${updatedOnes[0].name}`);
+    else if (updatedOnes.length > 1) titleParts.push(`🔄 ${updatedOnes.length} recalls updated`);
+    const title = titleParts.join(" · ").slice(0, 180) || "⚠️ Safety Recall";
+
+    const bodyParts: string[] = [];
+    if (newOnes.length) bodyParts.push(`${newOnes.map((i) => i.name).join(", ")} has an active recall.`);
+    if (updatedOnes.length) bodyParts.push(`Recall info for ${updatedOnes.map((i) => i.name).join(", ")} was updated — please review the changes.`);
+    const body = bodyParts.join(" ").slice(0, 300) + " Tap to review.";
+
+    const jwt = await currentApnsJwt();
     const result = await notifyUser(
       fetch,
       { userId, email, apnsDeviceToken: tokenByUser.get(userId) ?? null },
       { title, body, data: { type: "recall" } },
       apnsConfig,
-      apnsJwt,
+      jwt,
       resendApiKey,
       fromAddress,
     );
@@ -394,6 +414,7 @@ async function notifyAffectedUsers(
           recall_id: item.recall_id,
           notified_at: nowIso,
           notification_channel: result.channel,
+          notified_content_hash: contentHashByRecallId.get(item.recall_id) ?? null,
         });
       }
     } else if (!result.ok && result.channel === "push") {
@@ -405,7 +426,11 @@ async function notifyAffectedUsers(
   for (const row of notifiedRows) {
     await supabase
       .from("product_recalls")
-      .update({ notified_at: row.notified_at, notification_channel: row.notification_channel })
+      .update({
+        notified_at: row.notified_at,
+        notification_channel: row.notification_channel,
+        notified_content_hash: row.notified_content_hash,
+      })
       .eq("product_id", row.product_id)
       .eq("recall_id", row.recall_id);
   }
