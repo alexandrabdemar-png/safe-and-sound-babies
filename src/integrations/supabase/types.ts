@@ -484,6 +484,7 @@ export type Database = {
           completed: boolean
           created_at: string
           due_date: string | null
+          icon: string | null
           id: string
           logged_at: string
           notes: string | null
@@ -497,6 +498,7 @@ export type Database = {
           completed?: boolean
           created_at?: string
           due_date?: string | null
+          icon?: string | null
           id?: string
           logged_at?: string
           notes?: string | null
@@ -510,6 +512,7 @@ export type Database = {
           completed?: boolean
           created_at?: string
           due_date?: string | null
+          icon?: string | null
           id?: string
           logged_at?: string
           notes?: string | null

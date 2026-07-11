@@ -1,10 +1,21 @@
-import { parseMomentType, TYPE_STYLES } from "@/routes/_authenticated/moments";
+import {
+  MOMENT_ICONS,
+  MOMENT_ICON_LABELS,
+  MOMENT_ICON_ACCENT,
+  SketchDefs,
+  parseLegacyNotes,
+  resolveMomentIcon,
+} from "@/lib/momentIcons";
+
+const CARD_BG = "#FFFFFF";
+const CARD_BORDER = "#E8E1D4";
 
 export type Moment = {
   id: string;
   title: string;
   logged_at: string | null;
   notes: string | null;
+  icon?: string | null;
 };
 
 function formatDate(dateStr: string | null) {
@@ -38,23 +49,24 @@ export function MomentTimeline({
 }) {
   return (
     <ul className="space-y-3">
+      <SketchDefs />
       {moments.map((m) => {
-        const { type, displayNotes } = parseMomentType(m.notes);
-        const s = TYPE_STYLES[type];
+        const { legacyType, displayNotes } = parseLegacyNotes(m.notes);
+        const resolvedIcon = resolveMomentIcon(m.icon, legacyType);
+        const Icon = MOMENT_ICONS[resolvedIcon];
         const age = childName && childDob && m.logged_at ? calcAgeAt(childDob, m.logged_at) : null;
-        const isLetter = (type as string) === "Letter";
         return (
           <li
             key={m.id}
             className="rounded-2xl px-4 py-3"
-            style={{ backgroundColor: s.bg, border: `1px solid ${s.border}` }}
+            style={{ backgroundColor: CARD_BG, border: `1px solid ${CARD_BORDER}` }}
           >
             <div className="flex items-center justify-between gap-2 mb-1">
               <span
-                className="rounded-full px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wider"
-                style={{ backgroundColor: s.accent + "22", color: s.accent }}
+                className="flex items-center gap-1 rounded-full px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wider"
+                style={{ backgroundColor: MOMENT_ICON_ACCENT + "22", color: MOMENT_ICON_ACCENT }}
               >
-                {s.emoji} {type}
+                <Icon px={12} /> {MOMENT_ICON_LABELS[resolvedIcon]}
               </span>
               <div className="flex items-center gap-1.5">
                 {age && childName && (
@@ -62,14 +74,16 @@ export function MomentTimeline({
                     {childName} at {age}
                   </span>
                 )}
-                <span className="font-body text-[10px] text-muted-foreground">{formatDate(m.logged_at)}</span>
+                <span className="font-body text-[10px] text-muted-foreground">
+                  {formatDate(m.logged_at)}
+                </span>
               </div>
             </div>
             <p className="font-display text-sm font-semibold tracking-tight text-foreground">
               {m.title}
             </p>
             {displayNotes && (
-              <p className={`mt-1 font-body text-xs leading-relaxed text-muted-foreground ${isLetter ? "italic" : ""}`}>
+              <p className="mt-1 font-body text-xs leading-relaxed text-muted-foreground">
                 {displayNotes.length > 120 ? displayNotes.slice(0, 120) + "…" : displayNotes}
               </p>
             )}

@@ -6,6 +6,16 @@ import { ArrowLeft, Plus, Search, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { BottomNav } from "@/components/BottomNav";
+import {
+  MOMENT_ICON_KEYS,
+  MOMENT_ICON_LABELS,
+  MOMENT_ICONS,
+  MOMENT_ICON_ACCENT,
+  SketchDefs,
+  parseLegacyNotes,
+  resolveMomentIcon,
+  type MomentIconKey,
+} from "@/lib/momentIcons";
 
 export const Route = createFileRoute("/_authenticated/moments")({
   ssr: false,
@@ -13,38 +23,19 @@ export const Route = createFileRoute("/_authenticated/moments")({
   head: () => ({ meta: [{ title: "Memory Book — Peace of Mine" }] }),
 });
 
-export type MomentType = "First" | "Funny" | "Milestone";
-
-export const ALL_TYPES: MomentType[] = ["First", "Funny", "Milestone"];
-
-// Card backgrounds/borders are deliberately the same neutral white/warm-gray
-// across every type — only the accent (badge pill + spine-icon ring color)
-// stays type-specific, so the type is still identifiable at a glance without
-// tinting the whole card.
-export const TYPE_STYLES: Record<MomentType, { accent: string; bg: string; border: string; emoji: string }> = {
-  First:     { accent: "#C47B2B", bg: "#FFFFFF", border: "#E8E1D4", emoji: "⭐" },
-  Funny:     { accent: "#6A7FBF", bg: "#FFFFFF", border: "#E8E1D4", emoji: "😄" },
-  Milestone: { accent: "#4A7A47", bg: "#FFFFFF", border: "#E8E1D4", emoji: "🎯" },
-};
-
-export function parseMomentType(notes: string | null): { type: MomentType; displayNotes: string } {
-  if (!notes) return { type: "Milestone", displayNotes: "" };
-  const match = notes.match(/^\[(\w+)\]\s?/);
-  if (match && ALL_TYPES.includes(match[1] as MomentType)) {
-    return { type: match[1] as MomentType, displayNotes: notes.slice(match[0].length) };
-  }
-  return { type: "Milestone", displayNotes: notes };
-}
+const CARD_BG = "#FFFFFF";
+const CARD_BORDER = "#E8E1D4";
 
 type RawMoment = {
   id: string;
   title: string;
   logged_at: string | null;
   notes: string | null;
+  icon: string | null;
 };
 
 type ParsedMoment = RawMoment & {
-  type: MomentType;
+  resolvedIcon: MomentIconKey;
   displayNotes: string;
 };
 
@@ -58,7 +49,8 @@ function calcAgeAt(dob: string, loggedAt: string): string {
     const w = Math.floor(totalDays / 7);
     return `${w} ${w === 1 ? "week" : "weeks"} old`;
   }
-  if (weeks > 0) return `${totalMonths} ${totalMonths === 1 ? "month" : "months"} and ${weeks} ${weeks === 1 ? "week" : "weeks"}`;
+  if (weeks > 0)
+    return `${totalMonths} ${totalMonths === 1 ? "month" : "months"} and ${weeks} ${weeks === 1 ? "week" : "weeks"}`;
   return `${totalMonths} ${totalMonths === 1 ? "month" : "months"} old`;
 }
 
@@ -68,7 +60,6 @@ function formatDateLarge(dateStr: string | null) {
   return d.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
 }
 
-
 function MomentsPage() {
   const { activeChildId } = useActiveChild();
   const [moments, setMoments] = useState<ParsedMoment[]>([]);
@@ -76,20 +67,30 @@ function MomentsPage() {
   const [childName, setChildName] = useState("");
   const [childDob, setChildDob] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<MomentType | "all">("all");
+  const [iconFilter, setIconFilter] = useState<MomentIconKey | "all">("all");
 
   useEffect(() => {
     if (!activeChildId) return;
     (async () => {
       setLoading(true);
       const [mRes, cRes] = await Promise.all([
-        supabase.from("milestones").select("id, title, logged_at, notes").eq("child_id", activeChildId).order("logged_at", { ascending: false }).order("created_at", { ascending: false }),
-        supabase.from("children").select("name, date_of_birth").eq("id", activeChildId).maybeSingle(),
+        supabase
+          .from("milestones")
+          .select("id, title, logged_at, notes, icon")
+          .eq("child_id", activeChildId)
+          .order("logged_at", { ascending: false })
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("children")
+          .select("name, date_of_birth")
+          .eq("id", activeChildId)
+          .maybeSingle(),
       ]);
       if (mRes.error) toast.error(mRes.error.message);
       const parsed: ParsedMoment[] = (mRes.data ?? []).map((m: RawMoment) => {
-        const { type, displayNotes } = parseMomentType(m.notes);
-        return { ...m, type, displayNotes };
+        const { legacyType, displayNotes } = parseLegacyNotes(m.notes);
+        const resolvedIcon = resolveMomentIcon(m.icon, legacyType);
+        return { ...m, resolvedIcon, displayNotes };
       });
       setMoments(parsed);
       setChildName(cRes.data?.name ?? "");
@@ -100,20 +101,27 @@ function MomentsPage() {
 
   const filtered = useMemo(() => {
     let result = moments;
-    if (typeFilter !== "all") result = result.filter((m) => m.type === typeFilter);
+    if (iconFilter !== "all") result = result.filter((m) => m.resolvedIcon === iconFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
-      result = result.filter((m) => m.title.toLowerCase().includes(q) || m.displayNotes.toLowerCase().includes(q));
+      result = result.filter(
+        (m) => m.title.toLowerCase().includes(q) || m.displayNotes.toLowerCase().includes(q),
+      );
     }
     return result;
-  }, [moments, typeFilter, search]);
+  }, [moments, iconFilter, search]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28">
       <header className="px-5 pt-8 pb-4 sm:px-6">
         <div className="mx-auto max-w-md">
           <div className="flex items-center justify-between mb-4">
-            <Button asChild variant="ghost" size="sm" className="-ml-2 rounded-full font-body text-xs">
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="-ml-2 rounded-full font-body text-xs"
+            >
               <Link to="/home">
                 <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Home
               </Link>
@@ -128,9 +136,7 @@ function MomentsPage() {
           <p className="font-body text-xs font-semibold uppercase tracking-[0.2em] text-accent">
             <Sparkles className="mr-1 inline h-3 w-3" /> {childName || "Memory book"}
           </p>
-          <h1 className="mt-1.5 font-display text-3xl font-semibold tracking-tight">
-            Moments
-          </h1>
+          <h1 className="mt-1.5 font-display text-3xl font-semibold tracking-tight">Moments</h1>
           <p className="mt-1 font-body text-sm text-muted-foreground">
             Every memory, beautifully kept.
           </p>
@@ -149,33 +155,47 @@ function MomentsPage() {
               className="w-full rounded-2xl border border-border bg-card pl-9 pr-4 py-2.5 font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
             />
             {search && (
-              <button type="button" onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+              >
                 <X className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
             )}
           </div>
 
-          {/* Type filter */}
+          {/* Icon filter */}
+          <SketchDefs />
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
-              onClick={() => setTypeFilter("all")}
-              className={`rounded-full px-3 py-1 font-body text-xs font-medium transition-colors ${typeFilter === "all" ? "bg-foreground text-background" : "bg-card border border-border text-muted-foreground"}`}
+              onClick={() => setIconFilter("all")}
+              className={`rounded-full px-3 py-1 font-body text-xs font-medium transition-colors ${iconFilter === "all" ? "bg-foreground text-background" : "bg-card border border-border text-muted-foreground"}`}
             >
               All
             </button>
-            {ALL_TYPES.map((t) => {
-              const s = TYPE_STYLES[t];
-              const active = typeFilter === t;
+            {MOMENT_ICON_KEYS.map((key) => {
+              const Icon = MOMENT_ICONS[key];
+              const active = iconFilter === key;
               return (
                 <button
-                  key={t}
+                  key={key}
                   type="button"
-                  onClick={() => setTypeFilter(active ? "all" : t)}
-                  className={`rounded-full px-3 py-1 font-body text-xs font-medium transition-colors border ${active ? "" : "bg-card text-muted-foreground"}`}
-                  style={active ? { backgroundColor: s.accent, color: "#fff", borderColor: s.accent } : { borderColor: "#e5e5e5" }}
+                  onClick={() => setIconFilter(active ? "all" : key)}
+                  className={`flex items-center gap-1 rounded-full px-2.5 py-1 font-body text-xs font-medium transition-colors border ${active ? "" : "bg-card text-muted-foreground"}`}
+                  style={
+                    active
+                      ? {
+                          backgroundColor: MOMENT_ICON_ACCENT,
+                          color: "#fff",
+                          borderColor: MOMENT_ICON_ACCENT,
+                        }
+                      : { borderColor: "#e5e5e5" }
+                  }
                 >
-                  {s.emoji} {t}
+                  <Icon px={14} />
+                  {MOMENT_ICON_LABELS[key]}
                 </button>
               );
             })}
@@ -183,14 +203,18 @@ function MomentsPage() {
 
           {/* Timeline */}
           {loading ? (
-            <div className="py-10 text-center font-body text-sm text-muted-foreground">Loading…</div>
+            <div className="py-10 text-center font-body text-sm text-muted-foreground">
+              Loading…
+            </div>
           ) : filtered.length === 0 ? (
             <div className="py-10 text-center">
               <p className="font-display text-lg font-semibold">No moments yet</p>
               <p className="mt-1 font-body text-sm text-muted-foreground">
-                {search || typeFilter !== "all" ? "Try a different search or filter." : "Log your first moment and it'll appear here."}
+                {search || iconFilter !== "all"
+                  ? "Try a different search or filter."
+                  : "Log your first moment and it'll appear here."}
               </p>
-              {!search && typeFilter === "all" && (
+              {!search && iconFilter === "all" && (
                 <Button asChild className="mt-4 rounded-full">
                   <Link to="/moments/new">Log a moment</Link>
                 </Button>
@@ -209,33 +233,40 @@ function MomentsPage() {
               />
               <ul className="space-y-7">
                 {filtered.map((m, i) => {
-                  const s = TYPE_STYLES[m.type];
-                  const isLetter = (m.type as string) === "Letter";
+                  const Icon = MOMENT_ICONS[m.resolvedIcon];
                   const age = childDob && m.logged_at ? calcAgeAt(childDob, m.logged_at) : null;
                   const onLeft = i % 2 === 0;
                   return (
                     <li key={m.id} className="relative flex items-start">
                       {/* Icon badge on the spine */}
                       <span
-                        className="absolute left-1/2 top-2 z-10 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full text-xs shadow-sm"
-                        style={{ backgroundColor: s.bg, border: `1.5px solid ${s.accent}` }}
+                        className="absolute left-1/2 top-2 z-10 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full shadow-sm"
+                        style={{
+                          backgroundColor: CARD_BG,
+                          border: `1.5px solid ${MOMENT_ICON_ACCENT}`,
+                        }}
                       >
-                        {s.emoji}
+                        <Icon px={18} />
                       </span>
 
                       {/* Card, alternating side */}
-                      <div className={`flex w-1/2 ${onLeft ? "justify-end pr-6" : "order-2 justify-start pl-6"}`}>
+                      <div
+                        className={`flex w-1/2 ${onLeft ? "justify-end pr-6" : "order-2 justify-start pl-6"}`}
+                      >
                         <div
                           className="w-full max-w-[210px] rounded-2xl p-3.5"
-                          style={{ backgroundColor: s.bg, border: `1px solid ${s.border}` }}
+                          style={{ backgroundColor: CARD_BG, border: `1px solid ${CARD_BORDER}` }}
                         >
-                          {/* Type tag + date */}
+                          {/* Icon tag + date */}
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1.5">
                             <span
                               className="rounded-full px-2 py-0.5 font-body text-[9px] font-semibold uppercase tracking-wider"
-                              style={{ backgroundColor: s.accent + "22", color: s.accent }}
+                              style={{
+                                backgroundColor: MOMENT_ICON_ACCENT + "22",
+                                color: MOMENT_ICON_ACCENT,
+                              }}
                             >
-                              {m.type}
+                              {MOMENT_ICON_LABELS[m.resolvedIcon]}
                             </span>
                             <span className="font-body text-[10px] text-muted-foreground">
                               {formatDateLarge(m.logged_at)}
@@ -257,10 +288,10 @@ function MomentsPage() {
                             {m.title}
                           </p>
 
-                          {/* Notes / letter */}
+                          {/* Notes */}
                           {m.displayNotes && (
                             <p
-                              className={`mt-1.5 font-body text-xs leading-relaxed line-clamp-4 ${isLetter ? "italic" : ""}`}
+                              className="mt-1.5 font-body text-xs leading-relaxed line-clamp-4"
                               style={{ color: "#5C5248" }}
                             >
                               {m.displayNotes}
