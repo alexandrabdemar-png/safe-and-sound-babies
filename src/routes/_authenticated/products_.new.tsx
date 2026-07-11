@@ -40,6 +40,7 @@ import { CATEGORIES, guessCategoryFromText, type CategoryKey } from "@/lib/produ
 import { ProductCatalogSearch } from "@/components/ProductCatalogSearch";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 import type { CatalogSearchResult } from "@/lib/searchProductCatalog";
+import { resolveCarSeatReplaceAt } from "@/lib/carSeatExpiration";
 
 // Server functions are imported dynamically to prevent module-level evaluation
 // crashing the page if the server environment or API keys aren't available.
@@ -121,6 +122,7 @@ function NewProductPage() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [purchasedAt, setPurchasedAt] = useState(toISODate(new Date()));
   const [carSeatExpiry, setCarSeatExpiry] = useState("");
+  const [carSeatManufactureDate, setCarSeatManufactureDate] = useState("");
   const [swaddleSize, setSwaddleSize] = useState("");
 
   // Sheet state for AI-picked product
@@ -147,9 +149,9 @@ function NewProductPage() {
   }
 
   const computedReplaceAt = useMemo(() => {
-    if (category === "car_seat") return carSeatExpiry || "";
+    if (category === "car_seat") return resolveCarSeatReplaceAt(carSeatExpiry, carSeatManufactureDate) ?? "";
     return "";
-  }, [category, carSeatExpiry]);
+  }, [category, carSeatExpiry, carSeatManufactureDate]);
 
   const activeCategory = CATEGORIES.find((c) => c.key === category);
 
@@ -183,6 +185,13 @@ function NewProductPage() {
           added_at: new Date().toISOString(),
           replace_at: computedReplaceAt || null,
           size: category === "sleep_sack" ? swaddleSize.trim() || null : null,
+          product_type: category === "car_seat" ? "car_seat" : "other",
+          manufacture_date: category === "car_seat" ? carSeatManufactureDate || null : null,
+          // The DB trigger only auto-fills expiration_date from
+          // manufacture_date when expiration_date is null — an explicit
+          // sticker date needs to be stored directly or the daily
+          // expiration-alert cron never engages for it.
+          expiration_date: category === "car_seat" ? carSeatExpiry || null : null,
         } as never)
         .select("id")
         .single();
@@ -360,17 +369,33 @@ function NewProductPage() {
             </Field>
 
             {category === "car_seat" && (
-              <Field label="Manufacturer expiry date">
-                <Input
-                  type="date"
-                  value={carSeatExpiry}
-                  onChange={(e) => setCarSeatExpiry(e.target.value)}
-                  className="h-12 rounded-2xl bg-card px-4 font-body text-base"
-                />
-                <p className="mt-1.5 font-body text-xs text-muted-foreground">
-                  Usually printed on a sticker on the seat shell.
-                </p>
-              </Field>
+              <>
+                <Field label="Manufacturer expiry date">
+                  <Input
+                    type="date"
+                    value={carSeatExpiry}
+                    onChange={(e) => setCarSeatExpiry(e.target.value)}
+                    className="h-12 rounded-2xl bg-card px-4 font-body text-base"
+                  />
+                  <p className="mt-1.5 font-body text-xs text-muted-foreground">
+                    Usually printed on a sticker on the seat shell.
+                  </p>
+                </Field>
+
+                <Field label="Manufacture date (for hand-me-downs without a legible sticker)">
+                  <Input
+                    type="date"
+                    value={carSeatManufactureDate}
+                    onChange={(e) => setCarSeatManufactureDate(e.target.value)}
+                    className="h-12 rounded-2xl bg-card px-4 font-body text-base"
+                  />
+                  <p className="mt-1.5 font-body text-xs text-muted-foreground">
+                    {carSeatExpiry
+                      ? "Not needed — you already gave the expiry date above."
+                      : "Car seats are generally unsafe to use starting 6 years after manufacture. If you don't have the exact expiry date, we'll estimate one from this."}
+                  </p>
+                </Field>
+              </>
             )}
 
             {category === "sleep_sack" && (
@@ -388,6 +413,11 @@ function NewProductPage() {
             {computedReplaceAt && (
               <div className="rounded-2xl bg-primary/8 px-4 py-3 font-body text-sm text-foreground/80">
                 Replace by <span className="font-semibold">{formatDate(computedReplaceAt)}</span>
+                {category === "car_seat" && !carSeatExpiry && carSeatManufactureDate && (
+                  <span className="block mt-1 font-body text-xs text-muted-foreground">
+                    Estimated from the manufacture date — check the shell sticker for the exact date when you can.
+                  </span>
+                )}
               </div>
             )}
 
@@ -738,6 +768,8 @@ function SaveProductSheet({
           added_at: new Date().toISOString(),
           replace_at: replaceDate,
           predicted_replacement_date: replaceDate,
+          product_type: /car ?seat/i.test(product.category) ? "car_seat" : "other",
+          expiration_date: /car ?seat/i.test(product.category) ? replaceDate : null,
         } as never)
         .select("id")
         .single();

@@ -39,6 +39,7 @@ import {
 import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
 import { recordRecallInDb } from "@/lib/recallCheck";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
+import { resolveCarSeatReplaceAt } from "@/lib/carSeatExpiration";
 
 const CATEGORY_ORDER: CategoryKey[] = CATEGORIES.map((c) => c.key);
 
@@ -81,8 +82,9 @@ function computeReplaceAt(
   category: CategoryKey,
   _purchasedAt: string,
   carSeatExpiry: string,
+  carSeatManufactureDate: string,
 ): string {
-  if (category === "car_seat") return carSeatExpiry || "";
+  if (category === "car_seat") return resolveCarSeatReplaceAt(carSeatExpiry, carSeatManufactureDate) ?? "";
   return "";
 }
 
@@ -115,14 +117,15 @@ function ScanPage() {
   const [category, setCategory] = useState<CategoryKey>("other");
   const [purchasedAt, setPurchasedAt] = useState(toISODate(new Date()));
   const [carSeatExpiry, setCarSeatExpiry] = useState("");
+  const [carSeatManufactureDate, setCarSeatManufactureDate] = useState("");
   const [saving, setSaving] = useState(false);
   const [savedReplaceAt, setSavedReplaceAt] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
 
   const computedReplaceAt = useMemo(
-    () => computeReplaceAt(category, purchasedAt, carSeatExpiry),
-    [category, purchasedAt, carSeatExpiry],
+    () => computeReplaceAt(category, purchasedAt, carSeatExpiry, carSeatManufactureDate),
+    [category, purchasedAt, carSeatExpiry, carSeatManufactureDate],
   );
 
   // Single source of truth for releasing blob URLs: runs whenever the
@@ -248,8 +251,8 @@ function ScanPage() {
       toast.error("Give your product a name");
       return;
     }
-    if (category === "car_seat" && !carSeatExpiry) {
-      toast.error("Add the car seat's manufacturer expiry date");
+    if (category === "car_seat" && !carSeatExpiry && !carSeatManufactureDate) {
+      toast.error("Add the car seat's expiry date or manufacture date");
       return;
     }
     setSaving(true);
@@ -269,6 +272,13 @@ function ScanPage() {
           purchased_at: purchasedAt ? new Date(purchasedAt).toISOString() : null,
           added_at: nowIso,
           replace_at: computedReplaceAt || null,
+          product_type: category === "car_seat" ? "car_seat" : "other",
+          manufacture_date: category === "car_seat" ? carSeatManufactureDate || null : null,
+          // The DB trigger only auto-fills expiration_date from
+          // manufacture_date when expiration_date is null — an explicit
+          // sticker date needs to be stored directly or the daily
+          // expiration-alert cron never engages for it.
+          expiration_date: category === "car_seat" ? carSeatExpiry || null : null,
           // We already have a fresh answer from check-recalls — no need to
           // wait for tomorrow's daily sync to flag it.
           recalled: recallInfo?.recalled ?? false,
@@ -584,14 +594,29 @@ function ScanPage() {
               </Field>
 
               {category === "car_seat" && (
-                <Field label="Manufacturer expiry date" required>
-                  <Input
-                    type="date"
-                    value={carSeatExpiry}
-                    onChange={(e) => setCarSeatExpiry(e.target.value)}
-                    className="h-12 rounded-2xl bg-card px-4 font-body text-base"
-                  />
-                </Field>
+                <>
+                  <Field label="Manufacturer expiry date">
+                    <Input
+                      type="date"
+                      value={carSeatExpiry}
+                      onChange={(e) => setCarSeatExpiry(e.target.value)}
+                      className="h-12 rounded-2xl bg-card px-4 font-body text-base"
+                    />
+                  </Field>
+                  <Field label="Manufacture date (for hand-me-downs without a legible sticker)">
+                    <Input
+                      type="date"
+                      value={carSeatManufactureDate}
+                      onChange={(e) => setCarSeatManufactureDate(e.target.value)}
+                      className="h-12 rounded-2xl bg-card px-4 font-body text-base"
+                    />
+                    <p className="mt-1.5 font-body text-xs text-muted-foreground">
+                      {carSeatExpiry
+                        ? "Not needed — you already gave the expiry date above."
+                        : "Car seats are generally unsafe to use starting 6 years after manufacture. If you don't have the exact expiry date, we'll estimate one from this."}
+                    </p>
+                  </Field>
+                </>
               )}
 
               {computedReplaceAt && (
@@ -604,6 +629,11 @@ function ScanPage() {
                       year: "numeric",
                     })}
                   </span>
+                  {category === "car_seat" && !carSeatExpiry && carSeatManufactureDate && (
+                    <span className="block mt-1 font-body text-xs text-muted-foreground">
+                      Estimated from the manufacture date — check the shell sticker for the exact date when you can.
+                    </span>
+                  )}
                 </div>
               )}
 
