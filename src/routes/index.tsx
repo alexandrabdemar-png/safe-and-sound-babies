@@ -71,8 +71,10 @@ function Index() {
                 }}
                 className="text-5xl leading-[1.08] sm:text-6xl lg:text-7xl"
               >
-                Personalized reminders, powered by your baby's{" "}
-                <em style={{ fontStyle: "italic", color: "#9BB2A7" }}>milestones</em>
+                Stay on top of every{" "}
+                <em style={{ fontStyle: "italic", color: "#9BB2A7" }}>safety</em>
+                <br />
+                milestone.
               </h1>
 
               <p
