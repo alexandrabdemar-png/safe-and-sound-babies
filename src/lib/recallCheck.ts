@@ -71,10 +71,39 @@ export function isAllowedRecallUrl(url: string): boolean {
 
 // ── Noise words stripped before fuzzy token matching ─────────────────────────
 const NOISE_WORDS = new Set([
-  "baby", "babies", "organic", "organics", "natural", "formula", "bottle",
-  "infant", "toddler", "child", "children", "safe", "safety", "the", "and",
-  "for", "with", "a", "an", "of", "in", "on", "at", "new", "brand", "inc",
-  "llc", "ltd", "co", "set", "pack", "size", "model",
+  "baby",
+  "babies",
+  "organic",
+  "organics",
+  "natural",
+  "formula",
+  "bottle",
+  "infant",
+  "toddler",
+  "child",
+  "children",
+  "safe",
+  "safety",
+  "the",
+  "and",
+  "for",
+  "with",
+  "a",
+  "an",
+  "of",
+  "in",
+  "on",
+  "at",
+  "new",
+  "brand",
+  "inc",
+  "llc",
+  "ltd",
+  "co",
+  "set",
+  "pack",
+  "size",
+  "model",
 ]);
 
 /**
@@ -171,6 +200,24 @@ type RawCpscRecall = {
 };
 
 /**
+ * Every other external-fetch helper in this codebase (cpscSearch.ts,
+ * the check-recalls edge function) wraps its calls in a timeout so a slow
+ * or hanging government API can't block the UI indefinitely — this one
+ * didn't, which was the actual cause of the reported "registry check
+ * search is very slow" (no cap, so a hung saferproducts.gov/api.fda.gov
+ * response left the button spinning forever rather than failing fast).
+ */
+async function fetchWithTimeout(url: string, timeoutMs = 10_000): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+/**
  * Fetch recalls from the CPSC API matching productName and fuzzy-match the results.
  *
  * Uses CPSC's Keyword search (server-side filtered) rather than pulling the
@@ -181,7 +228,7 @@ type RawCpscRecall = {
 export async function fetchCpscRecallsForProduct(productName: string): Promise<RecallHit[]> {
   try {
     const url = `https://www.saferproducts.gov/RestWebServices/Recall?format=json&Keyword=${encodeURIComponent(productName)}`;
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(url);
     if (!res.ok) return [];
     const data: RawCpscRecall[] = await res.json();
     if (!Array.isArray(data)) return [];
@@ -208,8 +255,9 @@ export async function fetchCpscRecallsForProduct(productName: string): Promise<R
         title: r.RecallHeading ?? r.Title ?? "CPSC Recall",
         productDescription: r.Products?.[0]?.Description ?? r.Description ?? "",
         reason:
-          r.Hazards?.map((h) => h.Name).filter(Boolean).join("; ") ||
-          "See the official recall notice for hazard details.",
+          r.Hazards?.map((h) => h.Name)
+            .filter(Boolean)
+            .join("; ") || "See the official recall notice for hazard details.",
         url: r.URL ?? "https://www.saferproducts.gov",
         recallDate: r.RecallDate,
       }));
@@ -238,10 +286,10 @@ export async function fetchFdaRecallsForProduct(productName: string): Promise<Re
   try {
     const enc = encodeURIComponent(productName);
     const [res1, res2] = await Promise.all([
-      fetch(
+      fetchWithTimeout(
         `https://api.fda.gov/food/enforcement.json?search=recalling_firm_name:${enc}+OR+product_description:${enc}&limit=10`,
       ),
-      fetch(
+      fetchWithTimeout(
         `https://api.fda.gov/food/enforcement.json?search=product_description:${enc}&limit=10`,
       ),
     ]);
@@ -278,9 +326,7 @@ export async function fetchFdaRecallsForProduct(productName: string): Promise<Re
         id: r.recall_number ?? Math.random().toString(36).slice(2),
         title: (r.product_description ?? "FDA Food/Formula Recall").slice(0, 120),
         productDescription: r.product_description ?? "",
-        reason:
-          r.reason_for_recall ||
-          "See the official FDA recall notice for hazard details.",
+        reason: r.reason_for_recall || "See the official FDA recall notice for hazard details.",
         url: "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts",
         recallDate: r.recall_initiation_date,
       }));
@@ -354,7 +400,10 @@ type PersistableRecallHit = {
  * failure here shouldn't block or roll back the save that already
  * succeeded — just log it loudly so a real regression is visible.
  */
-export async function recordRecallInDb(productId: string, hit: PersistableRecallHit): Promise<void> {
+export async function recordRecallInDb(
+  productId: string,
+  hit: PersistableRecallHit,
+): Promise<void> {
   try {
     const { recordProductRecall } = await import("@/lib/recallRecord.functions");
     await recordProductRecall({
