@@ -12,7 +12,17 @@ export const Route = createFileRoute("/_authenticated/first-foods")({
   head: () => ({ meta: [{ title: "First Foods — Peace of Mine" }] }),
 });
 
-const TOP_ALLERGENS = ["Milk", "Eggs", "Fish", "Shellfish", "Tree nuts", "Peanuts", "Wheat", "Soy", "Sesame"] as const;
+const TOP_ALLERGENS = [
+  "Milk",
+  "Eggs",
+  "Fish",
+  "Shellfish",
+  "Tree nuts",
+  "Peanuts",
+  "Wheat",
+  "Soy",
+  "Sesame",
+] as const;
 type Allergen = (typeof TOP_ALLERGENS)[number];
 
 type Child = {
@@ -57,14 +67,19 @@ function FirstFoodsPage() {
 
   async function loadData() {
     let activeId: string | null = null;
-    try { activeId = localStorage.getItem("safesound.activeChildId"); } catch {}
+    try {
+      activeId = localStorage.getItem("safesound.activeChildId");
+    } catch {}
 
     const { data: kids } = await supabase
       .from("children")
       .select("id, name, date_of_birth")
       .order("created_at", { ascending: true });
 
-    if (!kids?.length) { navigate({ to: "/onboarding" }); return; }
+    if (!kids?.length) {
+      navigate({ to: "/onboarding" });
+      return;
+    }
     const c = (kids.find((k) => k.id === activeId) ?? kids[0]) as Child;
     setChild(c);
 
@@ -88,16 +103,28 @@ function FirstFoodsPage() {
     setLoading(false);
   }
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
+  }, []);
 
   async function handleAdd() {
     if (!child) return;
-    if (!foodName.trim()) { toast.error("Enter a food name."); return; }
+    if (!foodName.trim()) {
+      toast.error("Enter a food name.");
+      return;
+    }
 
     setSaving(true);
-    const finalName = isAllergen && selectedAllergen ? `${foodName.trim()} (${selectedAllergen})` : foodName.trim();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) { toast.error("Sign in to log foods"); setSaving(false); return; }
+    const finalName =
+      isAllergen && selectedAllergen ? `${foodName.trim()} (${selectedAllergen})` : foodName.trim();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.user) {
+      toast.error("Sign in to log foods");
+      setSaving(false);
+      return;
+    }
 
     const { error } = await supabase.from("first_foods" as any).insert({
       child_id: child.id,
@@ -107,11 +134,19 @@ function FirstFoodsPage() {
       reaction_notes: reactionNotes.trim() || null,
     });
 
-    if (error) { toast.error(error.message || "Couldn't save — please try again"); setSaving(false); return; }
+    if (error) {
+      console.error("[first-foods] failed to save food:", error.message);
+      toast.error(friendlyError(error.message));
+      setSaving(false);
+      return;
+    }
 
     toast.success(`${finalName} added to ${child.name}'s food log.`);
-    setFoodName(""); setDateIntroduced(new Date().toISOString().slice(0, 10));
-    setIsAllergen(false); setSelectedAllergen(""); setReactionNotes("");
+    setFoodName("");
+    setDateIntroduced(new Date().toISOString().slice(0, 10));
+    setIsAllergen(false);
+    setSelectedAllergen("");
+    setReactionNotes("");
     setShowForm(false);
     setShow4DayCard(true);
     setSaving(false);
@@ -139,7 +174,11 @@ function FirstFoodsPage() {
       <header className="px-5 pt-10 pb-4 sm:px-6">
         <div className="mx-auto max-w-md">
           <div className="mb-4 flex items-center gap-3">
-            <button type="button" onClick={() => navigate({ to: "/tracking" })} className="rounded-full p-2 text-muted-foreground hover:bg-muted">
+            <button
+              type="button"
+              onClick={() => navigate({ to: "/tracking" })}
+              className="rounded-full p-2 text-muted-foreground hover:bg-muted"
+            >
               <ArrowLeft className="h-4 w-4" />
             </button>
             <div className="flex items-center gap-2">
@@ -166,15 +205,17 @@ function FirstFoodsPage() {
 
       <main className="px-5 sm:px-6">
         <div className="mx-auto max-w-md space-y-4">
-
           {/* Age gate — under 4 months */}
           {tooYoung ? (
             <div className="rounded-3xl border border-border/60 bg-card p-6 text-center animate-scale-in">
               <span style={{ fontSize: 36 }}>🥑</span>
-              <p className="mt-3 font-display text-base font-semibold tracking-tight">First foods are coming</p>
+              <p className="mt-3 font-display text-base font-semibold tracking-tight">
+                First foods are coming
+              </p>
               <p className="mt-2 font-body text-sm text-muted-foreground leading-relaxed max-w-xs mx-auto">
-                First foods tracking will be available as {child?.name} grows — many babies begin exploring solids around
-                4 to 6 months, though every baby is different. Always follow your pediatrician's guidance.
+                First foods tracking will be available as {child?.name} grows — many babies begin
+                exploring solids around 4 to 6 months, though every baby is different. Always follow
+                your pediatrician's guidance.
               </p>
             </div>
           ) : (
@@ -184,13 +225,19 @@ function FirstFoodsPage() {
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 animate-scale-in">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="font-body text-sm font-semibold text-amber-800">4-day wait reminder</p>
+                      <p className="font-body text-sm font-semibold text-amber-800">
+                        4-day wait reminder
+                      </p>
                       <p className="mt-1 font-body text-sm text-amber-700 leading-relaxed">
-                        Many pediatricians suggest waiting around 4 days before introducing another new food — confirm
-                        this approach with your own doctor.
+                        Many pediatricians suggest waiting around 4 days before introducing another
+                        new food — confirm this approach with your own doctor.
                       </p>
                     </div>
-                    <button type="button" onClick={() => setShow4DayCard(false)} className="shrink-0 rounded-full p-1 text-amber-600 hover:bg-amber-100">
+                    <button
+                      type="button"
+                      onClick={() => setShow4DayCard(false)}
+                      className="shrink-0 rounded-full p-1 text-amber-600 hover:bg-amber-100"
+                    >
                       <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
@@ -203,7 +250,9 @@ function FirstFoodsPage() {
                   <p className="mb-3 font-display text-sm font-semibold">Add a new food</p>
 
                   <div className="mb-3">
-                    <label className="mb-1 block font-body text-xs text-muted-foreground">Food name</label>
+                    <label className="mb-1 block font-body text-xs text-muted-foreground">
+                      Food name
+                    </label>
                     <input
                       type="text"
                       placeholder="e.g. Sweet potato purée"
@@ -214,7 +263,9 @@ function FirstFoodsPage() {
                   </div>
 
                   <div className="mb-3">
-                    <label className="mb-1 block font-body text-xs text-muted-foreground">Date introduced</label>
+                    <label className="mb-1 block font-body text-xs text-muted-foreground">
+                      Date introduced
+                    </label>
                     <input
                       type="date"
                       value={dateIntroduced}
@@ -238,7 +289,9 @@ function FirstFoodsPage() {
 
                   {isAllergen && (
                     <div className="mb-3">
-                      <label className="mb-1 block font-body text-xs text-muted-foreground">Which allergen?</label>
+                      <label className="mb-1 block font-body text-xs text-muted-foreground">
+                        Which allergen?
+                      </label>
                       <div className="flex flex-wrap gap-2">
                         {TOP_ALLERGENS.map((a) => (
                           <button
@@ -309,7 +362,9 @@ function FirstFoodsPage() {
               {foods.some((f) => f.is_allergen) && (
                 <div className="flex items-center gap-2">
                   <ShieldAlert className="h-3.5 w-3.5 text-amber-500" />
-                  <p className="font-body text-xs text-muted-foreground">Orange badge = top 9 allergen</p>
+                  <p className="font-body text-xs text-muted-foreground">
+                    Orange badge = top 9 allergen
+                  </p>
                 </div>
               )}
 
@@ -320,7 +375,9 @@ function FirstFoodsPage() {
                     <div key={f.id} className="flex items-start gap-3 px-4 py-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-body text-sm font-medium text-foreground">{f.food_name}</p>
+                          <p className="font-body text-sm font-medium text-foreground">
+                            {f.food_name}
+                          </p>
                           {f.is_allergen && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-200 px-2 py-0.5 font-body text-[10px] font-semibold text-amber-700">
                               <ShieldAlert className="h-2.5 w-2.5" /> Allergen
@@ -328,10 +385,17 @@ function FirstFoodsPage() {
                           )}
                         </div>
                         <p className="mt-0.5 font-body text-[11px] text-muted-foreground">
-                          Introduced {new Date(f.date_introduced + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                          Introduced{" "}
+                          {new Date(f.date_introduced + "T00:00:00").toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
                         </p>
                         {f.reaction_notes && (
-                          <p className="mt-1 font-body text-xs text-foreground/70 italic">"{f.reaction_notes}"</p>
+                          <p className="mt-1 font-body text-xs text-foreground/70 italic">
+                            "{f.reaction_notes}"
+                          </p>
                         )}
                       </div>
                     </div>
@@ -341,7 +405,9 @@ function FirstFoodsPage() {
                 <div className="rounded-3xl border border-dashed border-border bg-card/40 px-6 py-8 text-center">
                   <p className="font-body text-sm text-muted-foreground">
                     No foods found matching "<strong>{search}</strong>"
-                    {!filtered.find((f) => f.food_name.toLowerCase().includes(search.toLowerCase())) && foods.length > 0
+                    {!filtered.find((f) =>
+                      f.food_name.toLowerCase().includes(search.toLowerCase()),
+                    ) && foods.length > 0
                       ? " — this food hasn't been introduced yet."
                       : "."}
                   </p>
@@ -351,7 +417,8 @@ function FirstFoodsPage() {
                   <span style={{ fontSize: 36 }}>🥣</span>
                   <p className="mt-3 font-display text-base font-semibold">No foods logged yet</p>
                   <p className="mt-1 font-body text-sm text-muted-foreground max-w-xs mx-auto">
-                    Tap <strong>Add food</strong> to start tracking {child?.name}'s first foods and allergen introductions.
+                    Tap <strong>Add food</strong> to start tracking {child?.name}'s first foods and
+                    allergen introductions.
                   </p>
                 </div>
               )}
@@ -364,11 +431,15 @@ function FirstFoodsPage() {
                     <p className="font-body text-[11px] text-muted-foreground">foods tried</p>
                   </div>
                   <div className="flex-1 rounded-2xl border border-border/60 bg-card p-3 text-center">
-                    <p className="font-display text-xl font-semibold text-amber-600">{foods.filter((f) => f.is_allergen).length}</p>
+                    <p className="font-display text-xl font-semibold text-amber-600">
+                      {foods.filter((f) => f.is_allergen).length}
+                    </p>
                     <p className="font-body text-[11px] text-muted-foreground">allergens</p>
                   </div>
                   <div className="flex-1 rounded-2xl border border-border/60 bg-card p-3 text-center">
-                    <p className="font-display text-xl font-semibold text-destructive">{foods.filter((f) => f.reaction_notes).length}</p>
+                    <p className="font-display text-xl font-semibold text-destructive">
+                      {foods.filter((f) => f.reaction_notes).length}
+                    </p>
                     <p className="font-body text-[11px] text-muted-foreground">with notes</p>
                   </div>
                 </div>
@@ -377,13 +448,13 @@ function FirstFoodsPage() {
               {/* 4-day guidance note */}
               <div className="rounded-2xl bg-muted/40 px-4 py-3">
                 <p className="font-body text-xs text-muted-foreground leading-relaxed">
-                  Many pediatricians suggest introducing one new food at a time and waiting around 4 days before
-                  the next — this helps identify any reactions. Always follow your own doctor's guidance.
+                  Many pediatricians suggest introducing one new food at a time and waiting around 4
+                  days before the next — this helps identify any reactions. Always follow your own
+                  doctor's guidance.
                 </p>
               </div>
             </>
           )}
-
         </div>
       </main>
 
