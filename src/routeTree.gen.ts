@@ -13,6 +13,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as RecallsRouteImport } from './routes/recalls'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MomentsTimelinePreviewRouteImport } from './routes/moments-timeline-preview'
+import { Route as MomentsIconOptionsPreviewRouteImport } from './routes/moments-icon-options-preview'
 import { Route as MomentsHanddrawnPreviewRouteImport } from './routes/moments-handdrawn-preview'
 import { Route as DesignPreviewRouteImport } from './routes/design-preview'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -74,6 +75,12 @@ const MomentsTimelinePreviewRoute = MomentsTimelinePreviewRouteImport.update({
   path: '/moments-timeline-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MomentsIconOptionsPreviewRoute =
+  MomentsIconOptionsPreviewRouteImport.update({
+    id: '/moments-icon-options-preview',
+    path: '/moments-icon-options-preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const MomentsHanddrawnPreviewRoute = MomentsHanddrawnPreviewRouteImport.update({
   id: '/moments-handdrawn-preview',
   path: '/moments-handdrawn-preview',
@@ -296,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRouteWithChildren
   '/design-preview': typeof DesignPreviewRoute
   '/moments-handdrawn-preview': typeof MomentsHanddrawnPreviewRoute
+  '/moments-icon-options-preview': typeof MomentsIconOptionsPreviewRoute
   '/moments-timeline-preview': typeof MomentsTimelinePreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
@@ -341,6 +349,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/design-preview': typeof DesignPreviewRoute
   '/moments-handdrawn-preview': typeof MomentsHanddrawnPreviewRoute
+  '/moments-icon-options-preview': typeof MomentsIconOptionsPreviewRoute
   '/moments-timeline-preview': typeof MomentsTimelinePreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
@@ -388,6 +397,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRouteWithChildren
   '/design-preview': typeof DesignPreviewRoute
   '/moments-handdrawn-preview': typeof MomentsHanddrawnPreviewRoute
+  '/moments-icon-options-preview': typeof MomentsIconOptionsPreviewRoute
   '/moments-timeline-preview': typeof MomentsTimelinePreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
@@ -435,6 +445,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/design-preview'
     | '/moments-handdrawn-preview'
+    | '/moments-icon-options-preview'
     | '/moments-timeline-preview'
     | '/onboarding'
     | '/recalls'
@@ -480,6 +491,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/design-preview'
     | '/moments-handdrawn-preview'
+    | '/moments-icon-options-preview'
     | '/moments-timeline-preview'
     | '/onboarding'
     | '/recalls'
@@ -526,6 +538,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/design-preview'
     | '/moments-handdrawn-preview'
+    | '/moments-icon-options-preview'
     | '/moments-timeline-preview'
     | '/onboarding'
     | '/recalls'
@@ -573,6 +586,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   DesignPreviewRoute: typeof DesignPreviewRoute
   MomentsHanddrawnPreviewRoute: typeof MomentsHanddrawnPreviewRoute
+  MomentsIconOptionsPreviewRoute: typeof MomentsIconOptionsPreviewRoute
   MomentsTimelinePreviewRoute: typeof MomentsTimelinePreviewRoute
   OnboardingRoute: typeof OnboardingRoute
   RecallsRoute: typeof RecallsRoute
@@ -614,6 +628,13 @@ declare module '@tanstack/react-router' {
       path: '/moments-timeline-preview'
       fullPath: '/moments-timeline-preview'
       preLoaderRoute: typeof MomentsTimelinePreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moments-icon-options-preview': {
+      id: '/moments-icon-options-preview'
+      path: '/moments-icon-options-preview'
+      fullPath: '/moments-icon-options-preview'
+      preLoaderRoute: typeof MomentsIconOptionsPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/moments-handdrawn-preview': {
@@ -981,6 +1002,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   DesignPreviewRoute: DesignPreviewRoute,
   MomentsHanddrawnPreviewRoute: MomentsHanddrawnPreviewRoute,
+  MomentsIconOptionsPreviewRoute: MomentsIconOptionsPreviewRoute,
   MomentsTimelinePreviewRoute: MomentsTimelinePreviewRoute,
   OnboardingRoute: OnboardingRoute,
   RecallsRoute: RecallsRoute,
