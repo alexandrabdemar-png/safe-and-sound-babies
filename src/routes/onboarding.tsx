@@ -180,6 +180,7 @@ function OnboardingPage() {
             user_id: userId,
             name: childName,
             date_of_birth: dob || null,
+            due_date: dueDate || null,
           } as never)
           .select("id")
           .single();
