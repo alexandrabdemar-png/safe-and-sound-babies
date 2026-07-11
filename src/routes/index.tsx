@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import "@fontsource/cormorant-garamond/400.css";
+import "@fontsource/cormorant-garamond/400-italic.css";
+import "@fontsource/cormorant-garamond/500.css";
 import catCarseat from "@/assets/hd-carseat.png";
 import catPacifier from "@/assets/hd-pacifier.png";
 import catBreastMilk from "@/assets/hd-breastmilk.png";
@@ -80,36 +83,40 @@ function Index() {
           <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
             {/* Left: Copy */}
             <div className="flex flex-col items-start">
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2">
-                <span className="h-2 w-2 rounded-full bg-accent" />
-                <span className="font-body text-sm font-medium text-foreground">
-                  For the little things that matter
-                </span>
-              </div>
-
-              <h1 className="font-display text-5xl font-semibold leading-[1.1] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
+              <h1
+                style={{
+                  fontFamily: "'Cormorant Garamond', Georgia, serif",
+                  fontWeight: 400,
+                  color: "#2B2927",
+                }}
+                className="text-5xl leading-[1.08] sm:text-6xl lg:text-7xl"
+              >
                 Stay on top of every{" "}
-                <span className="font-display-italic italic text-primary">safety</span>
+                <em style={{ fontStyle: "italic", color: "#9BB2A7" }}>safety</em>
                 <br />
                 milestone.
               </h1>
 
-              <p className="mt-6 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
-                Add any baby essential—from car seats and cribs to bottles,
-                carriers, and everything in between. Peace of Mine keeps
-                track of the details for you, with reminders when it's time to
-                replace, resize or double-check the fit.
-              </p>
-              <p className="mt-3 max-w-lg font-body text-lg leading-relaxed text-muted-foreground">
-                Just the information you need, organized in one place.
+              <p
+                style={{ fontWeight: 300, color: "#605C58" }}
+                className="mt-12 max-w-lg font-body text-lg leading-relaxed"
+              >
+                Peace of Mine keeps track of the vital details for you—from
+                gear expiry to age-specific safety fits—with effortless,
+                timely reminders.
               </p>
 
               <Link
                 to="/auth"
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-body text-base font-semibold text-primary-foreground transition-all duration-150 hover:bg-[#485240]"
+                style={{
+                  border: "1px solid #B8A899",
+                  color: "#2B2927",
+                  fontWeight: 400,
+                  letterSpacing: "0.03em",
+                }}
+                className="mt-8 inline-flex items-center gap-2 rounded-full bg-transparent px-8 py-4 font-body text-base transition-all duration-150 hover:bg-card"
               >
                 Get started free
-                <ArrowRight className="h-4 w-4" />
               </Link>
               <p
                 className="mt-5 text-[11px] font-medium tracking-[0.1em] text-muted-foreground/60"
@@ -117,6 +124,31 @@ function Index() {
               >
                 Recommendations informed by AAP, CPSC, and other trusted safety guidance
               </p>
+
+              <div className="mt-16 grid max-w-lg grid-cols-2 gap-10">
+                <div>
+                  <h2
+                    style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 500, color: "#2B2927" }}
+                    className="text-xl"
+                  >
+                    Track everything
+                  </h2>
+                  <p style={{ fontWeight: 300, color: "#605C58" }} className="mt-2 font-body text-sm leading-relaxed">
+                    We monitor the details and organize them in one place.
+                  </p>
+                </div>
+                <div>
+                  <h2
+                    style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 500, color: "#2B2927" }}
+                    className="text-xl"
+                  >
+                    Informed Guidance
+                  </h2>
+                  <p style={{ fontWeight: 300, color: "#605C58" }} className="mt-2 font-body text-sm leading-relaxed">
+                    We check your products against CPSC, FDA, and other official recall databases and let you know if there's a match.
+                  </p>
+                </div>
+              </div>
             </div>
 
           </div>
