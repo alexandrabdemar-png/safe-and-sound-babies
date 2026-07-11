@@ -133,9 +133,9 @@ function OnboardingPage() {
   // Persist progress whenever state changes
   useEffect(() => {
     if (!checking) {
-      saveProgress({ step, name, dob, selected: [...selected] });
+      saveProgress({ step, name, dob, dueDate, selected: [...selected] });
     }
-  }, [step, name, dob, selected, checking]);
+  }, [step, name, dob, dueDate, selected, checking]);
 
   const progress = ((step + 1) / TOTAL_STEPS) * 100;
 
