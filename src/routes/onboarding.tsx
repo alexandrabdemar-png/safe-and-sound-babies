@@ -112,6 +112,7 @@ function OnboardingPage() {
   const [step, setStep] = useState(saved.step ?? 0);
   const [name, setName] = useState(saved.name ?? "");
   const [dob, setDob] = useState(saved.dob ?? "");
+  const [dueDate, setDueDate] = useState(saved.dueDate ?? "");
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(saved.selected ?? ["car_seat", "crib", "stroller"]),
   );
