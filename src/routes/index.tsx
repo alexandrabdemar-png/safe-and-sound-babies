@@ -56,19 +56,9 @@ const categories = [
 
 const features = [
   {
-    title: "Track everything",
-    description:
-      "From car seats to pacifiers, cribs to swaddles — one place for every baby product that matters.",
-  },
-  {
     title: "Safety first",
     description:
       "Here to share gentle suggestions on timing — when to consider replacing, sizing up, or checking the fit.",
-  },
-  {
-    title: "Built to keep you ahead",
-    description:
-      "We check your products against CPSC, FDA, and other official recall databases and let you know if there's a match",
   },
 ];
 
@@ -189,8 +179,8 @@ function Index() {
 
       {/* Features Section */}
       <section className="w-full px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-        <div className="mx-auto max-w-6xl">
-          <div className="grid gap-8 md:grid-cols-3">
+        <div className="mx-auto max-w-md">
+          <div className="grid gap-8">
             {features.map((f) => (
               <div
                 key={f.title}
