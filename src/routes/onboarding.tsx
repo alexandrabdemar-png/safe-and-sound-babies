@@ -90,7 +90,7 @@ function saveProgress(data: object) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
 }
 
-function loadProgress(): { step?: number; name?: string; dob?: string; selected?: string[] } {
+function loadProgress(): { step?: number; name?: string; dob?: string; dueDate?: string; selected?: string[] } {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : {};
