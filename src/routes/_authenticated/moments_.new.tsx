@@ -9,7 +9,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { useProGate } from "@/hooks/useProGate";
-import { ALL_TYPES, TYPE_STYLES, type MomentType } from "@/routes/_authenticated/moments";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  MOMENT_ICON_KEYS,
+  MOMENT_ICON_LABELS,
+  MOMENT_ICONS,
+  DEFAULT_MOMENT_ICON,
+  SketchDefs,
+  type MomentIconKey,
+} from "@/lib/momentIcons";
 
 type SafetyTip = { title: string; tips: string[] };
 
@@ -157,26 +171,36 @@ function NewMomentPage() {
   const [title, setTitle] = useState("");
   const [loggedAt, setLoggedAt] = useState(new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState("");
-  const [momentType, setMomentType] = useState<MomentType>("Milestone");
+  const [momentIcon, setMomentIcon] = useState<MomentIconKey>(DEFAULT_MOMENT_ICON);
   const [safetyTip, setSafetyTip] = useState<SafetyTip | null>(null);
   const activeChild = children.find((c) => c.id === activeChildId);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim()) { toast.error("Give the moment a title"); return; }
-    if (!activeChildId) { toast.error("Add a child first"); return; }
+    if (!title.trim()) {
+      toast.error("Give the moment a title");
+      return;
+    }
+    if (!activeChildId) {
+      toast.error("Add a child first");
+      return;
+    }
     setSaving(true);
-    const rawNotes = notes.trim();
-    const savedNotes = (momentType !== "Milestone" && rawNotes)
-      ? `[${momentType}] ${rawNotes}`
-      : rawNotes || null;
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) { toast.error("Sign in to log moments"); setSaving(false); return; }
+    const rawNotes = notes.trim() || null;
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.user) {
+      toast.error("Sign in to log moments");
+      setSaving(false);
+      return;
+    }
     const { error } = await supabase.from("milestones").insert({
       child_id: activeChildId,
       title: title.trim(),
       logged_at: loggedAt,
-      notes: savedNotes,
+      notes: rawNotes,
+      icon: momentIcon,
       completed: true,
     });
     setSaving(false);
@@ -199,7 +223,12 @@ function NewMomentPage() {
       <div className="flex min-h-screen flex-col bg-background pb-16">
         <header className="px-5 pt-8 pb-4 sm:px-6">
           <div className="mx-auto max-w-md">
-            <Button asChild variant="ghost" size="sm" className="-ml-2 rounded-full font-body text-xs">
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="-ml-2 rounded-full font-body text-xs"
+            >
               <Link to="/home">
                 <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Home
               </Link>
@@ -211,14 +240,21 @@ function NewMomentPage() {
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
               <Lock className="h-6 w-6 text-primary" />
             </div>
-            <h2 className="font-display text-2xl font-semibold">Milestone logging is a Pro feature</h2>
+            <h2 className="font-display text-2xl font-semibold">
+              Milestone logging is a Pro feature
+            </h2>
             <p className="font-body text-sm text-muted-foreground">
-              Everything in free, plus expert features, tips and tricks, safety insights, and pediatrician-reviewed guidance. Try free for 7 days.
+              Everything in free, plus expert features, tips and tricks, safety insights, and
+              pediatrician-reviewed guidance. Try free for 7 days.
             </p>
             <Button className="w-full rounded-full" onClick={() => navigate({ to: "/pricing" })}>
               <Sparkles className="mr-2 h-4 w-4" /> Start free trial
             </Button>
-            <Button variant="ghost" className="w-full rounded-full" onClick={() => navigate({ to: "/home" })}>
+            <Button
+              variant="ghost"
+              className="w-full rounded-full"
+              onClick={() => navigate({ to: "/home" })}
+            >
               Not now
             </Button>
           </div>
@@ -234,7 +270,9 @@ function NewMomentPage() {
           <div className="mx-auto max-w-md">
             <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1">
               <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-              <span className="font-body text-xs font-semibold uppercase tracking-[0.15em] text-primary">Safety heads-up</span>
+              <span className="font-body text-xs font-semibold uppercase tracking-[0.15em] text-primary">
+                Safety heads-up
+              </span>
             </div>
             <h1 className="mt-3 font-display text-2xl font-semibold tracking-tight">
               {safetyTip.title}
@@ -270,7 +308,12 @@ function NewMomentPage() {
     <div className="flex min-h-screen flex-col bg-background pb-16">
       <header className="px-5 pt-8 pb-4 sm:px-6">
         <div className="mx-auto max-w-md">
-          <Button asChild variant="ghost" size="sm" className="-ml-2 rounded-full font-body text-xs">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="-ml-2 rounded-full font-body text-xs"
+          >
             <Link to="/home">
               <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Home
             </Link>
@@ -313,28 +356,36 @@ function NewMomentPage() {
             </div>
           </div>
 
-          {/* Moment type */}
+          {/* Moment icon */}
           <div className="space-y-2">
-            <Label className="font-body text-sm">Type</Label>
-            <div className="flex flex-wrap gap-1.5">
-              {ALL_TYPES.map((t) => {
-                const s = TYPE_STYLES[t];
-                const active = momentType === t;
-                return (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setMomentType(t)}
-                    className="rounded-full px-3 py-1.5 font-body text-[11px] font-medium transition-colors border"
-                    style={active
-                      ? { backgroundColor: s.accent, color: "#fff", borderColor: s.accent }
-                      : { backgroundColor: s.bg, color: s.accent, borderColor: s.border }}
-                  >
-                    {s.emoji} {t}
-                  </button>
-                );
-              })}
-            </div>
+            <SketchDefs />
+            <Label className="font-body text-sm">Icon</Label>
+            <Select value={momentIcon} onValueChange={(v) => setMomentIcon(v as MomentIconKey)}>
+              <SelectTrigger className="h-12 rounded-2xl bg-card px-4 font-body text-base">
+                <SelectValue>
+                  <span className="flex items-center gap-2">
+                    {(() => {
+                      const SelectedIcon = MOMENT_ICONS[momentIcon];
+                      return <SelectedIcon px={20} />;
+                    })()}
+                    {MOMENT_ICON_LABELS[momentIcon]}
+                  </span>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {MOMENT_ICON_KEYS.map((key) => {
+                  const Icon = MOMENT_ICONS[key];
+                  return (
+                    <SelectItem key={key} value={key}>
+                      <span className="flex items-center gap-2">
+                        <Icon px={20} />
+                        {MOMENT_ICON_LABELS[key]}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -349,11 +400,11 @@ function NewMomentPage() {
           </div>
 
           <div className="space-y-2">
-            <Label className="font-body text-sm">{(momentType as string) === "Letter" ? "Your letter" : "Notes (optional)"}</Label>
+            <Label className="font-body text-sm">Notes (optional)</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder={(momentType as string) === "Letter" ? "Write your letter here — it'll be saved starting with 'Dear [name],'…" : "A little detail you'll want to remember…"}
+              placeholder="A little detail you'll want to remember…"
               maxLength={1000}
               rows={4}
               className="rounded-2xl bg-card px-4 py-3 font-body text-base"

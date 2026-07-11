@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as RecallsRouteImport } from './routes/recalls'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as MomentsTimelinePreviewRouteImport } from './routes/moments-timeline-preview'
 import { Route as MomentsIconOptionsPreviewRouteImport } from './routes/moments-icon-options-preview'
 import { Route as MomentsIconOptions3PreviewRouteImport } from './routes/moments-icon-options-3-preview'
 import { Route as MomentsIconOptions2PreviewRouteImport } from './routes/moments-icon-options-2-preview'
@@ -70,11 +69,6 @@ const RecallsRoute = RecallsRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MomentsTimelinePreviewRoute = MomentsTimelinePreviewRouteImport.update({
-  id: '/moments-timeline-preview',
-  path: '/moments-timeline-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MomentsIconOptionsPreviewRoute =
@@ -320,7 +314,6 @@ export interface FileRoutesByFullPath {
   '/moments-icon-options-2-preview': typeof MomentsIconOptions2PreviewRoute
   '/moments-icon-options-3-preview': typeof MomentsIconOptions3PreviewRoute
   '/moments-icon-options-preview': typeof MomentsIconOptionsPreviewRoute
-  '/moments-timeline-preview': typeof MomentsTimelinePreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
   '/terms': typeof TermsRoute
@@ -368,7 +361,6 @@ export interface FileRoutesByTo {
   '/moments-icon-options-2-preview': typeof MomentsIconOptions2PreviewRoute
   '/moments-icon-options-3-preview': typeof MomentsIconOptions3PreviewRoute
   '/moments-icon-options-preview': typeof MomentsIconOptionsPreviewRoute
-  '/moments-timeline-preview': typeof MomentsTimelinePreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
   '/terms': typeof TermsRoute
@@ -418,7 +410,6 @@ export interface FileRoutesById {
   '/moments-icon-options-2-preview': typeof MomentsIconOptions2PreviewRoute
   '/moments-icon-options-3-preview': typeof MomentsIconOptions3PreviewRoute
   '/moments-icon-options-preview': typeof MomentsIconOptionsPreviewRoute
-  '/moments-timeline-preview': typeof MomentsTimelinePreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
   '/terms': typeof TermsRoute
@@ -468,7 +459,6 @@ export interface FileRouteTypes {
     | '/moments-icon-options-2-preview'
     | '/moments-icon-options-3-preview'
     | '/moments-icon-options-preview'
-    | '/moments-timeline-preview'
     | '/onboarding'
     | '/recalls'
     | '/terms'
@@ -516,7 +506,6 @@ export interface FileRouteTypes {
     | '/moments-icon-options-2-preview'
     | '/moments-icon-options-3-preview'
     | '/moments-icon-options-preview'
-    | '/moments-timeline-preview'
     | '/onboarding'
     | '/recalls'
     | '/terms'
@@ -565,7 +554,6 @@ export interface FileRouteTypes {
     | '/moments-icon-options-2-preview'
     | '/moments-icon-options-3-preview'
     | '/moments-icon-options-preview'
-    | '/moments-timeline-preview'
     | '/onboarding'
     | '/recalls'
     | '/terms'
@@ -615,7 +603,6 @@ export interface RootRouteChildren {
   MomentsIconOptions2PreviewRoute: typeof MomentsIconOptions2PreviewRoute
   MomentsIconOptions3PreviewRoute: typeof MomentsIconOptions3PreviewRoute
   MomentsIconOptionsPreviewRoute: typeof MomentsIconOptionsPreviewRoute
-  MomentsTimelinePreviewRoute: typeof MomentsTimelinePreviewRoute
   OnboardingRoute: typeof OnboardingRoute
   RecallsRoute: typeof RecallsRoute
   TermsRoute: typeof TermsRoute
@@ -649,13 +636,6 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/moments-timeline-preview': {
-      id: '/moments-timeline-preview'
-      path: '/moments-timeline-preview'
-      fullPath: '/moments-timeline-preview'
-      preLoaderRoute: typeof MomentsTimelinePreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/moments-icon-options-preview': {
@@ -1047,7 +1027,6 @@ const rootRouteChildren: RootRouteChildren = {
   MomentsIconOptions2PreviewRoute: MomentsIconOptions2PreviewRoute,
   MomentsIconOptions3PreviewRoute: MomentsIconOptions3PreviewRoute,
   MomentsIconOptionsPreviewRoute: MomentsIconOptionsPreviewRoute,
-  MomentsTimelinePreviewRoute: MomentsTimelinePreviewRoute,
   OnboardingRoute: OnboardingRoute,
   RecallsRoute: RecallsRoute,
   TermsRoute: TermsRoute,
@@ -1062,13 +1041,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
