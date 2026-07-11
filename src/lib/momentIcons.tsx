@@ -152,11 +152,19 @@ export function resolveMomentIcon(
 }
 
 /**
- * True when a PostgREST insert error is the live "icon column not in the
- * schema cache yet" bug (migration applied to Postgres but PostgREST's
- * cache hasn't reloaded) — the case where a moment save should be retried
- * without the `icon` field rather than failing outright.
+ * True when a milestones insert error means the `icon` column isn't
+ * usable yet on the live database — either PostgREST's schema cache
+ * hasn't reloaded after the migration ("Could not find the 'icon'
+ * column ... in the schema cache"), or the column genuinely doesn't
+ * exist there yet ("column milestones.icon does not exist", Postgres
+ * error code 42703 / undefined_column). Either way, a moment save
+ * should retry without the `icon` field rather than failing outright.
  */
-export function isIconSchemaCacheError(errorMessage: string): boolean {
-  return /icon/i.test(errorMessage) && /schema cache/i.test(errorMessage);
+export function isIconColumnUnavailableError(error: {
+  message: string;
+  code?: string | null;
+}): boolean {
+  if (!/icon/i.test(error.message)) return false;
+  if (error.code === "42703") return true; // Postgres: undefined_column
+  return /schema cache/i.test(error.message) || /does not exist/i.test(error.message);
 }
