@@ -45,7 +45,7 @@ const MOMENT_SAFETY_MAP: { pattern: RegExp; safety: SafetyTip }[] = [
     safety: {
       title: "Sitting up — babyproofing starts now",
       tips: [
-        "Lower the crib mattress to the middle setting before they can pull to sit.",
+        "Lower the crib mattress to the middle setting now — pulling to stand often follows sitting up within weeks.",
         "Begin babyproofing: outlet covers, cabinet locks, and anchor tall furniture to the wall.",
         "Swings and bouncers become unsafe once a baby can sit independently — check weight limits.",
       ],
