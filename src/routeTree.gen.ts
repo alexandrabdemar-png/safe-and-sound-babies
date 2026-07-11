@@ -12,10 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as RecallsRouteImport } from './routes/recalls'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as MomentsIconOptionsPreviewRouteImport } from './routes/moments-icon-options-preview'
-import { Route as MomentsIconOptions3PreviewRouteImport } from './routes/moments-icon-options-3-preview'
-import { Route as MomentsIconOptions2PreviewRouteImport } from './routes/moments-icon-options-2-preview'
-import { Route as MomentsHanddrawnPreviewRouteImport } from './routes/moments-handdrawn-preview'
 import { Route as DesignPreviewRouteImport } from './routes/design-preview'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -69,29 +65,6 @@ const RecallsRoute = RecallsRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MomentsIconOptionsPreviewRoute =
-  MomentsIconOptionsPreviewRouteImport.update({
-    id: '/moments-icon-options-preview',
-    path: '/moments-icon-options-preview',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const MomentsIconOptions3PreviewRoute =
-  MomentsIconOptions3PreviewRouteImport.update({
-    id: '/moments-icon-options-3-preview',
-    path: '/moments-icon-options-3-preview',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const MomentsIconOptions2PreviewRoute =
-  MomentsIconOptions2PreviewRouteImport.update({
-    id: '/moments-icon-options-2-preview',
-    path: '/moments-icon-options-2-preview',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const MomentsHanddrawnPreviewRoute = MomentsHanddrawnPreviewRouteImport.update({
-  id: '/moments-handdrawn-preview',
-  path: '/moments-handdrawn-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DesignPreviewRoute = DesignPreviewRouteImport.update({
@@ -310,10 +283,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/design-preview': typeof DesignPreviewRoute
-  '/moments-handdrawn-preview': typeof MomentsHanddrawnPreviewRoute
-  '/moments-icon-options-2-preview': typeof MomentsIconOptions2PreviewRoute
-  '/moments-icon-options-3-preview': typeof MomentsIconOptions3PreviewRoute
-  '/moments-icon-options-preview': typeof MomentsIconOptionsPreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
   '/terms': typeof TermsRoute
@@ -357,10 +326,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/design-preview': typeof DesignPreviewRoute
-  '/moments-handdrawn-preview': typeof MomentsHanddrawnPreviewRoute
-  '/moments-icon-options-2-preview': typeof MomentsIconOptions2PreviewRoute
-  '/moments-icon-options-3-preview': typeof MomentsIconOptions3PreviewRoute
-  '/moments-icon-options-preview': typeof MomentsIconOptionsPreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
   '/terms': typeof TermsRoute
@@ -406,10 +371,6 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
   '/design-preview': typeof DesignPreviewRoute
-  '/moments-handdrawn-preview': typeof MomentsHanddrawnPreviewRoute
-  '/moments-icon-options-2-preview': typeof MomentsIconOptions2PreviewRoute
-  '/moments-icon-options-3-preview': typeof MomentsIconOptions3PreviewRoute
-  '/moments-icon-options-preview': typeof MomentsIconOptionsPreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/recalls': typeof RecallsRoute
   '/terms': typeof TermsRoute
@@ -455,10 +416,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/design-preview'
-    | '/moments-handdrawn-preview'
-    | '/moments-icon-options-2-preview'
-    | '/moments-icon-options-3-preview'
-    | '/moments-icon-options-preview'
     | '/onboarding'
     | '/recalls'
     | '/terms'
@@ -502,10 +459,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/design-preview'
-    | '/moments-handdrawn-preview'
-    | '/moments-icon-options-2-preview'
-    | '/moments-icon-options-3-preview'
-    | '/moments-icon-options-preview'
     | '/onboarding'
     | '/recalls'
     | '/terms'
@@ -550,10 +503,6 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/design-preview'
-    | '/moments-handdrawn-preview'
-    | '/moments-icon-options-2-preview'
-    | '/moments-icon-options-3-preview'
-    | '/moments-icon-options-preview'
     | '/onboarding'
     | '/recalls'
     | '/terms'
@@ -599,10 +548,6 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   DesignPreviewRoute: typeof DesignPreviewRoute
-  MomentsHanddrawnPreviewRoute: typeof MomentsHanddrawnPreviewRoute
-  MomentsIconOptions2PreviewRoute: typeof MomentsIconOptions2PreviewRoute
-  MomentsIconOptions3PreviewRoute: typeof MomentsIconOptions3PreviewRoute
-  MomentsIconOptionsPreviewRoute: typeof MomentsIconOptionsPreviewRoute
   OnboardingRoute: typeof OnboardingRoute
   RecallsRoute: typeof RecallsRoute
   TermsRoute: typeof TermsRoute
@@ -636,34 +581,6 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/moments-icon-options-preview': {
-      id: '/moments-icon-options-preview'
-      path: '/moments-icon-options-preview'
-      fullPath: '/moments-icon-options-preview'
-      preLoaderRoute: typeof MomentsIconOptionsPreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/moments-icon-options-3-preview': {
-      id: '/moments-icon-options-3-preview'
-      path: '/moments-icon-options-3-preview'
-      fullPath: '/moments-icon-options-3-preview'
-      preLoaderRoute: typeof MomentsIconOptions3PreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/moments-icon-options-2-preview': {
-      id: '/moments-icon-options-2-preview'
-      path: '/moments-icon-options-2-preview'
-      fullPath: '/moments-icon-options-2-preview'
-      preLoaderRoute: typeof MomentsIconOptions2PreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/moments-handdrawn-preview': {
-      id: '/moments-handdrawn-preview'
-      path: '/moments-handdrawn-preview'
-      fullPath: '/moments-handdrawn-preview'
-      preLoaderRoute: typeof MomentsHanddrawnPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/design-preview': {
@@ -1023,10 +940,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   DesignPreviewRoute: DesignPreviewRoute,
-  MomentsHanddrawnPreviewRoute: MomentsHanddrawnPreviewRoute,
-  MomentsIconOptions2PreviewRoute: MomentsIconOptions2PreviewRoute,
-  MomentsIconOptions3PreviewRoute: MomentsIconOptions3PreviewRoute,
-  MomentsIconOptionsPreviewRoute: MomentsIconOptionsPreviewRoute,
   OnboardingRoute: OnboardingRoute,
   RecallsRoute: RecallsRoute,
   TermsRoute: TermsRoute,

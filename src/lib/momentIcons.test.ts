@@ -6,19 +6,12 @@ import {
   DEFAULT_MOMENT_ICON,
   parseLegacyNotes,
   resolveMomentIcon,
+  isIconSchemaCacheError,
 } from "./momentIcons";
 
 describe("MOMENT_ICON_KEYS", () => {
-  it("has exactly the 7 requested icons", () => {
-    expect(MOMENT_ICON_KEYS).toEqual([
-      "bear",
-      "feet",
-      "waving",
-      "star",
-      "smiley",
-      "heart",
-      "target",
-    ]);
+  it("has exactly the 4 requested icons (bear/feet/waving removed per user feedback)", () => {
+    expect(MOMENT_ICON_KEYS).toEqual(["star", "smiley", "heart", "target"]);
   });
 
   it("every key has a label and an icon component", () => {
@@ -69,12 +62,18 @@ describe("parseLegacyNotes", () => {
 
 describe("resolveMomentIcon", () => {
   it("uses the icon column when it's a valid key", () => {
-    expect(resolveMomentIcon("bear", null)).toBe("bear");
+    expect(resolveMomentIcon("heart", null)).toBe("heart");
     expect(resolveMomentIcon("heart", "First")).toBe("heart"); // icon column wins over legacy type
   });
 
   it("ignores an invalid/garbage icon column value", () => {
     expect(resolveMomentIcon("dinosaur", null)).toBe(DEFAULT_MOMENT_ICON);
+  });
+
+  it("regression: a value valid under the old 7-icon set (bear/feet/waving, now removed) falls back to the default rather than crashing", () => {
+    expect(resolveMomentIcon("bear", null)).toBe(DEFAULT_MOMENT_ICON);
+    expect(resolveMomentIcon("feet", null)).toBe(DEFAULT_MOMENT_ICON);
+    expect(resolveMomentIcon("waving", null)).toBe(DEFAULT_MOMENT_ICON);
   });
 
   it("falls back to the legacy type mapping when icon is null", () => {
@@ -92,5 +91,32 @@ describe("resolveMomentIcon", () => {
     // The exact shape of an old row saved before the icon column existed.
     const { legacyType } = parseLegacyNotes("just a plain note, no bracket prefix");
     expect(resolveMomentIcon(null, legacyType)).toBe(DEFAULT_MOMENT_ICON);
+  });
+});
+
+describe("isIconSchemaCacheError", () => {
+  it("regression: matches the EXACT error message reported live — 'Could not find the icon column ... in the schema cache'", () => {
+    // A prior version of this check used a regex ordered "column ... icon
+    // ... schema cache", which never matches this real PostgREST message
+    // (icon comes BEFORE column in the actual wording) — caught by this
+    // exact-string test during self-review before it shipped.
+    expect(
+      isIconSchemaCacheError(
+        "Could not find the 'icon' column of 'milestones' in the schema cache",
+      ),
+    ).toBe(true);
+  });
+
+  it("matches regardless of quoting/wording variations, as long as icon + schema cache both appear", () => {
+    expect(isIconSchemaCacheError("column icon does not exist in schema cache")).toBe(true);
+    expect(isIconSchemaCacheError("ICON column missing from Schema Cache")).toBe(true);
+  });
+
+  it("does not match unrelated errors", () => {
+    expect(isIconSchemaCacheError("duplicate key value violates unique constraint")).toBe(false);
+    expect(isIconSchemaCacheError("new row violates row-level security policy")).toBe(false);
+    expect(isIconSchemaCacheError("Could not find the 'notes' column in the schema cache")).toBe(
+      false,
+    );
   });
 });

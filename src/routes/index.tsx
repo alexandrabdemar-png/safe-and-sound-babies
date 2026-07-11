@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import "@fontsource/cormorant-garamond/400.css";
@@ -53,15 +52,6 @@ const categories = [
   { name: "Bouncers", image: catBouncer },
 ];
 
-
-const features = [
-  {
-    title: "Safety first",
-    description:
-      "Here to share gentle suggestions on timing — when to consider replacing, sizing up, or checking the fit.",
-  },
-];
-
 function Index() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -81,19 +71,16 @@ function Index() {
                 }}
                 className="text-5xl leading-[1.08] sm:text-6xl lg:text-7xl"
               >
-                Stay on top of every{" "}
-                <em style={{ fontStyle: "italic", color: "#9BB2A7" }}>safety</em>
-                <br />
-                milestone.
+                Personalized reminders, powered by your baby's{" "}
+                <em style={{ fontStyle: "italic", color: "#9BB2A7" }}>milestones</em>
               </h1>
 
               <p
                 style={{ fontWeight: 300, color: "#605C58" }}
                 className="mt-12 max-w-lg font-body text-lg leading-relaxed"
               >
-                Peace of Mine keeps track of the vital details for you—from
-                gear expiry to age-specific safety fits—with effortless,
-                timely reminders.
+                Track your baby's products and milestones in one place, with reminders to check for
+                upcoming replacements, size changes, and fit as your child grows.
               </p>
 
               <Link
@@ -110,7 +97,10 @@ function Index() {
               </Link>
               <p
                 className="mt-5 text-[11px] font-medium tracking-[0.1em] text-muted-foreground/60"
-                style={{ fontFamily: '"DM Sans", system-ui, sans-serif', textTransform: "uppercase" }}
+                style={{
+                  fontFamily: '"DM Sans", system-ui, sans-serif',
+                  textTransform: "uppercase",
+                }}
               >
                 Recommendations informed by AAP, CPSC, and other trusted safety guidance
               </p>
@@ -118,29 +108,43 @@ function Index() {
               <div className="mt-16 grid max-w-lg grid-cols-2 gap-10">
                 <div>
                   <h2
-                    style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 500, color: "#2B2927" }}
+                    style={{
+                      fontFamily: "'Cormorant Garamond', Georgia, serif",
+                      fontWeight: 500,
+                      color: "#2B2927",
+                    }}
                     className="text-xl"
                   >
                     Track everything
                   </h2>
-                  <p style={{ fontWeight: 300, color: "#605C58" }} className="mt-2 font-body text-sm leading-relaxed">
+                  <p
+                    style={{ fontWeight: 300, color: "#605C58" }}
+                    className="mt-2 font-body text-sm leading-relaxed"
+                  >
                     We monitor the details and organize them in one place.
                   </p>
                 </div>
                 <div>
                   <h2
-                    style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 500, color: "#2B2927" }}
+                    style={{
+                      fontFamily: "'Cormorant Garamond', Georgia, serif",
+                      fontWeight: 500,
+                      color: "#2B2927",
+                    }}
                     className="text-xl"
                   >
                     Informed Guidance
                   </h2>
-                  <p style={{ fontWeight: 300, color: "#605C58" }} className="mt-2 font-body text-sm leading-relaxed">
-                    We check your products against CPSC, FDA, and other official recall databases and let you know if there's a match.
+                  <p
+                    style={{ fontWeight: 300, color: "#605C58" }}
+                    className="mt-2 font-body text-sm leading-relaxed"
+                  >
+                    We check your products against CPSC, FDA, and other official recall databases
+                    and let you know if there's a match.
                   </p>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </section>
@@ -176,29 +180,6 @@ function Index() {
           </div>
         </div>
       </section>
-
-      {/* Features Section */}
-      <section className="w-full px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-        <div className="mx-auto max-w-md">
-          <div className="grid gap-8">
-            {features.map((f) => (
-              <div
-                key={f.title}
-                className="rounded-3xl border border-border/60 bg-card p-8 transition-all hover:shadow-lg hover:shadow-foreground/5"
-              >
-                <CheckCircle2 className="mb-4 h-6 w-6 text-accent" />
-                <h3 className="font-display text-xl font-semibold text-foreground">
-                  {f.title}
-                </h3>
-                <p className="mt-3 font-body text-base leading-relaxed text-muted-foreground">
-                  {f.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
 
       <Footer />
     </div>
