@@ -256,13 +256,11 @@ function MomentsPage() {
                           {/* Icon tag + date */}
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1.5">
                             <span
-                              className="rounded-full px-2 py-0.5 font-body text-[9px] font-semibold uppercase tracking-wider"
-                              style={{
-                                backgroundColor: MOMENT_ICON_ACCENT + "22",
-                                color: MOMENT_ICON_ACCENT,
-                              }}
+                              className="flex items-center justify-center rounded-full p-1"
+                              style={{ backgroundColor: MOMENT_ICON_ACCENT + "22" }}
+                              aria-label={MOMENT_ICON_LABELS[m.resolvedIcon]}
                             >
-                              {MOMENT_ICON_LABELS[m.resolvedIcon]}
+                              <Icon px={12} />
                             </span>
                             <span className="font-body text-[10px] text-muted-foreground">
                               {formatDateLarge(m.logged_at)}
