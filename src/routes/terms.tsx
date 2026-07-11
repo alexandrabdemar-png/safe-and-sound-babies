@@ -6,8 +6,22 @@ export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
       { title: "Terms & Conditions — Peace of Mine" },
-      { name: "description", content: "Terms and conditions for Peace of Mine." },
+      { name: "description", content: "Read the Peace of Mine terms and conditions covering suggestions-only guidance, user responsibility, and limitations of liability for our baby safety tracking app." },
+      { property: "og:title", content: "Terms & Conditions — Peace of Mine" },
+      { property: "og:description", content: "The terms of use for the Peace of Mine baby safety tracking app, including disclaimers and user responsibilities." },
+      { property: "og:url", content: "https://peace-of-mine.lovable.app/terms" },
     ],
+    links: [{ rel: "canonical", href: "https://peace-of-mine.lovable.app/terms" }],
+    scripts: [{
+      type: "application/ld+json",
+      children: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name: "Terms & Conditions — Peace of Mine",
+        url: "https://peace-of-mine.lovable.app/terms",
+        description: "Terms and conditions for the Peace of Mine baby safety tracking app.",
+      }),
+    }],
   }),
   component: TermsPage,
 });

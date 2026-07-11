@@ -9,10 +9,27 @@ export const Route = createFileRoute("/recalls")({
   head: () => ({
     meta: [
       { title: "Latest Baby Product Recalls — Peace of Mine" },
-      { name: "description", content: "Free list of CPSC baby and kids product recalls from the last 30 days. No login required." },
+      { name: "description", content: "Free list of CPSC baby and kids product recalls from the last 30 days. Updated daily. No login required." },
       { property: "og:title", content: "Latest Baby Product Recalls — Peace of Mine" },
-      { property: "og:description", content: "Free list of CPSC baby product recalls. Powered by Peace of Mine." },
+      { property: "og:description", content: "Free list of CPSC baby product recalls from the last 30 days. Powered by Peace of Mine." },
+      { property: "og:url", content: "https://peace-of-mine.lovable.app/recalls" },
     ],
+    links: [{ rel: "canonical", href: "https://peace-of-mine.lovable.app/recalls" }],
+    scripts: [{
+      type: "application/ld+json",
+      children: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: "Latest Baby Product Recalls",
+        url: "https://peace-of-mine.lovable.app/recalls",
+        description: "CPSC baby and kids product recalls from the last 30 days, updated daily by Peace of Mine.",
+        isPartOf: {
+          "@type": "WebSite",
+          name: "Peace of Mine",
+          url: "https://peace-of-mine.lovable.app/",
+        },
+      }),
+    }],
   }),
 });
 

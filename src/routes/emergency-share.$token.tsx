@@ -5,7 +5,15 @@ import { HeartPulse, AlertTriangle } from "lucide-react";
 export const Route = createFileRoute("/emergency-share/$token")({
   ssr: false,
   component: SharedEmergencyInfoPage,
-  head: () => ({ meta: [{ title: "Emergency Info" }] }),
+  head: () => ({
+    meta: [
+      { title: "Emergency Info — Peace of Mine" },
+      { name: "description", content: "A parent has shared their child's emergency info with you through Peace of Mine — allergies, medications, blood type, and emergency contacts in one place." },
+      { property: "og:title", content: "Emergency Info — Peace of Mine" },
+      { property: "og:description", content: "Shared child emergency info card via Peace of Mine." },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
 });
 
 interface SharedInfo {

@@ -7,7 +7,15 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/caregiver-invite/$token")({
   ssr: false,
   component: CaregiverInvitePage,
-  head: () => ({ meta: [{ title: "Caregiver Invite — Peace of Mine" }] }),
+  head: () => ({
+    meta: [
+      { title: "Caregiver Invite — Peace of Mine" },
+      { name: "description", content: "You've been invited as a caregiver on Peace of Mine — sign in to accept access to a child's profile and help track their safety." },
+      { property: "og:title", content: "Caregiver Invite — Peace of Mine" },
+      { property: "og:description", content: "Accept your Peace of Mine caregiver invitation to help track a child's safety, milestones, and recalls." },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
 });
 
 type InvitePreview = { inviteeEmail: string; childNames: string[]; role: "editor" | "viewer" };

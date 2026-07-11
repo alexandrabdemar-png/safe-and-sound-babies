@@ -11,7 +11,10 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Sign in — Peace of Mine" },
-      { name: "description", content: "Sign in or create your Peace of Mine account to start tracking your little one's milestones." },
+      { name: "description", content: "Sign in or create your Peace of Mine account to start tracking your little one's milestones, products, and safety recalls." },
+      { property: "og:title", content: "Sign in — Peace of Mine" },
+      { property: "og:description", content: "Sign in to Peace of Mine to track your baby's milestones, products, and safety recalls." },
+      { property: "og:url", content: "https://peace-of-mine.lovable.app/auth" },
     ],
   }),
   validateSearch: (s: Record<string, unknown>): { error?: string; mode?: string } => ({
