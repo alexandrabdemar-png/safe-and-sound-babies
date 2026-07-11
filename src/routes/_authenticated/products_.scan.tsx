@@ -152,10 +152,22 @@ function ScanPage() {
     setStep("looking-up");
     setLookupError(null);
     setRecallInfo(null);
+    setRecallCheckError(null);
     setUpgradeAvailable(false);
+
+    // Reject malformed barcodes before spending an API call on them.
+    const validation = validateBarcode(code);
+    if (!validation.ok) {
+      setFoundProduct(null);
+      setLookupError(validation.reason);
+      setStep("form");
+      return;
+    }
+    const normalized = validation.barcode;
+
     try {
       const { data, error } = await supabase.functions.invoke("lookup-product", {
-        body: { barcode: code },
+        body: { barcode: normalized },
       });
       if (generation !== scanGenerationRef.current) return;
       if (error) throw error;
@@ -200,6 +212,7 @@ function ScanPage() {
   ) {
     if (!productName.trim()) return;
     setCheckingRecalls(true);
+    setRecallCheckError(null);
     try {
       const { data, error } = await supabase.functions.invoke("check-recalls", {
         body: { name: productName, brand: brandName ?? undefined, category: categoryKey },
@@ -207,10 +220,19 @@ function ScanPage() {
       if (generation !== scanGenerationRef.current) return;
       if (error) throw error;
       setRecallInfo(data as RecallCheckResult);
-    } catch {
-      // Fail silently — a recall-check hiccup shouldn't block the scan flow.
-      // The parent can still check Recall Radar / the daily sync catches it.
-      if (generation === scanGenerationRef.current) setRecallInfo(null);
+    } catch (err) {
+      // Do NOT fail silently — the previous version showed no banner at all
+      // when the sources were unreachable, which is indistinguishable from
+      // "no recall found". Surface an amber "couldn't check" banner so the
+      // user makes an informed decision (retry, or verify at cpsc.gov).
+      if (generation === scanGenerationRef.current) {
+        setRecallInfo(null);
+        setRecallCheckError(
+          err instanceof Error && err.message
+            ? `We couldn't reach the recall databases (${err.message}). Please retry or verify at cpsc.gov/Recalls before continuing.`
+            : "We couldn't reach the recall databases. Please retry or verify at cpsc.gov/Recalls before continuing.",
+        );
+      }
     } finally {
       if (generation === scanGenerationRef.current) setCheckingRecalls(false);
     }
