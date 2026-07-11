@@ -461,6 +461,9 @@ function SafetyGuidesPage() {
         </div>
       )}
 
+      <div className="mx-auto max-w-md px-4 pb-2">
+        <PediatricianDisclaimer />
+      </div>
       <BottomNav />
     </div>
   );
