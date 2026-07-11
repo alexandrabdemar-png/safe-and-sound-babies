@@ -198,7 +198,7 @@ function OnboardingPage() {
 
       clearProgress();
 
-      const actions = getSafetyFirstLook(dob || null);
+      const actions = getSafetyFirstLook(dob || null, dueDate || null);
       setSafetyFirstLook(actions);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
