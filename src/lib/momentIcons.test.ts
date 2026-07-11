@@ -6,7 +6,7 @@ import {
   DEFAULT_MOMENT_ICON,
   parseLegacyNotes,
   resolveMomentIcon,
-  isIconSchemaCacheError,
+  isIconColumnUnavailableError,
 } from "./momentIcons";
 
 describe("MOMENT_ICON_KEYS", () => {
@@ -94,29 +94,56 @@ describe("resolveMomentIcon", () => {
   });
 });
 
-describe("isIconSchemaCacheError", () => {
-  it("regression: matches the EXACT error message reported live — 'Could not find the icon column ... in the schema cache'", () => {
+describe("isIconColumnUnavailableError", () => {
+  it("regression: matches the EXACT error message reported live (1st report) — PostgREST schema-cache wording", () => {
     // A prior version of this check used a regex ordered "column ... icon
     // ... schema cache", which never matches this real PostgREST message
     // (icon comes BEFORE column in the actual wording) — caught by this
     // exact-string test during self-review before it shipped.
     expect(
-      isIconSchemaCacheError(
-        "Could not find the 'icon' column of 'milestones' in the schema cache",
-      ),
+      isIconColumnUnavailableError({
+        message: "Could not find the 'icon' column of 'milestones' in the schema cache",
+      }),
     ).toBe(true);
   });
 
-  it("matches regardless of quoting/wording variations, as long as icon + schema cache both appear", () => {
-    expect(isIconSchemaCacheError("column icon does not exist in schema cache")).toBe(true);
-    expect(isIconSchemaCacheError("ICON column missing from Schema Cache")).toBe(true);
+  it("regression: matches the EXACT error message reported live (2nd report) — raw Postgres undefined_column wording", () => {
+    // The schema-cache-only check missed this second live report entirely
+    // (no "schema cache" substring), so moments kept failing to save.
+    expect(isIconColumnUnavailableError({ message: "column milestones.icon does not exist" })).toBe(
+      true,
+    );
+  });
+
+  it("matches by Postgres error code (42703 / undefined_column) even with unrelated message wording", () => {
+    expect(isIconColumnUnavailableError({ message: "icon: some odd wording", code: "42703" })).toBe(
+      true,
+    );
+  });
+
+  it("matches regardless of quoting/wording variations, as long as icon + (schema cache | does not exist) both appear", () => {
+    expect(
+      isIconColumnUnavailableError({ message: "column icon does not exist in schema cache" }),
+    ).toBe(true);
+    expect(isIconColumnUnavailableError({ message: "ICON column missing from Schema Cache" })).toBe(
+      true,
+    );
   });
 
   it("does not match unrelated errors", () => {
-    expect(isIconSchemaCacheError("duplicate key value violates unique constraint")).toBe(false);
-    expect(isIconSchemaCacheError("new row violates row-level security policy")).toBe(false);
-    expect(isIconSchemaCacheError("Could not find the 'notes' column in the schema cache")).toBe(
-      false,
-    );
+    expect(
+      isIconColumnUnavailableError({ message: "duplicate key value violates unique constraint" }),
+    ).toBe(false);
+    expect(
+      isIconColumnUnavailableError({ message: "new row violates row-level security policy" }),
+    ).toBe(false);
+    expect(
+      isIconColumnUnavailableError({
+        message: "Could not find the 'notes' column in the schema cache",
+      }),
+    ).toBe(false);
+    expect(
+      isIconColumnUnavailableError({ message: "column milestones.notes does not exist" }),
+    ).toBe(false);
   });
 });

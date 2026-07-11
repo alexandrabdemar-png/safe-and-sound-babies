@@ -22,7 +22,7 @@ import {
   MOMENT_ICONS,
   DEFAULT_MOMENT_ICON,
   SketchDefs,
-  isIconSchemaCacheError,
+  isIconColumnUnavailableError,
   type MomentIconKey,
 } from "@/lib/momentIcons";
 
@@ -204,16 +204,14 @@ function NewMomentPage() {
       completed: true,
     };
     let { error } = await supabase.from("milestones").insert({ ...basePayload, icon: momentIcon });
-    if (error && isIconSchemaCacheError(error.message)) {
-      // The `icon` column exists in migrations but the live Postgres schema
-      // cache hasn't picked it up yet (a real bug we hit in production —
-      // see 20260713000000_milestones_icon_column.sql). The moment itself
-      // must still save even if the icon selection can't be persisted yet,
+    if (error && isIconColumnUnavailableError(error)) {
+      // The `icon` column isn't usable on the live database yet — either
+      // the migration hasn't deployed there, or PostgREST's schema cache
+      // hasn't reloaded (a real bug we hit in production — see
+      // 20260713000000_milestones_icon_column.sql). The moment itself must
+      // still save even if the icon selection can't be persisted yet,
       // rather than failing the whole save.
-      console.error(
-        "[moments.new] icon column not yet in schema cache — retrying without it",
-        error,
-      );
+      console.error("[moments.new] icon column unavailable — retrying without it", error);
       ({ error } = await supabase.from("milestones").insert(basePayload));
     }
     setSaving(false);
@@ -338,7 +336,7 @@ function NewMomentPage() {
             What did they do?
           </h1>
           <p className="mt-1.5 font-body text-sm text-muted-foreground">
-            Every baby is on their own timeline. Log it when it happens — no schedule, no pressure.
+            Personalized reminders, powered by your baby's milestones.
           </p>
         </div>
       </header>
