@@ -310,6 +310,24 @@ function OnboardingPage() {
                     className="h-14 rounded-2xl bg-card px-5 font-body text-base"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="due-date" className="font-body text-sm">
+                    Original due date{" "}
+                    <span className="text-muted-foreground">(optional — enables adjusted-age reminders for preemies)</span>
+                  </Label>
+                  <Input
+                    id="due-date"
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className="h-14 rounded-2xl bg-card px-5 font-body text-base"
+                  />
+                  <p className="font-body text-[11px] text-muted-foreground">
+                    If your baby was born earlier than expected, we'll time developmental and
+                    safety reminders to their adjusted (corrected) age, as recommended by AAP
+                    guidance until 24 months.
+                  </p>
+                </div>
               </div>
             </StepShell>
           )}
