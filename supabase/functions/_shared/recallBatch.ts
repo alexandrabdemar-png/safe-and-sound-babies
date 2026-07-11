@@ -12,6 +12,8 @@
 // testable under Vitest without a live Supabase connection.
 import { fuzzyMatchProduct } from "./recallMatch.ts";
 import { fetchAllExtraRecallSources, type NormalizedRecall } from "./allRecallSources.ts";
+import { classifyRecallSeverity, type SeverityTier } from "./recallSeverity.ts";
+import { computeContentHash, hazardFingerprint } from "./recallFreshness.ts";
 
 export type BatchProduct = {
   id: string;
@@ -39,7 +41,27 @@ export type RecallCatalogRow = {
   affected_date_start: string | null;
   affected_date_end: string | null;
   official: boolean;
+  content_hash?: string;
+  hazard_fingerprint?: string;
+  severity_tier?: SeverityTier;
 };
+
+/**
+ * Enrich a catalog row with computed severity, content hash and hazard
+ * fingerprint. Awaits the async hash but never throws — a hashing failure
+ * simply skips the fields, and the batch upsert continues.
+ */
+export async function enrichCatalogRow(row: RecallCatalogRow): Promise<RecallCatalogRow> {
+  const severity_tier = classifyRecallSeverity(row);
+  const content_hash = await computeContentHash(row);
+  const hazard_fp = hazardFingerprint(row);
+  return {
+    ...row,
+    severity_tier,
+    content_hash,
+    hazard_fingerprint: hazard_fp,
+  };
+}
 
 export type RecallMatch = {
   user_id: string;
@@ -380,8 +402,14 @@ export async function runRecallBatch(
     }
   }
 
+  // Enrich every catalog row with severity, content_hash, and
+  // hazard_fingerprint so downstream consumers can (a) key UI on severity
+  // tier, (b) re-notify when the material text changes, and (c) dedup the
+  // same physical recall appearing in multiple upstream feeds.
+  const enrichedCatalogRows = await Promise.all(catalogRows.map(enrichCatalogRow));
+
   return {
-    catalogRows,
+    catalogRows: enrichedCatalogRows,
     matches,
     fetchCounts: {
       cpsc: cpscRecalls.length,

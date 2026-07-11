@@ -38,6 +38,9 @@ import {
 } from "@/lib/productCategories";
 import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
 import { recordRecallInDb } from "@/lib/recallCheck";
+import { validateBarcode } from "@/lib/barcodeValidation";
+import { DataAsOf } from "@/components/DataAsOf";
+import { SeverityBadge } from "@/components/SeverityBadge";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 import { resolveCarSeatReplaceAt } from "@/lib/carSeatExpiration";
 
@@ -97,11 +100,9 @@ type Step = "scanning" | "looking-up" | "form" | "success";
 
 function ScanPage() {
   const navigate = useNavigate();
-  // TEMP: paywall disabled for testing at user's request — REMOVE this
-  // override (restore `const { isPro, loading: subLoading } = useSubscription();`)
-  // before launch.
-  const { loading: subLoading } = useSubscription();
-  const isPro = true;
+  // Paywall re-enabled — the previous TEMP override is removed. Free tier
+  // gets the CPSC/NHTSA scan; Pro gets the extended lookup pipeline.
+  const { isPro, loading: subLoading } = useSubscription();
   const { activeChildId } = useActiveChild();
 
   const [step, setStep] = useState<Step>("scanning");
@@ -111,6 +112,10 @@ function ScanPage() {
   const [upgradeAvailable, setUpgradeAvailable] = useState(false);
   const [recallInfo, setRecallInfo] = useState<RecallCheckResult | null>(null);
   const [checkingRecalls, setCheckingRecalls] = useState(false);
+  // Distinct "couldn't check" state — separate from `recallInfo === null`
+  // which is the pre-check idle state. Rendered as an amber banner so the
+  // user is never left staring at a green/red-less form when a source down.
+  const [recallCheckError, setRecallCheckError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [brand, setBrand] = useState("");
@@ -150,10 +155,22 @@ function ScanPage() {
     setStep("looking-up");
     setLookupError(null);
     setRecallInfo(null);
+    setRecallCheckError(null);
     setUpgradeAvailable(false);
+
+    // Reject malformed barcodes before spending an API call on them.
+    const validation = validateBarcode(code);
+    if (!validation.ok) {
+      setFoundProduct(null);
+      setLookupError(validation.reason);
+      setStep("form");
+      return;
+    }
+    const normalized = validation.barcode;
+
     try {
       const { data, error } = await supabase.functions.invoke("lookup-product", {
-        body: { barcode: code },
+        body: { barcode: normalized },
       });
       if (generation !== scanGenerationRef.current) return;
       if (error) throw error;
@@ -198,6 +215,7 @@ function ScanPage() {
   ) {
     if (!productName.trim()) return;
     setCheckingRecalls(true);
+    setRecallCheckError(null);
     try {
       const { data, error } = await supabase.functions.invoke("check-recalls", {
         body: { name: productName, brand: brandName ?? undefined, category: categoryKey },
@@ -205,10 +223,19 @@ function ScanPage() {
       if (generation !== scanGenerationRef.current) return;
       if (error) throw error;
       setRecallInfo(data as RecallCheckResult);
-    } catch {
-      // Fail silently — a recall-check hiccup shouldn't block the scan flow.
-      // The parent can still check Recall Radar / the daily sync catches it.
-      if (generation === scanGenerationRef.current) setRecallInfo(null);
+    } catch (err) {
+      // Do NOT fail silently — the previous version showed no banner at all
+      // when the sources were unreachable, which is indistinguishable from
+      // "no recall found". Surface an amber "couldn't check" banner so the
+      // user makes an informed decision (retry, or verify at cpsc.gov).
+      if (generation === scanGenerationRef.current) {
+        setRecallInfo(null);
+        setRecallCheckError(
+          err instanceof Error && err.message
+            ? `We couldn't reach the recall databases (${err.message}). Please retry or verify at cpsc.gov/Recalls before continuing.`
+            : "We couldn't reach the recall databases. Please retry or verify at cpsc.gov/Recalls before continuing.",
+        );
+      }
     } finally {
       if (generation === scanGenerationRef.current) setCheckingRecalls(false);
     }
@@ -482,7 +509,10 @@ function ScanPage() {
                   </div>
                   {recallInfo.recalls.map((r) => (
                     <div key={`${r.source}-${r.id}`} className="rounded-2xl bg-card/60 p-3">
-                      <p className="font-body text-sm font-semibold text-foreground">{r.title}</p>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-body text-sm font-semibold text-foreground">{r.title}</p>
+                        <SeverityBadge fields={{ title: r.title, hazard: r.reason }} />
+                      </div>
                       <p className="mt-1 font-body text-xs text-muted-foreground">{r.reason}</p>
                       <a
                         href={r.url}
@@ -494,13 +524,30 @@ function ScanPage() {
                       </a>
                     </div>
                   ))}
+                  <DataAsOf sources={["cpsc", "nhtsa"]} className="pt-1" />
                 </div>
               )}
 
-              {recallInfo && !recallInfo.recalled && !checkingRecalls && (
-                <div className="flex items-center gap-2 rounded-2xl border border-emerald-600/20 bg-emerald-50 px-4 py-3 font-body text-xs text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
-                  <ShieldCheck className="h-3.5 w-3.5" /> No active CPSC or NHTSA recalls found for
-                  this product.
+              {recallCheckError && !checkingRecalls && (
+                <div className="space-y-1 rounded-2xl border border-amber-500/40 bg-amber-50 px-4 py-3 font-body text-xs text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                    <span>{recallCheckError}</span>
+                  </div>
+                </div>
+              )}
+
+              {recallInfo && !recallInfo.recalled && !checkingRecalls && !recallCheckError && (
+                <div className="space-y-1 rounded-2xl border border-emerald-600/20 bg-emerald-50 px-4 py-3 font-body text-xs text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
+                  <div className="flex items-start gap-2">
+                    <ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                    <span>
+                      No matching recall found in CPSC or NHTSA at scan time. This is not a
+                      guarantee of safety — verify with the manufacturer and cpsc.gov/Recalls
+                      before relying on it.
+                    </span>
+                  </div>
+                  <DataAsOf sources={["cpsc", "nhtsa"]} />
                 </div>
               )}
 

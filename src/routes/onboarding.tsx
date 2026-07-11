@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { computeAdjustedAge } from "@/lib/adjustedAge";
 
 export const Route = createFileRoute("/onboarding")({
   component: OnboardingPage,
@@ -49,13 +50,10 @@ const CATEGORIES: { key: string; name: string; icon: React.ComponentType<{ class
 // Age-appropriate safety first-look content
 type SafetyAction = { icon: string; title: string; body: string };
 
-function getSafetyFirstLook(dobStr: string | null): SafetyAction[] {
-  let ageMonths = 0;
-  if (dobStr) {
-    const birth = new Date(dobStr + "T00:00:00");
-    const now = new Date();
-    ageMonths = Math.max(0, (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth()));
-  }
+function getSafetyFirstLook(dobStr: string | null, dueDateStr: string | null = null): SafetyAction[] {
+  // Use adjusted age for preemies (per AAP guidance until 24 months chrono).
+  const age = computeAdjustedAge({ dateOfBirth: dobStr, dueDate: dueDateStr });
+  const ageMonths = age?.adjustedMonths ?? 0;
 
   if (ageMonths < 3) return [
     { icon: "🛏️", title: "Always back to sleep", body: "Place your baby on their back for every nap and every night — even when they look comfortable on their side." },
@@ -90,7 +88,7 @@ function saveProgress(data: object) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
 }
 
-function loadProgress(): { step?: number; name?: string; dob?: string; selected?: string[] } {
+function loadProgress(): { step?: number; name?: string; dob?: string; dueDate?: string; selected?: string[] } {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : {};
@@ -112,6 +110,7 @@ function OnboardingPage() {
   const [step, setStep] = useState(saved.step ?? 0);
   const [name, setName] = useState(saved.name ?? "");
   const [dob, setDob] = useState(saved.dob ?? "");
+  const [dueDate, setDueDate] = useState(saved.dueDate ?? "");
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(saved.selected ?? ["car_seat", "crib", "stroller"]),
   );
@@ -132,9 +131,9 @@ function OnboardingPage() {
   // Persist progress whenever state changes
   useEffect(() => {
     if (!checking) {
-      saveProgress({ step, name, dob, selected: [...selected] });
+      saveProgress({ step, name, dob, dueDate, selected: [...selected] });
     }
-  }, [step, name, dob, selected, checking]);
+  }, [step, name, dob, dueDate, selected, checking]);
 
   const progress = ((step + 1) / TOTAL_STEPS) * 100;
 
@@ -179,6 +178,7 @@ function OnboardingPage() {
             user_id: userId,
             name: childName,
             date_of_birth: dob || null,
+            due_date: dueDate || null,
           } as never)
           .select("id")
           .single();
@@ -198,7 +198,7 @@ function OnboardingPage() {
 
       clearProgress();
 
-      const actions = getSafetyFirstLook(dob || null);
+      const actions = getSafetyFirstLook(dob || null, dueDate || null);
       setSafetyFirstLook(actions);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
@@ -307,6 +307,24 @@ function OnboardingPage() {
                     onChange={(e) => setDob(e.target.value)}
                     className="h-14 rounded-2xl bg-card px-5 font-body text-base"
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="due-date" className="font-body text-sm">
+                    Original due date{" "}
+                    <span className="text-muted-foreground">(optional — enables adjusted-age reminders for preemies)</span>
+                  </Label>
+                  <Input
+                    id="due-date"
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className="h-14 rounded-2xl bg-card px-5 font-body text-base"
+                  />
+                  <p className="font-body text-[11px] text-muted-foreground">
+                    If your baby was born earlier than expected, we'll time developmental and
+                    safety reminders to their adjusted (corrected) age, as recommended by AAP
+                    guidance until 24 months.
+                  </p>
                 </div>
               </div>
             </StepShell>
