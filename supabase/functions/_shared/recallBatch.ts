@@ -402,8 +402,14 @@ export async function runRecallBatch(
     }
   }
 
+  // Enrich every catalog row with severity, content_hash, and
+  // hazard_fingerprint so downstream consumers can (a) key UI on severity
+  // tier, (b) re-notify when the material text changes, and (c) dedup the
+  // same physical recall appearing in multiple upstream feeds.
+  const enrichedCatalogRows = await Promise.all(catalogRows.map(enrichCatalogRow));
+
   return {
-    catalogRows,
+    catalogRows: enrichedCatalogRows,
     matches,
     fetchCounts: {
       cpsc: cpscRecalls.length,
