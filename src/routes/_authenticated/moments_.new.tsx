@@ -22,6 +22,7 @@ import {
   MOMENT_ICONS,
   DEFAULT_MOMENT_ICON,
   SketchDefs,
+  isIconSchemaCacheError,
   type MomentIconKey,
 } from "@/lib/momentIcons";
 
@@ -195,14 +196,26 @@ function NewMomentPage() {
       setSaving(false);
       return;
     }
-    const { error } = await supabase.from("milestones").insert({
+    const basePayload = {
       child_id: activeChildId,
       title: title.trim(),
       logged_at: loggedAt,
       notes: rawNotes,
-      icon: momentIcon,
       completed: true,
-    });
+    };
+    let { error } = await supabase.from("milestones").insert({ ...basePayload, icon: momentIcon });
+    if (error && isIconSchemaCacheError(error.message)) {
+      // The `icon` column exists in migrations but the live Postgres schema
+      // cache hasn't picked it up yet (a real bug we hit in production —
+      // see 20260713000000_milestones_icon_column.sql). The moment itself
+      // must still save even if the icon selection can't be persisted yet,
+      // rather than failing the whole save.
+      console.error(
+        "[moments.new] icon column not yet in schema cache — retrying without it",
+        error,
+      );
+      ({ error } = await supabase.from("milestones").insert(basePayload));
+    }
     setSaving(false);
     if (error) {
       console.error("[moments.new] insert failed", error);

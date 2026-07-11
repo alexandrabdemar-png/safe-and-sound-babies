@@ -3,22 +3,11 @@
 // (First/Funny/Milestone) with a flat set of 7 hand-inked icons the user
 // picks directly per moment.
 
-export type MomentIconKey = "bear" | "feet" | "waving" | "star" | "smiley" | "heart" | "target";
+export type MomentIconKey = "star" | "smiley" | "heart" | "target";
 
-export const MOMENT_ICON_KEYS: MomentIconKey[] = [
-  "bear",
-  "feet",
-  "waving",
-  "star",
-  "smiley",
-  "heart",
-  "target",
-];
+export const MOMENT_ICON_KEYS: MomentIconKey[] = ["star", "smiley", "heart", "target"];
 
 export const MOMENT_ICON_LABELS: Record<MomentIconKey, string> = {
-  bear: "Bear",
-  feet: "Feet",
-  waving: "Waving",
   star: "Star",
   smiley: "Smiley",
   heart: "Heart",
@@ -71,60 +60,6 @@ const g = (children: React.ReactNode, strokeWidth = 5.5) => (
   </g>
 );
 
-const BearIcon = ({ px }: { px: number }) =>
-  wrap(
-    px,
-    g(
-      <>
-        <circle cx="35" cy="28" r="9" />
-        <circle cx="65" cy="28" r="9" />
-        <circle cx="50" cy="46" r="26" />
-        <circle cx="41" cy="42" r="2.8" fill={INK} stroke="none" />
-        <circle cx="59" cy="42" r="2.8" fill={INK} stroke="none" />
-        <circle cx="50" cy="53" r="3.4" />
-      </>,
-    ),
-  );
-
-const FeetIcon = ({ px }: { px: number }) =>
-  wrap(
-    px,
-    g(
-      <>
-        <ellipse cx="38" cy="62" rx="14" ry="21" transform="rotate(-8 38 62)" />
-        <circle cx="30" cy="34" r="4.4" />
-        <circle cx="39" cy="30" r="4.6" />
-        <circle cx="48" cy="32" r="4.2" />
-        <ellipse cx="66" cy="42" rx="14" ry="21" transform="rotate(8 66 42)" />
-        <circle cx="58" cy="14" r="4.2" />
-        <circle cx="67" cy="10" r="4.6" />
-        <circle cx="76" cy="12" r="4.4" />
-      </>,
-      4.4,
-    ),
-  );
-
-// A traced "handprint" — palm plus five outstretched fingers/thumb radiating
-// outward, with a couple of short motion lines to read as a wave rather
-// than a static print.
-const WavingIcon = ({ px }: { px: number }) =>
-  wrap(
-    px,
-    g(
-      <>
-        <ellipse cx="48" cy="66" rx="20" ry="18" />
-        <ellipse cx="20" cy="56" rx="7" ry="15" transform="rotate(-45 20 56)" />
-        <ellipse cx="33" cy="27" rx="6.5" ry="19" transform="rotate(-16 33 27)" />
-        <ellipse cx="48" cy="19" rx="6.5" ry="21" />
-        <ellipse cx="63" cy="27" rx="6.5" ry="19" transform="rotate(16 63 27)" />
-        <ellipse cx="74" cy="42" rx="6" ry="15" transform="rotate(36 74 42)" />
-        <path d="M86 24 C90 30 90 38 86 44" strokeWidth="3.6" />
-        <path d="M94 16 C100 24 100 38 94 46" strokeWidth="3.6" />
-      </>,
-      4.4,
-    ),
-  );
-
 const StarIcon = ({ px }: { px: number }) =>
   wrap(
     px,
@@ -167,9 +102,6 @@ const TargetIcon = ({ px }: { px: number }) =>
   );
 
 export const MOMENT_ICONS: Record<MomentIconKey, (props: { px: number }) => React.ReactElement> = {
-  bear: BearIcon,
-  feet: FeetIcon,
-  waving: WavingIcon,
   star: StarIcon,
   smiley: SmileyIcon,
   heart: HeartIcon,
@@ -217,4 +149,14 @@ export function resolveMomentIcon(
   if (isMomentIconKey(icon)) return icon;
   if (legacyType) return LEGACY_TYPE_TO_ICON[legacyType];
   return DEFAULT_MOMENT_ICON;
+}
+
+/**
+ * True when a PostgREST insert error is the live "icon column not in the
+ * schema cache yet" bug (migration applied to Postgres but PostgREST's
+ * cache hasn't reloaded) — the case where a moment save should be retried
+ * without the `icon` field rather than failing outright.
+ */
+export function isIconSchemaCacheError(errorMessage: string): boolean {
+  return /icon/i.test(errorMessage) && /schema cache/i.test(errorMessage);
 }
