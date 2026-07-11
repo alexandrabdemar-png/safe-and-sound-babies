@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
 import { CheckCircle2, ChevronDown, ChevronUp, Clock, Download, Share2, Shield, ShieldCheck, Star, Stethoscope, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PediatricianDisclaimer } from "@/components/PediatricianDisclaimer";
 
 export const Route = createFileRoute("/_authenticated/safety-guides")({
   ssr: false,
