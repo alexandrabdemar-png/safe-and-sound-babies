@@ -1,6 +1,7 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { Home, Package, User, Plus, BarChart2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUnackedRecalls } from "@/hooks/useUnackedRecalls";
 
 const tabs = [
   { to: "/home", label: "Home", icon: Home },
@@ -14,6 +15,7 @@ const rightTabs = [
 
 export function BottomNav() {
   const { pathname } = useLocation();
+  const unackedRecalls = useUnackedRecalls();
 
   return (
     <nav
@@ -44,7 +46,12 @@ export function BottomNav() {
         </Link>
 
         {rightTabs.map((t) => (
-          <TabItem key={t.to} {...t} active={pathname === t.to} />
+          <TabItem
+            key={t.to}
+            {...t}
+            active={pathname === t.to}
+            badge={t.to === "/products" ? unackedRecalls : 0}
+          />
         ))}
       </div>
     </nav>
@@ -56,21 +63,33 @@ function TabItem({
   label,
   icon: Icon,
   active,
+  badge = 0,
 }: {
   to: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   active: boolean;
+  badge?: number;
 }) {
   return (
     <Link
       to={to}
       className={cn(
-        "flex w-14 flex-col items-center gap-0.5 py-1 transition-colors duration-150",
+        "relative flex w-14 flex-col items-center gap-0.5 py-1 transition-colors duration-150",
         active ? "text-primary" : "text-muted-foreground hover:text-foreground/70",
       )}
     >
-      <Icon className="h-5 w-5" />
+      <div className="relative">
+        <Icon className="h-5 w-5" />
+        {badge > 0 && (
+          <span
+            aria-label={`${badge} unread recall${badge === 1 ? "" : "s"}`}
+            className="absolute -right-2 -top-1.5 inline-flex min-h-[16px] min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground"
+          >
+            {badge > 9 ? "9+" : badge}
+          </span>
+        )}
+      </div>
       <span
         style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
         className={cn(
