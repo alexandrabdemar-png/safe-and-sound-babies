@@ -3,7 +3,7 @@
 # selected subset of migrations (via -m migration.sql, repeatable), then
 # runs the given test files. Selected-subset because a couple of migrations
 # require Supabase-only extensions (pg_net, pg_cron) not available here.
-set -euo pipefail
+set -eo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PGH="/tmp/pgtest_sock"
