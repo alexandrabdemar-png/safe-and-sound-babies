@@ -29,3 +29,8 @@ CREATE POLICY "Owners and product-holders can view product photos"
       )
     )
   );
+-- products.photo_url was dropped in an earlier migration then re-added
+-- to production via the console; codify it here so the schema and the
+-- policy that references it live in one place and RLS tests can apply
+-- the migration graph deterministically.
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS photo_url text;
