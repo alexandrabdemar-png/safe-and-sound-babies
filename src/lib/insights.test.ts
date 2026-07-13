@@ -121,3 +121,47 @@ describe("evaluateInsights — general regression guards", () => {
     }
   });
 });
+
+// ── Stair-gate insights are filtered by home_profile.has_stairs (regression:
+//    a user with has_stairs=false was still shown "install safety gates").
+describe("stair-gate insights respect home_profile.has_stairs", () => {
+  const babyGate: ProductInput = { id: "p1", category: "baby_gate" };
+
+  it("shows install_baby_gates + gate_suggest for a 9mo when has_stairs is TRUE", () => {
+    const insights = evaluateInsights(childAtMonths(9), [], { has_stairs: true });
+    expect(findInsight(insights, "install_baby_gates")).toBeDefined();
+    expect(findInsight(insights, "gate_suggest")).toBeDefined();
+  });
+
+  it("HIDES install_baby_gates when has_stairs is FALSE (the reported bug)", () => {
+    const insights = evaluateInsights(childAtMonths(9), [], { has_stairs: false });
+    expect(findInsight(insights, "install_baby_gates")).toBeUndefined();
+  });
+
+  it("HIDES gate_suggest when has_stairs is FALSE", () => {
+    const insights = evaluateInsights(childAtMonths(9), [], { has_stairs: false });
+    expect(findInsight(insights, "gate_suggest")).toBeUndefined();
+  });
+
+  it("still shows install_baby_gates when the profile hasn't been filled in yet (undefined)", () => {
+    // Default to showing — better to nudge than to silently hide safety guidance
+    // for a user who hasn't taken the quiz.
+    const insights = evaluateInsights(childAtMonths(9), []);
+    expect(findInsight(insights, "install_baby_gates")).toBeDefined();
+  });
+
+  it("does NOT show install_baby_gates for a 3mo regardless of has_stairs", () => {
+    const insights = evaluateInsights(childAtMonths(3), [], { has_stairs: true });
+    expect(findInsight(insights, "install_baby_gates")).toBeUndefined();
+  });
+
+  it("hides gate_suggest when the user already owns a baby gate (independent of stairs)", () => {
+    const insights = evaluateInsights(childAtMonths(9), [babyGate], { has_stairs: true });
+    expect(findInsight(insights, "gate_suggest")).toBeUndefined();
+  });
+
+  it("adversarial: has_stairs=null (never answered) is treated as unknown → still shows guidance", () => {
+    const insights = evaluateInsights(childAtMonths(9), [], { has_stairs: null });
+    expect(findInsight(insights, "install_baby_gates")).toBeDefined();
+  });
+});
