@@ -511,7 +511,7 @@ function HomePage() {
         if (sess2?.user) {
           const { data: hp, error: hpError } = await (supabase as any)
             .from("home_profile")
-            .select("has_stairs, home_type, has_pet, has_car, in_daycare, has_pool")
+            .select("has_stairs, home_type, has_pet, has_car, in_daycare, has_pool, dismissed_at")
             .eq("user_id", sess2.user.id)
             .maybeSingle();
           if (hpError) {
@@ -523,12 +523,17 @@ function HomePage() {
             console.error("[home] failed to load home_profile:", hpError.message);
             toast.error(friendlyError(hpError.message));
           } else if (hp) {
+            // Any row (with answers OR just a dismissed_at marker) means the
+            // user has already interacted with the card once — never show it
+            // again on any device. Previously the "skip" state lived only in
+            // localStorage, so skipping on phone → opening on tablet → card
+            // reappears; same issue after a browser data clear.
             setHomeProfile(hp as HomeProfile);
-            // If we have a profile, mark setup done
+            const nextState = hp.dismissed_at ? "skipped" : "done";
             try {
-              localStorage.setItem("safesound.homeProfileSetup", "done");
+              localStorage.setItem("safesound.homeProfileSetup", nextState);
             } catch {}
-            setHomeProfileSetup("done");
+            setHomeProfileSetup(nextState);
           }
         }
       } catch (err) {
