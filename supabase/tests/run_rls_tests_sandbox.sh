@@ -20,6 +20,14 @@ PSQL="psql -h $PGH -p $PGP -U postgres -v ON_ERROR_STOP=1 -q"
 echo "== creating scratch db $DB =="
 $PSQL -d postgres -c "CREATE DATABASE $DB"
 
+echo "== pre-creating supabase roles =="
+$PSQL -d "$DB" -c "DO \$\$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='anon') THEN CREATE ROLE anon NOLOGIN; END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='authenticated') THEN CREATE ROLE authenticated NOLOGIN; END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='service_role') THEN CREATE ROLE service_role NOLOGIN BYPASSRLS; END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='supabase_admin') THEN CREATE ROLE supabase_admin NOLOGIN SUPERUSER; END IF;
+END \$\$;"
+
 echo "== applying auth stub =="
 $PSQL -d "$DB" -f "$SCRIPT_DIR/_auth_stub.sql"
 
