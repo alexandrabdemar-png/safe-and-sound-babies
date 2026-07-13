@@ -10,6 +10,12 @@ PGH="/tmp/pgtest_sock"
 PGP="54329"
 DB="rls_test_$$"
 
+MIGRATIONS=()
+while [ "${1:-}" = "-m" ]; do
+  MIGRATIONS+=("$2")
+  shift 2
+done
+
 cleanup() {
   psql -h "$PGH" -p "$PGP" -U postgres -d postgres -c "DROP DATABASE IF EXISTS $DB" >/dev/null 2>&1 || true
 }
