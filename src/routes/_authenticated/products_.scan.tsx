@@ -43,7 +43,8 @@ import { DataAsOf } from "@/components/DataAsOf";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 import { resolveCarSeatReplaceAt } from "@/lib/carSeatExpiration";
-import { computeAdjustedAge } from "@/lib/adjustedAge";
+import { evaluateAgeAppropriateness } from "@/lib/ageAppropriateness";
+import { isPreviewHost } from "@/lib/previewHost";
 
 const CATEGORY_ORDER: CategoryKey[] = CATEGORIES.map((c) => c.key);
 
@@ -140,39 +141,15 @@ function ScanPage() {
   // start date and, if it's in the future, surface a "Wait until X" banner
   // with the suggested start age — but still let them save it (they may be
   // buying ahead of the recommended start age).
-  const ageAppropriateness = useMemo(() => {
-    const cat = CATEGORY_BY_KEY[category];
-    if (!activeChild?.date_of_birth) return null;
-    const age = computeAdjustedAge({
-      dateOfBirth: activeChild.date_of_birth,
-      dueDate: activeChild.due_date,
-    });
-    if (!age) return null;
-    const ageMonths = age.adjustedMonths;
-    if (typeof cat.minAgeMonths === "number" && ageMonths < cat.minAgeMonths) {
-      const dob = new Date(activeChild.date_of_birth);
-      const startDate = new Date(dob);
-      startDate.setMonth(startDate.getMonth() + cat.minAgeMonths + (age.correctionActive ? Math.ceil((age.correctionDays) / 30.4375) : 0));
-      return {
-        kind: "too-early" as const,
-        minAgeMonths: cat.minAgeMonths,
-        currentAgeMonths: ageMonths,
-        startDate,
-        adjusted: age.correctionActive,
-        label: cat.label,
-      };
-    }
-    if (typeof cat.maxAgeMonths === "number" && ageMonths > cat.maxAgeMonths) {
-      return {
-        kind: "outgrown" as const,
-        maxAgeMonths: cat.maxAgeMonths,
-        currentAgeMonths: ageMonths,
-        adjusted: age.correctionActive,
-        label: cat.label,
-      };
-    }
-    return null;
-  }, [category, activeChild?.date_of_birth, activeChild?.due_date]);
+  const ageAppropriateness = useMemo(
+    () =>
+      evaluateAgeAppropriateness({
+        category: CATEGORY_BY_KEY[category],
+        dateOfBirth: activeChild?.date_of_birth ?? null,
+        dueDate: activeChild?.due_date ?? null,
+      }),
+    [category, activeChild?.date_of_birth, activeChild?.due_date],
+  );
 
 
   // Single source of truth for releasing blob URLs: runs whenever the
@@ -445,12 +422,9 @@ function ScanPage() {
   // (id-preview--*.lovable.app / *.lovable.dev / localhost) — the published
   // production domain (peace-of-mine.lovable.app + any custom domain) still
   // gets the real paywall.
-  const isPreviewHost =
-    typeof window !== "undefined" &&
-    /(^|\.)lovable\.dev$|(^|\.)id-preview--.*\.lovable\.app$|^localhost$|^127\.0\.0\.1$/.test(
-      window.location.hostname,
-    );
-  if (!isPro && !isPreviewHost) {
+  const inPreview =
+    typeof window !== "undefined" && isPreviewHost(window.location.hostname);
+  if (!isPro && !inPreview) {
     return (
       <div className="flex min-h-screen flex-col bg-background pb-16">
         <Header />
