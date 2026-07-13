@@ -256,7 +256,7 @@ export function evaluateInsights(
       category: "high_chair",
     });
   }
-  if (months !== null && months >= 7 && !hasCategory(products, "baby_gate")) {
+  if (months !== null && months >= 7 && hasStairs && !hasCategory(products, "baby_gate")) {
     out.push({
       id: "gate_suggest",
       title: "Add baby gates to your list",
