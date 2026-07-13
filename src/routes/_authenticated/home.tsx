@@ -511,7 +511,7 @@ function HomePage() {
         if (sess2?.user) {
           const { data: hp, error: hpError } = await (supabase as any)
             .from("home_profile")
-            .select("has_stairs, home_type, has_pet, has_car, in_daycare, has_pool")
+            .select("has_stairs, home_type, has_pet, has_car, in_daycare, has_pool, dismissed_at")
             .eq("user_id", sess2.user.id)
             .maybeSingle();
           if (hpError) {
@@ -523,12 +523,17 @@ function HomePage() {
             console.error("[home] failed to load home_profile:", hpError.message);
             toast.error(friendlyError(hpError.message));
           } else if (hp) {
+            // Any row (with answers OR just a dismissed_at marker) means the
+            // user has already interacted with the card once — never show it
+            // again on any device. Previously the "skip" state lived only in
+            // localStorage, so skipping on phone → opening on tablet → card
+            // reappears; same issue after a browser data clear.
             setHomeProfile(hp as HomeProfile);
-            // If we have a profile, mark setup done
+            const nextState = hp.dismissed_at ? "skipped" : "done";
             try {
-              localStorage.setItem("safesound.homeProfileSetup", "done");
+              localStorage.setItem("safesound.homeProfileSetup", nextState);
             } catch {}
-            setHomeProfileSetup("done");
+            setHomeProfileSetup(nextState);
           }
         }
       } catch (err) {
@@ -906,11 +911,34 @@ function HomePage() {
     }
   }
 
-  function skipHomeProfile() {
+  async function skipHomeProfile() {
+    // Optimistic — hides the card immediately. Persisted to the database
+    // (dismissed_at column) so the "I already dismissed this" state
+    // survives across devices and browser-data clears; previously stored
+    // only in localStorage, which is why users saw the card reappear on
+    // every new device.
     setHomeProfileSetup("skipped");
     try {
       localStorage.setItem("safesound.homeProfileSetup", "skipped");
     } catch {}
+    try {
+      const {
+        data: { session: sess },
+      } = await supabase.auth.getSession();
+      if (!sess?.user) return;
+      const { error } = await (supabase as any).from("home_profile").upsert(
+        {
+          user_id: sess.user.id,
+          dismissed_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      );
+      if (error) {
+        console.error("[home] failed to persist home_profile skip:", error);
+      }
+    } catch (err) {
+      console.error("[home] failed to persist home_profile skip (network):", err);
+    }
   }
   // Weekly safety tip
   const alertsPaused = notifPrefs.paused_until && new Date(notifPrefs.paused_until) > new Date();

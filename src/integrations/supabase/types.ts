@@ -365,6 +365,7 @@ export type Database = {
       home_profile: {
         Row: {
           created_at: string | null
+          dismissed_at: string | null
           has_car: boolean | null
           has_pet: boolean | null
           has_pool: boolean | null
@@ -377,6 +378,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          dismissed_at?: string | null
           has_car?: boolean | null
           has_pet?: boolean | null
           has_pool?: boolean | null
@@ -389,6 +391,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          dismissed_at?: string | null
           has_car?: boolean | null
           has_pet?: boolean | null
           has_pool?: boolean | null
