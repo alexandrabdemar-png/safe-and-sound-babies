@@ -103,7 +103,7 @@ function ScanPage() {
   // Paywall re-enabled — the previous TEMP override is removed. Free tier
   // gets the CPSC/NHTSA scan; Pro gets the extended lookup pipeline.
   const { isPro, loading: subLoading } = useSubscription();
-  const { activeChildId } = useActiveChild();
+  const { activeChildId, activeChild } = useActiveChild();
 
   const [step, setStep] = useState<Step>("scanning");
   const [barcode, setBarcode] = useState("");
