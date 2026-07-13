@@ -3,7 +3,7 @@
 # selected subset of migrations (via -m migration.sql, repeatable), then
 # runs the given test files. Selected-subset because a couple of migrations
 # require Supabase-only extensions (pg_net, pg_cron) not available here.
-set -euo pipefail
+set -eo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PGH="/tmp/pgtest_sock"
@@ -37,10 +37,21 @@ END \$\$;"
 echo "== applying auth stub =="
 $PSQL -d "$DB" -f "$SCRIPT_DIR/_auth_stub.sql"
 
-for M in "${MIGRATIONS[@]}"; do
-  echo "== applying migration: $M =="
-  $PSQL -d "$DB" -f "$M"
-done
+if [ ${#MIGRATIONS[@]} -eq 0 ]; then
+  echo "== applying all migrations (skipping pg_net/pg_cron/pg_trgm CREATE EXTENSION lines) =="
+  for M in $(ls "$SCRIPT_DIR/../migrations/"*.sql | sort); do
+    # Strip CREATE EXTENSION for extensions not available in the sandbox.
+    sed -E 's#^CREATE EXTENSION.*pg_(net|cron|trgm).*;#-- stripped extension#' "$M" \
+      | $PSQL -d "$DB" -f - > /tmp/mig_last.log 2>&1 || {
+        echo "MIGRATION FAILED: $M"; cat /tmp/mig_last.log; exit 1;
+      }
+  done
+else
+  for M in "${MIGRATIONS[@]}"; do
+    echo "== applying migration: $M =="
+    $PSQL -d "$DB" -f "$M"
+  done
+fi
 
 STATUS=0
 for T in "$@"; do
