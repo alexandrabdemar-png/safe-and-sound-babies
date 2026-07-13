@@ -43,6 +43,7 @@ import { DataAsOf } from "@/components/DataAsOf";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 import { resolveCarSeatReplaceAt } from "@/lib/carSeatExpiration";
+import { computeAdjustedAge } from "@/lib/adjustedAge";
 
 const CATEGORY_ORDER: CategoryKey[] = CATEGORIES.map((c) => c.key);
 
@@ -103,7 +104,7 @@ function ScanPage() {
   // Paywall re-enabled — the previous TEMP override is removed. Free tier
   // gets the CPSC/NHTSA scan; Pro gets the extended lookup pipeline.
   const { isPro, loading: subLoading } = useSubscription();
-  const { activeChildId } = useActiveChild();
+  const { activeChildId, activeChild } = useActiveChild();
 
   const [step, setStep] = useState<Step>("scanning");
   const [barcode, setBarcode] = useState("");
@@ -132,6 +133,47 @@ function ScanPage() {
     () => computeReplaceAt(category, purchasedAt, carSeatExpiry, carSeatManufactureDate),
     [category, purchasedAt, carSeatExpiry, carSeatManufactureDate],
   );
+
+  // Age-appropriateness check: warn a parent when a scanned product isn't
+  // recommended yet for the active child's *adjusted* age (preemies use
+  // corrected age until ~24 months per AAP). We compute the earliest safe
+  // start date and, if it's in the future, surface a "Wait until X" banner
+  // with the suggested start age — but still let them save it (they may be
+  // buying ahead of the recommended start age).
+  const ageAppropriateness = useMemo(() => {
+    const cat = CATEGORY_BY_KEY[category];
+    if (!activeChild?.date_of_birth) return null;
+    const age = computeAdjustedAge({
+      dateOfBirth: activeChild.date_of_birth,
+      dueDate: activeChild.due_date,
+    });
+    if (!age) return null;
+    const ageMonths = age.adjustedMonths;
+    if (typeof cat.minAgeMonths === "number" && ageMonths < cat.minAgeMonths) {
+      const dob = new Date(activeChild.date_of_birth);
+      const startDate = new Date(dob);
+      startDate.setMonth(startDate.getMonth() + cat.minAgeMonths + (age.correctionActive ? Math.ceil((age.correctionDays) / 30.4375) : 0));
+      return {
+        kind: "too-early" as const,
+        minAgeMonths: cat.minAgeMonths,
+        currentAgeMonths: ageMonths,
+        startDate,
+        adjusted: age.correctionActive,
+        label: cat.label,
+      };
+    }
+    if (typeof cat.maxAgeMonths === "number" && ageMonths > cat.maxAgeMonths) {
+      return {
+        kind: "outgrown" as const,
+        maxAgeMonths: cat.maxAgeMonths,
+        currentAgeMonths: ageMonths,
+        adjusted: age.correctionActive,
+        label: cat.label,
+      };
+    }
+    return null;
+  }, [category, activeChild?.date_of_birth, activeChild?.due_date]);
+
 
   // Single source of truth for releasing blob URLs: runs whenever the
   // preview changes (picking a new photo, clearing it, rescanning) *and* on
@@ -591,6 +633,56 @@ function ScanPage() {
                   })}
                 </div>
               </Field>
+
+              {ageAppropriateness?.kind === "too-early" && (
+                <div className="space-y-1 rounded-2xl border border-amber-500/40 bg-amber-50 px-4 py-3 font-body text-xs text-amber-900 dark:bg-amber-900/20 dark:text-amber-200">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                    <div className="space-y-1">
+                      <p className="font-semibold">
+                        Not age-appropriate yet for {activeChild?.name ?? "your baby"}
+                      </p>
+                      <p>
+                        {ageAppropriateness.label} isn't generally recommended until around{" "}
+                        <span className="font-semibold">
+                          {ageAppropriateness.minAgeMonths} month
+                          {ageAppropriateness.minAgeMonths === 1 ? "" : "s"}
+                        </span>
+                        . Your baby is {ageAppropriateness.currentAgeMonths} month
+                        {ageAppropriateness.currentAgeMonths === 1 ? "" : "s"}
+                        {ageAppropriateness.adjusted ? " (adjusted)" : ""} — wait until about{" "}
+                        <span className="font-semibold">
+                          {ageAppropriateness.startDate.toLocaleDateString(undefined, {
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </span>{" "}
+                        before use.
+                      </p>
+                      <p className="text-amber-800/80 dark:text-amber-300/80">
+                        You can still save it now — we'll remind you when it's time. General
+                        guidance, not a substitute for your pediatrician.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {ageAppropriateness?.kind === "outgrown" && (
+                <div className="space-y-1 rounded-2xl border border-amber-500/40 bg-amber-50 px-4 py-3 font-body text-xs text-amber-900 dark:bg-amber-900/20 dark:text-amber-200">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                    <p>
+                      {ageAppropriateness.label} is typically outgrown by{" "}
+                      <span className="font-semibold">
+                        {ageAppropriateness.maxAgeMonths} months
+                      </span>
+                      . Check the manufacturer's weight and developmental limits before continuing to use.
+                    </p>
+                  </div>
+                </div>
+              )}
+
 
               {!foundProduct && (
                 <Field label="Photo (optional)">
