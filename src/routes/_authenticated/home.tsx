@@ -911,11 +911,34 @@ function HomePage() {
     }
   }
 
-  function skipHomeProfile() {
+  async function skipHomeProfile() {
+    // Optimistic — hides the card immediately. Persisted to the database
+    // (dismissed_at column) so the "I already dismissed this" state
+    // survives across devices and browser-data clears; previously stored
+    // only in localStorage, which is why users saw the card reappear on
+    // every new device.
     setHomeProfileSetup("skipped");
     try {
       localStorage.setItem("safesound.homeProfileSetup", "skipped");
     } catch {}
+    try {
+      const {
+        data: { session: sess },
+      } = await supabase.auth.getSession();
+      if (!sess?.user) return;
+      const { error } = await (supabase as any).from("home_profile").upsert(
+        {
+          user_id: sess.user.id,
+          dismissed_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      );
+      if (error) {
+        console.error("[home] failed to persist home_profile skip:", error);
+      }
+    } catch (err) {
+      console.error("[home] failed to persist home_profile skip (network):", err);
+    }
   }
   // Weekly safety tip
   const alertsPaused = notifPrefs.paused_until && new Date(notifPrefs.paused_until) > new Date();
