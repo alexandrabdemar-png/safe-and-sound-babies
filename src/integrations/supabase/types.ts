@@ -371,7 +371,7 @@ export type Database = {
           has_stairs: boolean | null
           home_type: string | null
           id: string
-          in_daycare: boolean | null
+          in_daycare: string | null
           updated_at: string | null
           user_id: string
         }
@@ -383,7 +383,7 @@ export type Database = {
           has_stairs?: boolean | null
           home_type?: string | null
           id?: string
-          in_daycare?: boolean | null
+          in_daycare?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -395,7 +395,7 @@ export type Database = {
           has_stairs?: boolean | null
           home_type?: string | null
           id?: string
-          in_daycare?: boolean | null
+          in_daycare?: string | null
           updated_at?: string | null
           user_id?: string
         }
