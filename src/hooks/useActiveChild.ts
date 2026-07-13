@@ -5,6 +5,7 @@ export type ChildOption = {
   id: string;
   name: string;
   date_of_birth: string | null;
+  due_date: string | null;
   height_inches: number | null;
   weight_lbs: number | null;
   measurements_updated_at: string | null;
