@@ -134,6 +134,47 @@ function ScanPage() {
     [category, purchasedAt, carSeatExpiry, carSeatManufactureDate],
   );
 
+  // Age-appropriateness check: warn a parent when a scanned product isn't
+  // recommended yet for the active child's *adjusted* age (preemies use
+  // corrected age until ~24 months per AAP). We compute the earliest safe
+  // start date and, if it's in the future, surface a "Wait until X" banner
+  // with the suggested start age — but still let them save it (they may be
+  // buying ahead of the recommended start age).
+  const ageAppropriateness = useMemo(() => {
+    const cat = CATEGORY_BY_KEY[category];
+    if (!activeChild?.date_of_birth) return null;
+    const age = computeAdjustedAge({
+      dateOfBirth: activeChild.date_of_birth,
+      dueDate: activeChild.due_date,
+    });
+    if (!age) return null;
+    const ageMonths = age.adjustedMonths;
+    if (typeof cat.minAgeMonths === "number" && ageMonths < cat.minAgeMonths) {
+      const dob = new Date(activeChild.date_of_birth);
+      const startDate = new Date(dob);
+      startDate.setMonth(startDate.getMonth() + cat.minAgeMonths + (age.correctionActive ? Math.ceil((age.correctionDays) / 30.4375) : 0));
+      return {
+        kind: "too-early" as const,
+        minAgeMonths: cat.minAgeMonths,
+        currentAgeMonths: ageMonths,
+        startDate,
+        adjusted: age.correctionActive,
+        label: cat.label,
+      };
+    }
+    if (typeof cat.maxAgeMonths === "number" && ageMonths > cat.maxAgeMonths) {
+      return {
+        kind: "outgrown" as const,
+        maxAgeMonths: cat.maxAgeMonths,
+        currentAgeMonths: ageMonths,
+        adjusted: age.correctionActive,
+        label: cat.label,
+      };
+    }
+    return null;
+  }, [category, activeChild?.date_of_birth, activeChild?.due_date]);
+
+
   // Single source of truth for releasing blob URLs: runs whenever the
   // preview changes (picking a new photo, clearing it, rescanning) *and* on
   // unmount if the parent navigates away mid-form — otherwise each replaced
