@@ -40,7 +40,7 @@ const CAT_MATCH: Record<string, RegExp> = {
   bouncer: /bouncer/i,
   activity_center: /activity ?center/i,
   sleep_sack: /sleep ?sack|swaddle/i,
-  baby_gate: /baby ?gate|^gate$/i,
+  baby_gate: /baby[ _]?gate|^gate$/i,
 };
 
 function hasCategory(products: ProductInput[], key: keyof typeof CAT_MATCH): ProductInput | undefined {

@@ -12,7 +12,7 @@
 //   • any custom domain
 //   • project--*.lovable.app     (published deployment aliases)
 export const PREVIEW_HOST_REGEX =
-  /(^|\.)lovable\.dev$|(^|\.)id-preview--.*\.lovable\.app$|^localhost$|^127\.0\.0\.1$/;
+  /(^|\.)lovable\.dev$|(^|\.)id-preview[^.]*\.lovable\.app$|^localhost$|^127\.0\.0\.1$/;
 
 export function isPreviewHost(hostname: string | null | undefined): boolean {
   if (!hostname) return false;
