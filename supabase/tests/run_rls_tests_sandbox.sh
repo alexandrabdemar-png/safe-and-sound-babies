@@ -41,7 +41,7 @@ if [ ${#MIGRATIONS[@]} -eq 0 ]; then
   echo "== applying all migrations (skipping pg_net/pg_cron/pg_trgm CREATE EXTENSION lines) =="
   for M in $(ls "$SCRIPT_DIR/../migrations/"*.sql | sort); do
     # Strip CREATE EXTENSION for extensions not available in the sandbox.
-    sed -E "s|^CREATE EXTENSION.*pg_(net|cron|trgm).*;|-- stripped extension|" "$M" \
+    sed -E 's#^CREATE EXTENSION.*pg_(net|cron|trgm).*;#-- stripped extension#' "$M" \
       | $PSQL -d "$DB" -f - > /tmp/mig_last.log 2>&1 || {
         echo "MIGRATION FAILED: $M"; cat /tmp/mig_last.log; exit 1;
       }
