@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Sandbox variant of run_rls_tests.sh: talks to a local Postgres that was
-# started as a non-root uid via setpriv (see the harness bootstrap in
-# tools chat). Applies the auth stub + every migration in order, then runs
-# the given test files.
+# Sandbox variant of run_rls_tests.sh — no sudo. Applies auth stub + a
+# selected subset of migrations (via -m migration.sql, repeatable), then
+# runs the given test files. Selected-subset because a couple of migrations
+# require Supabase-only extensions (pg_net, pg_cron) not available here.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -37,13 +37,9 @@ END \$\$;"
 echo "== applying auth stub =="
 $PSQL -d "$DB" -f "$SCRIPT_DIR/_auth_stub.sql"
 
-echo "== applying all migrations =="
-for M in $(ls "$SCRIPT_DIR/../migrations/"*.sql | sort); do
-  $PSQL -d "$DB" -f "$M" > /tmp/mig_last.log 2>&1 || {
-    echo "MIGRATION FAILED: $M"
-    cat /tmp/mig_last.log
-    exit 1
-  }
+for M in "${MIGRATIONS[@]}"; do
+  echo "== applying migration: $M =="
+  $PSQL -d "$DB" -f "$M"
 done
 
 STATUS=0
