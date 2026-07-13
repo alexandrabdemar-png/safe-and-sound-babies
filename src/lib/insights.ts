@@ -74,13 +74,28 @@ function daysSince(iso: string | null | undefined): number | null {
   return Math.floor((Date.now() - d.getTime()) / 86_400_000);
 }
 
-export function evaluateInsights(child: ChildInput | null, products: ProductInput[]): Insight[] {
+export type HomeProfileInput = {
+  has_stairs?: boolean | null;
+  has_pool?: boolean | null;
+  has_pet?: boolean | null;
+  has_car?: boolean | null;
+} | null | undefined;
+
+export function evaluateInsights(
+  child: ChildInput | null,
+  products: ProductInput[],
+  homeProfile?: HomeProfileInput,
+): Insight[] {
   if (!child) return [];
   const out: Insight[] = [];
   const months = ageInMonths(child.date_of_birth);
   const height = child.height_inches ?? null;
   const weight = child.weight_lbs ?? null;
   const name = child.name || "Your baby";
+  // A profile is only considered "answered" once the row exists — otherwise
+  // we default to showing stairs/gate guidance rather than silently hiding
+  // it for someone who hasn't taken the personalization quiz yet.
+  const hasStairs = homeProfile ? homeProfile.has_stairs !== false : true;
 
   // ── Stale measurement nudge ──────────────────────────────────────────────
   const measAge = daysSince(child.measurements_updated_at ?? null);
@@ -114,7 +129,7 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
         category: "crib",
       });
     }
-    if (months >= 7) {
+    if (months >= 7 && hasStairs) {
       out.push({
         id: "install_baby_gates",
         title: "Consider installing safety gates near stairs",
@@ -241,7 +256,7 @@ export function evaluateInsights(child: ChildInput | null, products: ProductInpu
       category: "high_chair",
     });
   }
-  if (months !== null && months >= 7 && !hasCategory(products, "baby_gate")) {
+  if (months !== null && months >= 7 && hasStairs && !hasCategory(products, "baby_gate")) {
     out.push({
       id: "gate_suggest",
       title: "Add baby gates to your list",

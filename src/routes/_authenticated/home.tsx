@@ -643,9 +643,9 @@ function HomePage() {
   const age = useMemo(() => calcAge(child?.date_of_birth ?? null), [child]);
   const totalAlerts = alerts.recalls + alerts.replace + alerts.sizeUp;
   const upNext: Insight[] = useMemo(() => {
-    const all = evaluateInsights(child, products);
+    const all = evaluateInsights(child, products, homeProfile);
     return all.filter((i) => !dismissedIds.has(i.id)).slice(0, 3);
-  }, [child, products, dismissedIds]);
+  }, [child, products, dismissedIds, homeProfile]);
 
   // Show measurements reminder if measurements_updated_at is null or > 28 days ago
   const showMeasReminder = useMemo(() => {
