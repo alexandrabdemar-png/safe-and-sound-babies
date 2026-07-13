@@ -440,7 +440,17 @@ function ScanPage() {
       </div>
     );
   }
-  if (!isPro) {
+  // Preview-only paywall bypass so the scanner can be tested end-to-end
+  // without a Pro subscription. Matches Lovable's preview host
+  // (id-preview--*.lovable.app / *.lovable.dev / localhost) — the published
+  // production domain (peace-of-mine.lovable.app + any custom domain) still
+  // gets the real paywall.
+  const isPreviewHost =
+    typeof window !== "undefined" &&
+    /(^|\.)lovable\.dev$|(^|\.)id-preview--.*\.lovable\.app$|^localhost$|^127\.0\.0\.1$/.test(
+      window.location.hostname,
+    );
+  if (!isPro && !isPreviewHost) {
     return (
       <div className="flex min-h-screen flex-col bg-background pb-16">
         <Header />
