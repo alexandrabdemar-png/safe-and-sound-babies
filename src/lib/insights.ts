@@ -129,7 +129,7 @@ export function evaluateInsights(
         category: "crib",
       });
     }
-    if (months >= 7) {
+    if (months >= 7 && hasStairs) {
       out.push({
         id: "install_baby_gates",
         title: "Consider installing safety gates near stairs",
