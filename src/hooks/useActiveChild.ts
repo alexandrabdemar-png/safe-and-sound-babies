@@ -36,7 +36,7 @@ export function useActiveChild() {
   const refresh = useCallback(async () => {
     const { data } = await supabase
       .from('children')
-      .select('id, name, date_of_birth, height_inches, weight_lbs, measurements_updated_at')
+      .select('id, name, date_of_birth, due_date, height_inches, weight_lbs, measurements_updated_at')
       .order('created_at', { ascending: true });
     const list = (data ?? []) as ChildOption[];
     setChildren(list);
