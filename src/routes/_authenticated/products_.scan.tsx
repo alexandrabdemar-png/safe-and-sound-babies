@@ -43,6 +43,7 @@ import { DataAsOf } from "@/components/DataAsOf";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 import { resolveCarSeatReplaceAt } from "@/lib/carSeatExpiration";
+import { computeAdjustedAge } from "@/lib/adjustedAge";
 
 const CATEGORY_ORDER: CategoryKey[] = CATEGORIES.map((c) => c.key);
 
