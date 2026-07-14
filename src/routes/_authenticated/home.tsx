@@ -311,7 +311,14 @@ function HomePage() {
     } catch {}
     return "pending";
   });
+  // Prevents a "prompts me every time I log in" flash on devices where
+  // localStorage is empty (new browser, incognito, cleared data): we don't
+  // actually know the user's status until the DB read below completes, so
+  // hold off rendering the card until then. Otherwise the card shows for
+  // ~a few hundred ms every login even though the answers are already saved.
+  const [homeProfileLoaded, setHomeProfileLoaded] = useState(false);
   const [hpStep, setHpStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6>(0);
+
 
   useEffect(() => {
     let cancelled = false;
