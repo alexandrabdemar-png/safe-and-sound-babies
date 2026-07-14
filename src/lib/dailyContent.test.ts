@@ -1,41 +1,73 @@
 import { describe, it, expect } from "vitest";
-import { ageSafetyTip, weekendReminder, growthCheckTip, monthsFromDob } from "./dailyContent";
+import { ageSafetyTip, weekendReminder, growthCheckTip, monthsFromDob, dayOfYear } from "./dailyContent";
 
 describe("ageSafetyTip", () => {
-  it("regression: does NOT return the same text every week for a fixed age — the reported bug", () => {
-    // 10-month-old, same age all year; only weekNumber changes.
+  it("regression: does NOT return the same text every day for a fixed age — the reported bug", () => {
+    // 10-month-old, same age all year; only dayNumber changes.
     const seen = new Set<string>();
-    for (let week = 1; week <= 6; week++) {
-      seen.add(ageSafetyTip(10, week));
+    for (let day = 1; day <= 6; day++) {
+      seen.add(ageSafetyTip(10, day));
     }
     expect(seen.size).toBeGreaterThan(1);
   });
 
   it("cycles back to the same text after a full lap of the variant pool (deterministic, not random)", () => {
     const first = ageSafetyTip(10, 1);
-    const poolSize = new Set([1, 2, 3, 4, 5, 6].map((w) => ageSafetyTip(10, w))).size;
+    const poolSize = new Set([1, 2, 3, 4, 5, 6].map((d) => ageSafetyTip(10, d))).size;
     expect(ageSafetyTip(10, 1 + poolSize)).toBe(first);
   });
 
-  it("stays within the correct AAP-appropriate age bracket across all weeks", () => {
+  it("stays within the correct AAP-appropriate age bracket across all days", () => {
     // A 2-month-old should only ever see 0-4mo sleep-safety content, never
     // the crawling/gate content meant for older babies.
-    for (let week = 1; week <= 10; week++) {
-      const tip = ageSafetyTip(2, week);
+    for (let day = 1; day <= 10; day++) {
+      const tip = ageSafetyTip(2, day);
       expect(tip).not.toMatch(/staircase|crawling/i);
     }
   });
 
   it("falls back to a rotating (not fixed) set of tips when no DOB is known", () => {
     const seen = new Set<string>();
-    for (let week = 1; week <= 6; week++) {
-      seen.add(ageSafetyTip(null, week));
+    for (let day = 1; day <= 6; day++) {
+      seen.add(ageSafetyTip(null, day));
     }
     expect(seen.size).toBeGreaterThan(1);
   });
 
-  it("is a pure function: same age + same week always returns the same tip", () => {
+  it("is a pure function: same age + same day always returns the same tip", () => {
     expect(ageSafetyTip(7, 23)).toBe(ageSafetyTip(7, 23));
+  });
+
+  // ── Regression coverage using real mocked dates via dayOfYear(), matching
+  // the actual home.tsx call site: ageSafetyTip(months, dayOfYear(new Date())) ──
+  it("shows a different tip on two different days", () => {
+    const dayA = dayOfYear(new Date("2026-03-01T12:00:00Z"));
+    const dayB = dayOfYear(new Date("2026-03-02T12:00:00Z"));
+    expect(ageSafetyTip(10, dayA)).not.toBe(ageSafetyTip(10, dayB));
+  });
+
+  it("shows the identical tip when checked twice on the same day (stable within a day)", () => {
+    const day = dayOfYear(new Date("2026-03-01T09:00:00Z"));
+    const dayAgainLater = dayOfYear(new Date("2026-03-01T23:59:00Z"));
+    expect(ageSafetyTip(10, day)).toBe(ageSafetyTip(10, dayAgainLater));
+  });
+
+  it("changes at UTC midnight — the last moment of one day differs in dayOfYear from the first moment of the next", () => {
+    const lastMomentOfDay = dayOfYear(new Date("2026-03-01T23:59:59Z"));
+    const firstMomentOfNextDay = dayOfYear(new Date("2026-03-02T00:00:00Z"));
+    expect(firstMomentOfNextDay).toBe(lastMomentOfDay + 1);
+  });
+});
+
+describe("dayOfYear", () => {
+  it("returns 1 for January 1st", () => {
+    expect(dayOfYear(new Date("2026-01-01T00:00:00Z"))).toBe(1);
+  });
+
+  it("is monotonically increasing day to day", () => {
+    expect(dayOfYear(new Date("2026-06-15T00:00:00Z"))).toBe(
+      dayOfYear(new Date("2026-06-14T00:00:00Z")) + 1,
+    );
   });
 });
 
