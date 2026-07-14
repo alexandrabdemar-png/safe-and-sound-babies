@@ -36,8 +36,11 @@ import { fetchMilestonesResilient } from "@/lib/momentIcons";
 import {
   isLastHomeProfileQuestionStep,
   buildHomeProfileAnswers,
+  resolveHomeProfileSetupState,
+  shouldShowHomeProfileCard,
   type HomeProfileAnswers,
 } from "@/lib/homeProfile";
+
 import { CheckCircle2, ShieldCheck } from "lucide-react";
 import { SoftBlob } from "@/components/SoftBlob";
 
