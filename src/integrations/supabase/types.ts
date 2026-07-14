@@ -945,6 +945,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_agreements: {
+        Row: {
+          agreed_at: string
+          id: string
+          terms_version: string
+          user_id: string
+        }
+        Insert: {
+          agreed_at?: string
+          id?: string
+          terms_version: string
+          user_id: string
+        }
+        Update: {
+          agreed_at?: string
+          id?: string
+          terms_version?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
