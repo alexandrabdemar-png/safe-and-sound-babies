@@ -4,6 +4,8 @@ import { Footer } from "@/components/Footer";
 import "@fontsource/cormorant-garamond/400.css";
 import "@fontsource/cormorant-garamond/400-italic.css";
 import "@fontsource/cormorant-garamond/500.css";
+import "@fontsource/cormorant/300.css";
+import "@fontsource/cormorant/300-italic.css";
 import catCarseat from "@/assets/hd-carseat.png";
 import catPacifier from "@/assets/hd-pacifier.png";
 import catBreastMilk from "@/assets/hd-breastmilk.png";
@@ -65,8 +67,8 @@ function Index() {
             <div className="flex flex-col items-start">
               <h1
                 style={{
-                  fontFamily: "'Cormorant Garamond', Georgia, serif",
-                  fontWeight: 400,
+                  fontFamily: "'Cormorant', Georgia, serif",
+                  fontWeight: 300,
                   color: "#2B2927",
                 }}
                 className="text-5xl leading-[1.08] sm:text-6xl lg:text-7xl"
@@ -181,6 +183,22 @@ function Index() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* Closing line */}
+      <section className="w-full px-4 pb-16 sm:px-6 lg:px-8">
+        <p
+          style={{
+            fontFamily: "'Cormorant', Georgia, serif",
+            fontWeight: 300,
+            fontStyle: "italic",
+            color: "#605C58",
+          }}
+          className="mx-auto max-w-2xl text-center text-2xl leading-snug sm:text-3xl"
+        >
+          We help you remember the little things that are easy to forget and the things you
+          haven't thought of yet.
+        </p>
       </section>
 
       <Footer />
