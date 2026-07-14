@@ -434,15 +434,24 @@ function NewMomentPage() {
             />
           </div>
 
+          {hasNoChildren && (
+            <p className="rounded-2xl border border-border/60 bg-card p-3 font-body text-xs text-muted-foreground">
+              Add a child profile first so we can save this moment.{" "}
+              <Link to="/children/new" className="font-semibold text-primary underline">
+                Add a child
+              </Link>
+            </p>
+          )}
           <Button
             type="submit"
-            disabled={saving || proLoading}
+            disabled={saving || proLoading || childrenLoading || hasNoChildren}
             className="mt-3 h-12 w-full rounded-full bg-primary font-body text-sm font-semibold"
           >
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save this moment"}
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : childrenLoading ? "Loading…" : "Save this moment"}
           </Button>
         </form>
       </main>
     </div>
   );
 }
+
