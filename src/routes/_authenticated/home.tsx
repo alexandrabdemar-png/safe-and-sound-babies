@@ -1003,7 +1003,7 @@ function HomePage() {
       <BetaBanner />
 
       {/* Home Personalization Setup — one-time, shown after onboarding */}
-      {homeProfileSetup === "pending" && child && (
+      {homeProfileSetup === "pending" && homeProfileLoaded && child && (
         <div className="px-5 pt-4 sm:px-6">
           <div className="mx-auto max-w-md">
             <HomePersonalizationCard
