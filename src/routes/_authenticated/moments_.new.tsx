@@ -162,7 +162,7 @@ const PROMPTS = [
 
 function NewMomentPage() {
   const navigate = useNavigate();
-  const { activeChildId, children } = useActiveChild();
+  const { activeChildId, children, loading: childrenLoading } = useActiveChild();
   // TEMP: paywall disabled for testing on 2026-07-04 at user's request — REMOVE
   // this override (restore `const { isPro, loading: proLoading } = useProGate();`)
   // before launch.
@@ -175,6 +175,7 @@ function NewMomentPage() {
   const [momentIcon, setMomentIcon] = useState<MomentIconKey>(DEFAULT_MOMENT_ICON);
   const [safetyTip, setSafetyTip] = useState<SafetyTip | null>(null);
   const activeChild = children.find((c) => c.id === activeChildId);
+  const hasNoChildren = !childrenLoading && children.length === 0;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -182,8 +183,16 @@ function NewMomentPage() {
       toast.error("Give the moment a title");
       return;
     }
+    if (childrenLoading) {
+      toast.message("Loading your profile — one sec…");
+      return;
+    }
     if (!activeChildId) {
-      toast.error("Add a child first");
+      if (children.length > 0) {
+        toast.error("Pick a child to log this moment for");
+      } else {
+        toast.error("Add a child first");
+      }
       return;
     }
     setSaving(true);
@@ -196,6 +205,7 @@ function NewMomentPage() {
       setSaving(false);
       return;
     }
+
     const basePayload = {
       child_id: activeChildId,
       title: title.trim(),
@@ -424,15 +434,25 @@ function NewMomentPage() {
             />
           </div>
 
+          {hasNoChildren && (
+            <p className="rounded-2xl border border-border/60 bg-card p-3 font-body text-xs text-muted-foreground">
+              Add a child profile first so we can save this moment.{" "}
+              <Link to="/onboarding" className="font-semibold text-primary underline">
+                Add a child
+              </Link>
+            </p>
+          )}
+
           <Button
             type="submit"
-            disabled={saving || proLoading}
+            disabled={saving || proLoading || childrenLoading || hasNoChildren}
             className="mt-3 h-12 w-full rounded-full bg-primary font-body text-sm font-semibold"
           >
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save this moment"}
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : childrenLoading ? "Loading…" : "Save this moment"}
           </Button>
         </form>
       </main>
     </div>
   );
 }
+
