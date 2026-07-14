@@ -62,7 +62,16 @@ export function DataAsOf({
     .at(-1) ?? null;
 
   const pipeline = rows.find((r) => r.source === "__pipeline__");
-  const stale = pipeline ? isPipelineStale(pipeline.last_success_at) : isPipelineStale(mostRecent);
+  // Only surface a "stale" warning when we actually have evidence of staleness:
+  // either the pipeline health row exists (and is stale) or we have prior
+  // success timestamps that are now old. When neither exists (fresh deploy
+  // before the first cron run), stay silent rather than undermining a live
+  // check the user just performed.
+  const stale = pipeline
+    ? isPipelineStale(pipeline.last_success_at)
+    : mostRecent
+      ? isPipelineStale(mostRecent)
+      : false;
 
   const sourceNames = filtered.map((r) => SOURCE_LABEL[r.source] ?? r.source).filter(Boolean);
 
@@ -74,6 +83,11 @@ export function DataAsOf({
       </p>
     );
   }
+
+  // No historical freshness signal yet — the on-demand check the user just
+  // ran is the source of truth; don't render a misleading "unavailable" line.
+  if (!mostRecent) return null;
+
 
   return (
     <p className={`inline-flex flex-wrap items-center gap-1.5 font-body text-[11px] text-muted-foreground ${className}`}>
