@@ -437,11 +437,12 @@ function NewMomentPage() {
           {hasNoChildren && (
             <p className="rounded-2xl border border-border/60 bg-card p-3 font-body text-xs text-muted-foreground">
               Add a child profile first so we can save this moment.{" "}
-              <Link to="/children/new" className="font-semibold text-primary underline">
+              <Link to="/onboarding" className="font-semibold text-primary underline">
                 Add a child
               </Link>
             </p>
           )}
+
           <Button
             type="submit"
             disabled={saving || proLoading || childrenLoading || hasNoChildren}
