@@ -14,6 +14,7 @@ import catStroller from "@/assets/hd-stroller.png";
 import catPacknPlay from "@/assets/hd-packnplay.png";
 import catCarrier from "@/assets/hd-carrier.png";
 import catBouncer from "@/assets/hd-bouncer.png";
+import catBlocks from "@/assets/hd-blocks.png";
 import catCrib from "@/assets/hd-crib.png";
 
 export const Route = createFileRoute("/")({
@@ -69,6 +70,7 @@ const categories = [
   { name: "Pack 'n Plays", image: catPacknPlay },
   { name: "Carriers", image: catCarrier },
   { name: "Bouncers", image: catBouncer },
+  { name: "Toys", image: catBlocks },
 ];
 
 function Index() {
