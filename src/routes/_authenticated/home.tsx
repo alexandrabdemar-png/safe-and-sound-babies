@@ -543,17 +543,18 @@ function HomePage() {
               // localStorage, so skipping on phone → opening on tablet → card
               // reappears; same issue after a browser data clear.
               setHomeProfile(hp as HomeProfile);
-              const nextState = hp.dismissed_at ? "skipped" : "done";
-              try {
-                localStorage.setItem("safesound.homeProfileSetup", nextState);
-              } catch {}
-              setHomeProfileSetup(nextState);
             }
+            const nextState = resolveHomeProfileSetupState(hp);
+            try {
+              localStorage.setItem("safesound.homeProfileSetup", nextState);
+            } catch {}
+            setHomeProfileSetup(nextState);
             // Only now do we actually know whether the user needs the prompt;
             // gate the card render on this so first-login-on-a-new-device
             // doesn't flash the card before we've read the DB.
             setHomeProfileLoaded(true);
           }
+
         }
       } catch (err) {
         console.error("[home] failed to load home_profile (network):", err);
