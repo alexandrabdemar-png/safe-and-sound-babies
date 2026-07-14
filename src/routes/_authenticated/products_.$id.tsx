@@ -11,7 +11,7 @@ import { CATEGORY_BY_KEY, categoryFromLabel } from "@/lib/productCategories";
 import { formatMonthYear, daysBetween } from "@/lib/predictions";
 import { lookupAndSaveGuidelines, recomputePredictions } from "@/lib/guidelines.functions";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
-import { recallFallbackUrl, recallSourceLabel } from "@/lib/recallCheck";
+import { recallFallbackUrl, recallSourceLabel, formatRecallSyncNote } from "@/lib/recallCheck";
 
 export const Route = createFileRoute("/_authenticated/products_/$id")({
   ssr: false,
@@ -30,6 +30,7 @@ type Product = {
   predicted_replacement_date: string | null;
   recalled: boolean;
   child_id: string | null;
+  recall_checked_at: string | null;
 }; type _u = never; // photo_url removed
 
 type Guideline = {
@@ -72,7 +73,7 @@ function ProductDetailPage() {
     setLoading(true);
     const { data: p, error } = await supabase
       .from("products")
-      .select("id, name, brand, size, category, added_at, purchased_at, predicted_sizeup_date, predicted_replacement_date, recalled, child_id")
+      .select("id, name, brand, size, category, added_at, purchased_at, predicted_sizeup_date, predicted_replacement_date, recalled, child_id, recall_checked_at")
       .eq("id", id)
       .maybeSingle();
     if (error || !p) {
@@ -150,8 +151,8 @@ function ProductDetailPage() {
       </header>
       <main className="flex-1 px-5 sm:px-6">
         <div className="mx-auto max-w-md space-y-5">
-          {/* Recall banner */}
-          {(product.recalled || recalls.length > 0) && (
+          {/* Recall status */}
+          {(product.recalled || recalls.length > 0) ? (
             <div className="rounded-3xl bg-destructive/15 border border-destructive/30 p-4">
               <div className="flex items-center gap-2 font-body text-sm font-semibold text-destructive">
                 <AlertTriangle className="h-4 w-4" /> RECALL
@@ -184,8 +185,26 @@ function ProductDetailPage() {
                   This product was flagged for a recall, but details aren't available yet.
                 </p>
               )}
+              <p className="mt-3 pt-3 border-t border-destructive/20 font-body text-[11px] leading-relaxed text-destructive/70">
+                {formatRecallSyncNote(product.recall_checked_at)}
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-3xl bg-emerald-50 border border-emerald-200 p-4">
+              <div className="flex items-center gap-2 font-body text-sm font-semibold text-emerald-800">
+                <ShieldCheck className="h-4 w-4" /> No known recalls
+              </div>
+              <p className="mt-3 pt-3 border-t border-emerald-200 font-body text-[11px] leading-relaxed text-emerald-800/70">
+                {formatRecallSyncNote(product.recall_checked_at)}
+              </p>
             </div>
           )}
+
+          <p className="font-body text-[11px] leading-relaxed text-muted-foreground/80 px-1">
+            Registration cards and mail-in forms that came with this product still matter — filling
+            one out and sending it to the manufacturer is the fastest way to be notified directly if
+            it's ever recalled.
+          </p>
 
           {/* Header */}
           <div className="flex items-start gap-3">

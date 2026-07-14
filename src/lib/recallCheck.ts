@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 /**
  * recallCheck.ts — Inline and background product recall detection
  *
@@ -44,6 +46,31 @@ export function recallSourceLabel(hit: { url?: string | null; source?: string | 
   if (hit.source === "cpsc") return "U.S. Consumer Product Safety Commission (CPSC)";
   if (hit.source === "fda") return "U.S. Food and Drug Administration (FDA)";
   return "the official recall notice linked below";
+}
+
+/**
+ * Copy for the "when was this last checked" note shown next to a product's
+ * recall status. Deliberately never implies real-time accuracy — recall
+ * data is only as fresh as the last sync, and manufacturers can issue a
+ * recall between syncs, so this always points a parent back to the
+ * official sources rather than letting the app's checkmark stand alone.
+ */
+export function formatRecallSyncNote(recallCheckedAt: string | null | undefined): string {
+  if (!recallCheckedAt) {
+    return "Recall check pending — new products sync with CPSC.gov and other official databases within 24 hours. Because manufacturer data changes rapidly, always cross-reference critical gear directly on official government recall sites.";
+  }
+  const d = new Date(recallCheckedAt);
+  if (Number.isNaN(d.getTime())) {
+    return "Recall check pending — new products sync with CPSC.gov and other official databases within 24 hours. Because manufacturer data changes rapidly, always cross-reference critical gear directly on official government recall sites.";
+  }
+  const formatted = d.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  return `Data synced with CPSC.gov and other official databases on ${formatted}. Because manufacturer data changes rapidly, always cross-reference critical gear directly on official government recall sites.`;
 }
 
 const ALLOWED_RECALL_HOSTS = ["cpsc.gov", "saferproducts.gov", "fda.gov", "nhtsa.gov"];
@@ -418,5 +445,29 @@ export async function recordRecallInDb(
     });
   } catch (err) {
     console.error("[recall-db] failed to persist recall for product", productId, err);
+  }
+}
+
+/**
+ * Stamps recall_checked_at on a product right after an inline recall check
+ * completes — hit or not — so the "data synced on" note on the product
+ * detail screen (formatRecallSyncNote) reflects a real check, not just the
+ * ones that happened to find a match. A plain client-side update: RLS
+ * ("Users manage own products") already allows a user to write any column
+ * on their own product row, same as replace_at/recalled today.
+ *
+ * Non-fatal by design, matching recordRecallInDb: the check already
+ * happened and was already shown to the parent, so a failure to persist
+ * the timestamp shouldn't surface as an error to them.
+ */
+export async function stampRecallCheckedAt(productId: string, checkedAt: string = new Date().toISOString()): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from("products")
+      .update({ recall_checked_at: checkedAt } as never)
+      .eq("id", productId);
+    if (error) throw error;
+  } catch (err) {
+    console.error("[recall-db] failed to stamp recall_checked_at for product", productId, err);
   }
 }

@@ -24,7 +24,7 @@ import {
   ScanLine,
   X,
 } from "lucide-react";
-import { checkRecallsForProduct, recallSourceLabel, recordRecallInDb, type RecallHit } from "@/lib/recallCheck";
+import { checkRecallsForProduct, recallSourceLabel, recordRecallInDb, stampRecallCheckedAt, type RecallHit } from "@/lib/recallCheck";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -207,6 +207,7 @@ function NewProductPage() {
 
         // Inline recall check — must complete before navigating
         const hit = await checkRecallsForProduct(name.trim());
+        void stampRecallCheckedAt(productId);
         if (hit) {
           await recordRecallInDb(productId, hit);
           setRecallModal({ hit, productName: name.trim(), productId });
@@ -395,6 +396,13 @@ function NewProductPage() {
                       : "Car seats are generally unsafe to use starting 6 years after manufacture. If you don't have the exact expiry date, we'll estimate one from this."}
                   </p>
                 </Field>
+
+                <div className="rounded-2xl bg-accent/10 px-4 py-3 font-body text-xs leading-relaxed text-foreground/80">
+                  <span className="font-semibold">Label it:</span> write your name and phone number
+                  on the underside or back of the shell. It helps the seat get back to you if it's
+                  ever lost, borrowed, or separated from your child — at daycare, a rideshare, or in
+                  an accident.
+                </div>
               </>
             )}
 
@@ -787,6 +795,7 @@ function SaveProductSheet({
 
         // Inline recall check — must complete before navigating
         const hit = await checkRecallsForProduct(product.name);
+        void stampRecallCheckedAt(productId);
         if (hit) {
           await recordRecallInDb(productId, hit);
           onRecallFound(hit, product.name, productId);

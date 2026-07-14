@@ -730,6 +730,7 @@ export type Database = {
           predicted_sizeup_date: string | null
           product_type: string
           purchased_at: string | null
+          recall_checked_at: string | null
           recalled: boolean
           replace_at: string | null
           size: string | null
@@ -755,6 +756,7 @@ export type Database = {
           predicted_sizeup_date?: string | null
           product_type?: string
           purchased_at?: string | null
+          recall_checked_at?: string | null
           recalled?: boolean
           replace_at?: string | null
           size?: string | null
