@@ -206,6 +206,20 @@ Deno.serve(async (req) => {
       if (flagErr) throw flagErr;
     }
 
+    // Every product in batchProducts was actually checked against every
+    // source this run, matched or not — stamp all of them so the detail
+    // screen can show a real "data synced on" timestamp rather than one
+    // that's only true for products with an active recall.
+    const checkedAt = new Date().toISOString();
+    const allProductIds = batchProducts.map((p) => p.id);
+    if (allProductIds.length) {
+      const { error: stampErr } = await supabase
+        .from("products")
+        .update({ recall_checked_at: checkedAt })
+        .in("id", allProductIds);
+      if (stampErr) throw stampErr;
+    }
+
     // ── Notify users with new or updated matches ─────────────────────────
     const notifyResult = await notifyAffectedUsers(
       supabase,

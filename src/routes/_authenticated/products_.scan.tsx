@@ -325,6 +325,10 @@ function ScanPage() {
           // sticker date needs to be stored directly or the daily
           // expiration-alert cron never engages for it.
           expiration_date: category === "car_seat" ? carSeatExpiry || null : null,
+          // Only stamp this if a recall check actually completed — a user
+          // can save before/without one finishing, and recallInfo staying
+          // null there shouldn't be reported as a synced check.
+          recall_checked_at: recallInfo ? nowIso : null,
           // We already have a fresh answer from check-recalls — no need to
           // wait for tomorrow's daily sync to flag it.
           recalled: recallInfo?.recalled ?? false,
@@ -739,6 +743,13 @@ function ScanPage() {
                         : "Car seats are generally unsafe to use starting 6 years after manufacture. If you don't have the exact expiry date, we'll estimate one from this."}
                     </p>
                   </Field>
+
+                  <div className="rounded-2xl bg-accent/10 px-4 py-3 font-body text-xs leading-relaxed text-foreground/80">
+                    <span className="font-semibold">Label it:</span> write your name and phone number
+                    on the underside or back of the shell. It helps the seat get back to you if it's
+                    ever lost, borrowed, or separated from your child — at daycare, a rideshare, or in
+                    an accident.
+                  </div>
                 </>
               )}
 

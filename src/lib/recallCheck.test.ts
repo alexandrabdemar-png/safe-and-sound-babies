@@ -3,6 +3,7 @@ import {
   isAllowedRecallUrl,
   fetchCpscRecallsForProduct,
   fetchFdaRecallsForProduct,
+  formatRecallSyncNote,
 } from "./recallCheck";
 
 describe("isAllowedRecallUrl", () => {
@@ -56,6 +57,44 @@ describe("isAllowedRecallUrl", () => {
   it("rejects an empty string instead of throwing", () => {
     expect(() => isAllowedRecallUrl("")).not.toThrow();
     expect(isAllowedRecallUrl("")).toBe(false);
+  });
+});
+
+describe("formatRecallSyncNote", () => {
+  it("formats a real timestamp with the sync date and the cross-reference caveat", () => {
+    const iso = "2026-07-14T16:30:00.000Z";
+    const note = formatRecallSyncNote(iso);
+    const expectedDate = new Date(iso).toLocaleString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+    expect(note).toContain("Data synced with CPSC.gov");
+    expect(note).toContain(expectedDate);
+    expect(note).toContain("always cross-reference critical gear directly on official government recall sites");
+  });
+
+  it("returns an honest pending message rather than a fabricated date when null", () => {
+    const note = formatRecallSyncNote(null);
+    expect(note).toContain("Recall check pending");
+    expect(note).not.toMatch(/\d{4}/); // no fabricated year/date
+  });
+
+  it("returns the pending message for undefined too", () => {
+    expect(formatRecallSyncNote(undefined)).toContain("Recall check pending");
+  });
+
+  it("falls back to the pending message rather than 'Invalid Date' for a malformed timestamp", () => {
+    const note = formatRecallSyncNote("not-a-real-date");
+    expect(note).toContain("Recall check pending");
+    expect(note).not.toContain("Invalid Date");
+  });
+
+  it("always includes the government cross-reference caveat regardless of sync state", () => {
+    expect(formatRecallSyncNote(null)).toContain("official government recall sites");
+    expect(formatRecallSyncNote("2026-01-01T00:00:00.000Z")).toContain("official government recall sites");
   });
 });
 
