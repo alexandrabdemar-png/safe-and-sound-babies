@@ -5,14 +5,29 @@ import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { toast } from "sonner";
 import { AlertTriangle, Users, WifiOff } from "lucide-react";
 import { usePushRegistration } from "@/hooks/usePushRegistration";
+import { needsLegalConsent } from "@/lib/legalConsent";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     const {
       data: { session },
     } = await supabase.auth.getSession();
     if (!session) throw redirect({ to: "/auth" });
+
+    // Clickwrap gate: every user, new or returning, must have accepted the
+    // current Terms of Service version before reaching any authenticated
+    // screen — not just at signup, since existing users need to accept a
+    // material terms update too (see src/lib/legalConsent.ts).
+    const { data: agreements } = await supabase
+      .from("user_agreements")
+      .select("terms_version")
+      .eq("user_id", session.user.id);
+    const acceptedVersions = (agreements ?? []).map((a) => (a as { terms_version: string }).terms_version);
+    if (needsLegalConsent(acceptedVersions)) {
+      throw redirect({ to: "/legal-consent", search: { next: location.pathname } });
+    }
+
     return { user: session.user };
   },
   component: AuthenticatedLayout,
