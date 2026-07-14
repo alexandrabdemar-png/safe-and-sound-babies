@@ -14,6 +14,7 @@ import {
   resolveMomentIcon,
   isIconColumnUnavailableError,
   fetchMilestonesResilient,
+  saveMomentResilient,
 } from "./momentIcons";
 
 // Minimal thenable chain mimicking Supabase's query builder — every
@@ -28,6 +29,12 @@ function makeChain(result: { data: unknown; error: unknown }) {
     then: (resolve: (v: typeof result) => void) => Promise.resolve(result).then(resolve),
   };
   return chain;
+}
+
+// insert() doesn't chain further (unlike select/eq/order/limit above) —
+// it's awaited directly, so this just needs to be thenable.
+function makeInsertChain(result: { data: unknown; error: unknown }) {
+  return { then: (resolve: (v: typeof result) => void) => Promise.resolve(result).then(resolve) };
 }
 
 describe("MOMENT_ICON_KEYS", () => {
@@ -258,5 +265,155 @@ describe("fetchMilestonesResilient", () => {
 
     expect(result.data).toBeNull();
     expect(result.error).toEqual({ message: 'relation "milestones" does not exist' });
+  });
+});
+
+describe("saveMomentResilient", () => {
+  beforeEach(() => {
+    mockFrom.mockReset();
+  });
+
+  const payload = {
+    child_id: "child-1",
+    title: "First smile",
+    logged_at: "2026-07-01",
+    notes: null,
+    completed: true,
+    icon: "star",
+  };
+
+  it("saves successfully with a single insert when the icon column is fine", async () => {
+    const insertMock = vi.fn(() => makeInsertChain({ data: null, error: null }));
+    mockFrom.mockReturnValue({ insert: insertMock });
+
+    const result = await saveMomentResilient(payload);
+
+    expect(result.error).toBeNull();
+    expect(mockFrom).toHaveBeenCalledTimes(1);
+    expect(insertMock).toHaveBeenCalledWith(payload);
+  });
+
+  it("regression: retries without icon when the live icon-column-unavailable error occurs", async () => {
+    const insertMock = vi
+      .fn()
+      .mockReturnValueOnce(
+        makeInsertChain({ data: null, error: { message: "column milestones.icon does not exist", code: "42703" } }),
+      )
+      .mockReturnValueOnce(makeInsertChain({ data: null, error: null }));
+    mockFrom.mockReturnValue({ insert: insertMock });
+
+    const result = await saveMomentResilient(payload);
+
+    expect(result.error).toBeNull();
+    expect(insertMock).toHaveBeenCalledTimes(2);
+    // The retry must drop `icon` from the payload, not just resend it.
+    const retryArg = insertMock.mock.calls[1][0] as Record<string, unknown>;
+    expect(retryArg).not.toHaveProperty("icon");
+    expect(retryArg).toMatchObject({ child_id: "child-1", title: "First smile" });
+  });
+
+  it("does NOT retry and surfaces the error as-is when it's unrelated to the icon column", async () => {
+    const insertMock = vi.fn(() =>
+      makeInsertChain({ data: null, error: { message: "permission denied for table milestones" } }),
+    );
+    mockFrom.mockReturnValue({ insert: insertMock });
+
+    const result = await saveMomentResilient(payload);
+
+    expect(insertMock).toHaveBeenCalledTimes(1);
+    expect(result.error).toEqual({ message: "permission denied for table milestones" });
+  });
+
+  // ── Regression: "moments may not be saving reliably" — the silent-failure /
+  // unhandled-rejection class of bug, not the already-fixed icon-column one ──
+  it("regression: a thrown network exception is caught and returned as an error, not left to reject the promise", async () => {
+    mockFrom.mockImplementation(() => {
+      throw new TypeError("Failed to fetch");
+    });
+
+    // Must resolve (not reject) — this is what lets the caller's finally
+    // block always run and clear its "saving" state.
+    await expect(saveMomentResilient(payload)).resolves.toEqual({
+      error: { message: "Failed to fetch" },
+    });
+  });
+
+  it("regression: a rejected insert promise (network drop mid-request) is also caught, not left unhandled", async () => {
+    const insertMock = vi.fn(() => Promise.reject(new Error("network request failed")));
+    mockFrom.mockReturnValue({ insert: insertMock });
+
+    await expect(saveMomentResilient(payload)).resolves.toEqual({
+      error: { message: "network request failed" },
+    });
+  });
+});
+
+// ── Integration: save then re-fetch round-trips correctly ─────────────────
+//
+// Exercises saveMomentResilient() and fetchMilestonesResilient() together
+// against one shared in-memory "milestones" table, proving the actual
+// end-to-end claim in the bug report: create a moment, then reload/
+// re-fetch, and the moment that comes back matches what was saved.
+describe("save then re-fetch (integration)", () => {
+  beforeEach(() => {
+    mockFrom.mockReset();
+  });
+
+  it("a moment saved via saveMomentResilient is present and matches on the next fetchMilestonesResilient call", async () => {
+    type Row = {
+      id: string;
+      child_id: string;
+      title: string;
+      logged_at: string;
+      notes: string | null;
+      icon: string;
+      created_at: string;
+    };
+    const table: Row[] = [];
+
+    mockFrom.mockImplementation((_table: string) => ({
+      insert: (payload: Omit<Row, "id" | "created_at">) => {
+        table.push({ ...payload, id: `row-${table.length + 1}`, created_at: new Date().toISOString() });
+        return makeInsertChain({ data: null, error: null });
+      },
+      // Mirrors the read-side chain shape (select/eq/order/limit), but
+      // resolves from the same in-memory `table` the insert above wrote to.
+      select: () => {
+        const chain = {
+          eq: (_col: string, childId: string) => {
+            const filterChain = {
+              order: () => filterChain,
+              limit: () => filterChain,
+              then: (resolve: (v: { data: Row[]; error: null }) => void) =>
+                Promise.resolve({ data: table.filter((r) => r.child_id === childId), error: null }).then(resolve),
+            };
+            return filterChain;
+          },
+        };
+        return chain;
+      },
+    }));
+
+    const saveResult = await saveMomentResilient({
+      child_id: "child-1",
+      title: "Rolled over",
+      logged_at: "2026-07-14",
+      notes: "so proud",
+      completed: true,
+      icon: "heart",
+    });
+    expect(saveResult.error).toBeNull();
+
+    const fetchResult = await fetchMilestonesResilient("child-1");
+
+    expect(fetchResult.error).toBeNull();
+    expect(fetchResult.data).toHaveLength(1);
+    expect(fetchResult.data![0]).toMatchObject({
+      child_id: "child-1",
+      title: "Rolled over",
+      logged_at: "2026-07-14",
+      notes: "so proud",
+      icon: "heart",
+    });
   });
 });

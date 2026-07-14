@@ -22,7 +22,7 @@ import {
   MOMENT_ICONS,
   DEFAULT_MOMENT_ICON,
   SketchDefs,
-  isIconColumnUnavailableError,
+  saveMomentResilient,
   type MomentIconKey,
 } from "@/lib/momentIcons";
 
@@ -196,48 +196,46 @@ function NewMomentPage() {
       return;
     }
     setSaving(true);
-    const rawNotes = notes.trim() || null;
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session?.user) {
-      toast.error("Sign in to log moments");
+    try {
+      const rawNotes = notes.trim() || null;
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.user) {
+        toast.error("Sign in to log moments");
+        return;
+      }
+      // saveMomentResilient handles both known failure classes: the
+      // `icon` column being unusable on the live database (retries
+      // without it — see 20260713000000_milestones_icon_column.sql), and
+      // a genuine network failure (caught internally, returned as an
+      // error rather than thrown) — see momentIcons.tsx for why both
+      // matter here specifically.
+      const { error } = await saveMomentResilient({
+        child_id: activeChildId,
+        title: title.trim(),
+        logged_at: loggedAt,
+        notes: rawNotes,
+        completed: true,
+        icon: momentIcon,
+      });
+      if (error) {
+        console.error("[moments.new] insert failed", error);
+        toast.error(error.message || "Couldn't save that moment");
+        return;
+      }
+      toast.success("Saved that moment 💛");
+      const tip = getSafetyTip(title.trim());
+      if (tip) {
+        setSafetyTip(tip);
+      } else {
+        navigate({ to: "/moments" });
+      }
+    } finally {
+      // Always clears — even if something above threw unexpectedly —
+      // so the button can never get stuck disabled/spinning forever with
+      // no feedback (the "silently lost save" failure mode).
       setSaving(false);
-      return;
-    }
-
-    const basePayload = {
-      child_id: activeChildId,
-      title: title.trim(),
-      logged_at: loggedAt,
-      notes: rawNotes,
-      completed: true,
-    };
-    let { error } = await supabase
-      .from("milestones")
-      .insert({ ...basePayload, icon: momentIcon } as typeof basePayload);
-    if (error && isIconColumnUnavailableError(error)) {
-      // The `icon` column isn't usable on the live database yet — either
-      // the migration hasn't deployed there, or PostgREST's schema cache
-      // hasn't reloaded (a real bug we hit in production — see
-      // 20260713000000_milestones_icon_column.sql). The moment itself must
-      // still save even if the icon selection can't be persisted yet,
-      // rather than failing the whole save.
-      console.error("[moments.new] icon column unavailable — retrying without it", error);
-      ({ error } = await supabase.from("milestones").insert(basePayload));
-    }
-    setSaving(false);
-    if (error) {
-      console.error("[moments.new] insert failed", error);
-      toast.error(error.message || "Couldn't save that moment");
-      return;
-    }
-    toast.success("Saved that moment 💛");
-    const tip = getSafetyTip(title.trim());
-    if (tip) {
-      setSafetyTip(tip);
-    } else {
-      navigate({ to: "/moments" });
     }
   }
 

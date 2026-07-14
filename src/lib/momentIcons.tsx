@@ -195,33 +195,83 @@ export async function fetchMilestonesResilient(
   data: RawMilestoneRow[] | null;
   error: { message: string; code?: string | null } | null;
 }> {
-  const baseQuery = supabase
-    .from("milestones")
-    .select("id, title, logged_at, notes, icon")
-    .eq("child_id", childId)
-    .order("logged_at", { ascending: false })
-    .order("created_at", { ascending: false });
-  const first = await (opts.limit ? baseQuery.limit(opts.limit) : baseQuery);
-
-  if (first.error && isIconColumnUnavailableError(first.error)) {
-    console.error(
-      "[fetchMilestonesResilient] icon column unavailable — retrying without it",
-      first.error,
-    );
-    const fallbackQuery = supabase
+  try {
+    const baseQuery = supabase
       .from("milestones")
-      .select("id, title, logged_at, notes")
+      .select("id, title, logged_at, notes, icon")
       .eq("child_id", childId)
       .order("logged_at", { ascending: false })
       .order("created_at", { ascending: false });
-    const retry = await (opts.limit ? fallbackQuery.limit(opts.limit) : fallbackQuery);
+    const first = await (opts.limit ? baseQuery.limit(opts.limit) : baseQuery);
+
+    if (first.error && isIconColumnUnavailableError(first.error)) {
+      console.error(
+        "[fetchMilestonesResilient] icon column unavailable — retrying without it",
+        first.error,
+      );
+      const fallbackQuery = supabase
+        .from("milestones")
+        .select("id, title, logged_at, notes")
+        .eq("child_id", childId)
+        .order("logged_at", { ascending: false })
+        .order("created_at", { ascending: false });
+      const retry = await (opts.limit ? fallbackQuery.limit(opts.limit) : fallbackQuery);
+      return {
+        data: retry.data ? retry.data.map((m) => ({ ...m, icon: null })) : null,
+        error: retry.error,
+      };
+    }
+    return first as unknown as {
+      data: RawMilestoneRow[] | null;
+      error: { message: string; code?: string | null } | null;
+    };
+  } catch (err) {
+    // A thrown (not resolved-with-error) exception — e.g. the network
+    // request itself failing outright (offline, DNS, CORS) rather than
+    // the server returning an error response. Without this, the caller's
+    // loading state can get stuck forever (see saveMomentResilient below
+    // for the write-side version of the same bug class).
+    console.error("[fetchMilestonesResilient] network/unexpected failure", err);
     return {
-      data: retry.data ? retry.data.map((m) => ({ ...m, icon: null })) : null,
-      error: retry.error,
+      data: null,
+      error: { message: err instanceof Error ? err.message : "Network error — couldn't load moments" },
     };
   }
-  return first as unknown as {
-    data: RawMilestoneRow[] | null;
-    error: { message: string; code?: string | null } | null;
-  };
+}
+
+type MomentInsertPayload = {
+  child_id: string;
+  title: string;
+  logged_at: string;
+  notes: string | null;
+  completed: boolean;
+  icon: string;
+};
+
+/**
+ * Saves a new moment, tolerating the live icon-column-unavailable bug the
+ * same way fetchMilestonesResilient does for reads: retries without
+ * `icon` if that specific column is the problem. Also catches any thrown
+ * (not resolved-with-error) exception — e.g. a genuine network failure —
+ * so a caller's "saving" state can always be cleared and an honest error
+ * shown, instead of the save silently hanging with no feedback (reported
+ * bug: "moments may not be saving reliably").
+ */
+export async function saveMomentResilient(
+  payload: MomentInsertPayload,
+): Promise<{ error: { message: string; code?: string | null } | null }> {
+  try {
+    let { error } = await supabase.from("milestones").insert(payload as never);
+    if (error && isIconColumnUnavailableError(error)) {
+      console.error("[saveMomentResilient] icon column unavailable — retrying without it", error);
+      const { icon: _icon, ...basePayload } = payload;
+      ({ error } = await supabase.from("milestones").insert(basePayload as never));
+    }
+    return { error };
+  } catch (err) {
+    console.error("[saveMomentResilient] network/unexpected failure", err);
+    return {
+      error: { message: err instanceof Error ? err.message : "Network error — couldn't save that moment" },
+    };
+  }
 }

@@ -74,24 +74,34 @@ function MomentsPage() {
     if (!activeChildId) return;
     (async () => {
       setLoading(true);
-      const [mRes, cRes] = await Promise.all([
-        fetchMilestonesResilient(activeChildId),
-        supabase
-          .from("children")
-          .select("name, date_of_birth")
-          .eq("id", activeChildId)
-          .maybeSingle(),
-      ]);
-      if (mRes.error) toast.error(mRes.error.message);
-      const parsed: ParsedMoment[] = (mRes.data ?? []).map((m: RawMoment) => {
-        const { legacyType, displayNotes } = parseLegacyNotes(m.notes);
-        const resolvedIcon = resolveMomentIcon(m.icon, legacyType);
-        return { ...m, resolvedIcon, displayNotes };
-      });
-      setMoments(parsed);
-      setChildName(cRes.data?.name ?? "");
-      setChildDob(cRes.data?.date_of_birth ?? null);
-      setLoading(false);
+      try {
+        const [mRes, cRes] = await Promise.all([
+          fetchMilestonesResilient(activeChildId),
+          supabase
+            .from("children")
+            .select("name, date_of_birth")
+            .eq("id", activeChildId)
+            .maybeSingle(),
+        ]);
+        if (mRes.error) toast.error(mRes.error.message);
+        const parsed: ParsedMoment[] = (mRes.data ?? []).map((m: RawMoment) => {
+          const { legacyType, displayNotes } = parseLegacyNotes(m.notes);
+          const resolvedIcon = resolveMomentIcon(m.icon, legacyType);
+          return { ...m, resolvedIcon, displayNotes };
+        });
+        setMoments(parsed);
+        setChildName(cRes.data?.name ?? "");
+        setChildDob(cRes.data?.date_of_birth ?? null);
+      } catch (err) {
+        // A thrown network/unexpected failure (fetchMilestonesResilient
+        // already catches its own — this covers the children query, and
+        // is the safety net that keeps the page from being stuck on its
+        // loading spinner forever with no error shown).
+        console.error("[moments] failed to load", err);
+        toast.error(err instanceof Error ? err.message : "Couldn't load your moments");
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [activeChildId]);
 
