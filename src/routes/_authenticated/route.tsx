@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AlertTriangle, Users, WifiOff } from "lucide-react";
 import { usePushRegistration } from "@/hooks/usePushRegistration";
 import { needsLegalConsent } from "@/lib/legalConsent";
+import { isSchemaMissingTableError } from "@/lib/errors";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -19,10 +20,24 @@ export const Route = createFileRoute("/_authenticated")({
     // current Terms of Service version before reaching any authenticated
     // screen — not just at signup, since existing users need to accept a
     // material terms update too (see src/lib/legalConsent.ts).
-    const { data: agreements } = await supabase
+    //
+    // Deliberately fails OPEN (lets the user through) if the
+    // user_agreements table itself isn't reachable yet — e.g. the
+    // migration hasn't been applied to this environment's database. This
+    // gate wraps every authenticated route, so failing closed here would
+    // lock every single user out of the entire app over an infra issue,
+    // not just this one feature. A genuine "you haven't agreed yet" (the
+    // query succeeds with zero/stale rows) still fails closed as normal.
+    const { data: agreements, error: agreementsError } = await supabase
       .from("user_agreements")
       .select("terms_version")
       .eq("user_id", session.user.id);
+    if (agreementsError) {
+      if (!isSchemaMissingTableError(agreementsError)) {
+        console.error("[legal-consent] couldn't check agreements — letting the user through:", agreementsError.message);
+      }
+      return { user: session.user };
+    }
     const acceptedVersions = (agreements ?? []).map((a) => (a as { terms_version: string }).terms_version);
     if (needsLegalConsent(acceptedVersions)) {
       throw redirect({ to: "/legal-consent", search: { next: location.pathname } });

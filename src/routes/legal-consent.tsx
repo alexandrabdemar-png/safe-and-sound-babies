@@ -6,6 +6,7 @@ import { Loader2, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { CURRENT_TERMS_VERSION } from "@/lib/legalConsent";
+import { friendlyError, isSchemaMissingTableError } from "@/lib/errors";
 
 export const Route = createFileRoute("/legal-consent")({
   ssr: false,
@@ -61,11 +62,18 @@ function LegalConsentPage() {
       } as never);
       // A duplicate-key error here just means this version was already
       // recorded (e.g. a double-click, or a retry after a network blip) —
-      // treat it as success rather than blocking the user.
-      if (error && !/duplicate key/i.test(error.message)) throw error;
+      // treat it as success rather than blocking the user. Likewise, if
+      // the table itself isn't reachable (e.g. this environment's
+      // database hasn't picked up the migration yet), don't trap the user
+      // on this screen forever — log it loudly and let them continue; the
+      // _authenticated gate fails open the same way for the same reason.
+      if (error && !/duplicate key/i.test(error.message) && !isSchemaMissingTableError(error)) {
+        throw error;
+      }
+      if (error) console.error("[legal-consent] couldn't record acceptance, continuing anyway:", error.message);
       navigate({ to: getNextParam() } as never);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Couldn't save your acceptance — please try again");
+      toast.error(friendlyError(err));
     } finally {
       setSubmitting(false);
     }
@@ -99,14 +107,16 @@ function LegalConsentPage() {
             We've updated our Terms of Service and Privacy Policy. Here's the short version of what you're agreeing to — the full text is linked below.
           </p>
 
-          <ul className="mt-6 space-y-3">
-            {ACKNOWLEDGMENTS.map((text, i) => (
-              <li key={i} className="flex gap-3 rounded-2xl border border-border/60 bg-card p-4 font-body text-sm leading-relaxed text-foreground">
-                <span className="mt-0.5 flex-shrink-0 text-primary">•</span>
-                <span>{text}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-6 max-h-72 overflow-y-auto rounded-2xl border border-border/60 bg-card p-4">
+            <ul className="space-y-3">
+              {ACKNOWLEDGMENTS.map((text, i) => (
+                <li key={i} className="flex gap-3 font-body text-sm leading-relaxed text-foreground">
+                  <span className="mt-0.5 flex-shrink-0 text-primary">•</span>
+                  <span>{text}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           <p className="mt-6 font-body text-xs text-muted-foreground">
             Read the full{" "}
