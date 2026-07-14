@@ -2,8 +2,11 @@ import { describe, it, expect } from "vitest";
 import {
   isLastHomeProfileQuestionStep,
   buildHomeProfileAnswers,
+  resolveHomeProfileSetupState,
+  shouldShowHomeProfileCard,
   HOME_PROFILE_QUESTION_COUNT,
 } from "./homeProfile";
+
 
 describe("isLastHomeProfileQuestionStep", () => {
   it("is true only at step 6 (the actual last question, has_pool)", () => {
