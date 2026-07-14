@@ -762,7 +762,6 @@ export type Database = {
           predicted_sizeup_date: string | null
           product_type: string
           purchased_at: string | null
-          recall_checked_at: string | null
           recalled: boolean
           replace_at: string | null
           size: string | null
@@ -788,7 +787,6 @@ export type Database = {
           predicted_sizeup_date?: string | null
           product_type?: string
           purchased_at?: string | null
-          recall_checked_at?: string | null
           recalled?: boolean
           replace_at?: string | null
           size?: string | null
@@ -1015,27 +1013,6 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_agreements: {
-        Row: {
-          agreed_at: string
-          id: string
-          terms_version: string
-          user_id: string
-        }
-        Insert: {
-          agreed_at?: string
-          id?: string
-          terms_version: string
-          user_id: string
-        }
-        Update: {
-          agreed_at?: string
-          id?: string
-          terms_version?: string
           user_id?: string
         }
         Relationships: []

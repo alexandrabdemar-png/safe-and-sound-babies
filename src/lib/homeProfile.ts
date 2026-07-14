@@ -41,3 +41,39 @@ export function buildHomeProfileAnswers(updated: Partial<HomeProfileAnswers>): H
     has_pool: updated.has_pool ?? false,
   };
 }
+
+/**
+ * Given the row (if any) returned from the DB for the current user, decide
+ * which UI state the personalize-reminders card should be in. Extracted so
+ * the "don't ever prompt again once the user has interacted" rule can be
+ * unit tested without React/Supabase.
+ *
+ * Rules (in priority order):
+ *   - Row with `dismissed_at` set → user tapped "Skip" before → "skipped".
+ *   - Row exists at all (any answered questions) → "done".
+ *   - No row → "pending" (first-time user; show the card).
+ */
+export type HomeProfileSetupState = "pending" | "done" | "skipped";
+export function resolveHomeProfileSetupState(
+  hp: { dismissed_at?: string | null } | null | undefined,
+): HomeProfileSetupState {
+  if (!hp) return "pending";
+  if (hp.dismissed_at) return "skipped";
+  return "done";
+}
+
+/**
+ * Whether the "Help us personalize your reminders" card should actually be
+ * rendered right now. We only prompt when (a) the user is in the pending
+ * state AND (b) we've finished checking the DB — otherwise a new device
+ * (empty localStorage) briefly flashes the card on every login, even though
+ * the answers are already saved server-side, which reads as "keeps prompting
+ * me every time I log in".
+ */
+export function shouldShowHomeProfileCard(
+  state: HomeProfileSetupState,
+  loaded: boolean,
+): boolean {
+  return state === "pending" && loaded;
+}
+

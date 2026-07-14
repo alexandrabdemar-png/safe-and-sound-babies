@@ -36,8 +36,11 @@ import { fetchMilestonesResilient } from "@/lib/momentIcons";
 import {
   isLastHomeProfileQuestionStep,
   buildHomeProfileAnswers,
+  resolveHomeProfileSetupState,
+  shouldShowHomeProfileCard,
   type HomeProfileAnswers,
 } from "@/lib/homeProfile";
+
 import { CheckCircle2, ShieldCheck } from "lucide-react";
 import { SoftBlob } from "@/components/SoftBlob";
 
@@ -311,7 +314,14 @@ function HomePage() {
     } catch {}
     return "pending";
   });
+  // Prevents a "prompts me every time I log in" flash on devices where
+  // localStorage is empty (new browser, incognito, cleared data): we don't
+  // actually know the user's status until the DB read below completes, so
+  // hold off rendering the card until then. Otherwise the card shows for
+  // ~a few hundred ms every login even though the answers are already saved.
+  const [homeProfileLoaded, setHomeProfileLoaded] = useState(false);
   const [hpStep, setHpStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6>(0);
+
 
   useEffect(() => {
     let cancelled = false;
@@ -522,23 +532,34 @@ function HomePage() {
             // "not remembering my answers".
             console.error("[home] failed to load home_profile:", hpError.message);
             toast.error(friendlyError(hpError.message));
-          } else if (hp) {
-            // Any row (with answers OR just a dismissed_at marker) means the
-            // user has already interacted with the card once — never show it
-            // again on any device. Previously the "skip" state lived only in
-            // localStorage, so skipping on phone → opening on tablet → card
-            // reappears; same issue after a browser data clear.
-            setHomeProfile(hp as HomeProfile);
-            const nextState = hp.dismissed_at ? "skipped" : "done";
+            // Don't flip loaded=true here — leaving it false keeps the card
+            // hidden so we don't prompt for answers we couldn't verify are
+            // missing. On the next successful load it will resolve properly.
+          } else {
+            if (hp) {
+              // Any row (with answers OR just a dismissed_at marker) means the
+              // user has already interacted with the card once — never show it
+              // again on any device. Previously the "skip" state lived only in
+              // localStorage, so skipping on phone → opening on tablet → card
+              // reappears; same issue after a browser data clear.
+              setHomeProfile(hp as HomeProfile);
+            }
+            const nextState = resolveHomeProfileSetupState(hp);
             try {
               localStorage.setItem("safesound.homeProfileSetup", nextState);
             } catch {}
             setHomeProfileSetup(nextState);
+            // Only now do we actually know whether the user needs the prompt;
+            // gate the card render on this so first-login-on-a-new-device
+            // doesn't flash the card before we've read the DB.
+            setHomeProfileLoaded(true);
           }
+
         }
       } catch (err) {
         console.error("[home] failed to load home_profile (network):", err);
       }
+
 
       // Load notification preferences
       try {
@@ -986,7 +1007,7 @@ function HomePage() {
       <BetaBanner />
 
       {/* Home Personalization Setup — one-time, shown after onboarding */}
-      {homeProfileSetup === "pending" && child && (
+      {shouldShowHomeProfileCard(homeProfileSetup, homeProfileLoaded) && child && (
         <div className="px-5 pt-4 sm:px-6">
           <div className="mx-auto max-w-md">
             <HomePersonalizationCard
