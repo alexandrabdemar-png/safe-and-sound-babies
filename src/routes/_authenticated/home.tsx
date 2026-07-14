@@ -529,23 +529,33 @@ function HomePage() {
             // "not remembering my answers".
             console.error("[home] failed to load home_profile:", hpError.message);
             toast.error(friendlyError(hpError.message));
-          } else if (hp) {
-            // Any row (with answers OR just a dismissed_at marker) means the
-            // user has already interacted with the card once — never show it
-            // again on any device. Previously the "skip" state lived only in
-            // localStorage, so skipping on phone → opening on tablet → card
-            // reappears; same issue after a browser data clear.
-            setHomeProfile(hp as HomeProfile);
-            const nextState = hp.dismissed_at ? "skipped" : "done";
-            try {
-              localStorage.setItem("safesound.homeProfileSetup", nextState);
-            } catch {}
-            setHomeProfileSetup(nextState);
+            // Don't flip loaded=true here — leaving it false keeps the card
+            // hidden so we don't prompt for answers we couldn't verify are
+            // missing. On the next successful load it will resolve properly.
+          } else {
+            if (hp) {
+              // Any row (with answers OR just a dismissed_at marker) means the
+              // user has already interacted with the card once — never show it
+              // again on any device. Previously the "skip" state lived only in
+              // localStorage, so skipping on phone → opening on tablet → card
+              // reappears; same issue after a browser data clear.
+              setHomeProfile(hp as HomeProfile);
+              const nextState = hp.dismissed_at ? "skipped" : "done";
+              try {
+                localStorage.setItem("safesound.homeProfileSetup", nextState);
+              } catch {}
+              setHomeProfileSetup(nextState);
+            }
+            // Only now do we actually know whether the user needs the prompt;
+            // gate the card render on this so first-login-on-a-new-device
+            // doesn't flash the card before we've read the DB.
+            setHomeProfileLoaded(true);
           }
         }
       } catch (err) {
         console.error("[home] failed to load home_profile (network):", err);
       }
+
 
       // Load notification preferences
       try {
