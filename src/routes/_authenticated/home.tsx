@@ -31,7 +31,7 @@ import { friendlyError, diagnosticDetail } from "@/lib/errors";
 import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
 import { checkCriticalRecalls, CRITICAL_RECALLS } from "@/lib/recallCheck";
 import { selectWeeklyTip, getIsoWeekNumber, weekKey as getTipWeekKey } from "@/lib/safetyTips";
-import { ageSafetyTip, weekendReminder, growthCheckTip, monthsFromDob } from "@/lib/dailyContent";
+import { ageSafetyTip, weekendReminder, growthCheckTip, monthsFromDob, dayOfYear } from "@/lib/dailyContent";
 import { fetchMilestonesResilient } from "@/lib/momentIcons";
 import {
   isLastHomeProfileQuestionStep,
@@ -1032,7 +1032,7 @@ function HomePage() {
             recalls={alerts.recalls}
             safetyTip={ageSafetyTip(
               monthsFromDob(child?.date_of_birth ?? null),
-              getIsoWeekNumber(),
+              dayOfYear(new Date()),
             )}
             onNavigate={navigate}
             safetyTipDismissed={dailyTipDismissed}

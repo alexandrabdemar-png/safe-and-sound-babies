@@ -10,18 +10,36 @@
 
 type AgeBracket = { maxMonths: number; variants: string[] };
 
+// Generic "which variant" chooser — cycleIndex is just an integer that
+// increments over time; how coarse that increment is (day vs. week) is up
+// to the caller. Modulo naturally cycles through every variant exactly
+// once before repeating, so it satisfies "no repeats until exhausted" for
+// any monotonically-increasing cycleIndex.
 function pickVariant(
   months: number | null,
   brackets: AgeBracket[],
   fallback: string[],
-  weekNumber: number,
+  cycleIndex: number,
 ): string {
   const pool =
     months === null
       ? fallback
       : (brackets.find((b) => months < b.maxMonths) ?? brackets[brackets.length - 1]).variants;
-  const index = ((weekNumber % pool.length) + pool.length) % pool.length;
+  const index = ((cycleIndex % pool.length) + pool.length) % pool.length;
   return pool[index];
+}
+
+/**
+ * Day-of-year (1-366), UTC-based so it flips at a consistent instant
+ * worldwide rather than each user's local midnight. Used to pick the
+ * "Quick safety tip" deterministically — same tip all day for every user,
+ * changes once at UTC midnight, cycles through the age bracket's variants
+ * without repeats until exhausted.
+ */
+export function dayOfYear(date: Date): number {
+  const start = Date.UTC(date.getUTCFullYear(), 0, 0);
+  const now = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+  return Math.floor((now - start) / 86400000);
 }
 
 const QUICK_TIP_FALLBACK = [
@@ -141,8 +159,14 @@ export function monthsFromDob(dobStr: string | null): number | null {
   );
 }
 
-export function ageSafetyTip(months: number | null, weekNumber: number): string {
-  return pickVariant(months, QUICK_TIP_BRACKETS, QUICK_TIP_FALLBACK, weekNumber);
+// Rotates daily (by day-of-year), not weekly — reported bug: the "Quick
+// safety tip" showed the same text all week since it shared the same
+// week-based rotation as the weekend/growth-check tips. Deliberately
+// day-of-year rather than random: it's the same tip all day for every
+// user (no flicker on re-render/reload), and it cycles through every
+// variant in the bracket before any repeat.
+export function ageSafetyTip(months: number | null, dayNumber: number): string {
+  return pickVariant(months, QUICK_TIP_BRACKETS, QUICK_TIP_FALLBACK, dayNumber);
 }
 
 export function weekendReminder(months: number | null, weekNumber: number): string {
