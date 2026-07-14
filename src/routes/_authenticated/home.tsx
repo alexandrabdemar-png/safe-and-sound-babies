@@ -32,6 +32,7 @@ import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/c
 import { checkCriticalRecalls, CRITICAL_RECALLS } from "@/lib/recallCheck";
 import { selectWeeklyTip, getIsoWeekNumber, weekKey as getTipWeekKey } from "@/lib/safetyTips";
 import { ageSafetyTip, weekendReminder, growthCheckTip, monthsFromDob, dayOfYear } from "@/lib/dailyContent";
+import { WHATS_NEW, LATEST_VERSION, whatsNewDismissalKey } from "@/lib/whatsNew";
 import { fetchMilestonesResilient } from "@/lib/momentIcons";
 import {
   isLastHomeProfileQuestionStep,
@@ -134,30 +135,6 @@ function todayKey() {
   return new Date().toISOString().slice(0, 10);
 }
 
-// ── What's New ──────────────────────────────────────────────────────────────
-const WHATS_NEW = [
-  {
-    version: "v1.4",
-    date: "June 2025",
-    updates: [
-      "Recall Radar: live CPSC baby recall count right on your home screen",
-      "Hand-Me-Down Checker flags expired and recalled second-hand gear you've logged",
-      "Travel Safety Mode — a full 30-item checklist for traveling with baby",
-    ],
-  },
-  {
-    version: "v1.3",
-    date: "May 2025",
-    updates: [
-      "Age jump alerts when your baby crosses a milestone — with relevant safety actions",
-      "Gift Registry Safety Check: paste any URL to check for recalls before adding to your list",
-      "Haptic feedback and smoother entrance animations throughout",
-    ],
-  },
-];
-
-const LATEST_VERSION = WHATS_NEW[0].version;
-
 // ── Age jump milestones ──────────────────────────────────────────────────────
 const AGE_MILESTONES: { months: number; actions: string[] }[] = [
   {
@@ -227,7 +204,7 @@ function HomePage() {
   // What's New card
   const [whatsNewDismissed, setWhatsNewDismissed] = useState(() => {
     try {
-      return localStorage.getItem(`safesound.whatsNew.${LATEST_VERSION}`) === "true";
+      return localStorage.getItem(whatsNewDismissalKey(LATEST_VERSION)) === "true";
     } catch {
       return false;
     }
@@ -728,7 +705,7 @@ function HomePage() {
 
   function dismissWhatsNew() {
     try {
-      localStorage.setItem(`safesound.whatsNew.${LATEST_VERSION}`, "true");
+      localStorage.setItem(whatsNewDismissalKey(LATEST_VERSION), "true");
     } catch {}
     setWhatsNewDismissed(true);
   }
