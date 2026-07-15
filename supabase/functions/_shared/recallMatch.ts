@@ -68,14 +68,31 @@ const NOISE_WORDS = new Set([
   "he",
 ]);
 
+function tokenize(s: string): string[] {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
 export function fuzzyMatchProduct(productName: string, recallText: string): boolean {
   const text = recallText.toLowerCase();
+  // Word-boundary set, not a raw string — checking token membership here
+  // (rather than `text.includes(token)`) is what stops a short token from
+  // matching as a *substring* of an unrelated word. Regression: a product
+  // named "Beech-Nut" tokenizes to ["beech", "nut"], and a completely
+  // unrelated recall for "Grizzlies Granola... Beechwood Trail Mix...
+  // Undeclared Peanuts" contains "beech" (inside "Beechwood") and "nut"
+  // (inside "Peanuts") as pure substrings, with neither word actually
+  // present — substring matching flagged that recall against Beech-Nut
+  // baby food, a false positive with no real connection between the
+  // products. Matching on whole tokens instead closes this off.
+  const textTokens = new Set(tokenize(text));
+
   const tokens = [
     ...new Set(
-      productName
-        .toLowerCase()
-        .replace(/[^a-z0-9 ]+/g, " ")
-        .split(/\s+/)
+      tokenize(productName)
         // Minimum length 2 (not 3) so short distinguishing suffixes like a
         // trim-level code ("RX", "LX") aren't silently dropped — dropping
         // exactly this kind of token is what let a sibling-product false
@@ -86,9 +103,9 @@ export function fuzzyMatchProduct(productName: string, recallText: string): bool
   ];
 
   if (tokens.length === 0) return text.includes(productName.toLowerCase().trim());
-  if (tokens.length === 1) return text.includes(tokens[0]);
+  if (tokens.length === 1) return textTokens.has(tokens[0]);
 
-  const matchCount = tokens.filter((t) => text.includes(t)).length;
+  const matchCount = tokens.filter((t) => textTokens.has(t)).length;
   // Short/specific product names (<=3 meaningful tokens, which is the
   // common case: brand + model + variant) must match *every* token — a
   // recall for the base model must not flag a variant that's the same

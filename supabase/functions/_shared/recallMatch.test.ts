@@ -25,6 +25,46 @@ describe("fuzzyMatchProduct", () => {
       fuzzyMatchProduct("Bobbie Gentle Formula", "Gentle giant recall of something else entirely"),
     ).toBe(false);
   });
+
+  // ── Regression: "Beech-Nut" false-flagged against an unrelated Grizzlies
+  // granola recall — reported bug. Root cause: token matching used raw
+  // substring containment (`text.includes(token)`), so short tokens like
+  // "beech" and "nut" matched as fragments of completely unrelated words
+  // ("Beechwood", "Peanuts") instead of requiring a real whole-word match. ──
+  it("regression: does NOT match on tokens that only appear as substrings of unrelated words", () => {
+    // Real-shape recall title: neither "Beech" nor "Nut" is actually
+    // present as a word — "beech" is only a fragment of "Beechwood" and
+    // "nut" only a fragment of "Peanuts".
+    expect(
+      fuzzyMatchProduct(
+        "Beech-Nut",
+        "Grizzlies Granola Recalls Beechwood Trail Mix Bars Due to Undeclared Peanuts",
+      ),
+    ).toBe(false);
+  });
+
+  it("regression: the same false-positive pattern, product name reversed (Nut-Beech) and different substring carriers", () => {
+    expect(
+      fuzzyMatchProduct("Nut Beech", "Coconut Grove Recalls Beechcraft-Branded Snack Trays"),
+    ).toBe(false);
+  });
+
+  it("still matches a genuine recall that names the exact brand as a whole word", () => {
+    expect(
+      fuzzyMatchProduct(
+        "Beech-Nut Naturals Oatmeal Pouch",
+        "Beech-Nut Nutrition Recalls Naturals Oatmeal Baby Food Pouches",
+      ),
+    ).toBe(true);
+  });
+
+  it("a single short meaningful token still requires a whole-word match, not a substring one", () => {
+    // "cat" must not match inside "category"/"educate"/"delicate" etc.
+    expect(fuzzyMatchProduct("Cat", "This product is in a different category entirely")).toBe(
+      false,
+    );
+    expect(fuzzyMatchProduct("Cat", "Recall affects the Cat brand of toy trucks")).toBe(true);
+  });
 });
 
 describe("checkCpscRecalls — structured-field-only matching (regression: Pipa RX false positive)", () => {

@@ -4,7 +4,49 @@ import {
   fetchCpscRecallsForProduct,
   fetchFdaRecallsForProduct,
   formatRecallSyncNote,
+  fuzzyMatchProduct,
 } from "./recallCheck";
+
+// ── Regression: "Beech-Nut" false-flagged against an unrelated Grizzlies
+// granola recall — reported bug. Root cause: this matcher used raw
+// substring containment (`text.includes(token)`), so short tokens like
+// "beech" and "nut" matched as fragments of completely unrelated words
+// ("Beechwood", "Peanuts") instead of requiring a real whole-word match.
+// This is the client-side copy of the same matcher fixed in
+// supabase/functions/_shared/recallMatch.ts — see that file's test for the
+// batch/edge-function-side coverage of the identical bug class.
+describe("fuzzyMatchProduct", () => {
+  it("regression: does NOT match on tokens that only appear as substrings of unrelated words", () => {
+    expect(
+      fuzzyMatchProduct(
+        "Beech-Nut",
+        "Grizzlies Granola Recalls Beechwood Trail Mix Bars Due to Undeclared Peanuts",
+      ),
+    ).toBe(false);
+  });
+
+  it("still matches a genuine recall that names the exact brand as a whole word", () => {
+    expect(
+      fuzzyMatchProduct(
+        "Beech-Nut Naturals Oatmeal Pouch",
+        "Beech-Nut Nutrition Recalls Naturals Oatmeal Baby Food Pouches",
+      ),
+    ).toBe(true);
+  });
+
+  it("a single meaningful token still requires a whole-word match, not a substring one", () => {
+    // "cat" must not match inside "category" — this file's minimum token
+    // length is 3, so "cat" (exactly 3) is the shortest realistic case.
+    expect(fuzzyMatchProduct("Cat", "This product is in a different category entirely")).toBe(
+      false,
+    );
+    expect(fuzzyMatchProduct("Cat", "Recall affects the Cat brand of toy trucks")).toBe(true);
+  });
+
+  it("does not match an unrelated product", () => {
+    expect(fuzzyMatchProduct("Bobbie Gentle Formula", "Graco Stroller Recall")).toBe(false);
+  });
+});
 
 describe("isAllowedRecallUrl", () => {
   it("allows an official cpsc.gov URL", () => {
