@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getIsoWeekNumber, weekKey } from "./safetyTips";
+import { getIsoWeekNumber, weekKey, SAFETY_TIPS, selectWeeklyTip } from "./safetyTips";
 
 describe("getIsoWeekNumber", () => {
   it("returns the same week number for every day in the same ISO week (Mon–Sun)", () => {
@@ -90,5 +90,27 @@ describe("weekly safety tip dismissal (via the weekKey-scoped storage key)", () 
     // "Reload" the following week — visible again, since that week's key
     // was never written.
     expect(isTipDismissedForWeek(storage, mondayNextWeek)).toBe(false);
+  });
+});
+
+describe("pacifier size-appropriateness tip", () => {
+  it("exists in the tip pool and covers the common pacifier-use age range", () => {
+    const tip = SAFETY_TIPS.find((t) => t.id === "t061");
+    expect(tip).toBeDefined();
+    expect(tip!.text).toMatch(/pacifier/i);
+    expect(tip!.text).toMatch(/size/i);
+    expect(tip!.minMonths).toBe(0);
+    expect(tip!.maxMonths).toBeGreaterThanOrEqual(18);
+  });
+
+  it("can actually be selected by selectWeeklyTip for an age within its range", () => {
+    // Cycle through enough weeks to prove it's reachable — selectWeeklyTip
+    // is deterministic (age-filtered pool, indexed by week number), so if
+    // the tip is in range it must show up within one lap of the pool.
+    const seen = new Set<string>();
+    for (let week = 1; week <= 60; week++) {
+      seen.add(selectWeeklyTip(3, week).id);
+    }
+    expect(seen.has("t061")).toBe(true);
   });
 });
