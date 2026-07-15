@@ -381,6 +381,12 @@ export const SAFETY_TIPS: SafetyTip[] = [
     maxMonths: 999,
     text: "You might consider giving the locks and latches on your outdoor gates a check — exposure to weather can cause these to degrade faster than interior hardware.",
   },
+  {
+    id: "t061",
+    minMonths: 0,
+    maxMonths: 24,
+    text: "If your baby uses a pacifier, it's worth double-checking you're using the size made for their current age — most brands mark stages like 0–6 months and 6–18 months, and a pacifier sized for a younger baby can be a choking or fit hazard as they grow.",
+  },
 ];
 
 // Select the best tip for a given age and ISO week number.

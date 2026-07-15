@@ -45,6 +45,7 @@ import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 import { resolveCarSeatReplaceAt } from "@/lib/carSeatExpiration";
 import { evaluateAgeAppropriateness } from "@/lib/ageAppropriateness";
 import { isPreviewHost } from "@/lib/previewHost";
+import { nextPacifierSizeUpDate } from "@/lib/pacifierSizeUp";
 
 const CATEGORY_ORDER: CategoryKey[] = CATEGORIES.map((c) => c.key);
 
@@ -151,6 +152,12 @@ function ScanPage() {
     [category, activeChild?.date_of_birth, activeChild?.due_date],
   );
 
+  // Pacifiers size up by age, not weight/height — computed straight from
+  // the active child's date of birth (see src/lib/pacifierSizeUp.ts).
+  const computedPacifierSizeUp = useMemo(() => {
+    if (category !== "pacifier") return "";
+    return nextPacifierSizeUpDate(activeChild?.date_of_birth ?? null) ?? "";
+  }, [category, activeChild?.date_of_birth]);
 
   // Single source of truth for releasing blob URLs: runs whenever the
   // preview changes (picking a new photo, clearing it, rescanning) *and* on
@@ -325,6 +332,7 @@ function ScanPage() {
           // sticker date needs to be stored directly or the daily
           // expiration-alert cron never engages for it.
           expiration_date: category === "car_seat" ? carSeatExpiry || null : null,
+          predicted_sizeup_date: computedPacifierSizeUp || null,
           // Only stamp this if a recall check actually completed — a user
           // can save before/without one finishing, and recallInfo staying
           // null there shouldn't be reported as a synced check.
@@ -766,6 +774,32 @@ function ScanPage() {
                   {category === "car_seat" && !carSeatExpiry && carSeatManufactureDate && (
                     <span className="block mt-1 font-body text-xs text-muted-foreground">
                       Estimated from the manufacture date — check the shell sticker for the exact date when you can.
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {category === "pacifier" && (
+                <div className="rounded-2xl bg-sand/60 px-4 py-3 font-body text-sm text-foreground/80">
+                  {computedPacifierSizeUp ? (
+                    <>
+                      Size up by{" "}
+                      <span className="font-semibold">
+                        {new Date(computedPacifierSizeUp).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </span>
+                      <span className="block mt-1 font-body text-xs text-muted-foreground">
+                        Estimated from {activeChild?.name ?? "your child"}'s birth date, based on common
+                        0–6mo / 6–18mo / 18mo+ stage sizing — check your specific brand's packaging for
+                        its exact age ranges.
+                      </span>
+                    </>
+                  ) : (
+                    <span className="font-body text-xs text-muted-foreground">
+                      Add your child's date of birth in Profile to get a pacifier size-up reminder.
                     </span>
                   )}
                 </div>
