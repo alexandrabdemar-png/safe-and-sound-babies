@@ -147,7 +147,7 @@ function NewBottlePage() {
                   >
                     <p className="font-display text-xs font-semibold">{opt.label}</p>
                     <p className="mt-1 font-body text-[10px] text-muted-foreground">
-                      {disabled ? "Not safe" : formatCountdown(mins! * 60_000)}
+                      {disabled ? "Not recommended" : formatCountdown(mins! * 60_000)}
                     </p>
                   </button>
                 );

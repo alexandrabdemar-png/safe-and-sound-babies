@@ -58,7 +58,7 @@ function daysFromNow(dateStr: string): number {
 
 function relative(dateStr: string): string {
   const days = daysFromNow(dateStr);
-  if (days < 0) return `${Math.abs(days)}d overdue`;
+  if (days < 0) return `${Math.abs(days)}d past estimate`;
   if (days === 0) return "today";
   if (days === 1) return "tomorrow";
   if (days < 7) return `in ${days} days`;
@@ -331,7 +331,7 @@ function AlertsPage() {
               )}
 
               {visibleReplace.length > 0 && (
-                <Section title="Time to replace" icon={RefreshCw}>
+                <Section title="Worth reviewing for replacement" icon={RefreshCw}>
                   <ul className="space-y-2.5">
                     {visibleReplace.map((p) => (
                       <ProductRow
@@ -348,7 +348,7 @@ function AlertsPage() {
               )}
 
               {visibleSizeUp.length > 0 && (
-                <Section title="Ready for the next size" icon={Ruler}>
+                <Section title="May be ready for the next size" icon={Ruler}>
                   <ul className="space-y-2.5">
                     {visibleSizeUp.map((p) => (
                       <ProductRow

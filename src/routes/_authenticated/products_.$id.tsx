@@ -322,7 +322,9 @@ function TimelineRow({ label, date, addedAt, variant }: { label: string; date: s
         <div className={`h-full ${barClass}`} style={{ width: `${pct}%` }} />
       </div>
       <p className="mt-1 font-body text-xs text-muted-foreground">
-        {remaining > 0 ? `${remaining} days from today` : "Past due — review now"}
+        {remaining > 0
+          ? `${remaining} days from today`
+          : "Past this estimated date — worth reviewing against the manufacturer's guidance"}
       </p>
     </div>
   );
