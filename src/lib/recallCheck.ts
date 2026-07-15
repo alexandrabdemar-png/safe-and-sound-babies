@@ -140,10 +140,16 @@ const NOISE_WORDS = new Set([
  *   1. Split product name into words, remove NOISE_WORDS and short words.
  *   2. Single meaningful token  → match if it appears anywhere in recall text.
  *   3. Multiple meaningful tokens → match if 2+ tokens appear in recall text.
- *   All comparisons are case-insensitive substring checks.
+ *   All comparisons are whole-word matches against the recall text, not raw
+ *   substring checks — see the regression test for why: a raw substring
+ *   check let a "Beech-Nut" product falsely match an unrelated "Grizzlies"
+ *   granola recall, because "beech" and "nut" both occurred as *fragments*
+ *   of other words ("Beechwood", "Peanuts") without either word actually
+ *   being present.
  */
 export function fuzzyMatchProduct(productName: string, recallText: string): boolean {
   const text = recallText.toLowerCase();
+  const textTokens = new Set(text.replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter(Boolean));
   const tokens = productName
     .toLowerCase()
     .replace(/[^a-z0-9 ]+/g, " ")
@@ -154,10 +160,10 @@ export function fuzzyMatchProduct(productName: string, recallText: string): bool
     return text.includes(productName.toLowerCase().trim());
   }
   if (tokens.length === 1) {
-    return text.includes(tokens[0]);
+    return textTokens.has(tokens[0]);
   }
   // Multiple tokens — require at least 2 hits
-  return tokens.filter((t) => text.includes(t)).length >= 2;
+  return tokens.filter((t) => textTokens.has(t)).length >= 2;
 }
 
 // ── CRITICAL RECALLS — manually maintained ───────────────────────────────────

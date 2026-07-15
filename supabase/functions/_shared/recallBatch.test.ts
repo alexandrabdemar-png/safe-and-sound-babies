@@ -170,4 +170,64 @@ describe("runRecallBatch", () => {
     expect(result.matches).toHaveLength(1);
     expect(result.matches[0].source).toBe("critical");
   });
+
+  // ── Regression: reported bug — a Beech-Nut baby food product got flagged
+  // with a recall alert for an entirely unrelated Grizzlies granola product.
+  // Root cause (fixed in recallMatch.ts's fuzzyMatchProduct): substring
+  // matching let "beech" and "nut" match as fragments of "Beechwood" and
+  // "Peanuts" in the granola recall's title, with neither word actually
+  // present. This test seeds exactly that scenario at the full
+  // runRecallBatch level (add a Beech-Nut product, seed the Grizzlies
+  // recall via the mocked CPSC feed) and asserts no match is produced. ──
+  it("regression: a Beech-Nut product does NOT get matched to an unrelated Grizzlies granola recall", async () => {
+    const fetchImpl = mockFetch({
+      "saferproducts.gov": [
+        {
+          RecallID: 555,
+          Title: "Grizzlies Granola Recalls Beechwood Trail Mix Bars Due to Undeclared Peanuts",
+          Products: [{ Name: "Grizzlies Beechwood Trail Mix Bar", Type: "Granola" }],
+          Manufacturers: [{ Name: "Grizzlies Snack Co" }],
+          Hazards: [{ Name: "Allergen — undeclared peanuts" }],
+        },
+      ],
+      "fsis.usda.gov": [],
+      "transportation.gov": [],
+      "canada.ca": [],
+      "opendatasoft.com": { results: [] },
+      "api.fda.gov": { results: [] },
+    });
+    const result = await runRecallBatch(fetchImpl, [
+      product({ id: "beech-nut-1", user_id: "u1", name: "Beech-Nut", category: "baby_food" }),
+    ]);
+    expect(result.matches).toEqual([]);
+    expect(result.catalogRows).toHaveLength(0);
+  });
+
+  it("a genuine Beech-Nut recall (brand actually named in the recall) still matches — true positive", async () => {
+    const fetchImpl = mockFetch({
+      "saferproducts.gov": [
+        {
+          RecallID: 556,
+          Title: "Beech-Nut Nutrition Recalls Naturals Oatmeal Baby Food Pouches",
+          Products: [{ Name: "Beech-Nut Naturals Oatmeal Pouch", Type: "Baby Food" }],
+          Manufacturers: [{ Name: "Beech-Nut Nutrition Company" }],
+          Hazards: [{ Name: "Possible elevated arsenic levels" }],
+        },
+      ],
+      "fsis.usda.gov": [],
+      "transportation.gov": [],
+      "canada.ca": [],
+      "opendatasoft.com": { results: [] },
+      "api.fda.gov": { results: [] },
+    });
+    const result = await runRecallBatch(fetchImpl, [
+      product({ id: "beech-nut-1", user_id: "u1", name: "Beech-Nut", category: "baby_food" }),
+    ]);
+    expect(result.matches).toHaveLength(1);
+    expect(result.matches[0]).toMatchObject({
+      product_id: "beech-nut-1",
+      source: "cpsc",
+      source_id: "556",
+    });
+  });
 });
