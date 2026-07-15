@@ -186,13 +186,17 @@ function OnboardingPage() {
         if (childError) throw childError;
 
         if (!skipCategories && selected.size > 0 && childRow) {
+          // Category interest is tracked separately from real gear — it
+          // must never create a row in `products`, since that table is
+          // rendered as "your baby gear" and a placeholder row (no brand,
+          // size, or barcode) is indistinguishable from something the
+          // user actually added.
           const rows = [...selected].map((cat) => ({
             user_id: userId,
             child_id: (childRow as { id: string }).id,
             category: cat,
-            name: CATEGORIES.find((c) => c.key === cat)?.name ?? cat,
           }));
-          await supabase.from("products").insert(rows as never);
+          await supabase.from("category_watchlist").insert(rows as never);
         }
       }
 
