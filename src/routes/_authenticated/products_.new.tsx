@@ -406,7 +406,7 @@ function NewProductPage() {
                   <p className="mt-1.5 font-body text-xs text-muted-foreground">
                     {carSeatExpiry
                       ? "Not needed — you already gave the expiry date above."
-                      : "Car seats are generally unsafe to use starting 6 years after manufacture. If you don't have the exact expiry date, we'll estimate one from this."}
+                      : "Many manufacturers recommend against using a car seat starting around 6 years after manufacture, though exact timelines vary by brand and model. If you don't have the exact expiry date, we'll estimate one from this manufacture date — always confirm against your seat's manual or shell sticker."}
                   </p>
                 </Field>
 
@@ -433,7 +433,7 @@ function NewProductPage() {
 
             {computedReplaceAt && (
               <div className="rounded-2xl bg-primary/8 px-4 py-3 font-body text-sm text-foreground/80">
-                Replace by <span className="font-semibold">{formatDate(computedReplaceAt)}</span>
+                Estimated replace-by <span className="font-semibold">{formatDate(computedReplaceAt)}</span>
                 {category === "car_seat" && !carSeatExpiry && carSeatManufactureDate && (
                   <span className="block mt-1 font-body text-xs text-muted-foreground">
                     Estimated from the manufacture date — check the shell sticker for the exact date when you can.
@@ -446,7 +446,7 @@ function NewProductPage() {
               <div className="rounded-2xl bg-primary/8 px-4 py-3 font-body text-sm text-foreground/80">
                 {computedPacifierSizeUp ? (
                   <>
-                    Size up by <span className="font-semibold">{formatDate(computedPacifierSizeUp)}</span>
+                    Estimated size-up <span className="font-semibold">{formatDate(computedPacifierSizeUp)}</span>
                     <span className="block mt-1 font-body text-xs text-muted-foreground">
                       Estimated from {activeChild?.name ?? "your child"}'s birth date, based on common
                       0–6mo / 6–18mo / 18mo+ stage sizing — check your specific brand's packaging for

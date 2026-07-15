@@ -1091,8 +1091,8 @@ function HomePage() {
             <div className="flex items-start justify-between gap-3 rounded-2xl border border-[#8FAF8C]/40 bg-[#F2F7F1] px-4 py-3.5">
               <div className="min-w-0 flex-1">
                 <p className="font-body text-sm leading-snug text-foreground/80">
-                  Time to update {child.name}'s measurements — keeping them current helps predict
-                  the right size-ups.
+                  It may be worth updating {child.name}'s measurements — keeping them current helps
+                  us estimate size-up timing more accurately.
                 </p>
                 <Link
                   to="/profile"

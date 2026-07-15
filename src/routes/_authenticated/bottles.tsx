@@ -83,7 +83,10 @@ function BottlesPage() {
         notifiedRef.current.add(b.id);
         const label = bottleTypeLabel(b.bottle_type);
         const remaining = Math.max(0, Math.round((exp - now) / 60_000));
-        const msg = remaining > 0 ? `${label} expires in ${remaining}m` : `${label} has expired`;
+        const msg =
+          remaining > 0
+            ? `${label} reaches its estimated window in ${remaining}m`
+            : `${label} is past its estimated window — worth a check before use`;
         toast(msg);
         if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
           try { new Notification("Peace of Mine", { body: msg }); } catch {/* ignore */}

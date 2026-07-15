@@ -98,7 +98,7 @@ export const Route = createFileRoute("/api/public/hooks/check-product-alerts")({
                 child_id: p.child_id,
                 alert_type: `size_up_${bucket}d`,
                 title: `${childName}'s ${p.name} may be getting snug`,
-                body: `Estimated size-up around ${new Date(p.predicted_sizeup_date).toLocaleDateString(undefined, { month: "long", year: "numeric" })}. Time to shop for the next size!`,
+                body: `Based on the information you've entered, ${childName} may be approaching the size-up window for this item around ${new Date(p.predicted_sizeup_date).toLocaleDateString(undefined, { month: "long", year: "numeric" })} — worth checking against the manufacturer's sizing guidance.`,
               });
             }
           }
@@ -113,8 +113,8 @@ export const Route = createFileRoute("/api/public/hooks/check-product-alerts")({
                 product_id: p.id,
                 child_id: p.child_id,
                 alert_type: `replace_${bucket}d`,
-                title: `Time to replace ${p.name}`,
-                body: `Recommended replacement around ${new Date(p.predicted_replacement_date).toLocaleDateString(undefined, { month: "long", year: "numeric" })}.`,
+                title: `${p.name} may need a replacement check`,
+                body: `Based on the information you've entered, this item may be approaching its typical replacement window around ${new Date(p.predicted_replacement_date).toLocaleDateString(undefined, { month: "long", year: "numeric" })} — worth reviewing against the manufacturer's guidance to see if it's time to inspect or replace it.`,
               });
             }
           }
@@ -130,8 +130,8 @@ export const Route = createFileRoute("/api/public/hooks/check-product-alerts")({
                 product_id: p.id,
                 child_id: p.child_id,
                 alert_type: "replace_overdue",
-                title: `${p.name} is overdue for replacement`,
-                body: `Based on the manufacturer's interval, this should have been replaced by ${overdueAt.toLocaleDateString(undefined, { month: "long", year: "numeric" })}.`,
+                title: `${p.name} may be past its replacement window`,
+                body: `Based on the manufacturer's typical interval, this item may be past its general replacement window (around ${overdueAt.toLocaleDateString(undefined, { month: "long", year: "numeric" })}) — worth reviewing the manufacturer's guidance to confirm.`,
               });
             }
           }

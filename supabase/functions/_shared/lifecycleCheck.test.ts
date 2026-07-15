@@ -139,10 +139,14 @@ describe("findLifecycleMatches", () => {
 
 describe("buildLifecycleNotification", () => {
   it("builds an urgency-appropriate title and body for each bucket", () => {
-    expect(buildLifecycleNotification("Graco Car Seat", "expired").body).toContain("has expired");
-    expect(buildLifecycleNotification("Graco Car Seat", "7").body).toContain("within a week");
-    expect(buildLifecycleNotification("Graco Car Seat", "30").body).toContain("within a month");
-    expect(buildLifecycleNotification("Graco Car Seat", "90").body).toContain("within 90 days");
+    expect(buildLifecycleNotification("Graco Car Seat", "expired").body).toContain(
+      "past its estimated safe-use window",
+    );
+    expect(buildLifecycleNotification("Graco Car Seat", "7").body).toContain("within the next week");
+    expect(buildLifecycleNotification("Graco Car Seat", "30").body).toContain("within the next month");
+    expect(buildLifecycleNotification("Graco Car Seat", "90").body).toContain(
+      "within the next 90 days",
+    );
   });
 
   it("includes the product name in the title", () => {

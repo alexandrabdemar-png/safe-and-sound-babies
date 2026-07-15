@@ -66,7 +66,7 @@ export function storageLabel(s: Storage): string {
 }
 
 export function formatCountdown(msRemaining: number): string {
-  if (msRemaining <= 0) return "Expired";
+  if (msRemaining <= 0) return "Past window";
   const totalMin = Math.floor(msRemaining / 60_000);
   const days = Math.floor(totalMin / (60 * 24));
   const hours = Math.floor((totalMin % (60 * 24)) / 60);

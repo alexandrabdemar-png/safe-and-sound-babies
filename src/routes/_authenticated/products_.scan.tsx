@@ -748,7 +748,7 @@ function ScanPage() {
                     <p className="mt-1.5 font-body text-xs text-muted-foreground">
                       {carSeatExpiry
                         ? "Not needed — you already gave the expiry date above."
-                        : "Car seats are generally unsafe to use starting 6 years after manufacture. If you don't have the exact expiry date, we'll estimate one from this."}
+                        : "Many manufacturers recommend against using a car seat starting around 6 years after manufacture, though exact timelines vary by brand and model. If you don't have the exact expiry date, we'll estimate one from this manufacture date — always confirm against your seat's manual or shell sticker."}
                     </p>
                   </Field>
 
@@ -763,7 +763,7 @@ function ScanPage() {
 
               {computedReplaceAt && (
                 <div className="rounded-2xl bg-sand/60 px-4 py-3 font-body text-sm text-foreground/80">
-                  Replace by{" "}
+                  Estimated replace-by{" "}
                   <span className="font-semibold">
                     {new Date(computedReplaceAt).toLocaleDateString(undefined, {
                       month: "short",
@@ -783,7 +783,7 @@ function ScanPage() {
                 <div className="rounded-2xl bg-sand/60 px-4 py-3 font-body text-sm text-foreground/80">
                   {computedPacifierSizeUp ? (
                     <>
-                      Size up by{" "}
+                      Estimated size-up{" "}
                       <span className="font-semibold">
                         {new Date(computedPacifierSizeUp).toLocaleDateString(undefined, {
                           month: "short",

@@ -68,10 +68,10 @@ export function findLifecycleMatches(products: LifecycleProduct[], today: Date):
 }
 
 const URGENCY_LABEL: Record<Urgency, string> = {
-  expired: "has expired",
-  "7": "expires within a week",
-  "30": "expires within a month",
-  "90": "expires within 90 days",
+  expired: "may be past its estimated safe-use window",
+  "7": "may be approaching its estimated window within the next week",
+  "30": "may be approaching its estimated window within the next month",
+  "90": "may be approaching its estimated window within the next 90 days",
 };
 
 export function buildLifecycleNotification(
@@ -80,6 +80,6 @@ export function buildLifecycleNotification(
 ): { title: string; body: string } {
   return {
     title: `⏳ Safety check — ${productName}`,
-    body: `${productName} ${URGENCY_LABEL[urgency]}. Check whether it's still safe to use.`,
+    body: `Based on the information you've entered, ${productName} ${URGENCY_LABEL[urgency]} — worth checking against the manufacturer's guidance to see if it's still recommended for use.`,
   };
 }
