@@ -105,7 +105,8 @@ function Index() {
                 className="mt-12 max-w-lg font-body text-lg leading-relaxed"
               >
                 Track your baby's products and milestones in one place, with reminders to check for
-                upcoming replacements, size changes, and fit as your child grows.
+                upcoming replacements, size changes, and fit as your child grows — plus alerts if a
+                product you're tracking turns up in an official recall database.
               </p>
 
               <Link
@@ -129,46 +130,6 @@ function Index() {
               >
                 Recommendations informed by AAP, CPSC, and other trusted safety guidance
               </p>
-
-              <div className="mt-16 grid max-w-lg grid-cols-2 gap-10">
-                <div>
-                  <h2
-                    style={{
-                      fontFamily: "'Cormorant Garamond', Georgia, serif",
-                      fontWeight: 500,
-                      color: "#2B2927",
-                    }}
-                    className="text-xl"
-                  >
-                    Track everything
-                  </h2>
-                  <p
-                    style={{ fontWeight: 300, color: "#605C58" }}
-                    className="mt-2 font-body text-sm leading-relaxed"
-                  >
-                    We monitor the details and organize them in one place.
-                  </p>
-                </div>
-                <div>
-                  <h2
-                    style={{
-                      fontFamily: "'Cormorant Garamond', Georgia, serif",
-                      fontWeight: 500,
-                      color: "#2B2927",
-                    }}
-                    className="text-xl"
-                  >
-                    Informed Guidance
-                  </h2>
-                  <p
-                    style={{ fontWeight: 300, color: "#605C58" }}
-                    className="mt-2 font-body text-sm leading-relaxed"
-                  >
-                    We check your products against CPSC, FDA, and other official recall databases
-                    and let you know if there's a match.
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -202,6 +163,49 @@ function Index() {
                 </span>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Track everything / Informed guidance */}
+      <section className="w-full px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-2xl grid-cols-1 gap-10 sm:grid-cols-2">
+          <div>
+            <h2
+              style={{
+                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                fontWeight: 500,
+                color: "#2B2927",
+              }}
+              className="text-xl"
+            >
+              Track everything
+            </h2>
+            <p
+              style={{ fontWeight: 300, color: "#605C58" }}
+              className="mt-2 font-body text-sm leading-relaxed"
+            >
+              We monitor the details and organize them in one place.
+            </p>
+          </div>
+          <div>
+            <h2
+              style={{
+                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                fontWeight: 500,
+                color: "#2B2927",
+              }}
+              className="text-xl"
+            >
+              Informed Guidance
+            </h2>
+            <p
+              style={{ fontWeight: 300, color: "#605C58" }}
+              className="mt-2 font-body text-sm leading-relaxed"
+            >
+              We check your products against CPSC, FDA, and other official recall databases and
+              let you know if there's a match.
+            </p>
           </div>
         </div>
       </section>
