@@ -1,0 +1,12 @@
+-- children.due_date is written by onboarding.tsx (the "Original due date"
+-- field, used to compute adjusted age for preemies via src/lib/adjustedAge.ts)
+-- and already appears in the generated src/integrations/supabase/types.ts,
+-- but no migration in this repo ever added it — it was evidently added
+-- directly against the live database (or only ever existed in a
+-- hand-edited types file) without a committed migration, so there is no
+-- reliable record of whether it's actually live. Live users are seeing
+-- onboarding fail with a generic "Something went wrong" whenever they
+-- enter a due date, which is the exact symptom of this column being
+-- missing. Idempotent either way: a no-op if the column already exists,
+-- a real fix if it doesn't.
+ALTER TABLE public.children ADD COLUMN IF NOT EXISTS due_date date;

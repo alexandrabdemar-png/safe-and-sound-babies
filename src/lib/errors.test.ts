@@ -63,6 +63,48 @@ describe("friendlyError — schema-missing-table case", () => {
   });
 });
 
+describe("friendlyError — plain Supabase/PostgREST error objects (not Error instances)", () => {
+  it("regression: a real PostgrestError-shaped object (plain object, not instanceof Error) has its .message correctly matched, not stringified to '[object Object]'", () => {
+    // This is the actual shape supabase-js resolves query errors to —
+    // { message, details, hint, code } — never an Error instance. A caller
+    // passing this whole object straight to friendlyError() (rather than
+    // pre-extracting .message themselves) must still get a real match.
+    const postgrestError = {
+      message: "duplicate key value violates unique constraint",
+      details: "Key already exists.",
+      hint: null,
+      code: "23505",
+    };
+    expect(friendlyError(postgrestError)).toMatch(/already saved/i);
+    expect(friendlyError(postgrestError)).not.toMatch(/object Object/i);
+  });
+
+  it("regression: a plain-object schema-missing-table error is detected via its .message, matching the string-argument behavior", () => {
+    const postgrestError = {
+      message: "Could not find the table 'public.first_foods' in the schema cache",
+      details: null,
+      hint: null,
+      code: "PGRST205",
+    };
+    expect(friendlyError(postgrestError)).toMatch(/isn't fully set up/i);
+  });
+
+  it("regression: a plain-object error is detected via Postgres error CODE (42P01) even when the message text alone wouldn't match", () => {
+    const postgrestError = {
+      message: "relation does not exist",
+      code: "42P01",
+    };
+    expect(friendlyError(postgrestError)).toMatch(/isn't fully set up/i);
+  });
+
+  it("an object with no string .message still falls back to the generic message, never '[object Object]'", () => {
+    const weirdError = { foo: "bar" };
+    const msg = friendlyError(weirdError);
+    expect(msg).not.toMatch(/object Object/i);
+    expect(msg).toBe("Something went wrong on our end. Give it a moment and try again — your data is safe.");
+  });
+});
+
 describe("friendlyAuthError", () => {
   it("maps the real GoTrue 'already registered' message to a signin suggestion", () => {
     expect(friendlyAuthError("User already registered")).toMatch(/already have an account/i);

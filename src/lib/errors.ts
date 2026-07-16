@@ -48,13 +48,35 @@ export function isSchemaMissingTableError(error: {
 }
 
 /**
+ * Pulls a usable message (and Postgres error code, when present) out of
+ * anything a catch block might hand us. Supabase/PostgREST errors are
+ * plain objects — { message, code, details, hint } — not Error instances,
+ * so `raw instanceof Error` is false for the single most common error
+ * shape in this codebase. Passing one of those objects straight to
+ * `String()` produces the useless "[object Object]" rather than its
+ * actual message, which silently defeated every pattern match below (and
+ * the schema-missing-table check) for any caller that passed the raw
+ * caught value instead of pre-extracting `.message` themselves.
+ */
+function extractMessage(raw: unknown): { message: string; code: string | null } {
+  if (raw instanceof Error) return { message: raw.message, code: null };
+  if (typeof raw === "string") return { message: raw, code: null };
+  if (raw && typeof raw === "object") {
+    const obj = raw as { message?: unknown; code?: unknown };
+    if (typeof obj.message === "string") {
+      return { message: obj.message, code: typeof obj.code === "string" ? obj.code : null };
+    }
+  }
+  return { message: String(raw ?? ""), code: null };
+}
+
+/**
  * Convert a raw error message into something a parent would actually understand.
  * Falls back to a warm generic message rather than showing the raw error.
  */
 export function friendlyError(raw: unknown): string {
-  const msg =
-    raw instanceof Error ? raw.message : typeof raw === "string" ? raw : String(raw ?? "");
-  if (isSchemaMissingTableError({ message: msg })) {
+  const { message: msg, code } = extractMessage(raw);
+  if (isSchemaMissingTableError({ message: msg, code })) {
     return "This feature isn't fully set up on your account yet — we're on it. Please try again in a little while.";
   }
   for (const [pattern, friendly] of FRIENDLY_MAP) {
@@ -114,8 +136,7 @@ const AUTH_FRIENDLY_MAP: [RegExp, string][] = [
  * someone trying to create an account.
  */
 export function friendlyAuthError(raw: unknown): string {
-  const msg =
-    raw instanceof Error ? raw.message : typeof raw === "string" ? raw : String(raw ?? "");
+  const { message: msg } = extractMessage(raw);
   for (const [pattern, friendly] of AUTH_FRIENDLY_MAP) {
     if (pattern.test(msg)) return friendly;
   }

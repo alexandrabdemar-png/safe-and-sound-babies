@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { computeAdjustedAge } from "@/lib/adjustedAge";
+import { friendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/onboarding")({
   component: OnboardingPage,
@@ -153,9 +154,14 @@ function OnboardingPage() {
 
   function advanceOrSkip(skip = false) {
     if (step === 0 && skip) {
-      // Skip child info — go straight to home with no child saved
+      // Skip child info entirely. /home requires at least one child and
+      // immediately bounces back to /onboarding if there isn't one — which
+      // defeats "Set up later" and looks like the page just reset. /profile
+      // is the one authenticated screen that renders fine with zero
+      // children, so that's where a fully-skipped user actually lands;
+      // they can add a child from there whenever they're ready.
       clearProgress();
-      navigate({ to: "/home" });
+      navigate({ to: "/profile" });
       return;
     }
     if (step < TOTAL_STEPS - 1) {
@@ -196,7 +202,13 @@ function OnboardingPage() {
             child_id: (childRow as { id: string }).id,
             category: cat,
           }));
-          await supabase.from("category_watchlist").insert(rows as never);
+          // Non-fatal: category-interest tracking is a nice-to-have, not
+          // something that should ever block a new user from finishing
+          // onboarding and reaching their dashboard.
+          const { error: watchlistError } = await supabase
+            .from("category_watchlist")
+            .insert(rows as never);
+          if (watchlistError) console.error("category_watchlist insert failed:", watchlistError);
         }
       }
 
@@ -205,7 +217,13 @@ function OnboardingPage() {
       const actions = getSafetyFirstLook(dob || null, dueDate || null);
       setSafetyFirstLook(actions);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong");
+      // Supabase/PostgREST errors are plain objects, not Error instances,
+      // so `err instanceof Error` was always false for them here — every
+      // real failure (a missing column, a constraint violation, anything)
+      // silently collapsed to the same unhelpful "Something went wrong"
+      // with no diagnostic detail, for the user or in the console.
+      console.error("Onboarding handleFinish failed:", err);
+      toast.error(friendlyError(err));
     } finally {
       setSaving(false);
     }
