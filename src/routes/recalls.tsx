@@ -121,10 +121,11 @@ function PublicRecallsPage() {
               <ShieldCheck size={22} />
             </span>
             <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#3D2B1F", margin: "0 0 6px" }}>
-              All clear this month
+              No recalls found this month
             </p>
             <p style={{ fontSize: 14, color: "#8A8078" }}>
-              No baby or kids product recalls were issued by CPSC in the last 30 days.
+              No baby or kids product recalls were issued by CPSC in the last 30 days, based on
+              the databases we check.
             </p>
           </div>
         )}
@@ -146,7 +147,7 @@ function PublicRecallsPage() {
             Get alerts for products <em>you own</em>
           </p>
           <p style={{ fontSize: 13, color: "#6B5B50", marginBottom: 16 }}>
-            Peace of Mine tracks your specific products and alerts you as soon as a recall comes through — even for things you bought second-hand.
+            Peace of Mine tracks your specific products and checks them against official recall databases regularly, so you can hear about a recall sooner than you might otherwise — even for things you bought second-hand. Because official sources update on their own schedule, there's always some gap between a recall being issued and it reaching you here.
           </p>
           <Link to="/auth" style={{
             display: "inline-block", padding: "10px 24px", borderRadius: 999, backgroundColor: "#A3B899", color: "white",

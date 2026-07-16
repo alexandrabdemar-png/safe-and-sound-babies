@@ -150,7 +150,7 @@ function PricingPage() {
           <div className="flex items-baseline justify-between pt-2">
             <div>
               <h3 className="text-xl font-semibold">Pro</h3>
-              <p className="text-sm text-muted-foreground">Expert features & guidance</p>
+              <p className="text-sm text-muted-foreground">AI-assisted guidance & extended features</p>
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold">$3.33</div>

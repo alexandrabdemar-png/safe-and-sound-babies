@@ -80,7 +80,7 @@ const ROOMS: Room[] = [
       { key: "bath_meds_locked", label: "All medications in locked cabinet" },
       { key: "bath_razors_away", label: "Razors and sharp items stored out of reach" },
       { key: "bath_cosmetics_away", label: "Cosmetics and toiletries out of reach" },
-      { key: "bath_outlet_covers_gfi", label: "Install GFCI outlets near water sources such as sinks and bathtubs. These special outlets shut off power instantly if they detect water contact and are required in bathrooms and kitchens for child safety." },
+      { key: "bath_outlet_covers_gfi", label: "GFCI outlets near water sources such as sinks and bathtubs shut off power quickly if they detect water contact, and many local codes require them in bathrooms and kitchens — worth checking what applies where you live." },
       { key: "bath_hair_dryer_away", label: "Hair dryer and appliances unplugged and stored" },
     ],
   },
@@ -159,6 +159,9 @@ function ChecklistsPage() {
             Safety Checklists
           </h1>
         </div>
+        <p className="mb-6 font-body text-xs" style={{ color: "#8A8078" }}>
+          General reference checklists, not a certified home safety inspection or medical advice.
+        </p>
 
         {/* Overall progress */}
         {!loading && (

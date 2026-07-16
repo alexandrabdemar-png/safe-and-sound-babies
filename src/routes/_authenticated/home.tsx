@@ -1177,7 +1177,8 @@ function HomePage() {
                   ✨ You're all caught up
                 </p>
                 <p className="mt-0.5 font-body text-xs text-muted-foreground">
-                  No recalls. No replacements. No size changes. We'll let you know if that changes.
+                  No recalls, replacements, or size changes found right now — we'll flag it here if
+                  that changes based on what we're able to check.
                 </p>
               </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground" />
@@ -1566,7 +1567,7 @@ function AgeJumpCard({
               {childName} just turned {label} 🎉
             </p>
             <p className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">
-              Here's what to check now
+              General guidance for this age — not personalized medical advice
             </p>
           </div>
         </div>
@@ -1756,7 +1757,7 @@ function TodayCard({
               <li style={{ fontSize: 13, color: "rgba(255,255,255,0.88)" }}>
                 {recalls > 0
                   ? `⚠️ ${recalls} active recall${recalls > 1 ? "s" : ""} — check the Alerts tab`
-                  : "✅ No recalls affecting your products this week"}
+                  : "✅ No recalls found for your products this week"}
               </li>
               {comingUp.length > 0 && (
                 <li style={{ fontSize: 13, color: "rgba(255,255,255,0.88)" }}>

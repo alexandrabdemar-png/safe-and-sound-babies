@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { friendlyError, isSchemaMissingTableError } from "./errors";
+import { friendlyAuthError, friendlyError, isSchemaMissingTableError } from "./errors";
 
 describe("isSchemaMissingTableError", () => {
   it("regression: matches the EXACT error message reported live for first_foods", () => {
@@ -60,5 +60,54 @@ describe("friendlyError — schema-missing-table case", () => {
       /already saved/i,
     );
     expect(friendlyError("JWT expired")).toMatch(/session expired/i);
+  });
+});
+
+describe("friendlyAuthError", () => {
+  it("maps the real GoTrue 'already registered' message to a signin suggestion", () => {
+    expect(friendlyAuthError("User already registered")).toMatch(/already have an account/i);
+  });
+
+  it("maps the real GoTrue 'invalid login credentials' message", () => {
+    expect(friendlyAuthError("Invalid login credentials")).toMatch(
+      /doesn't match our records/i,
+    );
+  });
+
+  it("maps a weak-password rejection", () => {
+    expect(friendlyAuthError("Password should be at least 6 characters")).toMatch(
+      /at least 6 characters/i,
+    );
+  });
+
+  it("maps a rate-limit response", () => {
+    expect(friendlyAuthError("email rate limit exceeded")).toMatch(/wait a bit/i);
+    expect(friendlyAuthError("Too many requests")).toMatch(/wait a minute/i);
+  });
+
+  it("maps an expired/invalid link (magic link, password reset, email confirmation)", () => {
+    expect(friendlyAuthError("Token has expired or is invalid")).toMatch(
+      /expired or already been used/i,
+    );
+  });
+
+  it("regression: a raw trigger/DB failure during signup never leaks to the user", () => {
+    const msg = friendlyAuthError(
+      "Database error saving new user: duplicate key value violates unique constraint \"profiles_user_id_key\"",
+    );
+    expect(msg).not.toMatch(/duplicate key|constraint|profiles_user_id_key/i);
+    expect(msg).toMatch(/hit a snag/i);
+  });
+
+  it("falls back to a warm generic message for a totally unrecognized error, never the raw string", () => {
+    const msg = friendlyAuthError("some_never_seen_gotrue_error_code_xyz");
+    expect(msg).not.toContain("some_never_seen_gotrue_error_code_xyz");
+    expect(msg).toMatch(/try again/i);
+  });
+
+  it("accepts a raw Error object as well as a string", () => {
+    expect(friendlyAuthError(new Error("User already registered"))).toMatch(
+      /already have an account/i,
+    );
   });
 });

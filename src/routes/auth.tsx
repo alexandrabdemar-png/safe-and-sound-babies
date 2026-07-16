@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
+import { friendlyAuthError } from "@/lib/errors";
 import { Mail, Lock, Sparkles, Loader2, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
@@ -72,7 +73,7 @@ function AuthPage() {
         toast.success("Welcome back!");
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong");
+      toast.error(friendlyAuthError(err));
     } finally {
       setLoading(null);
     }
@@ -89,7 +90,7 @@ function AuthPage() {
       if (error) throw error;
       toast.success("Magic link sent — check your inbox ✉️");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not send link");
+      toast.error(friendlyAuthError(err));
     } finally {
       setLoading(null);
     }
@@ -106,7 +107,7 @@ function AuthPage() {
       toast.success("Password reset email sent — check your inbox");
       setMode("signin");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not send reset email");
+      toast.error(friendlyAuthError(err));
     } finally {
       setLoading(null);
     }
@@ -121,7 +122,7 @@ function AuthPage() {
       toast.success("Password updated — you're signed in!");
       navigate({ to: "/home" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not update password");
+      toast.error(friendlyAuthError(err));
     } finally {
       setLoading(null);
     }
@@ -134,12 +135,12 @@ function AuthPage() {
         redirect_uri: window.location.origin,
       });
       if (result.error) {
-        toast.error(result.error.message || `${provider} sign-in failed`);
+        toast.error(friendlyAuthError(result.error.message || `${provider} sign-in failed`));
         setLoading(null);
       }
       // redirected: browser leaves; tokens: onAuthStateChange will redirect
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Sign-in failed");
+      toast.error(friendlyAuthError(err));
       setLoading(null);
     }
   }

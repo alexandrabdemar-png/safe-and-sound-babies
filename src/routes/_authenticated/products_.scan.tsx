@@ -449,8 +449,8 @@ function ScanPage() {
               Barcode scanner is a Pro feature
             </h2>
             <p className="mt-2 font-body text-sm text-muted-foreground">
-              Everything in free, plus expert features, tips and tricks, safety insights, and
-              pediatrician-reviewed guidance. Try free for 7 days.
+              Everything in free, plus AI-assisted product guidance, tips and tricks, and safety
+              insights. Try free for 7 days.
             </p>
             <Button
               asChild

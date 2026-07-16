@@ -165,9 +165,10 @@ function RecallRadarPage() {
               <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <ShieldCheck className="h-6 w-6" />
               </div>
-              <p className="font-display text-lg font-semibold tracking-tight">All clear this month</p>
+              <p className="font-display text-lg font-semibold tracking-tight">No recalls found this month</p>
               <p className="mt-1 mx-auto max-w-xs font-body text-sm text-muted-foreground">
-                No baby or kids product recalls were issued in the last 30 days. We check every 24 hours.
+                No baby or kids product recalls were issued in the last 30 days, based on the
+                sources we check roughly every 24 hours.
               </p>
             </div>
           ) : (
