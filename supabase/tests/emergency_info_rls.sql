@@ -168,3 +168,44 @@ SELECT test.assert(
   ),
   'emergency_share_links has no raw-token column — only token_hash exists'
 );
+
+-- ── Non-expiring links (20260719000000_emergency_share_links_no_expiry.sql):
+--    expires_at is now nullable, and NULL means "never expires" — the
+--    public read path's lookup must treat it as always-valid, not reject it.
+SELECT test.assert(
+  (SELECT is_nullable FROM information_schema.columns
+     WHERE table_name = 'emergency_share_links' AND column_name = 'expires_at') = 'YES',
+  'expires_at accepts NULL now that links no longer auto-expire'
+);
+
+SELECT test.login('authenticated', '11111111-1111-1111-1111-111111111111');
+INSERT INTO public.emergency_share_links (id, user_id, child_id, token_hash, expires_at)
+VALUES (
+  'dddddddd-dddd-dddd-dddd-dddddddddddd',
+  '11111111-1111-1111-1111-111111111111',
+  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+  'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
+  NULL
+);
+SELECT test.logout();
+
+SELECT test.login('service_role');
+SELECT test.assert(
+  (SELECT child_id FROM public.emergency_share_links
+     WHERE token_hash = 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2'
+       AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at > now())) = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+  'a link with NULL expires_at resolves as active — it never expires on its own'
+);
+
+-- A non-expiring link is still not immortal — revoking it must still work.
+UPDATE public.emergency_share_links SET revoked_at = now()
+WHERE id = 'dddddddd-dddd-dddd-dddd-dddddddddddd';
+SELECT test.assert(
+  NOT EXISTS (
+    SELECT 1 FROM public.emergency_share_links
+    WHERE token_hash = 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2'
+      AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at > now())
+  ),
+  'revocation still blocks a non-expiring link — revoke remains the only way to end it'
+);
+SELECT test.logout();

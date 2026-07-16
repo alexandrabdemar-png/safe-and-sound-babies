@@ -34,7 +34,11 @@ export const Route = createFileRoute("/api/public/emergency-share")({
           .eq("token_hash", tokenHash)
           .maybeSingle();
 
-        if (linkErr || !link || link.revoked_at || new Date(link.expires_at) <= new Date()) {
+        // expires_at is NULL for links created after they stopped
+        // auto-expiring — only enforce it when actually set (a link
+        // created before that change).
+        const isExpired = link?.expires_at ? new Date(link.expires_at) <= new Date() : false;
+        if (linkErr || !link || link.revoked_at || isExpired) {
           return json({ error: "This link is invalid or has expired." }, 404);
         }
 

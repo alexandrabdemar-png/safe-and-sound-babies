@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  computeShareExpiry,
-  generateShareToken,
-  hashShareToken,
-  SHARE_LINK_LIFETIME_HOURS,
-} from "./emergencyShare";
+import { generateShareToken, hashShareToken } from "./emergencyShare";
 
 describe("generateShareToken", () => {
   it("generates a 64-character hex string (256 bits)", () => {
@@ -35,15 +30,5 @@ describe("hashShareToken", () => {
     const h1 = await hashShareToken(token);
     const h2 = await hashShareToken(token);
     expect(h1).toBe(h2);
-  });
-});
-
-describe("computeShareExpiry", () => {
-  it("computes an expiry exactly SHARE_LINK_LIFETIME_HOURS after `now`", () => {
-    const now = new Date("2026-07-04T12:00:00Z");
-    const expiry = computeShareExpiry(now);
-    expect(expiry.toISOString()).toBe(
-      new Date(now.getTime() + SHARE_LINK_LIFETIME_HOURS * 3_600_000).toISOString(),
-    );
   });
 });

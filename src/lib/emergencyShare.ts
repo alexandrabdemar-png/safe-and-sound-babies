@@ -28,9 +28,3 @@ function bytesToHex(bytes: Uint8Array): string {
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 }
-
-export const SHARE_LINK_LIFETIME_HOURS = 24;
-
-export function computeShareExpiry(now = new Date()): Date {
-  return new Date(now.getTime() + SHARE_LINK_LIFETIME_HOURS * 60 * 60 * 1000);
-}

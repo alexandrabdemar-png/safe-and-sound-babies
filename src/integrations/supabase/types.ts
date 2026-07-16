@@ -360,7 +360,7 @@ export type Database = {
         Row: {
           child_id: string
           created_at: string
-          expires_at: string
+          expires_at: string | null
           id: string
           revoked_at: string | null
           token_hash: string
@@ -369,7 +369,7 @@ export type Database = {
         Insert: {
           child_id: string
           created_at?: string
-          expires_at: string
+          expires_at?: string | null
           id?: string
           revoked_at?: string | null
           token_hash: string
@@ -378,7 +378,7 @@ export type Database = {
         Update: {
           child_id?: string
           created_at?: string
-          expires_at?: string
+          expires_at?: string | null
           id?: string
           revoked_at?: string | null
           token_hash?: string

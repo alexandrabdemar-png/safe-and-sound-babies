@@ -94,7 +94,7 @@ function SharedEmergencyInfoPage() {
         <Row label="Notes" value={info.notes} last />
 
         <p className="mt-8 text-center font-body text-xs text-muted-foreground">
-          Shared from Peace of Mine. This link expires automatically.
+          Shared from Peace of Mine. The account holder can revoke this link at any time.
         </p>
       </div>
     </div>

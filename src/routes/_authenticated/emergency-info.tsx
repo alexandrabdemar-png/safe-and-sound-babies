@@ -5,7 +5,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { HeartPulse, Copy, Check, Link2, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { computeShareExpiry, generateShareToken, hashShareToken } from "@/lib/emergencyShare";
+import { generateShareToken, hashShareToken } from "@/lib/emergencyShare";
 import { diagnosticDetail } from "@/lib/errors";
 
 export const Route = createFileRoute("/_authenticated/emergency-info")({
@@ -43,7 +43,7 @@ const EMPTY_INFO: EmergencyInfo = {
 
 interface ActiveLink {
   id: string;
-  expires_at: string;
+  expires_at: string | null;
 }
 
 function EmergencyInfoPage() {
@@ -92,13 +92,18 @@ function EmergencyInfoPage() {
           }));
         }
 
+        // New links no longer expire (expires_at is NULL going forward —
+        // see 20260719000000_emergency_share_links_no_expiry.sql), so a
+        // NULL expires_at counts as active. A link created before that
+        // change still had a real timestamp and keeps enforcing it until
+        // it naturally passes.
         const nowIso = new Date().toISOString();
         const { data: link } = await supabase
           .from("emergency_share_links")
           .select("id, expires_at")
           .eq("child_id", c.id)
           .is("revoked_at", null)
-          .gt("expires_at", nowIso)
+          .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -136,7 +141,6 @@ function EmergencyInfoPage() {
     try {
       const rawToken = generateShareToken();
       const tokenHash = await hashShareToken(rawToken);
-      const expiresAt = computeShareExpiry();
 
       const { data, error } = await supabase
         .from("emergency_share_links")
@@ -144,7 +148,7 @@ function EmergencyInfoPage() {
           user_id: userId,
           child_id: child.id,
           token_hash: tokenHash,
-          expires_at: expiresAt.toISOString(),
+          expires_at: null,
         })
         .select("id, expires_at")
         .single();
@@ -152,7 +156,7 @@ function EmergencyInfoPage() {
 
       setActiveLink(data);
       setFreshShareUrl(`${window.location.origin}/emergency-share/${rawToken}`);
-      toast.success("Share link created — expires in 24 hours");
+      toast.success("Share link created — revoke it anytime from here");
     } catch (err) {
       console.error("emergency_share_links create failed:", err);
       toast.error(`Could not create a share link: ${diagnosticDetail(err)}`);
@@ -300,20 +304,26 @@ function EmergencyInfoPage() {
               <h3 className="font-display text-lg font-semibold">Share with a caregiver</h3>
             </div>
             <p className="mb-4 font-body text-sm text-muted-foreground">
-              Create a link that lets someone view this card without logging in. It expires in 24
-              hours and can be revoked anytime.
+              Create a link that lets someone view this card without logging in. It stays active
+              until you revoke it.
             </p>
 
             {activeLink && (
               <p className="mb-3 font-body text-sm text-foreground">
-                A link is active until{" "}
-                {new Date(activeLink.expires_at).toLocaleString(undefined, {
-                  month: "short",
-                  day: "numeric",
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
-                .
+                {activeLink.expires_at ? (
+                  <>
+                    A link is active until{" "}
+                    {new Date(activeLink.expires_at).toLocaleString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                    .
+                  </>
+                ) : (
+                  "A link is active and will stay available until you revoke it."
+                )}
               </p>
             )}
 
