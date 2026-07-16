@@ -2,10 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import {
-  ArrowLeft, ArrowRight, Check, Loader2,
-  ShieldCheck, Bed, Moon, Footprints, Utensils, Armchair, Grid3x3, DoorClosed, Shield,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2, Shield } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +11,9 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { computeAdjustedAge } from "@/lib/adjustedAge";
 import { friendlyError } from "@/lib/errors";
+import { SketchDefs, MOMENT_ICON_ACCENT } from "@/lib/momentIcons";
+import { CATEGORY_SKETCH_ICONS } from "@/lib/categorySketchIcons";
+import type { CategoryKey } from "@/lib/productCategories";
 
 export const Route = createFileRoute("/onboarding")({
   component: OnboardingPage,
@@ -36,16 +36,16 @@ export const Route = createFileRoute("/onboarding")({
   }),
 });
 
-const CATEGORIES: { key: string; name: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { key: "car_seat",        name: "Car seats",        icon: ShieldCheck },
-  { key: "crib",            name: "Cribs",            icon: Bed },
-  { key: "bassinet",        name: "Bassinets",        icon: Moon },
-  { key: "stroller",       name: "Strollers",        icon: Footprints },
-  { key: "high_chair",      name: "High chairs",      icon: Utensils },
-  { key: "bouncer",         name: "Bouncers",         icon: Armchair },
-  { key: "activity_center", name: "Activity centers", icon: Grid3x3 },
-  { key: "sleep_sack",      name: "Sleep sacks",      icon: DoorClosed },
-  { key: "baby_gate",       name: "Baby gates",       icon: DoorClosed },
+const CATEGORIES: { key: CategoryKey; name: string }[] = [
+  { key: "car_seat",        name: "Car seats" },
+  { key: "crib",            name: "Cribs" },
+  { key: "bassinet",        name: "Bassinets" },
+  { key: "stroller",        name: "Strollers" },
+  { key: "high_chair",      name: "High chairs" },
+  { key: "bouncer",         name: "Bouncers" },
+  { key: "activity_center", name: "Activity centers" },
+  { key: "sleep_sack",      name: "Sleep sacks" },
+  { key: "baby_gate",       name: "Baby gates" },
 ];
 
 // Age-appropriate safety first-look content
@@ -360,9 +360,10 @@ function OnboardingPage() {
               title="What are you tracking?"
               subtitle="Pick the categories that apply — we'll watch for recalls and replacements. You can change this anytime."
             >
+              <SketchDefs />
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {CATEGORIES.map((cat) => {
-                  const Icon = cat.icon;
+                  const SketchIcon = CATEGORY_SKETCH_ICONS[cat.key];
                   const active = selected.has(cat.key);
                   return (
                     <button
@@ -381,8 +382,11 @@ function OnboardingPage() {
                           <Check className="h-3 w-3" />
                         </span>
                       )}
-                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-sand/60 text-accent">
-                        <Icon className="h-5 w-5" />
+                      <span
+                        className="flex h-12 w-12 items-center justify-center rounded-full"
+                        style={{ backgroundColor: `${MOMENT_ICON_ACCENT}22` }}
+                      >
+                        {SketchIcon && <SketchIcon px={28} />}
                       </span>
                       <span className="font-body text-xs font-medium text-foreground">
                         {cat.name}
