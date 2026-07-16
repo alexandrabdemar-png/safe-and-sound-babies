@@ -138,8 +138,9 @@ const NOISE_WORDS = new Set([
  *
  * Logic (per spec):
  *   1. Split product name into words, remove NOISE_WORDS and short words.
- *   2. Single meaningful token  → match if it appears anywhere in recall text.
- *   3. Multiple meaningful tokens → match if 2+ tokens appear in recall text.
+ *   2. Single meaningful token → match if it appears anywhere in recall text.
+ *   3. Multiple meaningful tokens → match if enough of them appear in the
+ *      recall text (see the `required` comment below for the threshold).
  *   All comparisons are whole-word matches against the recall text, not raw
  *   substring checks — see the regression test for why: a raw substring
  *   check let a "Beech-Nut" product falsely match an unrelated "Grizzlies"
@@ -162,8 +163,18 @@ export function fuzzyMatchProduct(productName: string, recallText: string): bool
   if (tokens.length === 1) {
     return textTokens.has(tokens[0]);
   }
-  // Multiple tokens — require at least 2 hits
-  return tokens.filter((t) => textTokens.has(t)).length >= 2;
+  const matchCount = tokens.filter((t) => textTokens.has(t)).length;
+  // A flat "any 2 tokens" floor let a brand-only match slip through: "Philips
+  // Avent Soothie Pacifier" tokenizes to 4 words, and a completely
+  // unrelated recall for "Philips Avent Digital Video Baby Monitors" shares
+  // only the two brand tokens ("philips", "avent") — zero product-defining
+  // tokens ("soothie", "pacifier") actually matched, yet the flat floor of
+  // 2 still counted it as a hit. Short/specific names (<=3 meaningful
+  // tokens — typically brand + model + variant) now require *every* token
+  // to match; longer, more free-form names get a proportional 75%
+  // threshold so minor wording differences don't block a real match.
+  const required = tokens.length <= 3 ? tokens.length : Math.ceil(tokens.length * 0.75);
+  return matchCount >= required;
 }
 
 // ── CRITICAL RECALLS — manually maintained ───────────────────────────────────

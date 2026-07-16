@@ -48,6 +48,52 @@ describe("fuzzyMatchProduct", () => {
   });
 });
 
+// ── Regression: "Philips Avent Soothie Pacifier" false-flagged against an
+// unrelated "Philips Avent Digital Video Baby Monitors" recall — reported
+// bug. Root cause: this matcher's multi-token branch used a flat "any 2
+// tokens" floor regardless of how many meaningful tokens the product name
+// had. The pacifier tokenizes to 4 words (philips/avent/soothie/pacifier);
+// only the two brand tokens (philips/avent) appeared in the unrelated
+// monitor recall's text, with zero product-defining tokens (soothie/
+// pacifier) matching — yet the flat floor of 2 still counted it as a hit.
+// Fixed to require *every* token for short names (<=3 tokens) and a
+// proportional 75% for longer ones, matching the edge-function copy of
+// this matcher (supabase/functions/_shared/recallMatch.ts).
+describe("fuzzyMatchProduct — brand-only false positive (live bug report)", () => {
+  it("regression: does NOT match on brand-name tokens alone when no product-defining token matches", () => {
+    expect(
+      fuzzyMatchProduct(
+        "Philips Avent Soothie Pacifier",
+        "Philips Avent Digital Video Baby Monitors Recalled by Philips Personal Health Due to Burn Hazard",
+      ),
+    ).toBe(false);
+  });
+
+  it("still matches when the recall genuinely covers the same product line (brand + product-type tokens both present)", () => {
+    expect(
+      fuzzyMatchProduct(
+        "Philips Avent Soothie Pacifier",
+        "Philips Avent Recalls Soothie Pacifiers Due to Choking Hazard",
+      ),
+    ).toBe(true);
+  });
+
+  it("a 3-token or fewer product name still requires ALL tokens to match, not just a majority", () => {
+    // "Graco SnugRide Comfort" (3 tokens) must not match a recall that only
+    // covers the base "SnugRide" line without the "Comfort" variant —
+    // same sibling-product guard already covered on the edge-function side.
+    expect(
+      fuzzyMatchProduct("Graco SnugRide Comfort", "Graco Recalls SnugRide Infant Car Seat"),
+    ).toBe(false);
+    expect(
+      fuzzyMatchProduct(
+        "Graco SnugRide Comfort",
+        "Graco Recalls SnugRide Comfort Infant Car Seat",
+      ),
+    ).toBe(true);
+  });
+});
+
 describe("isAllowedRecallUrl", () => {
   it("allows an official cpsc.gov URL", () => {
     expect(isAllowedRecallUrl("https://www.cpsc.gov/Recalls/2024/example")).toBe(true);
