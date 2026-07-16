@@ -256,8 +256,8 @@ function NewMomentPage() {
               Milestone logging is a Pro feature
             </h2>
             <p className="font-body text-sm text-muted-foreground">
-              Everything in free, plus expert features, tips and tricks, safety insights, and
-              pediatrician-reviewed guidance. Try free for 7 days.
+              Everything in free, plus AI-assisted product guidance, tips and tricks, and safety
+              insights. Try free for 7 days.
             </p>
             <Button className="w-full rounded-full" onClick={() => navigate({ to: "/pricing" })}>
               <Sparkles className="mr-2 h-4 w-4" /> Start free trial
@@ -290,7 +290,8 @@ function NewMomentPage() {
               {safetyTip.title}
             </h1>
             <p className="mt-1 font-body text-sm text-muted-foreground">
-              This milestone comes with a few things worth knowing.
+              General reference guidance for this milestone, not personalized medical advice —
+              talk to your pediatrician about anything specific to your child.
             </p>
           </div>
         </header>
@@ -337,7 +338,7 @@ function NewMomentPage() {
             What did they do?
           </h1>
           <p className="mt-1.5 font-body text-sm text-muted-foreground">
-            Personalized reminders, powered by your baby's milestones.
+            Helpful safety reminders based on what you log.
           </p>
         </div>
       </header>

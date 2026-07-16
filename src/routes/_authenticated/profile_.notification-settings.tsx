@@ -251,7 +251,8 @@ function NotificationSettingsPage() {
                 <p className="font-body text-sm font-medium">Pause non-recall alerts</p>
               </div>
               <p className="font-body text-xs text-muted-foreground mb-3">
-                Temporarily hide weekly tips and product reminders. Recalls are never paused.
+                Temporarily hide weekly tips and product reminders. This toggle doesn't apply to
+                recall alerts — those stay on.
               </p>
               {isPaused ? (
                 <div className="flex items-center gap-3 flex-wrap">

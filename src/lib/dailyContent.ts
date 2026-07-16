@@ -43,7 +43,7 @@ export function dayOfYear(date: Date): number {
 }
 
 const QUICK_TIP_FALLBACK = [
-  "Always place your baby on their back for every sleep — it's the single most important safe sleep rule.",
+  "AAP guidance considers placing your baby on their back for every sleep the single most important safe sleep practice.",
   "A working smoke alarm on every level of the home, tested regularly, is one of the simplest safety wins available.",
   "It's worth keeping emergency numbers, including poison control, saved somewhere easy to find in a hurry.",
 ];
@@ -52,7 +52,7 @@ const QUICK_TIP_BRACKETS: AgeBracket[] = [
   {
     maxMonths: 4,
     variants: [
-      "Firm, flat, empty crib — no pillows, bumpers, or loose blankets. Back to sleep, every time.",
+      "Safe sleep guidance calls for a firm, flat, empty crib — no pillows, bumpers, or loose blankets — and back to sleep, every time.",
       "Room-sharing without bed-sharing is the AAP's recommendation for at least the first six months — a bassinet or crib in your room, not your bed.",
       "Swaddles are for sleep only until baby shows signs of rolling — once they can roll either way, it's time to stop swaddling the arms.",
     ],
@@ -60,15 +60,15 @@ const QUICK_TIP_BRACKETS: AgeBracket[] = [
   {
     maxMonths: 8,
     variants: [
-      "Before your baby can push up on all fours, lower the crib mattress to the next setting.",
+      "It may be worth lowering the crib mattress to the next setting before your baby can push up on all fours.",
       "Once solids start, keep an eye out for choking hazards — whole grapes, nuts, and popcorn are best avoided or modified for now.",
-      "Never leave a baby alone in the tub, even for a few seconds to grab a towel — bring everything within reach first.",
+      "Some families find it helps to bring everything within reach before bath time, so there's no need to step away from the tub even for a few seconds.",
     ],
   },
   {
     maxMonths: 13,
     variants: [
-      "Install hardware-mounted gates at the top of every staircase before they start crawling.",
+      "It may be worth installing hardware-mounted gates at the top of staircases before they start crawling.",
       "Outlet covers and cabinet locks are worth a room-by-room sweep right around when crawling really takes off.",
       "Setting the water heater to 120°F or below helps prevent scalds during bath time.",
     ],
@@ -76,7 +76,7 @@ const QUICK_TIP_BRACKETS: AgeBracket[] = [
   {
     maxMonths: 24,
     variants: [
-      "Anchor every bookshelf, dresser, and TV stand to the wall — toddlers pull on everything.",
+      "Worth a look: anchoring bookshelves, dressers, and TV stands to the wall — toddlers pull on everything.",
       "Button batteries and magnets are worth a special sweep of the house — small, easy to miss, and can cause serious harm if swallowed.",
       "This is a good age to double-check window guards or stops in rooms where your toddler plays.",
     ],
@@ -84,7 +84,7 @@ const QUICK_TIP_BRACKETS: AgeBracket[] = [
   {
     maxMonths: 36,
     variants: [
-      "Keep cleaning products and laundry pods in a locked cabinet or on the highest shelf.",
+      "It's worth keeping cleaning products and laundry pods in a locked cabinet or on the highest shelf.",
       "Toddlers can open child-resistant caps more easily than you'd expect — medications are worth keeping well out of reach, not just out of sight.",
       "This is a good stage to start talking through simple safety rules together, like staying close in parking lots and holding hands near streets.",
     ],
@@ -92,7 +92,7 @@ const QUICK_TIP_BRACKETS: AgeBracket[] = [
   {
     maxMonths: Infinity,
     variants: [
-      "Put a properly fitted helmet on your child for every bike, scooter, or balance bike ride — no exceptions.",
+      "Helmet safety guidance recommends a properly fitted helmet for every bike, scooter, or balance bike ride.",
       "Most kids need a booster seat until they're tall enough for the seatbelt to fit properly across the shoulder, not the neck.",
       "Even strong swimmers benefit from an adult within arm's reach around pools, lakes, and the ocean.",
     ],

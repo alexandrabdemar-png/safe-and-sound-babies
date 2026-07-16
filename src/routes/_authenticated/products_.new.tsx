@@ -887,15 +887,20 @@ function SaveProductSheet({
               </li>
             </ul>
 
-            {/* Safety summary */}
+            {/* AI-generated estimate — not a verified/certified claim about
+                this specific product, so framed and labeled as such. */}
             <div className="flex items-start gap-3 rounded-2xl bg-primary/8 px-4 py-3">
-              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
               <div>
                 <p className="font-body text-sm font-semibold text-foreground">
-                  Safe for {daysToLabel(product.safe_use_duration_days)}
+                  Estimated use window: {daysToLabel(product.safe_use_duration_days)}
                 </p>
                 <p className="mt-0.5 font-body text-xs text-muted-foreground">
                   {product.safe_use_notes}
+                </p>
+                <p className="mt-1 font-body text-[11px] text-muted-foreground/70">
+                  AI-generated estimate, not verified against the manufacturer — confirm with your
+                  product's manual or packaging.
                 </p>
               </div>
             </div>

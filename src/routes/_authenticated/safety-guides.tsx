@@ -360,7 +360,9 @@ function SafetyGuidesPage() {
             <h1 className="font-display text-3xl font-semibold tracking-tight">Safety Guides</h1>
           </div>
           <p className="mt-2 font-body text-sm text-muted-foreground">
-            Guides organized by developmental stage — every child grows at their own pace.
+            General reference guidance organized by developmental stage — every child grows at
+            their own pace. This isn't personalized medical advice; talk to your pediatrician
+            about anything specific to your child.
           </p>
         </div>
       </header>

@@ -228,7 +228,8 @@ function OnboardingPage() {
               {name.trim() ? `Here's what matters most for ${name.trim()} right now.` : "Here's what matters most right now."}
             </h1>
             <p className="mt-2 font-body text-sm text-muted-foreground">
-              Based on your child's age — review these before you do anything else.
+              General safety guidance based on AAP recommendations for your child's age — not a
+              substitute for advice from your pediatrician.
             </p>
             <ul className="mt-6 space-y-3">
               {safetyFirstLook.map((action) => (
@@ -242,7 +243,8 @@ function OnboardingPage() {
               ))}
             </ul>
             <p className="mt-4 text-center font-body text-[11px] text-muted-foreground">
-              Based on AAP recommendations.
+              Based on AAP recommendations — always confirm anything specific to your child with
+              your pediatrician.
             </p>
             <Button
               className="mt-6 h-12 w-full rounded-full bg-primary font-body text-sm font-semibold"

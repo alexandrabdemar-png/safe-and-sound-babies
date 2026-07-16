@@ -258,7 +258,7 @@ function NewBottlePage() {
           <div className="rounded-3xl border border-border/60 bg-sand/30 p-4">
             <p className="font-body text-xs uppercase tracking-wider text-muted-foreground">Expires</p>
             {notAllowed ? (
-              <p className="mt-1 font-display text-sm text-destructive">Not safe to store this way.</p>
+              <p className="mt-1 font-display text-sm text-destructive">This storage combination isn't recommended.</p>
             ) : (
               <>
                 <p className="mt-1 font-display text-lg font-semibold">
