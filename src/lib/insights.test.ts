@@ -165,3 +165,72 @@ describe("stair-gate insights respect home_profile.has_stairs", () => {
     expect(findInsight(insights, "install_baby_gates")).toBeDefined();
   });
 });
+
+// ── Live bug report: an 11-year-old (132mo) test profile still showed
+//    "Begin thinking about babyproofing" / "Consider installing safety
+//    gates near stairs" / "Consider securing lower cabinets" in the "Up
+//    next" card. Root cause: babyproof_start, install_baby_gates,
+//    babyproof_low_cabinets, crib_mattress_lowest, and gate_suggest were
+//    all bare `months >= X` checks with no upper bound, so they matched
+//    any older age too, not just their intended mobility-onset window.
+describe("mobility/babyproofing insights are capped to their relevant age window (live bug: fired for an 11-year-old)", () => {
+  const elevenYearsOld = 11 * 12; // 132 months
+
+  it("regression: NONE of the mobility/babyproofing insights fire for an 11-year-old", () => {
+    const insights = evaluateInsights(childAtMonths(elevenYearsOld), [], { has_stairs: true });
+    expect(findInsight(insights, "babyproof_start")).toBeUndefined();
+    expect(findInsight(insights, "install_baby_gates")).toBeUndefined();
+    expect(findInsight(insights, "babyproof_low_cabinets")).toBeUndefined();
+    expect(findInsight(insights, "crib_mattress_lowest")).toBeUndefined();
+    expect(findInsight(insights, "crib_mattress_middle")).toBeUndefined();
+    expect(findInsight(insights, "gate_suggest")).toBeUndefined();
+    expect(findInsight(insights, "rear_facing_reminder")).toBeUndefined();
+  });
+
+  it("regression: an 11-year-old gets NO insights at all (nothing in this engine is relevant past early childhood)", () => {
+    const insights = evaluateInsights(childAtMonths(elevenYearsOld), [], { has_stairs: true });
+    expect(insights).toEqual([]);
+  });
+
+  it("babyproof_start still fires within its intended 4-23mo window, but not at 24mo+", () => {
+    expect(findInsight(evaluateInsights(childAtMonths(4), []), "babyproof_start")).toBeDefined();
+    expect(findInsight(evaluateInsights(childAtMonths(23), []), "babyproof_start")).toBeDefined();
+    expect(findInsight(evaluateInsights(childAtMonths(24), []), "babyproof_start")).toBeUndefined();
+    expect(findInsight(evaluateInsights(childAtMonths(36), []), "babyproof_start")).toBeUndefined();
+  });
+
+  it("babyproof_low_cabinets still fires within its intended 9-23mo window, but not at 24mo+", () => {
+    expect(findInsight(evaluateInsights(childAtMonths(9), []), "babyproof_low_cabinets")).toBeDefined();
+    expect(findInsight(evaluateInsights(childAtMonths(23), []), "babyproof_low_cabinets")).toBeDefined();
+    expect(findInsight(evaluateInsights(childAtMonths(24), []), "babyproof_low_cabinets")).toBeUndefined();
+    expect(findInsight(evaluateInsights(childAtMonths(48), []), "babyproof_low_cabinets")).toBeUndefined();
+  });
+
+  it("install_baby_gates still fires within its intended 7-35mo window, but not at 36mo+", () => {
+    expect(
+      findInsight(evaluateInsights(childAtMonths(7), [], { has_stairs: true }), "install_baby_gates"),
+    ).toBeDefined();
+    expect(
+      findInsight(evaluateInsights(childAtMonths(35), [], { has_stairs: true }), "install_baby_gates"),
+    ).toBeDefined();
+    expect(
+      findInsight(evaluateInsights(childAtMonths(36), [], { has_stairs: true }), "install_baby_gates"),
+    ).toBeUndefined();
+    expect(
+      findInsight(evaluateInsights(childAtMonths(60), [], { has_stairs: true }), "install_baby_gates"),
+    ).toBeUndefined();
+  });
+
+  it("gate_suggest still fires within its intended 7-35mo window, but not at 36mo+", () => {
+    expect(findInsight(evaluateInsights(childAtMonths(7), [], { has_stairs: true }), "gate_suggest")).toBeDefined();
+    expect(findInsight(evaluateInsights(childAtMonths(35), [], { has_stairs: true }), "gate_suggest")).toBeDefined();
+    expect(findInsight(evaluateInsights(childAtMonths(36), [], { has_stairs: true }), "gate_suggest")).toBeUndefined();
+  });
+
+  it("crib_mattress_lowest still fires within its intended 12-35mo window, but not at 36mo+", () => {
+    expect(findInsight(evaluateInsights(childAtMonths(12), []), "crib_mattress_lowest")).toBeDefined();
+    expect(findInsight(evaluateInsights(childAtMonths(35), []), "crib_mattress_lowest")).toBeDefined();
+    expect(findInsight(evaluateInsights(childAtMonths(36), []), "crib_mattress_lowest")).toBeUndefined();
+    expect(findInsight(evaluateInsights(childAtMonths(elevenYearsOld), []), "crib_mattress_lowest")).toBeUndefined();
+  });
+});

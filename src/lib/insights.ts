@@ -110,8 +110,15 @@ export function evaluateInsights(
   }
 
   // ── Age-only rules ───────────────────────────────────────────────────────
+  // babyproof_start / install_baby_gates / babyproof_low_cabinets /
+  // crib_mattress_lowest were all bare `months >= X` checks with no upper
+  // bound, so any child older than the threshold — including, as reported,
+  // an 11-year-old (132mo) — kept getting "begin babyproofing" / "install
+  // gates" / "secure cabinets" / "lower the crib mattress" every time.
+  // Capped each to the actual window it's relevant for, same treatment
+  // already applied to the car-seat/bassinet/swing/bouncer rules below.
   if (months !== null) {
-    if (months >= 4) {
+    if (months >= 4 && months < 24) {
       out.push({
         id: "babyproof_start",
         title: "Begin thinking about babyproofing",
@@ -129,7 +136,7 @@ export function evaluateInsights(
         category: "crib",
       });
     }
-    if (months >= 7 && hasStairs) {
+    if (months >= 7 && months < 36 && hasStairs) {
       out.push({
         id: "install_baby_gates",
         title: "Consider installing safety gates near stairs",
@@ -138,7 +145,7 @@ export function evaluateInsights(
         category: "baby_gate",
       });
     }
-    if (months >= 9) {
+    if (months >= 9 && months < 24) {
       out.push({
         id: "babyproof_low_cabinets",
         title: "Consider securing lower cabinets",
@@ -147,7 +154,7 @@ export function evaluateInsights(
         category: "safety",
       });
     }
-    if (months >= 12) {
+    if (months >= 12 && months < 36) {
       out.push({
         id: "crib_mattress_lowest",
         title: "Consider lowering the crib mattress to its lowest setting",
@@ -256,7 +263,7 @@ export function evaluateInsights(
       category: "high_chair",
     });
   }
-  if (months !== null && months >= 7 && hasStairs && !hasCategory(products, "baby_gate")) {
+  if (months !== null && months >= 7 && months < 36 && hasStairs && !hasCategory(products, "baby_gate")) {
     out.push({
       id: "gate_suggest",
       title: "Add baby gates to your list",
