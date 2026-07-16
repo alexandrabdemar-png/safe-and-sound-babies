@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { friendlyAuthError, friendlyError, isSchemaMissingTableError } from "./errors";
+import {
+  friendlyAuthError,
+  friendlyError,
+  isColumnUnavailableError,
+  isSchemaMissingTableError,
+} from "./errors";
 
 describe("isSchemaMissingTableError", () => {
   it("regression: matches the EXACT error message reported live for first_foods", () => {
@@ -37,6 +42,44 @@ describe("isSchemaMissingTableError", () => {
     expect(
       isSchemaMissingTableError({ message: "duplicate key value violates unique constraint" }),
     ).toBe(false);
+  });
+});
+
+describe("isColumnUnavailableError", () => {
+  it("regression: matches the exact PostgREST message reported live for children.due_date", () => {
+    expect(
+      isColumnUnavailableError("due_date", {
+        message: "Could not find the 'due_date' column of 'children' in the schema cache",
+      }),
+    ).toBe(true);
+  });
+
+  it("matches by Postgres error code (42703 / undefined_column)", () => {
+    expect(isColumnUnavailableError("due_date", { message: "anything", code: "42703" })).toBe(
+      true,
+    );
+  });
+
+  it("does not match when the message doesn't mention the given column at all", () => {
+    expect(
+      isColumnUnavailableError("due_date", {
+        message: "Could not find the 'icon' column of 'milestones' in the schema cache",
+      }),
+    ).toBe(false);
+  });
+
+  it("does not match a same-named-column error on an unrelated, non-schema failure", () => {
+    expect(
+      isColumnUnavailableError("due_date", { message: "permission denied for column due_date" }),
+    ).toBe(false);
+  });
+
+  it("generalizes correctly for a different column name (icon), matching the existing momentIcons.tsx behavior", () => {
+    expect(
+      isColumnUnavailableError("icon", {
+        message: "Could not find the 'icon' column of 'milestones' in the schema cache",
+      }),
+    ).toBe(true);
   });
 });
 

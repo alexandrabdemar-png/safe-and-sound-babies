@@ -48,6 +48,27 @@ export function isSchemaMissingTableError(error: {
 }
 
 /**
+ * True when a Supabase/PostgREST error means a specific COLUMN (not the
+ * whole table) isn't reachable yet — either Postgres has no such column
+ * (code 42703 / undefined_column) or PostgREST's schema cache hasn't
+ * picked it up. Generalizes the same detection src/lib/momentIcons.tsx's
+ * isIconColumnUnavailableError uses for the `icon` column, parameterized
+ * by column name so other resilient-retry call sites (e.g.
+ * children.due_date in onboarding.tsx) don't duplicate the regex logic.
+ * Pair with a retry that omits the column — this is what lets a feature
+ * work immediately for users even when a migration hasn't reached the
+ * live database yet, rather than making them wait on it.
+ */
+export function isColumnUnavailableError(
+  column: string,
+  error: { message: string; code?: string | null },
+): boolean {
+  if (error.code === "42703") return true; // Postgres: undefined_column, independent of message text
+  if (!new RegExp(column, "i").test(error.message)) return false;
+  return /schema cache/i.test(error.message) || /does not exist/i.test(error.message);
+}
+
+/**
  * Pulls a usable message (and Postgres error code, when present) out of
  * anything a catch block might hand us. Supabase/PostgREST errors are
  * plain objects — { message, code, details, hint } — not Error instances,

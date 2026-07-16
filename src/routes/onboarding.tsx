@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { computeAdjustedAge } from "@/lib/adjustedAge";
-import { friendlyError } from "@/lib/errors";
+import { friendlyError, isColumnUnavailableError } from "@/lib/errors";
 import { SketchDefs, MOMENT_ICON_ACCENT } from "@/lib/momentIcons";
 import { CATEGORY_SKETCH_ICONS } from "@/lib/categorySketchIcons";
 import type { CategoryKey } from "@/lib/productCategories";
@@ -178,7 +178,7 @@ function OnboardingPage() {
       const childName = name.trim();
 
       if (childName) {
-        const { data: childRow, error: childError } = await supabase
+        let { data: childRow, error: childError } = await supabase
           .from("children")
           .insert({
             user_id: userId,
@@ -188,6 +188,26 @@ function OnboardingPage() {
           } as never)
           .select("id")
           .single();
+
+        // due_date is a recent addition — if a migration hasn't reached
+        // this database yet, retry without it rather than blocking the
+        // user's entire onboarding on a field that's optional anyway
+        // ("enables adjusted-age reminders for preemies"). Same resilient
+        // pattern as fetchMilestonesResilient's icon-column retry.
+        if (childError && isColumnUnavailableError("due_date", childError)) {
+          console.error("children.due_date unavailable — retrying without it", childError);
+          const retry = await supabase
+            .from("children")
+            .insert({
+              user_id: userId,
+              name: childName,
+              date_of_birth: dob || null,
+            } as never)
+            .select("id")
+            .single();
+          childRow = retry.data;
+          childError = retry.error;
+        }
 
         if (childError) throw childError;
 
