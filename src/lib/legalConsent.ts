@@ -10,14 +10,12 @@ import { isSchemaMissingTableError } from "@/lib/errors";
 export const CURRENT_TERMS_VERSION = "2026-07-16";
 
 /**
- * True when the given set of already-accepted terms versions does NOT
- * include the current one — i.e. the user must be sent to /legal-consent
- * before using the authenticated app. Pure so the redirect logic in
- * _authenticated/route.tsx's beforeLoad can be unit-tested without a real
- * Supabase round trip.
+ * True when the user has NEVER accepted the terms. Once a user has any
+ * recorded acceptance in user_agreements, we never prompt them again —
+ * the wall is strictly a one-time gate, not a per-version re-consent.
  */
 export function needsLegalConsent(acceptedVersions: string[]): boolean {
-  return !acceptedVersions.includes(CURRENT_TERMS_VERSION);
+  return acceptedVersions.length === 0;
 }
 
 type AgreementsClient = {

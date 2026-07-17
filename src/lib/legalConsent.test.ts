@@ -6,8 +6,8 @@ describe("needsLegalConsent", () => {
     expect(needsLegalConsent([])).toBe(true);
   });
 
-  it("returns true when the user only accepted an older version", () => {
-    expect(needsLegalConsent(["2026-01-01"])).toBe(true);
+  it("returns false once the user has accepted any version (one-time gate)", () => {
+    expect(needsLegalConsent(["2026-01-01"])).toBe(false);
   });
 
   it("returns false when the current version is among the accepted ones", () => {
@@ -81,9 +81,9 @@ describe("checkNeedsLegalConsent", () => {
     expect(await checkNeedsLegalConsent(client, userId)).toBe(true);
   });
 
-  it("re-prompts when the user only accepted an older version", async () => {
+  it("does not re-prompt when the user previously accepted an older version (one-time gate)", async () => {
     const client = makeFakeAgreementsClient([{ user_id: userId, terms_version: "2026-01-01" }]);
-    expect(await checkNeedsLegalConsent(client, userId)).toBe(true);
+    expect(await checkNeedsLegalConsent(client, userId)).toBe(false);
   });
 
   it("fails open (does not prompt) when the table itself is unreachable", async () => {
