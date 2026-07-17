@@ -276,8 +276,10 @@ function ScanPage() {
   ) {
     let imageUrl: string | undefined;
     if (photo) {
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userData.user) throw userErr ?? new Error("Not authenticated");
       const ext = photo.name.split(".").pop()?.toLowerCase() || "jpg";
-      const path = `${scannedBarcode}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const path = `${userData.user.id}/${scannedBarcode}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const { error: uploadErr } = await supabase.storage
         .from("product-photos")
         .upload(path, photo, { contentType: photo.type });
