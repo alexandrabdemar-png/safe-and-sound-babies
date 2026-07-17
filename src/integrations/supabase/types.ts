@@ -105,38 +105,6 @@ export type Database = {
           },
         ]
       }
-      category_watchlist: {
-        Row: {
-          category: string
-          child_id: string | null
-          created_at: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          category: string
-          child_id?: string | null
-          created_at?: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          category?: string
-          child_id?: string | null
-          created_at?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "category_watchlist_child_id_fkey"
-            columns: ["child_id"]
-            isOneToOne: false
-            referencedRelation: "children"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       checklist_completions: {
         Row: {
           created_at: string
@@ -360,7 +328,7 @@ export type Database = {
         Row: {
           child_id: string
           created_at: string
-          expires_at: string | null
+          expires_at: string
           id: string
           revoked_at: string | null
           token_hash: string
@@ -369,7 +337,7 @@ export type Database = {
         Insert: {
           child_id: string
           created_at?: string
-          expires_at?: string | null
+          expires_at: string
           id?: string
           revoked_at?: string | null
           token_hash: string
@@ -378,7 +346,7 @@ export type Database = {
         Update: {
           child_id?: string
           created_at?: string
-          expires_at?: string | null
+          expires_at?: string
           id?: string
           revoked_at?: string | null
           token_hash?: string
