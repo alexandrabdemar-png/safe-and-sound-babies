@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { decidePostCallbackRoute } from "@/lib/authCallbackRouting";
+import { decidePostCallbackRoute, parseNextParam } from "@/lib/authCallbackRouting";
 import { Loader2 } from "lucide-react";
 
 /**
@@ -24,10 +24,7 @@ export const Route = createFileRoute("/auth/callback")({
 
 function getNextParam(): string | null {
   if (typeof window === "undefined") return null;
-  const next = new URLSearchParams(window.location.search).get("next");
-  // Only ever allow an in-app relative path — never an absolute/external
-  // URL, which would make this an open redirect.
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+  return parseNextParam(new URLSearchParams(window.location.search).get("next"));
 }
 
 function getIsRecovery(): boolean {

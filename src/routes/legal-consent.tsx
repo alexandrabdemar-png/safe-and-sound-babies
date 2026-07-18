@@ -7,6 +7,7 @@ import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { CURRENT_TERMS_VERSION } from "@/lib/legalConsent";
 import { friendlyError, isSchemaMissingTableError } from "@/lib/errors";
+import { parseNextParam } from "@/lib/authCallbackRouting";
 
 export const Route = createFileRoute("/legal-consent")({
   ssr: false,
@@ -21,8 +22,7 @@ export const Route = createFileRoute("/legal-consent")({
 
 function getNextParam(): string {
   if (typeof window === "undefined") return "/home";
-  const next = new URLSearchParams(window.location.search).get("next");
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/home";
+  return parseNextParam(new URLSearchParams(window.location.search).get("next")) ?? "/home";
 }
 
 const ACKNOWLEDGMENTS = [
