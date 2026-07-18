@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { friendlyAuthError } from "@/lib/errors";
+import { withTimeout } from "@/lib/promiseTimeout";
 import { Mail, Lock, Sparkles, Loader2, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
@@ -131,9 +132,22 @@ function AuthPage() {
   async function handleOAuth(provider: "google" | "apple") {
     setLoading(provider);
     try {
-      const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: window.location.origin,
-      });
+      // The underlying OAuth broker (Lovable Cloud) can open a popup and
+      // then simply never resolve — no postMessage, no popup-closed event —
+      // if the provider handshake stalls. There's no timeout in that vendor
+      // code, so without one here the button spins forever with no way out.
+      // This doesn't fire for the normal full-page-redirect path, since the
+      // browser navigates away long before it could ever elapse.
+      const result = await withTimeout(
+        lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin }),
+        20000,
+        () => {
+          setLoading(null);
+          toast.error(
+            "This is taking longer than expected. If a sign-in window opened, close it and try again — or use email instead.",
+          );
+        },
+      );
       if (result.error) {
         toast.error(friendlyAuthError(result.error.message || `${provider} sign-in failed`));
         setLoading(null);

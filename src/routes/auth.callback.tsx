@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { decidePostCallbackRoute } from "@/lib/authCallbackRouting";
 import { Loader2 } from "lucide-react";
 
 /**
@@ -29,14 +30,28 @@ function getNextParam(): string | null {
   return next && next.startsWith("/") && !next.startsWith("//") ? next : null;
 }
 
+function getIsRecovery(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("type") === "recovery";
+}
+
 function AuthCallbackPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
     let done = false;
     const next = getNextParam();
+    // Read from our own redirect URL rather than racing getSession() against
+    // onAuthStateChange's PASSWORD_RECOVERY event — those can settle in
+    // either order, and if getSession() wins, a recovery link would
+    // silently route like a normal sign-in instead of to reset-password.
+    const isRecovery = getIsRecovery();
 
-    function routeAfterSignIn(userId: string) {
+    function routeAfterSession(userId: string) {
+      if (isRecovery) {
+        navigate({ to: "/auth", search: { mode: "reset" } } as never);
+        return;
+      }
       if (next) {
         navigate({ to: next } as never);
         return;
@@ -47,11 +62,8 @@ function AuthCallbackPage() {
         .eq("user_id", userId)
         .maybeSingle()
         .then(({ data: profile }) => {
-          if (!profile?.display_name) {
-            navigate({ to: "/onboarding" });
-          } else {
-            navigate({ to: "/home" });
-          }
+          const route = decidePostCallbackRoute({ isRecovery, next, hasDisplayName: !!profile?.display_name });
+          navigate(route as never);
         });
     }
 
@@ -68,7 +80,7 @@ function AuthCallbackPage() {
         return;
       }
       done = true;
-      routeAfterSignIn(data.session.user.id);
+      routeAfterSession(data.session.user.id);
     });
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
@@ -80,7 +92,7 @@ function AuthCallbackPage() {
       }
       if (event === "SIGNED_IN" && session) {
         done = true;
-        routeAfterSignIn(session.user.id);
+        routeAfterSession(session.user.id);
       }
     });
 
