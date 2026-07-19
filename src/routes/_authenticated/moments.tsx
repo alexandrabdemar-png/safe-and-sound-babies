@@ -6,6 +6,7 @@ import { ArrowLeft, Plus, Search, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { BottomNav } from "@/components/BottomNav";
+import { SparkleIllustration } from "@/components/EmptyIllustration";
 import {
   MOMENT_ICON_KEYS,
   MOMENT_ICON_LABELS,
@@ -139,13 +140,28 @@ function MomentsPage() {
             </Button>
           </div>
 
-          <p className="font-body text-xs font-semibold uppercase tracking-[0.2em] text-accent">
-            <Sparkles className="mr-1 inline h-3 w-3" /> {childName || "Memory book"}
-          </p>
-          <h1 className="mt-1.5 font-display text-3xl font-semibold tracking-tight">Moments</h1>
-          <p className="mt-1 font-body text-sm text-muted-foreground">
-            Every memory, beautifully kept.
-          </p>
+          {/* Hero card — same treatment as Home's "Today" card, giving
+              Moments real visual weight instead of a plain text header,
+              consistent with how central this feature is to the app. */}
+          <div
+            className="rounded-[20px] p-6"
+            style={{ backgroundColor: "#586C81", border: "1px solid rgba(255,255,255,0.08)" }}
+          >
+            <p
+              className="font-body text-[11px] font-medium uppercase tracking-[0.12em]"
+              style={{ color: "rgba(255,255,255,0.55)" }}
+            >
+              <Sparkles className="mr-1 inline h-3 w-3" /> {childName || "Memory book"}
+            </p>
+            <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-white">
+              Moments
+            </h1>
+            <p className="mt-1.5 font-body text-sm" style={{ color: "rgba(255,255,255,0.8)" }}>
+              {moments.length > 0
+                ? `${moments.length} moment${moments.length === 1 ? "" : "s"} captured — every first is worth remembering.`
+                : "Every memory, beautifully kept."}
+            </p>
+          </div>
         </div>
       </header>
 
@@ -213,16 +229,19 @@ function MomentsPage() {
               Loading…
             </div>
           ) : filtered.length === 0 ? (
-            <div className="py-10 text-center">
+            <div className="rounded-3xl border border-dashed border-border bg-card/40 px-6 py-10 text-center animate-scale-in">
+              <SparkleIllustration className="mx-auto mb-2 h-24 w-24" />
               <p className="font-display text-lg font-semibold">No moments yet</p>
-              <p className="mt-1 font-body text-sm text-muted-foreground">
+              <p className="mx-auto mt-1 max-w-xs font-body text-sm text-muted-foreground">
                 {search || iconFilter !== "all"
                   ? "Try a different search or filter."
                   : "Log your first moment and it'll appear here."}
               </p>
               {!search && iconFilter === "all" && (
-                <Button asChild className="mt-4 rounded-full">
-                  <Link to="/moments/new">Log a moment</Link>
+                <Button asChild className="mt-5 rounded-full bg-primary px-5 font-body text-xs font-semibold">
+                  <Link to="/moments/new">
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Log a moment
+                  </Link>
                 </Button>
               )}
             </div>
@@ -246,13 +265,13 @@ function MomentsPage() {
                     <li key={m.id} className="relative flex items-start">
                       {/* Icon badge on the spine */}
                       <span
-                        className="absolute left-1/2 top-2 z-10 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full shadow-sm"
+                        className="absolute left-1/2 top-2 z-10 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full shadow-md"
                         style={{
                           backgroundColor: CARD_BG,
-                          border: `1.5px solid ${MOMENT_ICON_ACCENT}`,
+                          border: `2px solid ${MOMENT_ICON_ACCENT}`,
                         }}
                       >
-                        <Icon px={18} />
+                        <Icon px={20} />
                       </span>
 
                       {/* Card, alternating side */}
@@ -260,7 +279,7 @@ function MomentsPage() {
                         className={`flex w-1/2 ${onLeft ? "justify-end pr-6" : "order-2 justify-start pl-6"}`}
                       >
                         <div
-                          className="w-full max-w-[210px] rounded-2xl p-3.5"
+                          className="w-full max-w-[210px] rounded-2xl p-3.5 shadow-sm transition-shadow hover:shadow-md"
                           style={{ backgroundColor: CARD_BG, border: `1px solid ${CARD_BORDER}` }}
                         >
                           {/* Icon tag + date */}
