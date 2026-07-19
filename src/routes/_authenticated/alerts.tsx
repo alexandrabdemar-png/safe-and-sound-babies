@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { hapticSuccess, hapticDismiss } from "@/lib/haptic";
 import { friendlyError } from "@/lib/errors";
 import { BellIllustration } from "@/components/EmptyIllustration";
-import { recallFallbackUrl } from "@/lib/recallCheck";
+import { recallFallbackUrl, lotMatches } from "@/lib/recallCheck";
 
 export const Route = createFileRoute("/_authenticated/alerts")({
   ssr: false,
@@ -31,7 +31,7 @@ type RecallMatch = {
   id: string;
   acknowledged: boolean;
   product_id: string;
-  products: { name: string; brand: string | null } | null;
+  products: { name: string; brand: string | null; lot_number: string | null } | null;
   recalls: {
     id: string;
     title: string;
@@ -39,6 +39,7 @@ type RecallMatch = {
     remedy: string | null;
     url: string | null;
     recall_date: string | null;
+    lot_pattern: string | null;
   } | null;
 };
 
@@ -143,7 +144,7 @@ function AlertsPage() {
       supabase
         .from("product_recalls")
         .select(
-          "id, acknowledged, product_id, products(name, brand), recalls(id, title, hazard, remedy, url, recall_date)",
+          "id, acknowledged, product_id, products(name, brand, lot_number), recalls(id, title, hazard, remedy, url, recall_date, lot_pattern)",
         )
         .eq("acknowledged", false),
     ]);
@@ -293,10 +294,11 @@ function AlertsPage() {
                 </span>
                 <div>
                   <h2 className="font-display text-base font-semibold text-destructive">
-                    Products You Own With Active Recalls
+                    Possible Recall Matches on Your Products
                   </h2>
                   <p className="font-body text-xs text-destructive/80">
-                    {ownedRecalls.length} product{ownedRecalls.length !== 1 ? "s" : ""} need{ownedRecalls.length === 1 ? "s" : ""} your attention
+                    {ownedRecalls.length} product{ownedRecalls.length !== 1 ? "s" : ""} matched by name to an active
+                    recall — verify against the official notice below before assuming it applies.
                   </p>
                 </div>
               </div>
@@ -457,6 +459,19 @@ function RecallCard({ item, onDismiss }: { item: RecallMatch; onDismiss: () => v
           <span className="font-semibold">What to do:</span> {recall.remedy}
         </p>
       )}
+      {recall.lot_pattern && (
+        <p className="mt-1.5 font-body text-xs text-destructive/80">
+          Affected batch/lot: <span className="font-semibold">{recall.lot_pattern}</span> — check your
+          product's sticker or packaging to compare.
+        </p>
+      )}
+      {product?.lot_number && recall.lot_pattern && (
+        <p className={`mt-1 font-body text-xs font-semibold ${lotMatches(product.lot_number, recall.lot_pattern) ? "text-destructive" : "text-emerald-700"}`}>
+          {lotMatches(product.lot_number, recall.lot_pattern)
+            ? "Your recorded batch/lot matches this recall."
+            : "Your recorded batch/lot doesn't match this recall's listed batch/lot — still worth double-checking manually."}
+        </p>
+      )}
       <div className="mt-4 flex items-center gap-2">
         <a
           href={recall.url || recallFallbackUrl(recall.title)}
@@ -539,6 +554,16 @@ function BannerRecallItem({ item }: { item: RecallMatch }) {
         >
           {expanded ? <><ChevronUp className="h-3 w-3" /> Show less</> : <><ChevronDown className="h-3 w-3" /> Show more</>}
         </button>
+      )}
+      {recall.lot_pattern && (
+        <p className="mt-1 font-body text-[11px] text-destructive/70">
+          Affected batch/lot: <span className="font-semibold">{recall.lot_pattern}</span>
+        </p>
+      )}
+      {product?.lot_number && recall.lot_pattern && (
+        <p className={`mt-0.5 font-body text-[11px] font-semibold ${lotMatches(product.lot_number, recall.lot_pattern) ? "text-destructive" : "text-emerald-700"}`}>
+          {lotMatches(product.lot_number, recall.lot_pattern) ? "Matches your recorded batch/lot" : "Doesn't match your recorded batch/lot"}
+        </p>
       )}
       <a
         href={recall.url || recallFallbackUrl(recall.title)}

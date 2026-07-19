@@ -42,7 +42,7 @@ import {
   type HomeProfileAnswers,
 } from "@/lib/homeProfile";
 
-import { CheckCircle2, ShieldCheck } from "lucide-react";
+import { CheckCircle2, ShieldAlert, ShieldCheck } from "lucide-react";
 import { SoftBlob } from "@/components/SoftBlob";
 
 export const Route = createFileRoute("/_authenticated/home")({
@@ -1191,7 +1191,7 @@ function HomePage() {
                 label="Recalls"
                 tone={alerts.recalls > 0 ? "danger" : "muted"}
               />
-              <SummaryTile icon={RefreshCw} count={alerts.replace} label="Replace" />
+              <SummaryTile icon={RefreshCw} count={alerts.replace} label="Replacements" />
               <SummaryTile icon={Ruler} count={alerts.sizeUp} label="Size up" />
             </div>
           )}
@@ -1602,32 +1602,62 @@ function RecallRadarCard({
   childName: string;
 }) {
   return (
-    <Link
-      to="/recall-radar"
-      className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3.5 transition-colors hover:border-primary/40"
-    >
-      <div className="flex items-center gap-3">
-        <span
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${matchedCount > 0 ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary"}`}
-        >
-          <Radio className="h-4 w-4" />
-        </span>
-        <div>
-          <p className="font-body text-sm font-semibold">Recall Radar</p>
-          <p className="font-body text-[11px] text-muted-foreground">
-            {count > 0
-              ? `${count} new recall${count > 1 ? "s" : ""} published this month`
-              : "No new recalls published this month"}
-          </p>
-          <p className="mt-0.5 font-body text-[11px] text-muted-foreground/70">
-            {matchedCount > 0
-              ? `${matchedCount} may match ${childName}'s saved products — tap to review.`
-              : `None currently match ${childName}'s saved products.`}
-          </p>
+    <div className="space-y-2">
+      {/* Recall Radar — industry-wide, every baby/kids recall published
+          recently, regardless of what this user owns. Links to the full
+          public-database list. */}
+      <Link
+        to="/recall-radar"
+        className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3.5 transition-colors hover:border-primary/40"
+      >
+        <div className="flex items-center gap-3">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <Radio className="h-4 w-4" />
+          </span>
+          <div>
+            <p className="font-body text-sm font-semibold">Recall Radar</p>
+            <p className="font-body text-[11px] text-muted-foreground">
+              {count > 0
+                ? `${count} new recall${count > 1 ? "s" : ""} published this month, industry-wide`
+                : "No new recalls published this month, industry-wide"}
+            </p>
+          </div>
         </div>
-      </div>
-      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-    </Link>
+        <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+      </Link>
+
+      {/* Alerts for [Child] — only recalls matched to products this user
+          actually added. A separate section on purpose: this is a
+          fuzzy-name match, not a certified affected-unit confirmation, and
+          it's a fundamentally different (much smaller, personal) list than
+          the industry-wide one above. Links to /alerts, where the actual
+          matched list lives — not to /recall-radar. */}
+      <Link
+        to="/alerts"
+        className={`flex items-center justify-between rounded-2xl border px-4 py-3.5 transition-colors ${
+          matchedCount > 0
+            ? "border-destructive/30 bg-destructive/5 hover:border-destructive/50"
+            : "border-border/60 bg-card hover:border-primary/40"
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <span
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${matchedCount > 0 ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary"}`}
+          >
+            <ShieldAlert className="h-4 w-4" />
+          </span>
+          <div>
+            <p className="font-body text-sm font-semibold">Alerts for {childName}</p>
+            <p className="font-body text-[11px] text-muted-foreground">
+              {matchedCount > 0
+                ? `${matchedCount} may match ${childName}'s saved products — tap to review.`
+                : `None currently match ${childName}'s saved products.`}
+            </p>
+          </div>
+        </div>
+        <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+      </Link>
+    </div>
   );
 }
 

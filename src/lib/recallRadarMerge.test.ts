@@ -76,16 +76,33 @@ describe("mapExtraResults", () => {
       url: "https://nhtsa.gov/x",
       recall_date: "2026-05-01",
       official: true,
+      lot_pattern: null,
     }]);
     expect(out).toHaveLength(1);
     expect(out[0].id).toBe("nhtsa-abc");
     expect(out[0].description).toBe("specific hazard text");
+    expect(out[0].lotPattern).toBeNull();
+  });
+
+  it("carries lot_pattern through when the source data has it", () => {
+    const out = mapExtraResults([{
+      id: "abc",
+      source: "nhtsa",
+      title: "Car seat issue",
+      description: "generic description",
+      hazard: null,
+      url: "https://nhtsa.gov/x",
+      recall_date: "2026-05-01",
+      official: true,
+      lot_pattern: "Lot codes AB1000-AB2000",
+    }]);
+    expect(out[0].lotPattern).toBe("Lot codes AB1000-AB2000");
   });
 
   it("does not throw on a row missing id/source — drops it instead", () => {
     const rows = [
       { title: "broken row" } as unknown as ExtraRecallRow,
-      { id: "1", source: "eu_safety_gate", title: "ok", description: null, hazard: null, url: null, recall_date: null, official: false },
+      { id: "1", source: "eu_safety_gate", title: "ok", description: null, hazard: null, url: null, recall_date: null, official: false, lot_pattern: null },
     ];
     expect(() => mapExtraResults(rows)).not.toThrow();
     const out = mapExtraResults(rows);

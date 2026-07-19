@@ -177,6 +177,27 @@ export function fuzzyMatchProduct(productName: string, recallText: string): bool
   return matchCount >= required;
 }
 
+/**
+ * Compares a product's recorded lot/batch number against a recall's
+ * affected-lot text. Deliberately does NOT try to parse numeric lot
+ * ranges (e.g. "AB1000–AB2000") — source data formats this inconsistently
+ * and free-text range parsing is exactly the kind of "confidently wrong"
+ * logic this feature is meant to avoid. Instead: normalize both to
+ * uppercase alphanumerics only, then match if either fully contains the
+ * other. That correctly handles a recall listing several exact lot codes
+ * ("Lot codes: AB1234, CD5678") against a product recorded as just
+ * "AB1234", and an exact single-code match either direction, without
+ * guessing at ranges it can't reliably interpret.
+ */
+export function lotMatches(productLot: string | null | undefined, recallLotPattern: string | null | undefined): boolean {
+  if (!productLot || !recallLotPattern) return false;
+  const normalize = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]+/g, "");
+  const a = normalize(productLot);
+  const b = normalize(recallLotPattern);
+  if (!a || !b) return false;
+  return b.includes(a) || a.includes(b);
+}
+
 // ── CRITICAL RECALLS — manually maintained ───────────────────────────────────
 
 type CriticalRecall = {

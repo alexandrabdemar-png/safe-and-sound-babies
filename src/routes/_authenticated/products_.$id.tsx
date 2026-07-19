@@ -11,7 +11,7 @@ import { CATEGORY_BY_KEY, categoryFromLabel } from "@/lib/productCategories";
 import { formatMonthYear, daysBetween } from "@/lib/predictions";
 import { lookupAndSaveGuidelines, recomputePredictions } from "@/lib/guidelines.functions";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
-import { recallFallbackUrl, recallSourceLabel, formatRecallSyncNote } from "@/lib/recallCheck";
+import { recallFallbackUrl, recallSourceLabel, formatRecallSyncNote, lotMatches } from "@/lib/recallCheck";
 
 export const Route = createFileRoute("/_authenticated/products_/$id")({
   ssr: false,
@@ -31,6 +31,7 @@ type Product = {
   recalled: boolean;
   child_id: string | null;
   recall_checked_at: string | null;
+  lot_number: string | null;
 }; type _u = never; // photo_url removed
 
 type Guideline = {
@@ -57,6 +58,7 @@ type RecallInfo = {
   description: string | null;
   recallDate: string | null;
   source: string | null;
+  lotPattern: string | null;
 };
 
 function ProductDetailPage() {
@@ -73,7 +75,7 @@ function ProductDetailPage() {
     setLoading(true);
     const { data: p, error } = await supabase
       .from("products")
-      .select("id, name, brand, size, category, added_at, purchased_at, predicted_sizeup_date, predicted_replacement_date, recalled, child_id, recall_checked_at")
+      .select("id, name, brand, size, category, added_at, purchased_at, predicted_sizeup_date, predicted_replacement_date, recalled, child_id, recall_checked_at, lot_number")
       .eq("id", id)
       .maybeSingle();
     if (error || !p) {
@@ -89,16 +91,16 @@ function ProductDetailPage() {
       // the product regardless of whether the parent already dismissed it
       // from the Alerts feed; "acknowledged" only controls whether it's
       // still an actionable item there, not whether the article is visible.
-      supabase.from("product_recalls").select("recalls(title, url, description, recall_date, source)").eq("product_id", id),
+      supabase.from("product_recalls").select("recalls(title, url, description, recall_date, source, lot_pattern)").eq("product_id", id),
       p.child_id ? supabase.from("children").select("id, name, height_inches, weight_lbs, measurements_updated_at").eq("id", p.child_id).maybeSingle() : Promise.resolve({ data: null }),
     ]);
     setGuideline((g as Guideline) ?? null);
-    type RecallRow = { recalls: { title: string; url: string | null; description: string | null; recall_date: string | null; source: string | null } | null };
+    type RecallRow = { recalls: { title: string; url: string | null; description: string | null; recall_date: string | null; source: string | null; lot_pattern: string | null } | null };
     setRecalls(
       ((r ?? []) as RecallRow[])
         .map((x) => x.recalls)
         .filter((x): x is NonNullable<typeof x> => x !== null)
-        .map((x) => ({ title: x.title, url: x.url, description: x.description, recallDate: x.recall_date, source: x.source }))
+        .map((x) => ({ title: x.title, url: x.url, description: x.description, recallDate: x.recall_date, source: x.source, lotPattern: x.lot_pattern }))
     );
     setChild((kidRes?.data as Child) ?? null);
     setLoading(false);
@@ -155,11 +157,13 @@ function ProductDetailPage() {
           {(product.recalled || recalls.length > 0) ? (
             <div className="rounded-3xl bg-destructive/15 border border-destructive/30 p-4">
               <div className="flex items-center gap-2 font-body text-sm font-semibold text-destructive">
-                <AlertTriangle className="h-4 w-4" /> RECALL
+                <AlertTriangle className="h-4 w-4" /> POSSIBLE RECALL MATCH
               </div>
               {recalls.length > 0 ? (
                 <ul className="mt-2 space-y-3">
-                  {recalls.map((rc, i) => (
+                  {recalls.map((rc, i) => {
+                    const hasLotMatch = lotMatches(product.lot_number, rc.lotPattern);
+                    return (
                     <li key={i} className="space-y-1">
                       <p className="font-body text-sm font-semibold text-destructive">{rc.title}</p>
                       {rc.description && (
@@ -167,6 +171,19 @@ function ProductDetailPage() {
                       )}
                       {rc.recallDate && (
                         <p className="font-body text-[11px] text-destructive/70">Recall date: {rc.recallDate}</p>
+                      )}
+                      {rc.lotPattern && (
+                        <p className="font-body text-[11px] text-destructive/70">
+                          Affected batch/lot: <span className="font-semibold">{rc.lotPattern}</span> — check your
+                          product's sticker or packaging to compare.
+                        </p>
+                      )}
+                      {product.lot_number && rc.lotPattern && (
+                        <p className={`font-body text-[11px] font-semibold ${hasLotMatch ? "text-destructive" : "text-emerald-700"}`}>
+                          {hasLotMatch
+                            ? "Your recorded batch/lot matches this recall."
+                            : "Your recorded batch/lot doesn't match this recall's listed batch/lot — still worth double-checking manually."}
+                        </p>
                       )}
                       <a
                         href={rc.url || recallFallbackUrl(rc.title)}
@@ -178,7 +195,8 @@ function ProductDetailPage() {
                       </a>
                       <p className="font-body text-[11px] text-destructive/60">Source: {recallSourceLabel(rc)}</p>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               ) : (
                 <p className="mt-1 font-body text-xs text-destructive/80">

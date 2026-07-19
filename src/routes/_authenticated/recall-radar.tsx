@@ -72,7 +72,7 @@ function RecallRadarPage() {
         // support couldn't be confirmed from this build environment.
         supabase
           .from("recalls")
-          .select("id, source, title, description, hazard, url, recall_date, official")
+          .select("id, source, title, description, hazard, url, recall_date, official, lot_pattern")
           .in("source", ["usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"])
           .order("recall_date", { ascending: false })
           .limit(50),
@@ -246,6 +246,11 @@ function RecallCard({ recall }: { recall: RadarRecall }) {
       </div>
       {recall.description && (
         <p className="font-body text-xs text-muted-foreground leading-relaxed pl-10 line-clamp-3">{recall.description}</p>
+      )}
+      {recall.lotPattern && (
+        <p className="font-body text-xs text-muted-foreground pl-10">
+          Affected batch/lot: <span className="font-semibold text-foreground">{recall.lotPattern}</span>
+        </p>
       )}
       <div className="pl-10">
         <a href={recall.url || recallFallbackUrl(recall.title)} target="_blank" rel="noopener noreferrer"

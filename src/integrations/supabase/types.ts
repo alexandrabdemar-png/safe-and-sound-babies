@@ -784,6 +784,7 @@ export type Database = {
           created_at: string
           expiration_date: string | null
           id: string
+          lot_number: string | null
           manufacture_date: string | null
           model: string | null
           name: string
@@ -810,6 +811,7 @@ export type Database = {
           created_at?: string
           expiration_date?: string | null
           id?: string
+          lot_number?: string | null
           manufacture_date?: string | null
           model?: string | null
           name: string
@@ -836,6 +838,7 @@ export type Database = {
           created_at?: string
           expiration_date?: string | null
           id?: string
+          lot_number?: string | null
           manufacture_date?: string | null
           model?: string | null
           name?: string
@@ -951,6 +954,7 @@ export type Database = {
           hazard_fingerprint: string | null
           id: string
           image_url: string | null
+          lot_pattern: string | null
           model: string | null
           official: boolean
           product_name: string | null
@@ -975,6 +979,7 @@ export type Database = {
           hazard_fingerprint?: string | null
           id?: string
           image_url?: string | null
+          lot_pattern?: string | null
           model?: string | null
           official?: boolean
           product_name?: string | null
@@ -999,6 +1004,7 @@ export type Database = {
           hazard_fingerprint?: string | null
           id?: string
           image_url?: string | null
+          lot_pattern?: string | null
           model?: string | null
           official?: boolean
           product_name?: string | null

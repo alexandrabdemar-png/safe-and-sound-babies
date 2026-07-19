@@ -12,6 +12,13 @@ export type RadarRecall = {
   sortDate: number;
   url: string;
   official: boolean;
+  /**
+   * Affected batch/lot code(s), when the source data specifies them.
+   * Only ever populated from our own `recalls` table (mapExtraResults) —
+   * the live CPSC/FDA APIs (mapCpscResults) don't return a structured lot
+   * field, so this is always null for those.
+   */
+  lotPattern: string | null;
 };
 
 export type ExtraRecallRow = {
@@ -23,6 +30,7 @@ export type ExtraRecallRow = {
   url: string | null;
   recall_date: string | null;
   official: boolean;
+  lot_pattern: string | null;
 };
 
 /** Maps CPSC/FDA API results into RadarRecall. Guards against malformed
@@ -42,6 +50,7 @@ export function mapCpscResults(cpscResults: CpscRecall[]): RadarRecall[] {
       sortDate: r.RecallDate ? new Date(r.RecallDate).getTime() : 0,
       url: r.URL ?? "",
       official: true,
+      lotPattern: null,
     }));
 }
 
@@ -55,6 +64,7 @@ export function mapCriticalRecalls(): RadarRecall[] {
     sortDate: Number.MAX_SAFE_INTEGER,
     url: c.url,
     official: true,
+    lotPattern: null,
   }));
 }
 
@@ -72,6 +82,7 @@ export function mapExtraResults(rows: ExtraRecallRow[]): RadarRecall[] {
       sortDate: r.recall_date ? new Date(r.recall_date).getTime() : 0,
       url: r.url ?? "",
       official: r.official,
+      lotPattern: r.lot_pattern ?? null,
     }));
 }
 

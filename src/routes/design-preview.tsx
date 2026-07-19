@@ -104,7 +104,7 @@ function DesignPreview() {
         <div className="mx-auto max-w-md">
           <div className="grid grid-cols-3 gap-2.5">
             <SummaryTile icon={AlertTriangle} count={1} label="Recalls" tone="danger" />
-            <SummaryTile icon={RefreshCw} count={1} label="Replace" />
+            <SummaryTile icon={RefreshCw} count={1} label="Replacements" />
             <SummaryTile icon={Ruler} count={0} label="Size up" />
           </div>
         </div>

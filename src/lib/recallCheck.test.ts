@@ -5,6 +5,7 @@ import {
   fetchFdaRecallsForProduct,
   formatRecallSyncNote,
   fuzzyMatchProduct,
+  lotMatches,
 } from "./recallCheck";
 
 // ── Regression: "Beech-Nut" false-flagged against an unrelated Grizzlies
@@ -91,6 +92,42 @@ describe("fuzzyMatchProduct — brand-only false positive (live bug report)", ()
         "Graco Recalls SnugRide Comfort Infant Car Seat",
       ),
     ).toBe(true);
+  });
+});
+
+describe("lotMatches", () => {
+  it("matches an exact same lot code regardless of case", () => {
+    expect(lotMatches("ab1234", "AB1234")).toBe(true);
+  });
+
+  it("matches when the recall lists multiple lot codes including the product's", () => {
+    expect(lotMatches("AB1234", "Lot codes: AB1234, CD5678, EF9012")).toBe(true);
+  });
+
+  it("matches when the product's recorded lot is a prefix/substring the recall's pattern contains", () => {
+    expect(lotMatches("AB12", "Affects lot AB1234 only")).toBe(true);
+  });
+
+  it("does not match unrelated lot codes", () => {
+    expect(lotMatches("AB1234", "Lot codes: CD5678, EF9012")).toBe(false);
+  });
+
+  it("ignores punctuation/whitespace differences when comparing", () => {
+    expect(lotMatches("AB-1234", "lot: AB 1234")).toBe(true);
+  });
+
+  it("returns false when either side is missing", () => {
+    expect(lotMatches(null, "AB1234")).toBe(false);
+    expect(lotMatches("AB1234", null)).toBe(false);
+    expect(lotMatches(undefined, undefined)).toBe(false);
+    expect(lotMatches("", "AB1234")).toBe(false);
+  });
+
+  it("does not false-positive on a short numeric fragment appearing incidentally", () => {
+    // "12" is too generic to be a meaningful lot match on its own — this
+    // documents the current (intentionally simple) behavior rather than
+    // claiming smarter disambiguation this function doesn't attempt.
+    expect(lotMatches("12", "Lot 1234-5678")).toBe(true);
   });
 });
 

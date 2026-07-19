@@ -128,6 +128,7 @@ function NewProductPage() {
   const [carSeatManufactureDate, setCarSeatManufactureDate] = useState("");
   const [swaddleSize, setSwaddleSize] = useState("");
   const [otherCategoryDetail, setOtherCategoryDetail] = useState("");
+  const [lotNumber, setLotNumber] = useState("");
 
   // Sheet state for AI-picked product
   const [sheetProduct, setSheetProduct] = useState<ProductSearchResult | null>(null);
@@ -212,6 +213,7 @@ function NewProductPage() {
           notes: category === "other" && otherCategoryDetail.trim()
             ? `Suggested category: ${otherCategoryDetail.trim()}`
             : null,
+          lot_number: lotNumber.trim() || null,
         } as never)
         .select("id")
         .single();
@@ -386,6 +388,20 @@ function NewProductPage() {
               />
               <p className="mt-1.5 font-body text-xs text-muted-foreground">
                 Used to help estimate reminders when manufacturer dates aren't available.
+              </p>
+            </Field>
+
+            <Field label="Lot / batch number (optional)">
+              <Input
+                value={lotNumber}
+                onChange={(e) => setLotNumber(e.target.value)}
+                placeholder="e.g. printed on the box or a sticker on the product"
+                maxLength={60}
+                className="h-12 rounded-2xl bg-card px-4 font-body text-base"
+              />
+              <p className="mt-1.5 font-body text-xs text-muted-foreground">
+                Some recalls only affect specific batches — recording this lets us flag whether your
+                exact batch is listed, not just the product name.
               </p>
             </Field>
 
