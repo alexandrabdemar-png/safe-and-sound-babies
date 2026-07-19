@@ -13,6 +13,13 @@ export function Footer() {
 
           <div className="flex items-center gap-5">
             <Link
+              to="/recall-search"
+              className="font-body text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Recall Search
+            </Link>
+            <span className="text-border">·</span>
+            <Link
               to="/terms"
               className="font-body text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
