@@ -123,7 +123,7 @@ function ProfilePage() {
 
 
   async function handleExport() {
-    if (!requirePro('Export your data', 'Download a complete backup of your children, products and moments as JSON.')) return;
+    if (!requirePro('Export your data', "Download a personal backup of everything you've saved — your children's profiles, tracked products, and logged moments — as a single file you can keep for your own records or use if you ever move your data elsewhere.")) return;
     setExporting(true);
     try {
       const data = await exportUserData();
@@ -240,10 +240,22 @@ function ProfilePage() {
 
         {/* Tools */}
         <section className="rounded-3xl border border-border/60 bg-card p-5 space-y-2">
-          <Button onClick={handleExport} variant="ghost" className="w-full justify-start rounded-xl" disabled={exporting}>
-            {exporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-            Export my data
-          </Button>
+          <div>
+            <Button onClick={handleExport} variant="ghost" className="w-full justify-start rounded-xl" disabled={exporting}>
+              {exporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+              Export my data
+              {!isPro && (
+                <span className="ml-auto rounded-full bg-primary/15 px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wide text-primary">
+                  Pro
+                </span>
+              )}
+            </Button>
+            <p className="px-3 pt-0.5 font-body text-xs leading-relaxed text-muted-foreground">
+              A personal backup of everything you've saved — your children's profiles, tracked
+              products, and logged moments — as one file you keep for yourself. Handy for your own
+              records, or if you ever want to move your data elsewhere.
+            </p>
+          </div>
           <Button asChild variant="ghost" className="w-full justify-start rounded-xl">
             <Link to="/profile/notification-settings"><Bell className="h-4 w-4 mr-2" /> Notification Settings</Link>
           </Button>
