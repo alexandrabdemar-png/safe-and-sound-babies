@@ -127,6 +127,7 @@ function NewProductPage() {
   const [carSeatExpiry, setCarSeatExpiry] = useState("");
   const [carSeatManufactureDate, setCarSeatManufactureDate] = useState("");
   const [swaddleSize, setSwaddleSize] = useState("");
+  const [otherCategoryDetail, setOtherCategoryDetail] = useState("");
 
   // Sheet state for AI-picked product
   const [sheetProduct, setSheetProduct] = useState<ProductSearchResult | null>(null);
@@ -205,6 +206,12 @@ function NewProductPage() {
           // expiration-alert cron never engages for it.
           expiration_date: category === "car_seat" ? carSeatExpiry || null : null,
           predicted_sizeup_date: computedPacifierSizeUp || null,
+          // Not shown back to the user anywhere yet — collected so we can
+          // see what categories people are asking for and consider adding
+          // them as real options later.
+          notes: category === "other" && otherCategoryDetail.trim()
+            ? `Suggested category: ${otherCategoryDetail.trim()}`
+            : null,
         } as never)
         .select("id")
         .single();
@@ -428,6 +435,21 @@ function NewProductPage() {
                   maxLength={40}
                   className="h-12 rounded-2xl bg-card px-4 font-body text-base"
                 />
+              </Field>
+            )}
+
+            {category === "other" && (
+              <Field label="What kind of product is it?">
+                <Input
+                  value={otherCategoryDetail}
+                  onChange={(e) => setOtherCategoryDetail(e.target.value)}
+                  placeholder="e.g. Diaper pail, baby monitor, teething toy"
+                  maxLength={80}
+                  className="h-12 rounded-2xl bg-card px-4 font-body text-base"
+                />
+                <p className="mt-1.5 font-body text-xs text-muted-foreground">
+                  If your product fits a new category, let us know so we can consider adding it!
+                </p>
               </Field>
             )}
 

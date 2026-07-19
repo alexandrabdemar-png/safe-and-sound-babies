@@ -36,13 +36,19 @@ export function BottomNav() {
         ))}
 
         {/* Center Add FAB */}
-        <Link
-          to="/add"
-          className="relative -mt-8 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white ring-4 ring-white transition-transform duration-150 hover:scale-105 active:scale-95"
-          style={{ boxShadow: "0 4px 16px rgba(44,95,90,0.35)" }}
-          aria-label="Add"
-        >
-          <Plus className="h-6 w-6" strokeWidth={2.5} />
+        <Link to="/add" className="relative flex w-14 flex-col items-center gap-0.5 py-1" aria-label="Add">
+          <div
+            className="-mt-8 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white ring-4 ring-white transition-transform duration-150 hover:scale-105 active:scale-95"
+            style={{ boxShadow: "0 4px 16px rgba(44,95,90,0.35)" }}
+          >
+            <Plus className="h-6 w-6" strokeWidth={2.5} />
+          </div>
+          <span
+            style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
+            className="text-[10px] font-medium tracking-[0.04em] text-muted-foreground"
+          >
+            Add
+          </span>
         </Link>
 
         {rightTabs.map((t) => (
