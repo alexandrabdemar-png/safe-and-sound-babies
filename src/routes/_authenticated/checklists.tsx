@@ -159,8 +159,10 @@ function ChecklistsPage() {
             Safety Checklists
           </h1>
         </div>
-        <p className="mb-6 font-body text-xs" style={{ color: "#8A8078" }}>
-          General reference checklists, not a certified home safety inspection or medical advice.
+        <p className="mb-6 font-body text-xs leading-relaxed" style={{ color: "#8A8078" }}>
+          A starting point, not an exhaustive list — general reference checklists, not a certified
+          home safety inspection or medical advice. Every home is different, so use your own
+          judgment about what else applies.
         </p>
 
         {/* Overall progress */}

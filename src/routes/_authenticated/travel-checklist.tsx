@@ -29,27 +29,9 @@ const TRAVEL_SECTIONS: TravelSection[] = [
     id: "before_you_leave",
     label: "Before You Leave",
     emoji: "📋",
+    // Most important first: first aid, health/ID records, how to reach help,
+    // then the car seat, then everything else.
     items: [
-      {
-        key: "travel_car_seat_expiry",
-        label: "Check car seat expiration date",
-        note: "Printed on the bottom or back of the seat. Don't travel with an expired seat.",
-      },
-      {
-        key: "travel_car_seat_install",
-        label: "Verify car seat installation at a certified inspection station",
-        note: "3 out of 4 car seats are installed incorrectly. Find a station at nhtsa.gov/car-seats.",
-      },
-      {
-        key: "travel_recall_check",
-        label: "Check all travel gear for active recalls",
-        note: "Search your stroller, carrier, and car seat at cpsc.gov/Recalls before departing.",
-      },
-      {
-        key: "travel_emergency_contacts",
-        label: "Save local emergency and poison control numbers",
-        note: "US Poison Control: 1-800-222-1222. Research the nearest pediatric ER at your destination.",
-      },
       {
         key: "travel_meds_packed",
         label: "Pack a baby first-aid kit",
@@ -59,6 +41,26 @@ const TRAVEL_SECTIONS: TravelSection[] = [
         key: "travel_health_records",
         label: "Bring immunization records and insurance card",
         note: "Take a photo as backup in case the physical copies are lost.",
+      },
+      {
+        key: "travel_emergency_contacts",
+        label: "Save local emergency and poison control numbers",
+        note: "US Poison Control: 1-800-222-1222. Research the nearest pediatric ER at your destination.",
+      },
+      {
+        key: "travel_car_seat_install",
+        label: "Inspect car seat based on fit and ensure properly installed",
+        note: "Check for a snug fit with no more than an inch of movement side-to-side and front-to-back at the belt path.",
+      },
+      {
+        key: "travel_car_seat_expiry",
+        label: "Check car seat expiration date",
+        note: "Printed on the bottom or back of the seat. Don't travel with an expired seat.",
+      },
+      {
+        key: "travel_recall_check",
+        label: "Check all travel gear for active recalls",
+        note: "Search your stroller, carrier, and car seat at cpsc.gov/Recalls before departing.",
       },
       {
         key: "travel_safe_sleep_surface",
@@ -232,8 +234,12 @@ function TravelChecklistPage() {
             Travel Safety
           </h1>
         </div>
-        <p className="mb-5 font-body text-sm" style={{ color: "#8A8078" }}>
+        <p className="mb-2 font-body text-sm" style={{ color: "#8A8078" }}>
           Pack smart, travel safe. Check off every item before and during your trip.
+        </p>
+        <p className="mb-5 font-body text-xs leading-relaxed" style={{ color: "#A89888" }}>
+          A starting point, not an exhaustive list — every trip and destination is different, so use
+          your own judgment about what else applies.
         </p>
 
         {/* Progress */}
