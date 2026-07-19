@@ -366,7 +366,10 @@ function HomePage() {
 
       const [mRes, recallRes, replaceRes, sizeRes, productRes, dismRes, comingUpRes] =
         await Promise.all([
-          fetchMilestonesResilient(c.id, { limit: 5 }),
+          // Only the single most recent moment is ever shown on Home now
+          // (a "Latest moment" highlight, not the full list) — fetch just
+          // that one instead of 5.
+          fetchMilestonesResilient(c.id, { limit: 1 }),
           supabase
             .from("product_recalls")
             .select("id", { count: "exact", head: true })
@@ -579,7 +582,7 @@ function HomePage() {
         .select("id, title, logged_at, notes")
         .eq("child_id", (child as any)?.id)
         .order("logged_at", { ascending: false })
-        .limit(5)
+        .limit(1)
         .then(({ data }) => {
           if (data) setMoments(data as Moment[]);
         });
@@ -1259,11 +1262,16 @@ function HomePage() {
           {moments.length === 0 ? (
             <EmptyMoments />
           ) : (
-            <MomentTimeline
-              moments={moments}
-              childName={child?.name}
-              childDob={child?.date_of_birth}
-            />
+            <div>
+              <p className="mb-2 font-body text-xs font-semibold uppercase tracking-[0.15em] text-accent">
+                Latest moment
+              </p>
+              <MomentTimeline
+                moments={moments.slice(0, 1)}
+                childName={child?.name}
+                childDob={child?.date_of_birth}
+              />
+            </div>
           )}
         </div>
       </section>
