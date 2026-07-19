@@ -8,12 +8,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { WelcomeIntroModal } from "@/components/WelcomeIntroModal";
 import { cn } from "@/lib/utils";
 import { computeAdjustedAge } from "@/lib/adjustedAge";
 import { friendlyError, isColumnUnavailableError } from "@/lib/errors";
 import { SketchDefs, MOMENT_ICON_ACCENT } from "@/lib/momentIcons";
 import { CATEGORY_SKETCH_ICONS } from "@/lib/categorySketchIcons";
 import type { CategoryKey } from "@/lib/productCategories";
+import {
+  PROFILE_TYPES,
+  usesAgeRangeFlow,
+  validateAgeRange,
+  formatAgeRange,
+  MAX_CARE_AGE_MONTHS,
+  type ProfileType,
+} from "@/lib/profileType";
 
 export const Route = createFileRoute("/onboarding")({
   component: OnboardingPage,
@@ -89,7 +99,16 @@ function saveProgress(data: object) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
 }
 
-function loadProgress(): { step?: number; name?: string; dob?: string; dueDate?: string; selected?: string[] } {
+function loadProgress(): {
+  step?: number;
+  name?: string;
+  dob?: string;
+  dueDate?: string;
+  selected?: string[];
+  profileType?: string;
+  careAgeMin?: string;
+  careAgeMax?: string;
+} {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : {};
@@ -100,7 +119,7 @@ function clearProgress() {
   try { localStorage.removeItem(STORAGE_KEY); } catch {}
 }
 
-const TOTAL_STEPS = 2;
+const TOTAL_STEPS = 3;
 
 function OnboardingPage() {
   const navigate = useNavigate();
@@ -109,14 +128,18 @@ function OnboardingPage() {
 
   const saved = loadProgress();
   const [step, setStep] = useState(saved.step ?? 0);
+  const [profileType, setProfileType] = useState<ProfileType>((saved.profileType as ProfileType) ?? "parent");
   const [name, setName] = useState(saved.name ?? "");
   const [dob, setDob] = useState(saved.dob ?? "");
   const [dueDate, setDueDate] = useState(saved.dueDate ?? "");
+  const [careAgeMin, setCareAgeMin] = useState(saved.careAgeMin ?? "");
+  const [careAgeMax, setCareAgeMax] = useState(saved.careAgeMax ?? "");
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(saved.selected ?? ["car_seat", "crib", "stroller"]),
   );
   const [saving, setSaving] = useState(false);
   const [safetyFirstLook, setSafetyFirstLook] = useState<SafetyAction[] | null>(null);
+  const [showIntro, setShowIntro] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -126,17 +149,43 @@ function OnboardingPage() {
       }
       setUserId(data.session.user.id);
       setChecking(false);
+
+      supabase
+        .from("profiles")
+        .select("intro_seen_at")
+        .eq("user_id", data.session.user.id)
+        .maybeSingle()
+        .then(({ data: profile, error }) => {
+          // Missing column (migration not live yet) or missing row: don't
+          // block the welcome modal on either — just don't show it, rather
+          // than surfacing an error for something purely informational.
+          if (error) return;
+          if (!profile?.intro_seen_at) setShowIntro(true);
+        });
     });
   }, [navigate]);
+
+  function dismissIntro() {
+    setShowIntro(false);
+    if (!userId) return;
+    supabase
+      .from("profiles")
+      .update({ intro_seen_at: new Date().toISOString() } as never)
+      .eq("user_id", userId)
+      .then(({ error }) => {
+        if (error) console.error("[onboarding] couldn't record intro_seen_at:", error.message);
+      });
+  }
 
   // Persist progress whenever state changes
   useEffect(() => {
     if (!checking) {
-      saveProgress({ step, name, dob, dueDate, selected: [...selected] });
+      saveProgress({ step, name, dob, dueDate, selected: [...selected], profileType, careAgeMin, careAgeMax });
     }
-  }, [step, name, dob, dueDate, selected, checking]);
+  }, [step, name, dob, dueDate, selected, profileType, careAgeMin, careAgeMax, checking]);
 
   const progress = ((step + 1) / TOTAL_STEPS) * 100;
+  const isAgeRangeFlow = usesAgeRangeFlow(profileType);
 
   function toggle(key: string) {
     setSelected((prev) => {
@@ -148,13 +197,21 @@ function OnboardingPage() {
   }
 
   function canAdvance() {
-    if (step === 0) return name.trim().length > 0;
+    if (step === 0) return true; // profile type always has a default selection
+    if (step === 1) {
+      if (usesAgeRangeFlow(profileType)) {
+        const min = careAgeMin === "" ? null : Number(careAgeMin);
+        const max = careAgeMax === "" ? null : Number(careAgeMax);
+        return validateAgeRange(min, max).valid;
+      }
+      return name.trim().length > 0;
+    }
     return true; // categories step always advanceable
   }
 
   function advanceOrSkip(skip = false) {
     if (step === 0 && skip) {
-      // Skip child info entirely. /home requires at least one child and
+      // Skip everything entirely. /home requires at least one child and
       // immediately bounces back to /onboarding if there isn't one — which
       // defeats "Set up later" and looks like the page just reset. /profile
       // is the one authenticated screen that renders fine with zero
@@ -175,7 +232,27 @@ function OnboardingPage() {
     if (!userId) return;
     setSaving(true);
     try {
-      const childName = name.trim();
+      const isAgeRange = usesAgeRangeFlow(profileType);
+
+      // Persist profile type + (for age-range roles) the care age range onto
+      // the user's own profile row, already created by the handle_new_user
+      // trigger at signup. Non-blocking: this is metadata, not something
+      // that should ever stop a new user from finishing onboarding.
+      const minMonths = careAgeMin === "" ? null : Number(careAgeMin);
+      const maxMonths = careAgeMax === "" ? null : Number(careAgeMax);
+      const { error: profileTypeError } = await supabase
+        .from("profiles")
+        .update({
+          profile_type: profileType,
+          care_age_min_months: isAgeRange ? minMonths : null,
+          care_age_max_months: isAgeRange ? maxMonths : null,
+        } as never)
+        .eq("user_id", userId);
+      if (profileTypeError) {
+        console.error("[onboarding] couldn't save profile type / care age range:", profileTypeError.message);
+      }
+
+      const childName = isAgeRange ? "" : name.trim();
 
       if (childName) {
         let { data: childRow, error: childError } = await supabase
@@ -230,9 +307,38 @@ function OnboardingPage() {
             .insert(rows as never);
           if (watchlistError) console.error("category_watchlist insert failed:", watchlistError);
         }
+      } else if (isAgeRange && !skipCategories && selected.size > 0) {
+        // Age-range profile types (Pediatrician/Daycare/Babysitter-Nanny/
+        // Caregiver) don't have one single child to attach category
+        // interest to — child_id is nullable for exactly this case and RLS
+        // scopes it to the user regardless.
+        const rows = [...selected].map((cat) => ({
+          user_id: userId,
+          child_id: null,
+          category: cat,
+        }));
+        const { error: watchlistError } = await supabase
+          .from("category_watchlist")
+          .insert(rows as never);
+        if (watchlistError) console.error("category_watchlist insert failed:", watchlistError);
       }
 
       clearProgress();
+
+      if (!childName) {
+        // No child was created this run — either an age-range profile type
+        // (never creates one) or a Parent/Parent-to-be who skipped past the
+        // name step (Skip isn't gated by canAdvance(), so this is reachable
+        // even though "Continue" requires a name). The "safety first look"
+        // screen assumes one specific child's age, and /home requires at
+        // least one child and bounces straight back to /onboarding when
+        // there are none — so land on /profile instead, the one
+        // authenticated screen that renders fine with zero children (same
+        // reasoning as the "Set up later" skip path above).
+        toast.success("You're all set!");
+        navigate({ to: "/profile" });
+        return;
+      }
 
       const actions = getSafetyFirstLook(dob || null, dueDate || null);
       setSafetyFirstLook(actions);
@@ -305,6 +411,7 @@ function OnboardingPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      <WelcomeIntroModal open={showIntro} onDismiss={dismissIntro} />
       <header className="w-full px-4 py-6 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-2xl items-center justify-between">
           <Link to="/" className="flex items-center">
@@ -322,7 +429,31 @@ function OnboardingPage() {
 
           {step === 0 && (
             <StepShell
-              eyebrow="Step 1 of 2 — Your little one"
+              eyebrow={`Step 1 of ${TOTAL_STEPS} — Your role`}
+              title="What best describes you?"
+              subtitle="This helps us tailor onboarding — professionals looking after multiple children get an age range instead of a single child profile."
+            >
+              <div className="space-y-2">
+                <Label htmlFor="profile-type" className="font-body text-sm">I am a…</Label>
+                <Select value={profileType} onValueChange={(v) => setProfileType(v as ProfileType)}>
+                  <SelectTrigger id="profile-type" className="h-14 rounded-2xl bg-card px-5 font-body text-base">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PROFILE_TYPES.map((pt) => (
+                      <SelectItem key={pt.value} value={pt.value}>
+                        {pt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </StepShell>
+          )}
+
+          {step === 1 && !isAgeRangeFlow && (
+            <StepShell
+              eyebrow={`Step 2 of ${TOTAL_STEPS} — Your little one`}
               title="Tell us about your baby"
               subtitle="Just a name and birthday — we'll use these to time safety reminders to the right week."
             >
@@ -374,9 +505,60 @@ function OnboardingPage() {
             </StepShell>
           )}
 
-          {step === 1 && (
+          {step === 1 && isAgeRangeFlow && (
             <StepShell
-              eyebrow="Step 2 of 2 — Your gear"
+              eyebrow={`Step 2 of ${TOTAL_STEPS} — Who you care for`}
+              title="What age range are you caring for?"
+              subtitle="A rough range is fine — we'll use it to tailor general safety guidance rather than tracking one specific child."
+            >
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="care-age-min" className="font-body text-sm">Youngest (months)</Label>
+                  <Input
+                    id="care-age-min"
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    max={MAX_CARE_AGE_MONTHS}
+                    value={careAgeMin}
+                    onChange={(e) => setCareAgeMin(e.target.value)}
+                    placeholder="e.g. 0"
+                    className="h-14 rounded-2xl bg-card px-5 font-body text-base"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="care-age-max" className="font-body text-sm">Oldest (months)</Label>
+                  <Input
+                    id="care-age-max"
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    max={MAX_CARE_AGE_MONTHS}
+                    value={careAgeMax}
+                    onChange={(e) => setCareAgeMax(e.target.value)}
+                    placeholder="e.g. 24"
+                    className="h-14 rounded-2xl bg-card px-5 font-body text-base"
+                  />
+                </div>
+              </div>
+              {careAgeMin !== "" && careAgeMax !== "" && (() => {
+                const min = Number(careAgeMin);
+                const max = Number(careAgeMax);
+                const result = validateAgeRange(min, max);
+                return result.valid ? (
+                  <p className="font-body text-sm text-muted-foreground">
+                    {formatAgeRange(min, max)}
+                  </p>
+                ) : (
+                  <p className="font-body text-sm text-destructive">{result.error}</p>
+                );
+              })()}
+            </StepShell>
+          )}
+
+          {step === 2 && (
+            <StepShell
+              eyebrow={`Step 3 of ${TOTAL_STEPS} — Your gear`}
               title="What are you tracking?"
               subtitle="Pick the categories that apply — we'll watch for recalls and replacements. You can change this anytime."
             >

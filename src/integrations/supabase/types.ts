@@ -867,27 +867,39 @@ export type Database = {
         Row: {
           apns_device_token: string | null
           avatar_url: string | null
+          care_age_max_months: number | null
+          care_age_min_months: number | null
           created_at: string
           display_name: string | null
           id: string
+          intro_seen_at: string | null
+          profile_type: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           apns_device_token?: string | null
           avatar_url?: string | null
+          care_age_max_months?: number | null
+          care_age_min_months?: number | null
           created_at?: string
           display_name?: string | null
           id?: string
+          intro_seen_at?: string | null
+          profile_type?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           apns_device_token?: string | null
           avatar_url?: string | null
+          care_age_max_months?: number | null
+          care_age_min_months?: number | null
           created_at?: string
           display_name?: string | null
           id?: string
+          intro_seen_at?: string | null
+          profile_type?: string | null
           updated_at?: string
           user_id?: string
         }
