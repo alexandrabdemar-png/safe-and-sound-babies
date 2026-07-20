@@ -1,9 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, CheckCircle2, Circle, Luggage, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/BottomNav";
 import { hapticSuccess, hapticLight } from "@/lib/haptic";
+import { useActiveChild } from "@/hooks/useActiveChild";
+import { ChildSwitcher } from "@/components/ChildSwitcher";
+import { computeAdjustedAge } from "@/lib/adjustedAge";
+import { formatAgeMonths } from "@/lib/profileType";
+import { isItemRelevantForAge } from "@/lib/checklistAgeFilter";
 
 export const Route = createFileRoute("/_authenticated/travel-checklist")({
   ssr: false,
@@ -15,6 +20,9 @@ interface TravelItem {
   key: string;
   label: string;
   note?: string;
+  // Undefined bounds mean the item applies at any age.
+  minAgeMonths?: number;
+  maxAgeMonths?: number;
 }
 
 interface TravelSection {
@@ -87,6 +95,7 @@ const TRAVEL_SECTIONS: TravelSection[] = [
       {
         key: "travel_cs_tether",
         label: "Top tether strap attached and tight (forward-facing only)",
+        minAgeMonths: 24,
       },
       {
         key: "travel_cs_base_angle",
@@ -120,22 +129,29 @@ const TRAVEL_SECTIONS: TravelSection[] = [
         key: "travel_hotel_outlet_covers",
         label: "Bring outlet covers for hotel room outlets",
         note: "Pack a few in your bag — hotel rooms rarely have them.",
+        minAgeMonths: 6,
       },
       { key: "travel_hotel_blind_cords", label: "Tie up blind and curtain cords out of reach" },
       {
         key: "travel_hotel_balcony",
         label: "Lock balcony door and place a piece of furniture in front of it",
+        minAgeMonths: 9,
       },
       {
         key: "travel_hotel_small_objects",
         label: "Do a floor sweep for small objects, coins, and buttons",
+        minAgeMonths: 4,
       },
       { key: "travel_hotel_temp", label: "Set room temperature to 68–72°F (20–22°C) for sleep" },
       {
         key: "travel_hotel_smoke_co",
         label: "Confirm smoke and CO detectors are present and working",
       },
-      { key: "travel_hotel_bathroom_locked", label: "Keep bathroom door locked when not in use" },
+      {
+        key: "travel_hotel_bathroom_locked",
+        label: "Keep bathroom door locked when not in use",
+        minAgeMonths: 9,
+      },
       {
         key: "travel_hotel_iron_unplugged",
         label: "Unplug the iron and hair dryer and store out of reach",
@@ -175,6 +191,27 @@ const STORAGE_KEY = "safesound.travelChecklist.v1";
 
 function TravelChecklistPage() {
   const [completed, setCompleted] = useState<Set<string>>(new Set());
+  const [showAllAges, setShowAllAges] = useState(false);
+
+  const { activeChild } = useActiveChild();
+  const ageMonths = useMemo(() => {
+    if (!activeChild?.date_of_birth) return null;
+    const age = computeAdjustedAge({
+      dateOfBirth: activeChild.date_of_birth,
+      dueDate: activeChild.due_date,
+    });
+    return age ? age.adjustedMonths : null;
+  }, [activeChild?.date_of_birth, activeChild?.due_date]);
+
+  const filterAge = showAllAges ? null : ageMonths;
+  const visibleSections = useMemo(
+    () =>
+      TRAVEL_SECTIONS.map((section) => ({
+        ...section,
+        items: section.items.filter((item) => isItemRelevantForAge(item, filterAge)),
+      })),
+    [filterAge],
+  );
 
   useEffect(() => {
     try {
@@ -207,8 +244,8 @@ function TravelChecklistPage() {
     } catch {}
   }
 
-  const totalItems = TRAVEL_SECTIONS.reduce((s, sec) => s + sec.items.length, 0);
-  const totalCompleted = TRAVEL_SECTIONS.reduce(
+  const totalItems = visibleSections.reduce((s, sec) => s + sec.items.length, 0);
+  const totalCompleted = visibleSections.reduce(
     (s, sec) => s + sec.items.filter((i) => completed.has(i.key)).length,
     0,
   );
@@ -228,19 +265,39 @@ function TravelChecklistPage() {
           </Link>
         </Button>
 
-        <div className="mb-2 flex items-center gap-3">
-          <Luggage className="h-7 w-7" style={{ color: "#C4785A" }} />
-          <h1 className="font-display text-3xl font-semibold" style={{ color: "#3D2B1F" }}>
-            Travel Safety
-          </h1>
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Luggage className="h-7 w-7" style={{ color: "#C4785A" }} />
+            <h1 className="font-display text-3xl font-semibold" style={{ color: "#3D2B1F" }}>
+              Travel Safety
+            </h1>
+          </div>
+          <ChildSwitcher />
         </div>
         <p className="mb-2 font-body text-sm" style={{ color: "#8A8078" }}>
           Pack smart, travel safe. Check off every item before and during your trip.
         </p>
-        <p className="mb-5 font-body text-xs leading-relaxed" style={{ color: "#A89888" }}>
+        <p
+          className={`font-body text-xs leading-relaxed ${ageMonths != null ? "mb-2" : "mb-5"}`}
+          style={{ color: "#A89888" }}
+        >
           A starting point, not an exhaustive list — every trip and destination is different, so use
           your own judgment about what else applies.
         </p>
+        {ageMonths != null && (
+          <p className="mb-5 font-body text-xs" style={{ color: "#A89888" }}>
+            Showing items relevant for {activeChild?.name ?? "your child"} at{" "}
+            {formatAgeMonths(ageMonths)} old.{" "}
+            <button
+              type="button"
+              onClick={() => setShowAllAges((v) => !v)}
+              className="underline underline-offset-2"
+              style={{ color: "#C4785A" }}
+            >
+              {showAllAges ? "Show age-relevant items only" : "Show full checklist"}
+            </button>
+          </p>
+        )}
 
         {/* Progress */}
         <div className="mb-6">
@@ -262,7 +319,8 @@ function TravelChecklistPage() {
         </div>
 
         <div className="flex flex-col gap-6">
-          {TRAVEL_SECTIONS.map((section) => {
+          {visibleSections.map((section) => {
+            if (section.items.length === 0) return null;
             const secCompleted = section.items.filter((i) => completed.has(i.key)).length;
             const secPct = Math.round((secCompleted / section.items.length) * 100);
             return (
