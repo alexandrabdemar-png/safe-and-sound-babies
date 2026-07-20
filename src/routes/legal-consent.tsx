@@ -120,7 +120,7 @@ function LegalConsentPage() {
 
           <p className="mt-6 font-body text-xs text-muted-foreground">
             Read the full{" "}
-            <Link to="/terms" target="_blank" className="underline hover:text-foreground">
+            <Link to="/terms" className="underline hover:text-foreground">
               Terms of Service
             </Link>
             , including the complete Safety Disclaimer, Assumption of Risk, and Limitation of Liability sections.
