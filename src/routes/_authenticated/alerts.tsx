@@ -156,6 +156,15 @@ function AlertsPage() {
     setLoading(false);
   }
 
+  // Manual select-then-update-or-insert instead of `.upsert(..., { onConflict })`
+  // — same fix, and same reason, as home.tsx's saveInsightResponse for this
+  // exact table: onConflict requires a real unique constraint matching those
+  // exact columns, and insight_dismissals' live constraint is (child_id,
+  // rule_id) — two competing migrations once left a 3-column onConflict spec
+  // silently mismatched, so every upsert threw "no unique or exclusion
+  // constraint matching the ON CONFLICT specification" (swallowed here as
+  // the generic "Something went wrong" toast) and no dismissal was ever
+  // saved. This works regardless of which unique constraint is currently live.
   async function markInsightDone(ruleId: string) {
     if (!activeChildId) return;
     setDismissedRuleIds((prev) => new Set([...prev, ruleId]));
@@ -163,13 +172,34 @@ function AlertsPage() {
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) return;
-    const { error } = await supabase.from("insight_dismissals").upsert(
-      { user_id: userId, child_id: activeChildId, rule_id: ruleId, action: "done", until: null },
-      { onConflict: "user_id,child_id,rule_id" }
-    );
-    if (error) {
+    try {
+      const { data: existing, error: selectError } = await supabase
+        .from("insight_dismissals")
+        .select("id")
+        .eq("child_id", activeChildId)
+        .eq("rule_id", ruleId)
+        .maybeSingle();
+      if (selectError) throw selectError;
+
+      if (existing) {
+        const { error } = await supabase
+          .from("insight_dismissals")
+          .update({ user_id: userId, action: "done", until: null })
+          .eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("insight_dismissals").insert({
+          user_id: userId,
+          child_id: activeChildId,
+          rule_id: ruleId,
+          action: "done",
+          until: null,
+        });
+        if (error) throw error;
+      }
+    } catch (err) {
       setDismissedRuleIds((prev) => { const next = new Set(prev); next.delete(ruleId); return next; });
-      toast.error(friendlyError(error.message));
+      toast.error(friendlyError((err as { message?: string })?.message ?? err));
     }
   }
 
