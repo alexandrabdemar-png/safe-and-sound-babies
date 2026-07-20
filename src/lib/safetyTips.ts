@@ -185,7 +185,7 @@ export const SAFETY_TIPS: SafetyTip[] = [
     id: "t029",
     minMonths: 6,
     maxMonths: 12,
-    text: "Some families find it helpful to check that the kitchen bin has a secure lid or is stored inside a locked cabinet — kitchen bins can contain hazardous items that are interesting to exploring babies.",
+    text: "Some families find it helpful to check that the kitchen bin has a secure lid or is stored inside a locked cabinet — trash can hold sharp edges, packaging, and other hazards that catch a curious baby's eye.",
   },
   {
     id: "t030",
@@ -391,12 +391,26 @@ export const SAFETY_TIPS: SafetyTip[] = [
 
 // Select the best tip for a given age and ISO week number.
 // Prefers age-appropriate tips; falls back to any tip if none match.
-export function selectWeeklyTip(ageMonths: number, weekNumber: number): SafetyTip {
+//
+// hasStairs === false excludes stair-gate tips (a home_profile answer of
+// "no stairs" — see home.tsx's AgeJumpCard and dailyContent.ts's
+// ageSafetyTip, which do the equivalent filtering elsewhere on Home).
+// Unset/unknown (undefined or true) leaves every tip in play, same as
+// before this parameter existed. Never lets the filter empty the pool.
+export function selectWeeklyTip(
+  ageMonths: number,
+  weekNumber: number,
+  hasStairs?: boolean | null,
+): SafetyTip {
   const ageTips = SAFETY_TIPS.filter(
     (t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths,
   );
-  const pool = ageTips.length > 0 ? ageTips : SAFETY_TIPS;
-  return pool[weekNumber % pool.length];
+  const basePool = ageTips.length > 0 ? ageTips : SAFETY_TIPS;
+  if (hasStairs === false) {
+    const withoutStairs = basePool.filter((t) => !/stair/i.test(t.text));
+    if (withoutStairs.length > 0) return withoutStairs[weekNumber % withoutStairs.length];
+  }
+  return basePool[weekNumber % basePool.length];
 }
 
 // ISO week number (1–53)

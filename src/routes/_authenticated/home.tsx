@@ -768,6 +768,7 @@ function HomePage() {
                 (30.44 * 86400000),
             ),
             getIsoWeekNumber(),
+            homeProfile?.has_stairs,
           )
         : null;
       await (supabase as any).from("completed_tips").upsert(
@@ -1013,6 +1014,7 @@ function HomePage() {
             safetyTip={ageSafetyTip(
               monthsFromDob(child?.date_of_birth ?? null),
               dayOfYear(new Date()),
+              homeProfile?.has_stairs,
             )}
             onNavigate={navigate}
             safetyTipDismissed={dailyTipDismissed}
