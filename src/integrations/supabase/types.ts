@@ -784,7 +784,6 @@ export type Database = {
           created_at: string
           expiration_date: string | null
           id: string
-          lot_number: string | null
           manufacture_date: string | null
           model: string | null
           name: string
@@ -811,7 +810,6 @@ export type Database = {
           created_at?: string
           expiration_date?: string | null
           id?: string
-          lot_number?: string | null
           manufacture_date?: string | null
           model?: string | null
           name: string
@@ -838,7 +836,6 @@ export type Database = {
           created_at?: string
           expiration_date?: string | null
           id?: string
-          lot_number?: string | null
           manufacture_date?: string | null
           model?: string | null
           name?: string
@@ -870,39 +867,27 @@ export type Database = {
         Row: {
           apns_device_token: string | null
           avatar_url: string | null
-          care_age_max_months: number | null
-          care_age_min_months: number | null
           created_at: string
           display_name: string | null
           id: string
-          intro_seen_at: string | null
-          profile_type: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           apns_device_token?: string | null
           avatar_url?: string | null
-          care_age_max_months?: number | null
-          care_age_min_months?: number | null
           created_at?: string
           display_name?: string | null
           id?: string
-          intro_seen_at?: string | null
-          profile_type?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           apns_device_token?: string | null
           avatar_url?: string | null
-          care_age_max_months?: number | null
-          care_age_min_months?: number | null
           created_at?: string
           display_name?: string | null
           id?: string
-          intro_seen_at?: string | null
-          profile_type?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -954,7 +939,6 @@ export type Database = {
           hazard_fingerprint: string | null
           id: string
           image_url: string | null
-          lot_pattern: string | null
           model: string | null
           official: boolean
           product_name: string | null
@@ -979,7 +963,6 @@ export type Database = {
           hazard_fingerprint?: string | null
           id?: string
           image_url?: string | null
-          lot_pattern?: string | null
           model?: string | null
           official?: boolean
           product_name?: string | null
@@ -1004,7 +987,6 @@ export type Database = {
           hazard_fingerprint?: string | null
           id?: string
           image_url?: string | null
-          lot_pattern?: string | null
           model?: string | null
           official?: boolean
           product_name?: string | null
