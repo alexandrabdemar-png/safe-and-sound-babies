@@ -83,7 +83,7 @@ function ProductDetailPage() {
       setLoading(false);
       return;
     }
-    setProduct(p as Product);
+    setProduct(p as unknown as Product);
 
     const [{ data: g }, { data: r }, kidRes] = await Promise.all([
       supabase.from("product_guidelines").select("max_weight_lbs, max_height_inches, average_use_months, replacement_interval_months, size_up_trigger, replacement_trigger, source").eq("product_id", id).maybeSingle(),
