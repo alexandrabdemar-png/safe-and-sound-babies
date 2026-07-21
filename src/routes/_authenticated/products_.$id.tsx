@@ -98,7 +98,7 @@ function ProductDetailPage() {
     setGuideline((g as Guideline) ?? null);
     type RecallRow = { recalls: { title: string; url: string | null; description: string | null; recall_date: string | null; source: string | null; lot_pattern: string | null } | null };
     setRecalls(
-      ((r ?? []) as RecallRow[])
+      ((r ?? []) as unknown as RecallRow[])
         .map((x) => x.recalls)
         .filter((x): x is NonNullable<typeof x> => x !== null)
         .map((x) => ({ title: x.title, url: x.url, description: x.description, recallDate: x.recall_date, source: x.source, lotPattern: x.lot_pattern }))
