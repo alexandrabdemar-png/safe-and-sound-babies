@@ -160,7 +160,7 @@ function OnboardingPage() {
           // block the welcome modal on either — just don't show it, rather
           // than surfacing an error for something purely informational.
           if (error) return;
-          if (!profile?.intro_seen_at) setShowIntro(true);
+          if (!(profile as { intro_seen_at?: string | null } | null)?.intro_seen_at) setShowIntro(true);
         });
     });
   }, [navigate]);
