@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
-import { CheckCircle2, Circle, ClipboardList, ArrowLeft, Gift, Luggage, HeartPulse, Home } from "lucide-react";
+import { CheckCircle2, Circle, ClipboardList, ArrowLeft, Gift, Luggage, HeartPulse, Home, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
@@ -14,11 +14,32 @@ import { ROOMS } from "@/lib/checklistsData";
 
 export const ssr = false;
 
+const HOMECOMING_CARD_DISMISSED_KEY = "safesound.homecomingCardDismissed";
+
 function ChecklistsPage() {
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [showAllAges, setShowAllAges] = useState(false);
+  // Shown to everyone by default (so people who might need it know it
+  // exists), but dismissible for anyone it doesn't apply to — persisted so
+  // an X here means gone for good, not just for this session.
+  const [homecomingCardDismissed, setHomecomingCardDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(HOMECOMING_CARD_DISMISSED_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  function dismissHomecomingCard(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      localStorage.setItem(HOMECOMING_CARD_DISMISSED_KEY, "true");
+    } catch {}
+    setHomecomingCardDismissed(true);
+  }
 
   const { activeChild } = useActiveChild();
   const ageMonths = useMemo(() => {
@@ -152,17 +173,27 @@ function ChecklistsPage() {
 
         {/* Quick links to special checklists */}
         <div className="mb-6 grid grid-cols-2 gap-3">
-          <Link to="/homecoming-checklist"
-            className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[#C4785A]/50"
-            style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}>
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: "#F5F0E8" }}>
-              <Home className="h-5 w-5" style={{ color: "#C4785A" }} />
-            </span>
-            <div>
-              <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>Bringing Baby Home</p>
-              <p className="font-body text-xs" style={{ color: "#8A8078" }}>For expecting parents</p>
-            </div>
-          </Link>
+          {!homecomingCardDismissed && (
+            <Link to="/homecoming-checklist"
+              className="relative flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[#C4785A]/50"
+              style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}>
+              <button
+                type="button"
+                onClick={dismissHomecomingCard}
+                aria-label="Not expecting — hide this card"
+                className="absolute right-1.5 top-1.5 rounded-full p-1 text-muted-foreground hover:bg-black/5"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: "#F5F0E8" }}>
+                <Home className="h-5 w-5" style={{ color: "#C4785A" }} />
+              </span>
+              <div>
+                <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>Bringing Baby Home</p>
+                <p className="font-body text-xs" style={{ color: "#8A8078" }}>For expecting parents</p>
+              </div>
+            </Link>
+          )}
           <Link to="/travel-checklist"
             className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[#C4785A]/50"
             style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}>
