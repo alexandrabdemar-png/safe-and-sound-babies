@@ -77,6 +77,20 @@ function FirstFoodsPage() {
       .order("created_at", { ascending: true });
 
     if (!kids?.length) {
+      // Age-range caregiver roles never create a child — send them to
+      // /profile instead of looping back into onboarding.
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("profile_type")
+        .maybeSingle();
+      const pt = (prof as { profile_type?: string } | null)?.profile_type as
+        | import("@/lib/profileType").ProfileType
+        | undefined;
+      const { usesAgeRangeFlow } = await import("@/lib/profileType");
+      if (pt && usesAgeRangeFlow(pt)) {
+        navigate({ to: "/profile" });
+        return;
+      }
       navigate({ to: "/onboarding" });
       return;
     }
