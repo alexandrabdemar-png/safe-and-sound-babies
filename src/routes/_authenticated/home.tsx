@@ -318,6 +318,21 @@ function HomePage() {
         return;
       }
       if (!kids || kids.length === 0) {
+        // Age-range profile types (Pediatrician/Daycare/Babysitter-Nanny/
+        // Caregiver) intentionally never create a `children` row during
+        // onboarding — sending them to /onboarding would trap them in a
+        // loop. Route them to /profile, which renders fine with zero kids.
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("profile_type")
+          .maybeSingle();
+        const pt = (prof as { profile_type?: string } | null)?.profile_type as
+          | import("@/lib/profileType").ProfileType
+          | undefined;
+        if (pt && (await import("@/lib/profileType")).usesAgeRangeFlow(pt)) {
+          navigate({ to: "/profile" });
+          return;
+        }
         navigate({ to: "/onboarding" });
         return;
       }
