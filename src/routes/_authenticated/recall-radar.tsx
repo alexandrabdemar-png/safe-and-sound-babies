@@ -96,7 +96,7 @@ function RecallRadarPage() {
           console.error("Recall Radar: extra-sources query failed", extraSettled.value.error);
           anySourceFailed = true;
         } else {
-          extraItems = mapExtraResults((extraSettled.value.data ?? []) as ExtraRecallRow[]);
+          extraItems = mapExtraResults((extraSettled.value.data ?? []) as unknown as ExtraRecallRow[]);
         }
       } else {
         console.error("Recall Radar: extra-sources query rejected", extraSettled.reason);

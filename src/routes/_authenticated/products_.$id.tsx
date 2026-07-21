@@ -83,8 +83,9 @@ function ProductDetailPage() {
       setLoading(false);
       return;
     }
-    setProduct(p as Product);
+    setProduct(p as unknown as Product);
 
+    const pAny = p as unknown as { child_id: string | null };
     const [{ data: g }, { data: r }, kidRes] = await Promise.all([
       supabase.from("product_guidelines").select("max_weight_lbs, max_height_inches, average_use_months, replacement_interval_months, size_up_trigger, replacement_trigger, source").eq("product_id", id).maybeSingle(),
       // Not filtered by acknowledged — this page shows recall history for
@@ -92,12 +93,12 @@ function ProductDetailPage() {
       // from the Alerts feed; "acknowledged" only controls whether it's
       // still an actionable item there, not whether the article is visible.
       supabase.from("product_recalls").select("recalls(title, url, description, recall_date, source, lot_pattern)").eq("product_id", id),
-      p.child_id ? supabase.from("children").select("id, name, height_inches, weight_lbs, measurements_updated_at").eq("id", p.child_id).maybeSingle() : Promise.resolve({ data: null }),
+      pAny.child_id ? supabase.from("children").select("id, name, height_inches, weight_lbs, measurements_updated_at").eq("id", pAny.child_id).maybeSingle() : Promise.resolve({ data: null }),
     ]);
     setGuideline((g as Guideline) ?? null);
     type RecallRow = { recalls: { title: string; url: string | null; description: string | null; recall_date: string | null; source: string | null; lot_pattern: string | null } | null };
     setRecalls(
-      ((r ?? []) as RecallRow[])
+      ((r ?? []) as unknown as RecallRow[])
         .map((x) => x.recalls)
         .filter((x): x is NonNullable<typeof x> => x !== null)
         .map((x) => ({ title: x.title, url: x.url, description: x.description, recallDate: x.recall_date, source: x.source, lotPattern: x.lot_pattern }))
