@@ -185,7 +185,7 @@ export const SAFETY_TIPS: SafetyTip[] = [
     id: "t029",
     minMonths: 6,
     maxMonths: 12,
-    text: "Some families find it helpful to check that the kitchen bin has a secure lid or is stored inside a locked cabinet — trash can hold sharp edges, packaging, and other hazards that catch a curious baby's eye.",
+    text: "Some families find it helpful to check that the kitchen garbage can has a secure lid or is stored inside a locked cabinet — trash can hold sharp edges, packaging, and other hazards that catch a curious baby's eye.",
   },
   {
     id: "t030",
