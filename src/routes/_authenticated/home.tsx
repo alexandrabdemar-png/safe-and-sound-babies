@@ -658,6 +658,10 @@ function HomePage() {
 
   const age = useMemo(() => calcAge(child?.date_of_birth ?? null), [child]);
   const totalAlerts = alerts.recalls + alerts.replace + alerts.sizeUp;
+  // Matches the icon/priority order the alert tiles below already use —
+  // recalls (safety-critical) outrank replacements, which outrank size-ups.
+  const HeaderAlertIcon =
+    alerts.recalls > 0 ? AlertTriangle : alerts.replace > 0 ? RefreshCw : alerts.sizeUp > 0 ? Ruler : Sparkles;
   const upNext: Insight[] = useMemo(() => {
     const all = evaluateInsights(child, products, homeProfile);
     return all.filter((i) => !dismissedIds.has(i.id)).slice(0, 3);
@@ -783,6 +787,7 @@ function HomePage() {
                 (30.44 * 86400000),
             ),
             getIsoWeekNumber(),
+            homeProfile?.has_stairs,
           )
         : null;
       await (supabase as any).from("completed_tips").upsert(
@@ -976,10 +981,16 @@ function HomePage() {
             </div>
             <div className="flex items-center gap-2">
               <ChildSwitcher />
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 font-body text-[11px] font-medium text-muted-foreground shadow-sm">
-                <Sparkles className="h-3 w-3 text-accent" />
+              <Link
+                to="/alerts"
+                className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 font-body text-[11px] font-medium text-muted-foreground shadow-sm transition-colors hover:text-foreground"
+              >
+                <HeaderAlertIcon
+                  className="h-3 w-3"
+                  style={{ color: alerts.recalls > 0 ? "var(--destructive)" : "var(--accent)" }}
+                />
                 {totalAlerts === 0 ? "All quiet" : `${totalAlerts} to look at`}
-              </span>
+              </Link>
             </div>
           </div>
 
@@ -1028,6 +1039,7 @@ function HomePage() {
             safetyTip={ageSafetyTip(
               monthsFromDob(child?.date_of_birth ?? null),
               dayOfYear(new Date()),
+              homeProfile?.has_stairs,
             )}
             onNavigate={navigate}
             safetyTipDismissed={dailyTipDismissed}

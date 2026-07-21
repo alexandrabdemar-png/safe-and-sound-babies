@@ -93,7 +93,7 @@ export const SAFETY_TIPS: SafetyTip[] = [
     id: "t014",
     minMonths: 3,
     maxMonths: 12,
-    text: "Some families find it useful to look up the expiry date on their baby carrier or sling — most manufacturers set a lifespan, and sun and wear can affect the material over time.",
+    text: "Some families find it useful to look up the expiration date on their baby carrier or sling — most manufacturers set a lifespan, and sun and wear can affect the material over time.",
   },
   {
     id: "t015",
@@ -111,7 +111,7 @@ export const SAFETY_TIPS: SafetyTip[] = [
     id: "t017",
     minMonths: 3,
     maxMonths: 9,
-    text: "Some families find it helpful to take a photo of their car seat label and save it somewhere easy to find — having the expiry date and model number on hand can be useful.",
+    text: "Some families find it helpful to take a photo of their car seat label and save it somewhere easy to find — having the expiration date and model number on hand can be useful.",
   },
   {
     id: "t018",
@@ -185,7 +185,7 @@ export const SAFETY_TIPS: SafetyTip[] = [
     id: "t029",
     minMonths: 6,
     maxMonths: 12,
-    text: "Some families find it helpful to check that the kitchen bin has a secure lid or is stored inside a locked cabinet — kitchen bins can contain hazardous items that are interesting to exploring babies.",
+    text: "Some families find it helpful to check that the kitchen garbage can has a secure lid or is stored inside a locked cabinet — trash can hold sharp edges, packaging, and other hazards that catch a curious baby's eye.",
   },
   {
     id: "t030",
@@ -367,7 +367,7 @@ export const SAFETY_TIPS: SafetyTip[] = [
     id: "t050",
     minMonths: 24,
     maxMonths: 999,
-    text: "It may be worth doing a general medicine cabinet check — expiry dates on first aid supplies can pass without notice, and some products degrade before they're needed.",
+    text: "It may be worth doing a general medicine cabinet check — expiration dates on first aid supplies can pass without notice, and some products degrade before they're needed.",
   },
   {
     id: "t051",
@@ -391,12 +391,26 @@ export const SAFETY_TIPS: SafetyTip[] = [
 
 // Select the best tip for a given age and ISO week number.
 // Prefers age-appropriate tips; falls back to any tip if none match.
-export function selectWeeklyTip(ageMonths: number, weekNumber: number): SafetyTip {
+//
+// hasStairs === false excludes stair-gate tips (a home_profile answer of
+// "no stairs" — see home.tsx's AgeJumpCard and dailyContent.ts's
+// ageSafetyTip, which do the equivalent filtering elsewhere on Home).
+// Unset/unknown (undefined or true) leaves every tip in play, same as
+// before this parameter existed. Never lets the filter empty the pool.
+export function selectWeeklyTip(
+  ageMonths: number,
+  weekNumber: number,
+  hasStairs?: boolean | null,
+): SafetyTip {
   const ageTips = SAFETY_TIPS.filter(
     (t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths,
   );
-  const pool = ageTips.length > 0 ? ageTips : SAFETY_TIPS;
-  return pool[weekNumber % pool.length];
+  const basePool = ageTips.length > 0 ? ageTips : SAFETY_TIPS;
+  if (hasStairs === false) {
+    const withoutStairs = basePool.filter((t) => !/stair/i.test(t.text));
+    if (withoutStairs.length > 0) return withoutStairs[weekNumber % withoutStairs.length];
+  }
+  return basePool[weekNumber % basePool.length];
 }
 
 // ISO week number (1–53)

@@ -59,6 +59,47 @@ describe("ageSafetyTip", () => {
   });
 });
 
+// ── Regression: stair-gate tip shown to a family with no stairs ───────────
+//
+// Reported bug: a user answered "no stairs" on the home_profile setup card
+// but Monday/Tuesday's "Quick safety tip" still showed the 6-13mo
+// bracket's stair-gate variant. home.tsx's AgeJumpCard already filtered
+// its own stair-related actions by home_profile.has_stairs — this daily
+// rotation didn't get the same treatment until now.
+describe("ageSafetyTip with hasStairs === false", () => {
+  it("never returns the stair-gate variant across a full lap of the 6-13mo bracket, where it would otherwise appear", () => {
+    for (let day = 1; day <= 10; day++) {
+      const tip = ageSafetyTip(10, day, false);
+      expect(tip).not.toMatch(/staircase|stair/i);
+    }
+  });
+
+  it("still rotates through the remaining (non-stair) variants rather than getting stuck on one", () => {
+    const seen = new Set<string>();
+    for (let day = 1; day <= 10; day++) {
+      seen.add(ageSafetyTip(10, day, false));
+    }
+    expect(seen.size).toBeGreaterThan(1);
+  });
+
+  it("can still return the stair-gate variant when hasStairs is true or unset (unchanged default behavior)", () => {
+    const seenWithStairs = new Set<string>();
+    const seenUnset = new Set<string>();
+    for (let day = 1; day <= 10; day++) {
+      seenWithStairs.add(ageSafetyTip(10, day, true));
+      seenUnset.add(ageSafetyTip(10, day));
+    }
+    expect([...seenWithStairs].some((t) => /staircase/i.test(t))).toBe(true);
+    expect([...seenUnset].some((t) => /staircase/i.test(t))).toBe(true);
+  });
+
+  it("has no effect on age brackets that never mention stairs in the first place", () => {
+    for (let day = 1; day <= 10; day++) {
+      expect(ageSafetyTip(2, day, false)).toBe(ageSafetyTip(2, day, true));
+    }
+  });
+});
+
 describe("dayOfYear", () => {
   it("returns 1 for January 1st", () => {
     expect(dayOfYear(new Date("2026-01-01T00:00:00Z"))).toBe(1);

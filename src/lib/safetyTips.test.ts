@@ -93,6 +93,41 @@ describe("weekly safety tip dismissal (via the weekKey-scoped storage key)", () 
   });
 });
 
+// ── Regression: stair-gate tips shown to a family with no stairs ──────────
+//
+// Reported bug: a user answered "no stairs" on the home_profile setup card
+// but still saw a stair-gate safety tip on Home. home.tsx's AgeJumpCard
+// already filtered its own stair-related content by home_profile.has_stairs
+// — this weekly tip pool (t021, t035) didn't get the same treatment.
+describe("selectWeeklyTip with hasStairs === false", () => {
+  it("never returns a stair-gate tip across a full lap of the pool, at ages where one would otherwise be selected", () => {
+    for (let week = 1; week <= 60; week++) {
+      const tip = selectWeeklyTip(12, week, false);
+      expect(tip.text).not.toMatch(/stair/i);
+    }
+  });
+
+  it("can still return the stair-gate tip when hasStairs is true or unset (unchanged default behavior)", () => {
+    const seenWithStairs = new Set<string>();
+    const seenUnset = new Set<string>();
+    for (let week = 1; week <= 60; week++) {
+      seenWithStairs.add(selectWeeklyTip(12, week, true).id);
+      seenUnset.add(selectWeeklyTip(12, week).id);
+    }
+    expect(seenWithStairs.has("t021") || seenWithStairs.has("t035")).toBe(true);
+    expect(seenUnset.has("t021") || seenUnset.has("t035")).toBe(true);
+  });
+
+  it("falls back to the full age-appropriate pool rather than an empty one, for an age where every tip in range happens to mention stairs", () => {
+    // Sanity guard on the exclusion logic itself, using a narrow age slice
+    // (5 months) where t021 is in range — exercised indirectly above, this
+    // just confirms selectWeeklyTip never throws or returns undefined.
+    for (let week = 1; week <= 10; week++) {
+      expect(selectWeeklyTip(5, week, false)).toBeDefined();
+    }
+  });
+});
+
 describe("pacifier size-appropriateness tip", () => {
   it("exists in the tip pool and covers the common pacifier-use age range", () => {
     const tip = SAFETY_TIPS.find((t) => t.id === "t061");

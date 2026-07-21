@@ -35,7 +35,7 @@ function RecallRadarPage() {
   const [loading, setLoading] = useState(true);
   const [recalls, setRecalls] = useState<RadarRecall[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [degraded, setDegraded] = useState(false);
+  const [degradedSources, setDegradedSources] = useState<string[]>([]);
   const [reloadKey, setReloadKey] = useState(0);
 
   const retry = useCallback(() => {
@@ -48,7 +48,7 @@ function RecallRadarPage() {
     (async () => {
       setLoading(true);
       setError(null);
-      setDegraded(false);
+      setDegradedSources([]);
 
       // Critical recalls are manually curated, synchronous, and can never
       // fail — always available regardless of what happens below.
@@ -80,27 +80,27 @@ function RecallRadarPage() {
 
       if (cancelled) return;
 
-      let anySourceFailed = false;
+      const failedSources: string[] = [];
 
       let cpscItems: RadarRecall[] = [];
       if (cpscSettled.status === "fulfilled") {
         cpscItems = mapCpscResults(cpscSettled.value);
       } else {
         console.error("Recall Radar: CPSC/FDA fetch failed", cpscSettled.reason);
-        anySourceFailed = true;
+        failedSources.push("CPSC & FDA");
       }
 
       let extraItems: RadarRecall[] = [];
       if (extraSettled.status === "fulfilled") {
         if (extraSettled.value.error) {
           console.error("Recall Radar: extra-sources query failed", extraSettled.value.error);
-          anySourceFailed = true;
+          failedSources.push("USDA FSIS, NHTSA, Health Canada & EU Safety Gate");
         } else {
           extraItems = mapExtraResults((extraSettled.value.data ?? []) as unknown as ExtraRecallRow[]);
         }
       } else {
         console.error("Recall Radar: extra-sources query rejected", extraSettled.reason);
-        anySourceFailed = true;
+        failedSources.push("USDA FSIS, NHTSA, Health Canada & EU Safety Gate");
       }
 
       const merged = mergeRecallSources(criticalItems, cpscItems, extraItems);
@@ -108,10 +108,10 @@ function RecallRadarPage() {
       setRecalls(merged);
       // Only show a hard error if literally nothing loaded — otherwise
       // degrade gracefully and show what we have, with a small notice.
-      if (anySourceFailed && merged.length === 0) {
+      if (failedSources.length > 0 && merged.length === 0) {
         setError("Couldn't reach the recall databases right now. Try again in a moment or visit cpsc.gov/Recalls directly.");
-      } else if (anySourceFailed) {
-        setDegraded(true);
+      } else if (failedSources.length > 0) {
+        setDegradedSources(failedSources);
       }
       setLoading(false);
     })();
@@ -179,9 +179,11 @@ function RecallRadarPage() {
                 </p>
                 <span className="font-body text-xs text-muted-foreground">6 agencies + brand watch</span>
               </div>
-              {degraded && (
+              {degradedSources.length > 0 && (
                 <div className="flex items-center justify-between gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 font-body text-xs text-amber-800 dark:text-amber-400">
-                  <span>One or more recall sources didn't respond — this list may be incomplete.</span>
+                  <span>
+                    {degradedSources.join(" and ")} didn't respond — this list may be incomplete.
+                  </span>
                   <button
                     type="button"
                     onClick={retry}
@@ -206,12 +208,12 @@ function RecallRadarPage() {
               </a>
             </p>
             <p>
-              EU Safety Gate alerts come from an unofficial mirror (no official EC API exists) and are marked{" "}
-              <span className="font-semibold text-foreground">unofficial</span> — verify directly at{" "}
+              EU Safety Gate alerts are compiled from public listings, since the European Commission
+              doesn't offer a direct data feed. For the official, up-to-date record, visit{" "}
               <a href="https://ec.europa.eu/safety-gate-alerts/screen/webReport" target="_blank" rel="noopener noreferrer"
                 className="font-semibold text-foreground underline underline-offset-2">
                 Safety Gate
-              </a>{" "}before relying on it.
+              </a>.
             </p>
           </div>
         </div>

@@ -89,7 +89,17 @@ async function searchUpcItemDbLive(
           signal: controller.signal,
         },
       );
-      if (!res.ok) return [];
+      if (!res.ok) {
+        // The free "trial" tier is quota-limited (and CORS/network issues
+        // land here too) — surface *why* nothing came back instead of
+        // silently returning [] and looking identical to "no matches
+        // exist." A 429 here specifically means the shared trial quota is
+        // exhausted, not that the product doesn't exist.
+        console.error(
+          `[searchProductCatalog] UPCitemdb live search failed: HTTP ${res.status} for query "${query}"`,
+        );
+        return [];
+      }
       const json = (await res.json()) as { items?: Array<Record<string, unknown>> };
       const items = Array.isArray(json.items) ? json.items : [];
       return items
@@ -109,7 +119,10 @@ async function searchUpcItemDbLive(
     } finally {
       clearTimeout(timeout);
     }
-  } catch {
+  } catch (err) {
+    // Network failure, CORS rejection, or the 5s abort — same silent-[]
+    // problem as the !res.ok branch above.
+    console.error(`[searchProductCatalog] UPCitemdb live search threw for query "${query}":`, err);
     return [];
   }
 }

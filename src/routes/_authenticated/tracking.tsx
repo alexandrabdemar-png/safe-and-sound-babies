@@ -38,9 +38,6 @@ function TrackingPage() {
                 <p className="mt-0.5 font-body text-sm text-muted-foreground">
                   Log the first time your baby tries a food and any allergen reactions
                 </p>
-                <p className="mt-0.5 font-body text-[11px] text-muted-foreground/70">
-                  A quick, lightweight log — not a full Moment — that any caregiver with access can add to
-                </p>
               </div>
             </div>
             <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />

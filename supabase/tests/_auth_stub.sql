@@ -83,6 +83,24 @@ LANGUAGE sql AS $$
     ON CONFLICT (name) DO UPDATE SET decrypted_secret = EXCLUDED.decrypted_secret;
 $$;
 
+-- Roles must exist before any GRANT ... TO anon/authenticated/service_role
+-- below — a vanilla local Postgres (unlike a Supabase-provisioned one)
+-- doesn't pre-create them, and this file previously created them *after*
+-- the cron/net/vault grants that reference them, which made it fail with
+-- "role anon does not exist" on a truly fresh database.
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+    CREATE ROLE anon NOLOGIN;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+    CREATE ROLE authenticated NOLOGIN;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+    CREATE ROLE service_role NOLOGIN BYPASSRLS;
+  END IF;
+END $$;
+
 GRANT USAGE ON SCHEMA cron, net, vault TO anon, authenticated, service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON cron.job TO anon, authenticated, service_role;
 GRANT USAGE ON SEQUENCE cron.job_jobid_seq TO anon, authenticated, service_role;
@@ -109,19 +127,6 @@ CREATE TABLE IF NOT EXISTS auth.users (
   email text,
   raw_user_meta_data jsonb NOT NULL DEFAULT '{}'::jsonb
 );
-
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
-    CREATE ROLE anon NOLOGIN;
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
-    CREATE ROLE authenticated NOLOGIN;
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
-    CREATE ROLE service_role NOLOGIN BYPASSRLS;
-  END IF;
-END $$;
 
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 GRANT USAGE ON SCHEMA auth TO anon, authenticated, service_role;

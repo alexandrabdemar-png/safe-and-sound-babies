@@ -20,13 +20,18 @@ function pickVariant(
   brackets: AgeBracket[],
   fallback: string[],
   cycleIndex: number,
+  exclude?: (variant: string) => boolean,
 ): string {
-  const pool =
+  const rawPool =
     months === null
       ? fallback
       : (brackets.find((b) => months < b.maxMonths) ?? brackets[brackets.length - 1]).variants;
-  const index = ((cycleIndex % pool.length) + pool.length) % pool.length;
-  return pool[index];
+  // Never let a filter empty the pool out from under the rotation — fall
+  // back to the unfiltered pool rather than throwing or returning "".
+  const pool = exclude ? rawPool.filter((v) => !exclude(v)) : rawPool;
+  const effectivePool = pool.length > 0 ? pool : rawPool;
+  const index = ((cycleIndex % effectivePool.length) + effectivePool.length) % effectivePool.length;
+  return effectivePool[index];
 }
 
 /**
@@ -165,8 +170,18 @@ export function monthsFromDob(dobStr: string | null): number | null {
 // day-of-year rather than random: it's the same tip all day for every
 // user (no flicker on re-render/reload), and it cycles through every
 // variant in the bracket before any repeat.
-export function ageSafetyTip(months: number | null, dayNumber: number): string {
-  return pickVariant(months, QUICK_TIP_BRACKETS, QUICK_TIP_FALLBACK, dayNumber);
+// hasStairs === false excludes stair/gate-specific variants from the
+// rotation (a home_profile answer of "no stairs" — see home.tsx's
+// AgeJumpCard, which already does the equivalent filtering for its
+// milestone actions). Unset/unknown (undefined or true) leaves every
+// variant in play, same as before this parameter existed.
+export function ageSafetyTip(
+  months: number | null,
+  dayNumber: number,
+  hasStairs?: boolean | null,
+): string {
+  const exclude = hasStairs === false ? (v: string) => /stair/i.test(v) : undefined;
+  return pickVariant(months, QUICK_TIP_BRACKETS, QUICK_TIP_FALLBACK, dayNumber, exclude);
 }
 
 export function weekendReminder(months: number | null, weekNumber: number): string {

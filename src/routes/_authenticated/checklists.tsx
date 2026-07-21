@@ -1,95 +1,65 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
-import { CheckCircle2, Circle, ClipboardList, ArrowLeft, Gift, Luggage, HeartPulse, Home } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { CheckCircle2, Circle, ClipboardList, ArrowLeft, Gift, Luggage, HeartPulse, Home, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { hapticSuccess, hapticLight } from "@/lib/haptic";
+import { useActiveChild } from "@/hooks/useActiveChild";
+import { ChildSwitcher } from "@/components/ChildSwitcher";
+import { computeAdjustedAge } from "@/lib/adjustedAge";
+import { formatAgeMonths } from "@/lib/profileType";
+import { isItemRelevantForAge } from "@/lib/checklistAgeFilter";
+import { ROOMS } from "@/lib/checklistsData";
 
 export const ssr = false;
 
-interface ChecklistItem {
-  key: string;
-  label: string;
-}
-
-interface Room {
-  id: string;
-  label: string;
-  items: ChecklistItem[];
-}
-
-const ROOMS: Room[] = [
-  {
-    id: "nursery",
-    label: "Nursery",
-    items: [
-      { key: "nursery_crib_firm_mattress", label: "Firm, flat crib mattress with fitted sheet" },
-      { key: "nursery_crib_no_bumpers", label: "No crib bumpers, pillows, or loose bedding" },
-      { key: "nursery_crib_slat_spacing", label: "Crib slat spacing ≤ 2⅜ inches" },
-      { key: "nursery_temp_68_72", label: "Room temperature 68–72°F (20–22°C)" },
-      { key: "nursery_co_detector", label: "CO detector installed and tested" },
-      { key: "nursery_baby_monitor", label: "Baby monitor positioned safely out of reach" },
-      { key: "nursery_dresser_anchored", label: "Dresser and furniture anchored to wall" },
-      { key: "nursery_outlet_covers", label: "All outlets covered" },
-      { key: "nursery_cord_free", label: "No blind/curtain cords within reach" },
-      { key: "nursery_diaper_pail_closed", label: "Diaper pail stays closed and latched" },
-    ],
-  },
-  {
-    id: "living_room",
-    label: "Living Room",
-    items: [
-      { key: "lr_tv_anchored", label: "TV anchored to wall or TV stand" },
-      { key: "lr_furniture_anchored", label: "Tall furniture anchored to wall" },
-      { key: "lr_sharp_corners", label: "Sharp coffee table corners padded" },
-      { key: "lr_small_objects_away", label: "Small objects (coins, batteries) out of reach" },
-      { key: "lr_blind_cords", label: "Blind/curtain cords looped up or cut" },
-      { key: "lr_outlet_covers", label: "All outlets covered" },
-      { key: "lr_fireplace_gate", label: "Fireplace/heater gated or guarded" },
-      { key: "lr_houseplants_safe", label: "All houseplants are non-toxic" },
-      { key: "lr_rugs_secured", label: "Area rugs have non-slip backing" },
-      { key: "lr_remote_batteries", label: "Remote control battery covers secured" },
-    ],
-  },
-  {
-    id: "kitchen",
-    label: "Kitchen",
-    items: [
-      { key: "kitchen_cabinet_locks", label: "Child locks on lower cabinet doors" },
-      { key: "kitchen_cleaning_products_high", label: "Cleaning products stored high or locked" },
-      { key: "kitchen_knives_locked", label: "Knives in locked drawer or out of reach" },
-      { key: "kitchen_stove_knob_covers", label: "Stove knob covers installed" },
-      { key: "kitchen_back_burners", label: "Cook on back burners when possible" },
-      { key: "kitchen_fridge_lock", label: "Refrigerator lock if needed" },
-      { key: "kitchen_trash_locked", label: "Trash can locked or secured" },
-      { key: "kitchen_dishwasher_latched", label: "Dishwasher door stays latched" },
-      { key: "kitchen_tablecloth_removed", label: "No tablecloth to pull down" },
-      { key: "kitchen_pet_food_away", label: "Pet food and bowls moved away" },
-    ],
-  },
-  {
-    id: "bathroom",
-    label: "Bathroom",
-    items: [
-      { key: "bath_door_locked", label: "Bathroom door kept closed/locked" },
-      { key: "bath_toilet_lock", label: "Toilet lid lock installed" },
-      { key: "bath_non_slip_mat", label: "Non-slip mat inside and outside tub" },
-      { key: "bath_water_temp_120", label: "Water heater set to ≤ 120°F (49°C)" },
-      { key: "bath_never_leave_alone", label: "Never leave baby alone in water" },
-      { key: "bath_meds_locked", label: "All medications in locked cabinet" },
-      { key: "bath_razors_away", label: "Razors and sharp items stored out of reach" },
-      { key: "bath_cosmetics_away", label: "Cosmetics and toiletries out of reach" },
-      { key: "bath_outlet_covers_gfi", label: "GFCI outlets near water sources such as sinks and bathtubs shut off power quickly if they detect water contact, and many local codes require them in bathrooms and kitchens — worth checking what applies where you live." },
-      { key: "bath_hair_dryer_away", label: "Hair dryer and appliances unplugged and stored" },
-    ],
-  },
-];
+const HOMECOMING_CARD_DISMISSED_KEY = "safesound.homecomingCardDismissed";
 
 function ChecklistsPage() {
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [showAllAges, setShowAllAges] = useState(false);
+  // Shown to everyone by default (so people who might need it know it
+  // exists), but dismissible for anyone it doesn't apply to — persisted so
+  // an X here means gone for good, not just for this session.
+  const [homecomingCardDismissed, setHomecomingCardDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(HOMECOMING_CARD_DISMISSED_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  function dismissHomecomingCard(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      localStorage.setItem(HOMECOMING_CARD_DISMISSED_KEY, "true");
+    } catch {}
+    setHomecomingCardDismissed(true);
+  }
+
+  const { activeChild } = useActiveChild();
+  const ageMonths = useMemo(() => {
+    if (!activeChild?.date_of_birth) return null;
+    const age = computeAdjustedAge({
+      dateOfBirth: activeChild.date_of_birth,
+      dueDate: activeChild.due_date,
+    });
+    return age ? age.adjustedMonths : null;
+  }, [activeChild?.date_of_birth, activeChild?.due_date]);
+
+  const filterAge = showAllAges ? null : ageMonths;
+  const visibleRooms = useMemo(
+    () =>
+      ROOMS.map((room) => ({
+        ...room,
+        items: room.items.filter((item) => isItemRelevantForAge(item, filterAge)),
+      })),
+    [filterAge],
+  );
 
   useEffect(() => {
     async function init() {
@@ -136,8 +106,8 @@ function ChecklistsPage() {
     }
   }
 
-  const totalItems = ROOMS.reduce((sum, r) => sum + r.items.length, 0);
-  const totalCompleted = ROOMS.reduce(
+  const totalItems = visibleRooms.reduce((sum, r) => sum + r.items.length, 0);
+  const totalCompleted = visibleRooms.reduce(
     (sum, r) => sum + r.items.filter((i) => completed.has(i.key)).length,
     0,
   );
@@ -153,17 +123,37 @@ function ChecklistsPage() {
           </Link>
         </Button>
         {/* Header */}
-        <div className="mb-2 flex items-center gap-3">
-          <ClipboardList className="h-7 w-7" style={{ color: "#C4785A" }} />
-          <h1 className="font-display text-3xl font-semibold" style={{ color: "#3D2B1F" }}>
-            Safety Checklists
-          </h1>
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <ClipboardList className="h-7 w-7" style={{ color: "#C4785A" }} />
+            <h1 className="font-display text-3xl font-semibold" style={{ color: "#3D2B1F" }}>
+              Safety Checklists
+            </h1>
+          </div>
+          <ChildSwitcher />
         </div>
-        <p className="mb-6 font-body text-xs leading-relaxed" style={{ color: "#8A8078" }}>
+        <p
+          className={`font-body text-xs leading-relaxed ${ageMonths != null ? "mb-2" : "mb-6"}`}
+          style={{ color: "#8A8078" }}
+        >
           A starting point, not an exhaustive list — general reference checklists, not a certified
           home safety inspection or medical advice. Every home is different, so use your own
           judgment about what else applies.
         </p>
+        {ageMonths != null && (
+          <p className="mb-6 font-body text-xs" style={{ color: "#A89888" }}>
+            Showing items relevant for {activeChild?.name ?? "your child"} at{" "}
+            {formatAgeMonths(ageMonths)} old.{" "}
+            <button
+              type="button"
+              onClick={() => setShowAllAges((v) => !v)}
+              className="underline underline-offset-2"
+              style={{ color: "#C4785A" }}
+            >
+              {showAllAges ? "Show age-relevant items only" : "Show full checklist"}
+            </button>
+          </p>
+        )}
 
         {/* Overall progress */}
         {!loading && (
@@ -183,17 +173,27 @@ function ChecklistsPage() {
 
         {/* Quick links to special checklists */}
         <div className="mb-6 grid grid-cols-2 gap-3">
-          <Link to="/homecoming-checklist"
-            className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[#C4785A]/50"
-            style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}>
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: "#F5F0E8" }}>
-              <Home className="h-5 w-5" style={{ color: "#C4785A" }} />
-            </span>
-            <div>
-              <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>Bringing Baby Home</p>
-              <p className="font-body text-xs" style={{ color: "#8A8078" }}>For expecting parents</p>
-            </div>
-          </Link>
+          {!homecomingCardDismissed && (
+            <Link to="/homecoming-checklist"
+              className="relative flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[#C4785A]/50"
+              style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}>
+              <button
+                type="button"
+                onClick={dismissHomecomingCard}
+                aria-label="Not expecting — hide this card"
+                className="absolute right-1.5 top-1.5 rounded-full p-1 text-muted-foreground hover:bg-black/5"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: "#F5F0E8" }}>
+                <Home className="h-5 w-5" style={{ color: "#C4785A" }} />
+              </span>
+              <div>
+                <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>Bringing Baby Home</p>
+                <p className="font-body text-xs" style={{ color: "#8A8078" }}>For expecting parents</p>
+              </div>
+            </Link>
+          )}
           <Link to="/travel-checklist"
             className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[#C4785A]/50"
             style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}>
@@ -233,7 +233,8 @@ function ChecklistsPage() {
           <p className="font-body text-sm" style={{ color: "#8A8078" }}>Loading checklists...</p>
         ) : (
           <div className="flex flex-col gap-6">
-            {ROOMS.map((room) => {
+            {visibleRooms.map((room) => {
+              if (room.items.length === 0) return null;
               const roomCompleted = room.items.filter((i) => completed.has(i.key)).length;
               const roomPct = Math.round((roomCompleted / room.items.length) * 100);
               return (

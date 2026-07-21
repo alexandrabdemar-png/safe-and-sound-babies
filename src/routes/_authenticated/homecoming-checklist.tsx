@@ -49,43 +49,12 @@ export const HOMECOMING_SECTIONS: HomecomingSection[] = [
       },
       {
         key: "home_pediatrician_appt",
-        label: "Schedule the first pediatrician visit (typically within 3–5 days)",
+        label: "Schedule the first pediatrician visit",
       },
       {
         key: "home_going_home_outfit",
         label: "Pack a weather-appropriate going-home outfit and extra layer for the car seat",
-        note: "Avoid bulky/puffy layers under the car seat harness — use a blanket over the buckled straps instead.",
-      },
-    ],
-  },
-  {
-    id: "home_ready",
-    label: "Getting Home Ready",
-    emoji: "🏠",
-    items: [
-      {
-        key: "home_safe_sleep_space",
-        label: "Safe sleep space set up: firm mattress, fitted sheet, no loose bedding or bumpers",
-      },
-      {
-        key: "home_smoke_co_tested",
-        label: "Smoke and CO detectors tested and working",
-      },
-      {
-        key: "home_water_heater_temp",
-        label: "Water heater set to 120°F (49°C) or lower",
-      },
-      {
-        key: "home_supplies_stocked",
-        label: "Diapers, wipes, and feeding supplies stocked within easy reach",
-      },
-      {
-        key: "home_monitor_set_up",
-        label: "Baby monitor set up and positioned safely out of reach",
-      },
-      {
-        key: "home_pets_prepped",
-        label: "Plan for introducing pets and older siblings slowly and under supervision",
+        note: "Avoid bulky/puffy layers under the car seat harness.",
       },
     ],
   },
@@ -98,19 +67,6 @@ export const HOMECOMING_SECTIONS: HomecomingSection[] = [
         key: "home_feeding_diaper_tracking",
         label: "Track feeding times and wet/dirty diaper counts",
         note: "A rough guide, not a rule: expect diaper counts to climb over the first week as feeding is established.",
-      },
-      {
-        key: "home_warning_signs",
-        label: "Know the newborn warning signs that mean call the pediatrician right away",
-        note: "Fever, worsening jaundice, poor feeding, unusually few wet diapers, or trouble breathing.",
-      },
-      {
-        key: "home_cord_care",
-        label: "Keep the umbilical cord stump clean and dry until it falls off",
-      },
-      {
-        key: "home_safe_sleep_every_time",
-        label: "Every sleep: on the back, alone, in an empty crib or bassinet",
       },
       {
         key: "home_emergency_numbers_saved",
@@ -131,11 +87,6 @@ export const HOMECOMING_SECTIONS: HomecomingSection[] = [
       {
         key: "home_visitor_plan",
         label: "Set expectations with visitors: handwashing, and staying home if sick",
-      },
-      {
-        key: "home_postpartum_signs",
-        label: "Know the postpartum warning signs to watch for in the birthing parent",
-        note: "Heavy bleeding, fever, severe headache, or signs of infection — call your provider if any appear.",
       },
       {
         key: "home_pediatrician_registered",

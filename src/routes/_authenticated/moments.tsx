@@ -25,8 +25,17 @@ export const Route = createFileRoute("/_authenticated/moments")({
   head: () => ({ meta: [{ title: "Memory Book — Peace of Mine" }] }),
 });
 
-const CARD_BG = "#FFFFFF";
-const CARD_BORDER = "#E8E1D4";
+// Scrapbook polaroid styling: a small cycle of tilt angles so consecutive
+// cards don't all lean the same way, and a soft tint per icon so each
+// "photo" placeholder reads as a distinct little Polaroid rather than a
+// plain icon badge.
+const POLAROID_TILTS = [-3, 2.2, -1.6, 2.8];
+const POLAROID_TINTS: Record<MomentIconKey, string> = {
+  star: "linear-gradient(160deg, #EFE9DC, #E3D8C2)",
+  smiley: "linear-gradient(160deg, #E9EEF2, #D7E2E8)",
+  heart: "linear-gradient(160deg, #F3E7DD, #E9D2C2)",
+  target: "linear-gradient(160deg, #F5E4D6, #EAC9AE)",
+};
 
 type RawMoment = {
   id: string;
@@ -246,83 +255,93 @@ function MomentsPage() {
               )}
             </div>
           ) : (
-            <div className="relative pb-4">
-              {/* Dashed center spine */}
+            <div className="relative pb-2">
+              {/* Dashed thread */}
               <div
-                className="absolute left-1/2 top-2 bottom-2 w-px -translate-x-1/2"
-                style={{
-                  backgroundImage: "linear-gradient(var(--border) 60%, transparent 0%)",
-                  backgroundSize: "1px 9px",
-                  backgroundRepeat: "repeat-y",
-                }}
+                className="absolute left-[27px] top-2 bottom-2 w-0"
+                style={{ borderLeft: "2.5px dashed var(--border)" }}
               />
-              <ul className="space-y-7">
+              <ul className="space-y-11">
                 {filtered.map((m, i) => {
                   const Icon = MOMENT_ICONS[m.resolvedIcon];
                   const age = childDob && m.logged_at ? calcAgeAt(childDob, m.logged_at) : null;
-                  const onLeft = i % 2 === 0;
+                  const tilt = POLAROID_TILTS[i % POLAROID_TILTS.length];
+                  const tapeTilt = i % 2 === 0 ? -5 : 6;
+                  const frameTint = POLAROID_TINTS[m.resolvedIcon];
                   return (
-                    <li key={m.id} className="relative flex items-start">
-                      {/* Icon badge on the spine */}
-                      <span
-                        className="absolute left-1/2 top-2 z-10 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full shadow-md"
-                        style={{
-                          backgroundColor: CARD_BG,
-                          border: `2px solid ${MOMENT_ICON_ACCENT}`,
-                        }}
-                      >
-                        <Icon px={20} />
-                      </span>
-
-                      {/* Card, alternating side */}
-                      <div
-                        className={`flex w-1/2 ${onLeft ? "justify-end pr-6" : "order-2 justify-start pl-6"}`}
-                      >
-                        <div
-                          className="w-full max-w-[210px] rounded-2xl p-3.5 shadow-sm transition-shadow hover:shadow-md"
-                          style={{ backgroundColor: CARD_BG, border: `1px solid ${CARD_BORDER}` }}
-                        >
-                          {/* Icon tag + date */}
-                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1.5">
-                            <span
-                              className="flex items-center justify-center rounded-full p-1"
-                              style={{ backgroundColor: MOMENT_ICON_ACCENT + "22" }}
-                              aria-label={MOMENT_ICON_LABELS[m.resolvedIcon]}
-                            >
-                              <Icon px={12} />
-                            </span>
-                            <span className="font-body text-[10px] text-muted-foreground">
-                              {formatDateLarge(m.logged_at)}
-                            </span>
-                          </div>
-
-                          {/* Age label */}
-                          {age && (
-                            <p className="font-body text-[10px] italic text-muted-foreground mb-1">
-                              {childName} at {age}
-                            </p>
-                          )}
-
-                          {/* Title */}
-                          <p
-                            className="font-display text-sm font-semibold tracking-tight leading-snug"
-                            style={{ color: "#3D3935" }}
-                          >
-                            {m.title}
-                          </p>
-
-                          {/* Notes */}
-                          {m.displayNotes && (
-                            <p
-                              className="mt-1.5 font-body text-xs leading-relaxed line-clamp-4"
-                              style={{ color: "#5C5248" }}
-                            >
-                              {m.displayNotes}
-                            </p>
-                          )}
-                        </div>
+                    <li key={m.id} className="relative flex gap-4">
+                      {/* Node on the thread */}
+                      <div className="relative z-10 flex w-[54px] shrink-0 justify-center pt-1.5">
+                        <span
+                          className="h-3 w-3 rounded-full"
+                          style={{
+                            backgroundColor: "var(--background)",
+                            border: `2.5px solid ${MOMENT_ICON_ACCENT}`,
+                          }}
+                        />
                       </div>
-                      <div className={onLeft ? "order-2 w-1/2" : "w-1/2"} />
+
+                      {/* Polaroid + caption */}
+                      <div className="min-w-0 flex-1 pb-1">
+                        <div
+                          className="relative mb-3 w-[168px] rounded-[3px] bg-white p-2 pb-7 shadow-md"
+                          style={{ transform: `rotate(${tilt}deg)` }}
+                        >
+                          {/* Washi tape */}
+                          <div
+                            className="absolute -top-2.5 left-1/2 h-6 w-16 -translate-x-1/2 opacity-80 shadow-sm"
+                            style={{
+                              backgroundImage: "linear-gradient(180deg, #EFE2BE 0%, #E0CE9C 100%)",
+                              transform: `translateX(-50%) rotate(${tapeTilt}deg)`,
+                            }}
+                          />
+                          <div
+                            className="flex aspect-square items-center justify-center rounded-[1px]"
+                            style={{ backgroundImage: frameTint }}
+                            role="img"
+                            aria-label={MOMENT_ICON_LABELS[m.resolvedIcon]}
+                          >
+                            <Icon px={44} />
+                          </div>
+                          <p
+                            className="absolute inset-x-0 bottom-1.5 text-center text-base"
+                            style={{ fontFamily: '"Caveat", cursive', color: "#3D3935" }}
+                          >
+                            {formatDateLarge(m.logged_at)}
+                          </p>
+                        </div>
+
+                        {/* Title */}
+                        <p
+                          className="font-display text-base font-semibold tracking-tight leading-snug"
+                          style={{ color: "#3D3935" }}
+                        >
+                          {m.title}
+                        </p>
+
+                        {/* Notes */}
+                        {m.displayNotes && (
+                          <p
+                            className="mt-1 max-w-[30ch] font-body text-xs leading-relaxed line-clamp-3"
+                            style={{ color: "#5C5248" }}
+                          >
+                            {m.displayNotes}
+                          </p>
+                        )}
+
+                        {/* Age pill */}
+                        {age && (
+                          <span
+                            className="mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wider"
+                            style={{
+                              backgroundColor: MOMENT_ICON_ACCENT + "1A",
+                              color: MOMENT_ICON_ACCENT,
+                            }}
+                          >
+                            {childName ? `${childName} at ${age}` : age}
+                          </span>
+                        )}
+                      </div>
                     </li>
                   );
                 })}

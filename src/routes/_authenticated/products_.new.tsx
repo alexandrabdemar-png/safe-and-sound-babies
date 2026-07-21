@@ -407,7 +407,7 @@ function NewProductPage() {
 
             {category === "car_seat" && (
               <>
-                <Field label="Manufacturer expiry date">
+                <Field label="Manufacturer expiration date">
                   <Input
                     type="date"
                     value={carSeatExpiry}
@@ -428,8 +428,8 @@ function NewProductPage() {
                   />
                   <p className="mt-1.5 font-body text-xs text-muted-foreground">
                     {carSeatExpiry
-                      ? "Not needed — you already gave the expiry date above."
-                      : "Many manufacturers recommend against using a car seat starting around 6 years after manufacture, though exact timelines vary by brand and model. If you don't have the exact expiry date, we'll estimate one from this manufacture date — always confirm against your seat's manual or shell sticker."}
+                      ? "Not needed — you already gave the expiration date above."
+                      : "Many manufacturers recommend against using a car seat starting around 6 years after manufacture, though exact timelines vary by brand and model. If you don't have the exact expiration date, we'll estimate one from this manufacture date — always confirm against your seat's manual or shell sticker."}
                   </p>
                 </Field>
 
