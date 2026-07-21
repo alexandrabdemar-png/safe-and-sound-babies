@@ -206,12 +206,12 @@ function RecallRadarPage() {
               </a>
             </p>
             <p>
-              EU Safety Gate alerts come from an unofficial mirror (no official EC API exists) and are marked{" "}
-              <span className="font-semibold text-foreground">unofficial</span> — verify directly at{" "}
+              EU Safety Gate alerts are compiled from public listings, since the European Commission
+              doesn't offer a direct data feed. For the official, up-to-date record, visit{" "}
               <a href="https://ec.europa.eu/safety-gate-alerts/screen/webReport" target="_blank" rel="noopener noreferrer"
                 className="font-semibold text-foreground underline underline-offset-2">
                 Safety Gate
-              </a>{" "}before relying on it.
+              </a>.
             </p>
           </div>
         </div>

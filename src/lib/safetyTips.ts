@@ -93,7 +93,7 @@ export const SAFETY_TIPS: SafetyTip[] = [
     id: "t014",
     minMonths: 3,
     maxMonths: 12,
-    text: "Some families find it useful to look up the expiry date on their baby carrier or sling — most manufacturers set a lifespan, and sun and wear can affect the material over time.",
+    text: "Some families find it useful to look up the expiration date on their baby carrier or sling — most manufacturers set a lifespan, and sun and wear can affect the material over time.",
   },
   {
     id: "t015",
@@ -111,7 +111,7 @@ export const SAFETY_TIPS: SafetyTip[] = [
     id: "t017",
     minMonths: 3,
     maxMonths: 9,
-    text: "Some families find it helpful to take a photo of their car seat label and save it somewhere easy to find — having the expiry date and model number on hand can be useful.",
+    text: "Some families find it helpful to take a photo of their car seat label and save it somewhere easy to find — having the expiration date and model number on hand can be useful.",
   },
   {
     id: "t018",
@@ -367,7 +367,7 @@ export const SAFETY_TIPS: SafetyTip[] = [
     id: "t050",
     minMonths: 24,
     maxMonths: 999,
-    text: "It may be worth doing a general medicine cabinet check — expiry dates on first aid supplies can pass without notice, and some products degrade before they're needed.",
+    text: "It may be worth doing a general medicine cabinet check — expiration dates on first aid supplies can pass without notice, and some products degrade before they're needed.",
   },
   {
     id: "t051",

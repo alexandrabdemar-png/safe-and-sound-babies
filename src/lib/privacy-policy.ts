@@ -17,8 +17,8 @@ About your child
 • Milestone notes — optional free-text notes you write about your child's development.
 
 About your baby products
-• Product name, brand, category, and barcode — used to match your products against the U.S. Consumer Product Safety Commission (CPSC) recall database and to surface expiry / size-up alerts.
-• Manufacturer expiry date and purchase date — used to send you timely safety reminders.
+• Product name, brand, category, and barcode — used to match your products against the U.S. Consumer Product Safety Commission (CPSC) recall database and to surface expiration / size-up alerts.
+• Manufacturer expiration date and purchase date — used to send you timely safety reminders.
 
 About your account
 • Email address — used to identify your account and send safety alert notifications.

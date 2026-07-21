@@ -42,7 +42,7 @@ export const CATEGORIES: {
   minAgeMonths?: number;
   maxAgeMonths?: number;
 }[] = [
-  { key: "car_seat",        label: "Car seat",        icon: ShieldCheck, hint: "We'll track recalls and the manufacturer expiry date", minAgeMonths: 0 },
+  { key: "car_seat",        label: "Car seat",        icon: ShieldCheck, hint: "We'll track recalls and the manufacturer expiration date", minAgeMonths: 0 },
   { key: "crib",            label: "Crib",            icon: Bed,         hint: "We'll remind you when to lower the mattress", minAgeMonths: 0 },
   { key: "bassinet",        label: "Bassinet",        icon: Moon,        hint: "Outgrown when your baby can push up or exceeds the weight limit", minAgeMonths: 0, maxAgeMonths: 6 },
   { key: "stroller",        label: "Stroller",        icon: StrollerIcon, hint: "Tracked for recalls", minAgeMonths: 0 },
@@ -55,9 +55,9 @@ export const CATEGORIES: {
   { key: "play_yard",       label: "Pack 'n Play",    icon: Tent,        hint: "Portable play yard / travel crib", minAgeMonths: 0 },
   { key: "baby_monitor",    label: "Baby monitor",    icon: Radio,       hint: "Tracked for recalls", minAgeMonths: 0 },
   { key: "pacifier",        label: "Pacifier",        icon: Baby,        hint: "We'll remind you to replace every ~2 months", minAgeMonths: 0 },
-  { key: "formula",         label: "Formula",         icon: Milk,        hint: "Track expiry & opened-can dates", minAgeMonths: 0 },
+  { key: "formula",         label: "Formula",         icon: Milk,        hint: "Track expiration & opened-can dates", minAgeMonths: 0 },
   { key: "breast_milk",     label: "Breast Milk",     icon: Milk,        hint: "Storage & freshness tracking", minAgeMonths: 0 },
-  { key: "baby_food",       label: "Baby Food",       icon: Cookie,      hint: "Track expiry dates", minAgeMonths: 6 },
+  { key: "baby_food",       label: "Baby Food",       icon: Cookie,      hint: "Track expiration dates", minAgeMonths: 6 },
   { key: "toothbrush",      label: "Toothbrush",      icon: Brush,       hint: "Replace every ~3 months", minAgeMonths: 6 },
   { key: "other",           label: "Other",           icon: Package,     hint: "Anything else you want to track" },
 ];
