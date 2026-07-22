@@ -38,8 +38,8 @@ function makeInsertChain(result: { data: unknown; error: unknown }) {
 }
 
 describe("MOMENT_ICON_KEYS", () => {
-  it("has exactly the 4 requested icons (bear/feet/waving removed per user feedback)", () => {
-    expect(MOMENT_ICON_KEYS).toEqual(["star", "smiley", "heart", "target"]);
+  it("has exactly the 4 requested icons (target swapped for sparkles per updated design)", () => {
+    expect(MOMENT_ICON_KEYS).toEqual(["star", "smiley", "heart", "sparkles"]);
   });
 
   it("every key has a label and an icon component", () => {
@@ -104,10 +104,18 @@ describe("resolveMomentIcon", () => {
     expect(resolveMomentIcon("waving", null)).toBe(DEFAULT_MOMENT_ICON);
   });
 
+  it("regression: a pre-existing row still tagged 'target' (the old 4th icon, now swapped for sparkles) falls back to the default rather than crashing", () => {
+    // The migration remaps existing DB rows to 'star', but this guards the
+    // read path itself against any row this client sees before that lands
+    // (or any other stale 'target' value) — same class of protection as
+    // the bear/feet/waving case above.
+    expect(resolveMomentIcon("target", null)).toBe(DEFAULT_MOMENT_ICON);
+  });
+
   it("falls back to the legacy type mapping when icon is null", () => {
     expect(resolveMomentIcon(null, "First")).toBe("star");
     expect(resolveMomentIcon(null, "Funny")).toBe("smiley");
-    expect(resolveMomentIcon(null, "Milestone")).toBe("target");
+    expect(resolveMomentIcon(null, "Milestone")).toBe("star");
   });
 
   it("falls back to the default when neither icon nor legacy type is present", () => {
@@ -297,7 +305,10 @@ describe("saveMomentResilient", () => {
     const insertMock = vi
       .fn()
       .mockReturnValueOnce(
-        makeInsertChain({ data: null, error: { message: "column milestones.icon does not exist", code: "42703" } }),
+        makeInsertChain({
+          data: null,
+          error: { message: "column milestones.icon does not exist", code: "42703" },
+        }),
       )
       .mockReturnValueOnce(makeInsertChain({ data: null, error: null }));
     mockFrom.mockReturnValue({ insert: insertMock });
@@ -373,7 +384,11 @@ describe("save then re-fetch (integration)", () => {
 
     mockFrom.mockImplementation((_table: string) => ({
       insert: (payload: Omit<Row, "id" | "created_at">) => {
-        table.push({ ...payload, id: `row-${table.length + 1}`, created_at: new Date().toISOString() });
+        table.push({
+          ...payload,
+          id: `row-${table.length + 1}`,
+          created_at: new Date().toISOString(),
+        });
         return makeInsertChain({ data: null, error: null });
       },
       // Mirrors the read-side chain shape (select/eq/order/limit), but
@@ -385,7 +400,10 @@ describe("save then re-fetch (integration)", () => {
               order: () => filterChain,
               limit: () => filterChain,
               then: (resolve: (v: { data: Row[]; error: null }) => void) =>
-                Promise.resolve({ data: table.filter((r) => r.child_id === childId), error: null }).then(resolve),
+                Promise.resolve({
+                  data: table.filter((r) => r.child_id === childId),
+                  error: null,
+                }).then(resolve),
             };
             return filterChain;
           },

@@ -25,18 +25,6 @@ export const Route = createFileRoute("/_authenticated/moments")({
   head: () => ({ meta: [{ title: "Memory Book — Peace of Mine" }] }),
 });
 
-// Scrapbook polaroid styling: a small cycle of tilt angles so consecutive
-// cards don't all lean the same way, and a soft tint per icon so each
-// "photo" placeholder reads as a distinct little Polaroid rather than a
-// plain icon badge.
-const POLAROID_TILTS = [-3, 2.2, -1.6, 2.8];
-const POLAROID_TINTS: Record<MomentIconKey, string> = {
-  star: "linear-gradient(160deg, #EFE9DC, #E3D8C2)",
-  smiley: "linear-gradient(160deg, #E9EEF2, #D7E2E8)",
-  heart: "linear-gradient(160deg, #F3E7DD, #E9D2C2)",
-  target: "linear-gradient(160deg, #F5E4D6, #EAC9AE)",
-};
-
 type RawMoment = {
   id: string;
   title: string;
@@ -247,7 +235,10 @@ function MomentsPage() {
                   : "Log your first moment and it'll appear here."}
               </p>
               {!search && iconFilter === "all" && (
-                <Button asChild className="mt-5 rounded-full bg-primary px-5 font-body text-xs font-semibold">
+                <Button
+                  asChild
+                  className="mt-5 rounded-full bg-primary px-5 font-body text-xs font-semibold"
+                >
                   <Link to="/moments/new">
                     <Plus className="mr-1 h-3.5 w-3.5" /> Log a moment
                   </Link>
@@ -256,92 +247,62 @@ function MomentsPage() {
             </div>
           ) : (
             <div className="relative pb-2">
-              {/* Dashed thread */}
+              {/* Center line */}
               <div
-                className="absolute left-[27px] top-2 bottom-2 w-0"
-                style={{ borderLeft: "2.5px dashed var(--border)" }}
+                className="absolute left-1/2 top-1 bottom-1 w-px -translate-x-1/2"
+                style={{ backgroundColor: MOMENT_ICON_ACCENT }}
               />
-              <ul className="space-y-11">
+              <ul className="space-y-2">
                 {filtered.map((m, i) => {
                   const Icon = MOMENT_ICONS[m.resolvedIcon];
                   const age = childDob && m.logged_at ? calcAgeAt(childDob, m.logged_at) : null;
-                  const tilt = POLAROID_TILTS[i % POLAROID_TILTS.length];
-                  const tapeTilt = i % 2 === 0 ? -5 : 6;
-                  const frameTint = POLAROID_TINTS[m.resolvedIcon];
-                  return (
-                    <li key={m.id} className="relative flex gap-4">
-                      {/* Node on the thread */}
-                      <div className="relative z-10 flex w-[54px] shrink-0 justify-center pt-1.5">
-                        <span
-                          className="h-3 w-3 rounded-full"
-                          style={{
-                            backgroundColor: "var(--background)",
-                            border: `2.5px solid ${MOMENT_ICON_ACCENT}`,
-                          }}
-                        />
-                      </div>
-
-                      {/* Polaroid + caption */}
-                      <div className="min-w-0 flex-1 pb-1">
-                        <div
-                          className="relative mb-3 w-[168px] rounded-[3px] bg-white p-2 pb-7 shadow-md"
-                          style={{ transform: `rotate(${tilt}deg)` }}
-                        >
-                          {/* Washi tape */}
-                          <div
-                            className="absolute -top-2.5 left-1/2 h-6 w-16 -translate-x-1/2 opacity-80 shadow-sm"
-                            style={{
-                              backgroundImage: "linear-gradient(180deg, #EFE2BE 0%, #E0CE9C 100%)",
-                              transform: `translateX(-50%) rotate(${tapeTilt}deg)`,
-                            }}
-                          />
-                          <div
-                            className="flex aspect-square items-center justify-center rounded-[1px]"
-                            style={{ backgroundImage: frameTint }}
-                            role="img"
-                            aria-label={MOMENT_ICON_LABELS[m.resolvedIcon]}
-                          >
-                            <Icon px={44} />
-                          </div>
-                          <p
-                            className="absolute inset-x-0 bottom-1.5 text-center text-base"
-                            style={{ fontFamily: '"Caveat", cursive', color: "#3D3935" }}
-                          >
-                            {formatDateLarge(m.logged_at)}
-                          </p>
-                        </div>
-
-                        {/* Title */}
+                  const onLeft = i % 2 === 0;
+                  const entry = (
+                    <div
+                      className={`flex flex-col ${onLeft ? "items-end text-right" : "items-start text-left"}`}
+                    >
+                      <span
+                        className="mb-1.5 flex h-11 w-11 items-center justify-center rounded-full"
+                        style={{ backgroundColor: MOMENT_ICON_ACCENT + "1F" }}
+                        role="img"
+                        aria-label={MOMENT_ICON_LABELS[m.resolvedIcon]}
+                      >
+                        <Icon px={24} />
+                      </span>
+                      <p className="font-body text-[11px] tracking-wide text-muted-foreground">
+                        {age ?? formatDateLarge(m.logged_at)}
+                      </p>
+                      <p
+                        className="mt-0.5 font-body text-xs font-semibold uppercase tracking-[0.14em]"
+                        style={{ color: "#3D3935" }}
+                      >
+                        {m.title}
+                      </p>
+                      {m.displayNotes && (
                         <p
-                          className="font-display text-base font-semibold tracking-tight leading-snug"
-                          style={{ color: "#3D3935" }}
+                          className="mt-1 max-w-[26ch] font-body text-xs leading-relaxed line-clamp-3"
+                          style={{ color: "#8A8078" }}
                         >
-                          {m.title}
+                          {m.displayNotes}
                         </p>
-
-                        {/* Notes */}
-                        {m.displayNotes && (
-                          <p
-                            className="mt-1 max-w-[30ch] font-body text-xs leading-relaxed line-clamp-3"
-                            style={{ color: "#5C5248" }}
-                          >
-                            {m.displayNotes}
-                          </p>
-                        )}
-
-                        {/* Age pill */}
-                        {age && (
-                          <span
-                            className="mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wider"
-                            style={{
-                              backgroundColor: MOMENT_ICON_ACCENT + "1A",
-                              color: MOMENT_ICON_ACCENT,
-                            }}
-                          >
-                            {childName ? `${childName} at ${age}` : age}
-                          </span>
-                        )}
+                      )}
+                    </div>
+                  );
+                  return (
+                    <li key={m.id} className="relative flex items-start">
+                      <div
+                        className={`flex w-1/2 ${onLeft ? "justify-end pr-6" : "order-2 justify-start pl-6"}`}
+                      >
+                        {entry}
                       </div>
+                      <span
+                        className="relative z-10 mt-[18px] h-2 w-2 shrink-0 rounded-full"
+                        style={{
+                          backgroundColor: "var(--background)",
+                          border: `1.5px solid ${MOMENT_ICON_ACCENT}`,
+                        }}
+                      />
+                      <div className={onLeft ? "order-2 w-1/2" : "w-1/2"} />
                     </li>
                   );
                 })}

@@ -5,15 +5,15 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-export type MomentIconKey = "star" | "smiley" | "heart" | "target";
+export type MomentIconKey = "star" | "smiley" | "heart" | "sparkles";
 
-export const MOMENT_ICON_KEYS: MomentIconKey[] = ["star", "smiley", "heart", "target"];
+export const MOMENT_ICON_KEYS: MomentIconKey[] = ["star", "smiley", "heart", "sparkles"];
 
 export const MOMENT_ICON_LABELS: Record<MomentIconKey, string> = {
   star: "Star",
   smiley: "Smiley",
   heart: "Heart",
-  target: "Target",
+  sparkles: "Sparkles",
 };
 
 export const DEFAULT_MOMENT_ICON: MomentIconKey = "star";
@@ -91,23 +91,23 @@ const HeartIcon = ({ px }: { px: number }) =>
     ),
   );
 
-const TargetIcon = ({ px }: { px: number }) =>
+const SparklesIcon = ({ px }: { px: number }) =>
   wrap(
     px,
-    g(
-      <>
-        <circle cx="50" cy="50" r="38" strokeWidth="5" />
-        <circle cx="50" cy="50" r="24" strokeWidth="4.6" />
-        <circle cx="50" cy="50" r="10" strokeWidth="4.2" />
-      </>,
-    ),
+    <>
+      {g(
+        <path d="M50,10 C52,32 55,45 78,50 C55,55 52,68 50,90 C48,68 45,55 22,50 C45,45 48,32 50,10 Z" />,
+      )}
+      {g(<path d="M78,14 L84,14 M81,11 L81,17" />, 3.2)}
+      <circle cx="18" cy="76" r="3.4" fill={INK} stroke="none" />
+    </>,
   );
 
 export const MOMENT_ICONS: Record<MomentIconKey, (props: { px: number }) => React.ReactElement> = {
   star: StarIcon,
   smiley: SmileyIcon,
   heart: HeartIcon,
-  target: TargetIcon,
+  sparkles: SparklesIcon,
 };
 
 function isMomentIconKey(value: string | null | undefined): value is MomentIconKey {
@@ -138,7 +138,7 @@ export function parseLegacyNotes(notes: string | null): {
 const LEGACY_TYPE_TO_ICON: Record<"First" | "Funny" | "Milestone", MomentIconKey> = {
   First: "star",
   Funny: "smiley",
-  Milestone: "target",
+  Milestone: "star",
 };
 
 /** Resolves the icon to render for a moment: the dedicated `icon` column if
@@ -234,7 +234,9 @@ export async function fetchMilestonesResilient(
     console.error("[fetchMilestonesResilient] network/unexpected failure", err);
     return {
       data: null,
-      error: { message: err instanceof Error ? err.message : "Network error — couldn't load moments" },
+      error: {
+        message: err instanceof Error ? err.message : "Network error — couldn't load moments",
+      },
     };
   }
 }
@@ -271,7 +273,9 @@ export async function saveMomentResilient(
   } catch (err) {
     console.error("[saveMomentResilient] network/unexpected failure", err);
     return {
-      error: { message: err instanceof Error ? err.message : "Network error — couldn't save that moment" },
+      error: {
+        message: err instanceof Error ? err.message : "Network error — couldn't save that moment",
+      },
     };
   }
 }
