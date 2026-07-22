@@ -12,6 +12,7 @@ import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 
 import { formatMonthYear, daysBetween } from "@/lib/predictions";
 import { CATEGORY_BY_KEY, categoryFromLabel, type CategoryKey } from "@/lib/productCategories";
+import { isOnboardingPlaceholderProduct } from "@/lib/onboardingPlaceholderProduct";
 
 export const Route = createFileRoute("/_authenticated/products")({
   ssr: false,
@@ -32,6 +33,12 @@ type Product = {
   predicted_replacement_date: string | null;
   recalled: boolean;
   child_id: string | null;
+  // Fetched only to run isOnboardingPlaceholderProduct() below, not
+  // rendered directly.
+  model: string | null;
+  barcode: string | null;
+  notes: string | null;
+  purchased_at: string | null;
 }; type _PhotoRemoved = never;
 
 function ProductsPage() {
@@ -46,14 +53,24 @@ function ProductsPage() {
       let q: any = supabase
         .from("products")
         .select(
-          "id, name, brand, size, category, added_at, replace_at, next_size_at, predicted_sizeup_date, predicted_replacement_date, recalled, child_id",
+          "id, name, brand, size, category, added_at, replace_at, next_size_at, predicted_sizeup_date, predicted_replacement_date, recalled, child_id, model, barcode, notes, purchased_at",
         )
         .order("created_at", { ascending: false });
       if (activeChildId) q = q.or(`child_id.eq.${activeChildId},child_id.is.null`);
       const { data, error } = await q;
       if (cancelled) return;
       if (error) toast.error(error.message);
-      else setProducts((data ?? []) as Product[]);
+      else {
+        // Client-side safety net for a since-fixed onboarding bug that
+        // inserted a placeholder row per selected category directly into
+        // `products` (see supabase/migrations/20260717000000_
+        // category_watchlist_fix_onboarding_products.sql, which cleans
+        // these up server-side) — filtered here too so the list is
+        // correct immediately, independent of whether that migration has
+        // reached this database yet.
+        const rows = (data ?? []) as Product[];
+        setProducts(rows.filter((p) => !isOnboardingPlaceholderProduct(p)));
+      }
       setLoading(false);
     })();
     return () => { cancelled = true; };
