@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { guessCategoryFromText } from "@/lib/productCategories";
 
 /**
  * recallCheck.ts — Inline and background product recall detection
@@ -400,6 +401,25 @@ export async function fetchFdaRecallsForProduct(productName: string): Promise<Re
   }
 }
 
+// ── Food-vs-gear guard for the FDA query ────────────────────────────────────
+
+const FOOD_CATEGORIES = new Set(["formula", "breast_milk", "baby_food"]);
+
+/**
+ * True when a product name clearly names a non-food gear category (stroller,
+ * crib, car seat, etc.) — used to skip the FDA food-enforcement query, which
+ * only ever returns *food* recalls. Without this, a bare brand-name search
+ * that happens to also be a food brand can surface a same-brand-but-
+ * unrelated-product food recall as if it answered a gear search — reported
+ * bug: searching "Yoyo" (a stroller brand) surfaced an unrelated "Yoyo Gummy
+ * Grape" FDA food recall. Formula/breast milk/baby food searches are
+ * deliberately left alone since those genuinely need the FDA food check.
+ */
+export function isLikelyNonFoodProduct(productName: string): boolean {
+  const category = guessCategoryFromText(productName);
+  return category !== "" && !FOOD_CATEGORIES.has(category);
+}
+
 // ── Main entry point ─────────────────────────────────────────────────────────
 
 /**
@@ -432,10 +452,14 @@ export async function checkRecallsForProduct(productName: string): Promise<Recal
     };
   }
 
-  // Step 2 — CPSC + FDA in parallel
+  // Step 2 — CPSC always; FDA (food-only data) skipped for names that
+  // clearly name non-food gear, so a same-brand food recall can't outrank
+  // "no recall found" for a stroller/crib/etc. search (see
+  // isLikelyNonFoodProduct).
+  const skipFda = isLikelyNonFoodProduct(productName);
   const [cpscHits, fdaHits] = await Promise.all([
     fetchCpscRecallsForProduct(productName),
-    fetchFdaRecallsForProduct(productName),
+    skipFda ? Promise.resolve<RecallHit[]>([]) : fetchFdaRecallsForProduct(productName),
   ]);
 
   return cpscHits[0] ?? fdaHits[0] ?? null;

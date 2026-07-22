@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import {
   isAllowedRecallUrl,
   fetchCpscRecallsForProduct,
@@ -6,6 +6,8 @@ import {
   formatRecallSyncNote,
   fuzzyMatchProduct,
   lotMatches,
+  isLikelyNonFoodProduct,
+  checkRecallsForProduct,
 } from "./recallCheck";
 
 // ── Regression: "Beech-Nut" false-flagged against an unrelated Grizzlies
@@ -327,5 +329,175 @@ describe("fetchFdaRecallsForProduct — timeout resilience", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].productDescription).toBe("Test Infant Formula");
+  });
+});
+
+// ── Regression: reported bug — searching "Yoyo" (the Babyzen YOYO stroller
+// brand) on the public recall search page surfaced an unrelated "Yoyo Gummy
+// Grape" FDA *food* recall instead of "no recall found". Root cause: the
+// FDA food-enforcement API is queried for every search regardless of
+// category, and a bare brand-name match against its product_description
+// field has no way to know "Yoyo" the stroller brand isn't "Yoyo" the candy
+// brand. Fixed by skipping the FDA (food-only) query outright whenever the
+// search text clearly names a non-food gear category.
+describe("isLikelyNonFoodProduct", () => {
+  it("recognizes clearly non-food gear categories", () => {
+    expect(isLikelyNonFoodProduct("Yoyo Stroller")).toBe(true);
+    expect(isLikelyNonFoodProduct("Graco SnugRide Car Seat")).toBe(true);
+    expect(isLikelyNonFoodProduct("Fisher-Price Rock 'n Play Bassinet")).toBe(true);
+    expect(isLikelyNonFoodProduct("Baby Gate")).toBe(true);
+  });
+
+  it("does not flag genuine food/formula searches as non-food", () => {
+    expect(isLikelyNonFoodProduct("Nara infant formula")).toBe(false);
+    expect(isLikelyNonFoodProduct("Bobbie Gentle Formula")).toBe(false);
+    expect(isLikelyNonFoodProduct("organic breast milk storage bags")).toBe(false);
+    expect(isLikelyNonFoodProduct("stage 2 baby food")).toBe(false);
+  });
+
+  it("does not flag a name with no detectable category either way (known limitation — see below)", () => {
+    // A bare brand word with zero category signal ("Yoyo" alone, no
+    // "stroller") is genuinely ambiguous from text alone — this documents
+    // that isLikelyNonFoodProduct can't and doesn't guess in that case.
+    expect(isLikelyNonFoodProduct("Yoyo")).toBe(false);
+    expect(isLikelyNonFoodProduct("Similac")).toBe(false);
+  });
+});
+
+describe("checkRecallsForProduct — food-vs-gear FDA skip (live bug report: Yoyo stroller)", () => {
+  // vi.stubGlobal/vi.unstubAllGlobals aren't implemented by bun's built-in
+  // vitest-compat test runner (same pre-existing gap that already skips the
+  // "timeout resilience" describes above under `bun test`) — plain
+  // save/restore of globalThis.fetch sidesteps that so these tests actually
+  // execute here instead of relying on reasoning about untested code.
+  let originalFetch: typeof fetch;
+  beforeEach(() => {
+    originalFetch = globalThis.fetch;
+  });
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  it("regression: a gear search never surfaces an unrelated FDA food recall, even when CPSC has no match", async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes("saferproducts.gov")) {
+        // No real CPSC recall for this stroller line.
+        return { ok: true, json: async () => [] };
+      }
+      if (url.includes("api.fda.gov")) {
+        // Should never actually be called — asserted below — but if it
+        // were, this is the exact shape of the false-positive report.
+        return {
+          ok: true,
+          json: async () => ({
+            results: [
+              {
+                recall_number: "F-9001",
+                product_description: "YOYO GUMMY GRAPE 3.5 OZ POUCH",
+                reason_for_recall: "Undeclared allergen",
+                recall_initiation_date: "2026-05-01",
+              },
+            ],
+          }),
+        };
+      }
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    const result = await checkRecallsForProduct("Yoyo Stroller");
+
+    expect(result).toBeNull();
+    // The FDA endpoint must not even be called for a gear search — this is
+    // the actual fix, not just a client-side filter after the fact.
+    const calledUrls: string[] = fetchMock.mock.calls.map((c: unknown[]) => c[0] as string);
+    expect(calledUrls.some((u: string) => u.includes("api.fda.gov"))).toBe(false);
+    expect(calledUrls.some((u: string) => u.includes("saferproducts.gov"))).toBe(true);
+  });
+
+  it("still finds a genuine CPSC recall for a gear search (FDA skip does not break real matches)", async () => {
+    globalThis.fetch = vi.fn(async (url: string) => {
+      if (url.includes("saferproducts.gov")) {
+        return {
+          ok: true,
+          json: async () => [
+            {
+              RecallID: "555",
+              RecallHeading: "Yoyo Stroller Recall",
+              Products: [{ Name: "Yoyo Stroller" }],
+              Hazards: [{ Name: "Fall hazard" }],
+              URL: "https://www.saferproducts.gov/x",
+              RecallDate: "2026-01-01",
+            },
+          ],
+        };
+      }
+      throw new Error(`unexpected fetch: ${url}`);
+    }) as unknown as typeof fetch;
+
+    const result = await checkRecallsForProduct("Yoyo Stroller");
+
+    expect(result?.title).toBe("Yoyo Stroller Recall");
+    expect(result?.source).toBe("cpsc");
+  });
+
+  it("known limitation, documented not silently assumed away: a bare ambiguous brand word with no category signal can still surface an unrelated FDA food match", async () => {
+    globalThis.fetch = vi.fn(async (url: string) => {
+      if (url.includes("saferproducts.gov")) return { ok: true, json: async () => [] };
+      if (url.includes("api.fda.gov")) {
+        return {
+          ok: true,
+          json: async () => ({
+            results: [
+              {
+                recall_number: "F-9001",
+                product_description: "YOYO GUMMY GRAPE 3.5 OZ POUCH",
+                reason_for_recall: "Undeclared allergen",
+                recall_initiation_date: "2026-05-01",
+              },
+            ],
+          }),
+        };
+      }
+      throw new Error(`unexpected fetch: ${url}`);
+    }) as unknown as typeof fetch;
+
+    const result = await checkRecallsForProduct("Yoyo");
+
+    // This still happens today: "Yoyo" alone has no category keyword, so
+    // isLikelyNonFoodProduct can't tell it apart from a food brand, and
+    // fuzzyMatchProduct's single-token branch is a plain whole-word match
+    // with no further disambiguation. Encoding this as a passing assertion
+    // (rather than leaving it unverified) so a future change to either
+    // function has to consciously decide to change this behavior.
+    expect(result?.source).toBe("fda");
+    expect(result?.title).toContain("YOYO GUMMY GRAPE");
+  });
+
+  it("still queries FDA (and finds a real formula recall) for an actual food/formula search", async () => {
+    globalThis.fetch = vi.fn(async (url: string) => {
+      if (url.includes("saferproducts.gov")) return { ok: true, json: async () => [] };
+      if (url.includes("api.fda.gov")) {
+        return {
+          ok: true,
+          json: async () => ({
+            results: [
+              {
+                recall_number: "F-1234",
+                product_description: "Bobbie Gentle Formula 800g",
+                reason_for_recall: "Possible contamination",
+                recall_initiation_date: "2026-02-01",
+              },
+            ],
+          }),
+        };
+      }
+      throw new Error(`unexpected fetch: ${url}`);
+    }) as unknown as typeof fetch;
+
+    const result = await checkRecallsForProduct("Bobbie Gentle Formula");
+
+    expect(result?.source).toBe("fda");
+    expect(result?.title).toContain("Bobbie Gentle Formula");
   });
 });
