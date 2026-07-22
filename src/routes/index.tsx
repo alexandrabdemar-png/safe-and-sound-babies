@@ -95,7 +95,7 @@ function Index() {
                 className="text-5xl leading-[1.08] sm:text-6xl lg:text-7xl"
               >
                 Stay on top of every{" "}
-                <em style={{ fontStyle: "italic", color: "#9BB2A7" }}>safety</em>
+                <em style={{ fontStyle: "italic", color: "#586C81" }}>safety</em>
                 <br />
                 milestone.
               </h1>
