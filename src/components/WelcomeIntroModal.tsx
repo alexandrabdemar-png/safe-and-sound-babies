@@ -44,7 +44,7 @@ export function WelcomeIntroModal({ open, onDismiss }: { open: boolean; onDismis
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">Welcome to Peace of Mine</DialogTitle>
           <DialogDescription className="font-body text-sm">
-            A quiet way to keep track of your little one's gear and safety — without the mental
+            Keep track of your little one's gear and safety — without the mental
             load. Here's a quick look at what you can do:
           </DialogDescription>
         </DialogHeader>

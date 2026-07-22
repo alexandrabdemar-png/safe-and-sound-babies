@@ -219,7 +219,7 @@ const GROWTH_CHECK_BRACKETS: AgeBracket[] = [
     variants: [
       "Once crawling turns to cruising, stroller and carrier weight limits are worth a fresh look.",
       "Shoes for new walkers should have a thumb's width of room at the toe — worth checking every few weeks at this age.",
-      "Car seat straps need rechecking often around this age — growth here tends to be quick and uneven.",
+      "Car seat straps need rechecking often around this age — growth here tends to be quick and can vary from child to child.",
     ],
   },
   {
