@@ -107,11 +107,6 @@ export const ROOMS: Room[] = [
         label: "Cosmetics and toiletries out of reach",
         minAgeMonths: 9,
       },
-      {
-        key: "bath_outlet_covers_gfi",
-        label:
-          "GFCI outlets near water sources such as sinks and bathtubs shut off power quickly if they detect water contact, and many local codes require them in bathrooms and kitchens — worth checking what applies where you live.",
-      },
       { key: "bath_hair_dryer_away", label: "Hair dryer and appliances unplugged and stored" },
     ],
   },
