@@ -23,6 +23,7 @@ import {
 import { MomentTimeline } from "@/components/MomentTimeline";
 import { SparkleIllustration } from "@/components/EmptyIllustration";
 import { BottomNav } from "@/components/BottomNav";
+import { DailyDiscoveryCard } from "@/components/DailyDiscoveryCard";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -1045,6 +1046,7 @@ function HomePage() {
             safetyTipDismissed={dailyTipDismissed}
             onDismissSafetyTip={dismissDailyTip}
           />
+          <DailyDiscoveryCard dob={child?.date_of_birth ?? null} />
         </div>
       </div>
 
