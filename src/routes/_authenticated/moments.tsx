@@ -70,6 +70,13 @@ function MomentsPage() {
 
   useEffect(() => {
     if (!activeChildId) return;
+    // `cancelled` stops a stale response from toasting or setting state
+    // after the user has already navigated off this page — sonner toasts
+    // render globally, not scoped to the current route, so an unguarded
+    // toast here could appear on whatever screen (e.g. Home) the user has
+    // already moved to. Same bug class as the first-foods.tsx fix — see
+    // that file's mountedRef comment for the reported symptom.
+    let cancelled = false;
     (async () => {
       setLoading(true);
       try {
@@ -81,6 +88,7 @@ function MomentsPage() {
             .eq("id", activeChildId)
             .maybeSingle(),
         ]);
+        if (cancelled) return;
         if (mRes.error) toast.error(mRes.error.message);
         const parsed: ParsedMoment[] = (mRes.data ?? []).map((m: RawMoment) => {
           const { legacyType, displayNotes } = parseLegacyNotes(m.notes);
@@ -91,6 +99,7 @@ function MomentsPage() {
         setChildName(cRes.data?.name ?? "");
         setChildDob(cRes.data?.date_of_birth ?? null);
       } catch (err) {
+        if (cancelled) return;
         // A thrown network/unexpected failure (fetchMilestonesResilient
         // already catches its own — this covers the children query, and
         // is the safety net that keeps the page from being stuck on its
@@ -98,9 +107,12 @@ function MomentsPage() {
         console.error("[moments] failed to load", err);
         toast.error(err instanceof Error ? err.message : "Couldn't load your moments");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [activeChildId]);
 
   const filtered = useMemo(() => {

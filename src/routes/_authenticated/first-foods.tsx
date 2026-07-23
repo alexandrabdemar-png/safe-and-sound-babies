@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, Search, ShieldAlert, Utensils, Loader2, X } from "lucide-react";
@@ -65,6 +65,22 @@ function FirstFoodsPage() {
   const [selectedAllergen, setSelectedAllergen] = useState<Allergen | "">("");
   const [reactionNotes, setReactionNotes] = useState("");
 
+  // Guards every setState/toast in loadData() against firing after the user
+  // has already navigated away — e.g. handleAdd() below re-calls loadData()
+  // as a background refresh after a successful save, unawaited, and if that
+  // resolves (with an error) after the user has already tapped "back to
+  // Home", an un-guarded toast.error would still fire, appearing on
+  // whatever screen they've since navigated to. Reported bug: "Something
+  // went wrong on our end" showing up right after adding food and going
+  // back to Home, even though the save itself had already succeeded.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   async function loadData() {
     let activeId: string | null = null;
     try {
@@ -75,6 +91,8 @@ function FirstFoodsPage() {
       .from("children")
       .select("id, name, date_of_birth")
       .order("created_at", { ascending: true });
+
+    if (!mountedRef.current) return;
 
     if (!kids?.length) {
       // Age-range caregiver roles never create a child — send them to
@@ -103,6 +121,8 @@ function FirstFoodsPage() {
       .eq("child_id", c.id)
       .order("date_introduced", { ascending: false })
       .order("created_at", { ascending: false });
+
+    if (!mountedRef.current) return;
 
     if (error) {
       // Previously silent: a failed read here just left `foods` at its
@@ -164,7 +184,17 @@ function FirstFoodsPage() {
     setShowForm(false);
     setShow4DayCard(true);
     setSaving(false);
-    loadData();
+    // Deliberately not awaited/surfaced as an error toast: the save above
+    // already succeeded and the user has already moved on by the time this
+    // resolves. Previously this called loadData() (which does toast on
+    // failure) unawaited — if the user navigated to Home before this
+    // in-flight re-fetch settled, a transient failure here fired a global
+    // toast that appeared on whatever screen they'd already navigated to,
+    // looking exactly like "hitting back Home broke something" when the
+    // save itself was actually fine.
+    loadData().catch((err) => {
+      console.error("[first-foods] background refresh after save failed:", err);
+    });
   }
 
   const months = ageMonths(child?.date_of_birth ?? null);
