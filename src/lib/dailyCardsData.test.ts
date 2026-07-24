@@ -122,13 +122,34 @@ describe("DAILY_CARDS — data integrity", () => {
     }
   });
 
-  it("non-'Today With Your Child' cards are not age-restricted", () => {
+  it("only 'Today With Your Child' and 'Everyday Moments' cards may carry an age range; every other category stays fully evergreen", () => {
     for (const c of DAILY_CARDS) {
-      if (c.category !== "Today With Your Child") {
+      if (c.category !== "Today With Your Child" && c.category !== "Everyday Moments") {
         expect(c.ageMinMonths).toBeNull();
         expect(c.ageMaxMonths).toBeNull();
       }
     }
+  });
+
+  it("any age range set on an 'Everyday Moments' card is internally consistent (min <= max when both set)", () => {
+    const moments = DAILY_CARDS.filter((c) => c.category === "Everyday Moments");
+    for (const c of moments) {
+      if (c.ageMinMonths !== null && c.ageMaxMonths !== null) {
+        expect(c.ageMinMonths).toBeLessThanOrEqual(c.ageMaxMonths);
+      }
+    }
+  });
+
+  it("at least some 'Everyday Moments' cards are age-scoped and at least some remain fully evergreen", () => {
+    // Regression: reported bug — a pre-verbal 10-month-old was shown "One
+    // more bedtime story" (assumes the child requests a book by name).
+    // Everyday Moments cards that assume a specific developmental skill
+    // now carry an age range; ones that genuinely fit any age stay null.
+    const moments = DAILY_CARDS.filter((c) => c.category === "Everyday Moments");
+    const ageScoped = moments.filter((c) => c.ageMinMonths !== null || c.ageMaxMonths !== null);
+    const evergreen = moments.filter((c) => c.ageMinMonths === null && c.ageMaxMonths === null);
+    expect(ageScoped.length).toBeGreaterThan(0);
+    expect(evergreen.length).toBeGreaterThan(0);
   });
 
   it("every holiday-tagged card's season is 'all' (holiday window already scopes it in time)", () => {

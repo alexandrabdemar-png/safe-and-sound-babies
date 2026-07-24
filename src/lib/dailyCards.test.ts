@@ -123,4 +123,28 @@ describe("pickDailyCard", () => {
       expect(result.id).not.toBe(1);
     }
   });
+
+  it("regression: an age-scoped card outside 'Today With Your Child' (e.g. Everyday Moments) is also gated by age", () => {
+    // Reported bug: a 10-month-old (pre-verbal) was shown an "Everyday
+    // Moments" card about requesting a bedtime book by name — that card
+    // now carries an ageMinMonths, and must be excluded for a 10mo child
+    // the same way an age-scoped "Today With Your Child" card would be.
+    const bedtimeBookCard = card({
+      id: 1,
+      category: "Everyday Moments",
+      ageMinMonths: 18,
+      ageMaxMonths: null,
+    });
+    const evergreenCard = card({ id: 2, category: "Everyday Moments" });
+    const lib = [bedtimeBookCard, evergreenCard];
+
+    expect(isCardEligible(bedtimeBookCard, new Date(2026, 0, 1), 10)).toBe(false);
+    expect(isCardEligible(bedtimeBookCard, new Date(2026, 0, 1), 20)).toBe(true);
+    expect(isCardEligible(evergreenCard, new Date(2026, 0, 1), 10)).toBe(true);
+
+    for (let doy = 1; doy <= 10; doy++) {
+      const result = pickDailyCard(lib, new Date(2026, 0, 1), 10, () => doy);
+      expect(result.id).toBe(2);
+    }
+  });
 });

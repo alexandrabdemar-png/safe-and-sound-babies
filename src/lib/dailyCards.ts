@@ -132,17 +132,23 @@ function isHolidayActive(holiday: Holiday, date: Date): boolean {
  * True when `card` is eligible to show on `date` for a child whose age in
  * months is `ageMonths` (null = no child profile / evergreen browsing).
  *
- *  - "Today With Your Child" cards require an age match; with no profile
- *    (ageMonths === null) they're excluded entirely — evergreen browsing
- *    falls back to the other five categories, per spec ("if it's a
- *    general profile these can be more evergreen").
+ *  - Any card with an ageMinMonths/ageMaxMonths set is age-scoped — not
+ *    just "Today With Your Child" (which always has one), but also any
+ *    other category's card where the content assumes a skill the child
+ *    may not have yet (e.g. an "Everyday Moments" card about requesting a
+ *    bedtime book by name doesn't fit a pre-verbal 10-month-old). With no
+ *    profile (ageMonths === null), every age-scoped card is excluded —
+ *    evergreen browsing falls back to cards with no age range at all, per
+ *    spec ("if it's a general profile these can be more evergreen").
  *  - A card with a holiday only shows within that holiday's window.
  *  - A card with a specific season (not "all") only shows during that
  *    calendar season.
- *  - Neither restricts if season is "all" and holiday is null.
+ *  - None of these restrict a card with no age range, season "all", and
+ *    no holiday.
  */
 export function isCardEligible(card: DailyCard, date: Date, ageMonths: number | null): boolean {
-  if (card.category === "Today With Your Child") {
+  const isAgeScoped = card.ageMinMonths !== null || card.ageMaxMonths !== null;
+  if (isAgeScoped) {
     if (ageMonths === null) return false;
     if (card.ageMinMonths !== null && ageMonths < card.ageMinMonths) return false;
     if (card.ageMaxMonths !== null && ageMonths > card.ageMaxMonths) return false;
@@ -178,7 +184,11 @@ export function pickDailyCard(
     eligible.length > 0
       ? eligible
       : library.filter(
-          (c) => c.season === "all" && c.holiday === null && c.category !== "Today With Your Child",
+          (c) =>
+            c.season === "all" &&
+            c.holiday === null &&
+            c.ageMinMonths === null &&
+            c.ageMaxMonths === null,
         );
   const safePool = pool.length > 0 ? pool : library;
   const doy = dayOfYearFn(date);

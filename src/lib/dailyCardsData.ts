@@ -3533,7 +3533,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 321,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 18,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3555,7 +3555,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 323,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 12,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3632,7 +3632,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 330,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 18,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3654,7 +3654,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 332,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 12,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3665,7 +3665,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 333,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 18,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3698,7 +3698,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 336,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 12,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3720,7 +3720,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 338,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 12,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3753,7 +3753,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 341,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 9,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3764,7 +3764,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 342,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 9,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3797,7 +3797,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 345,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 6,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3808,7 +3808,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 346,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 18,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3830,7 +3830,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 348,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 9,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3841,7 +3841,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 349,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 24,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3852,7 +3852,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 350,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 18,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3874,7 +3874,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 352,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 7,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3885,7 +3885,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 353,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 6,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3896,7 +3896,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 354,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 12,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3918,7 +3918,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 356,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 18,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3929,7 +3929,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 357,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 18,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3951,7 +3951,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 359,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 6,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3962,7 +3962,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 360,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 18,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -3973,7 +3973,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 361,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 12,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -4006,7 +4006,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 364,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 9,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
@@ -4017,7 +4017,7 @@ export const DAILY_CARDS: DailyCard[] = [
   {
     id: 365,
     category: "Everyday Moments",
-    ageMinMonths: null,
+    ageMinMonths: 12,
     ageMaxMonths: null,
     season: "all",
     holiday: null,
