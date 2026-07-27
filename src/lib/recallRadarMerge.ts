@@ -43,9 +43,16 @@ export function mapCpscResults(cpscResults: CpscRecall[]): RadarRecall[] {
       id: r.RecallID.startsWith("fda-") ? r.RecallID : `cpsc-${r.RecallID}`,
       source: r.RecallID.startsWith("fda-") ? "fda" : "cpsc",
       title: r.RecallHeading ?? "Recall notice",
-      description: r.Products?.map((p) => p.Description || p.Name).filter(Boolean).join("; ") ?? "",
+      description:
+        r.Products?.map((p) => p.Description || p.Name)
+          .filter(Boolean)
+          .join("; ") ?? "",
       dateLabel: r.RecallDate
-        ? new Date(r.RecallDate).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+        ? new Date(r.RecallDate).toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })
         : null,
       sortDate: r.RecallDate ? new Date(r.RecallDate).getTime() : 0,
       url: r.URL ?? "",
@@ -77,13 +84,63 @@ export function mapExtraResults(rows: ExtraRecallRow[]): RadarRecall[] {
       title: r.title ?? "Recall notice",
       description: r.hazard ?? r.description ?? "",
       dateLabel: r.recall_date
-        ? new Date(r.recall_date).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+        ? new Date(r.recall_date).toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })
         : null,
       sortDate: r.recall_date ? new Date(r.recall_date).getTime() : 0,
       url: r.url ?? "",
       official: r.official,
       lotPattern: r.lot_pattern ?? null,
     }));
+}
+
+export type RecallFetchStatus = {
+  /** Set only when nothing loaded at all — recall-radar.tsx shows a
+   * blocking error state instead of the list in this case. */
+  error: string | null;
+  /** Human-readable source labels that failed to load, shown as a
+   * dismissible degraded-data banner above an otherwise-usable list. */
+  degradedSources: string[];
+};
+
+/**
+ * Decides what recall-radar.tsx should show given which of its two
+ * sources failed and how many recalls ended up merged — extracted so this
+ * decision (blocking error vs. degraded banner vs. nothing) is unit
+ * testable independent of React/network calls.
+ *
+ * Note on wording: "CPSC & FDA" genuinely is a live API fetch, so a
+ * failure there really did go unanswered. "USDA FSIS, NHTSA, Health
+ * Canada & EU Safety Gate" is different — those aren't fetched live at
+ * all; they're read from our own `recalls` table, pre-synced daily by a
+ * scheduled job. A failure there means *our database read* failed, not
+ * that those agencies "didn't respond" — the caller's copy should reflect
+ * that rather than implying a live external timeout for a source that was
+ * never contacted live in the first place.
+ */
+export function classifyRecallFetchStatus(
+  cpscFailed: boolean,
+  extraFailed: boolean,
+  mergedCount: number,
+): RecallFetchStatus {
+  const failedSources: string[] = [];
+  if (cpscFailed) failedSources.push("CPSC & FDA");
+  if (extraFailed) failedSources.push("USDA FSIS, NHTSA, Health Canada & EU Safety Gate");
+
+  if (failedSources.length === 0) {
+    return { error: null, degradedSources: [] };
+  }
+  if (mergedCount === 0) {
+    return {
+      error:
+        "Couldn't reach the recall databases right now. Try again in a moment or visit cpsc.gov/Recalls directly.",
+      degradedSources: [],
+    };
+  }
+  return { error: null, degradedSources: failedSources };
 }
 
 /** Dedupe by lowercased title (across sources) and sort newest-first. */
