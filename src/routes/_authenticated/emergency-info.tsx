@@ -119,14 +119,30 @@ function EmergencyInfoPage() {
     setInfo((prev) => ({ ...prev, [field]: value }));
   }
 
+  // Shared by saveInfo() and generateLink() — throws on failure so each
+  // caller can report it in its own words, rather than duplicating the
+  // upsert. Extracted because generateLink() must also run this: the
+  // public /api/public/emergency-share endpoint 404s ("This link is
+  // invalid or has expired.") whenever no emergency_info row exists yet
+  // for the child, and the "Create link" button previously had no guard
+  // requiring "Save" to be clicked first — a parent could generate and
+  // share a link before ever saving the form, and it would look fine on
+  // their end (a real URL, no error) while permanently 404ing for
+  // whoever opened it, even though the link itself was valid, unexpired,
+  // and unrevoked. Reported bug: "this share link is not working."
+  async function upsertEmergencyInfo() {
+    if (!child || !userId) return;
+    const { error } = await supabase
+      .from("emergency_info")
+      .upsert({ ...info, child_id: child.id, user_id: userId }, { onConflict: "child_id" });
+    if (error) throw error;
+  }
+
   async function saveInfo() {
     if (!child || !userId) return;
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from("emergency_info")
-        .upsert({ ...info, child_id: child.id, user_id: userId }, { onConflict: "child_id" });
-      if (error) throw error;
+      await upsertEmergencyInfo();
       toast.success("Saved");
     } catch (err) {
       console.error("emergency_info save failed:", err);
@@ -139,6 +155,8 @@ function EmergencyInfoPage() {
     if (!child || !userId) return;
     setGenerating(true);
     try {
+      await upsertEmergencyInfo();
+
       const rawToken = generateShareToken();
       const tokenHash = await hashShareToken(rawToken);
 
