@@ -1,6 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
-import { CheckCircle2, Circle, ClipboardList, ArrowLeft, Gift, Luggage, HeartPulse, Home, X } from "lucide-react";
+import {
+  CheckCircle2,
+  Circle,
+  ClipboardList,
+  ArrowLeft,
+  Gift,
+  Luggage,
+  HeartPulse,
+  Home,
+  X,
+} from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
@@ -63,7 +74,9 @@ function ChecklistsPage() {
 
   useEffect(() => {
     async function init() {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const uid = session?.user?.id ?? null;
       setUserId(uid);
       if (uid) {
@@ -93,16 +106,39 @@ function ChecklistsPage() {
 
     if (wasCompleted) {
       hapticLight();
-      await supabase
+      const { error } = await supabase
         .from("checklist_completions")
         .delete()
         .eq("user_id", userId)
         .eq("item_key", key);
+      if (error) {
+        console.error("[checklists] failed to un-check item:", error.message);
+        // Roll the optimistic update back so the UI reflects what's
+        // actually saved, and let the user know rather than silently
+        // showing an unchecked box that's still checked in the database.
+        setCompleted((prev) => new Set(prev).add(key));
+        toast.error("Couldn't save that — try again.");
+      }
     } else {
       hapticSuccess();
-      await supabase
+      const { error } = await supabase
         .from("checklist_completions")
-        .upsert({ user_id: userId, item_key: key });
+        // onConflict matches the table's actual unique constraint
+        // (user_id, item_key) explicitly — the previous unqualified
+        // upsert() defaulted to PostgREST's primary-key conflict target
+        // (id, which is never supplied here), so a rapid re-check of the
+        // same item could throw a duplicate-key error instead of the
+        // idempotent update this is meant to be.
+        .upsert({ user_id: userId, item_key: key }, { onConflict: "user_id,item_key" });
+      if (error) {
+        console.error("[checklists] failed to check off item:", error.message);
+        setCompleted((prev) => {
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
+        toast.error("Couldn't save that — try again.");
+      }
     }
   }
 
@@ -117,7 +153,12 @@ function ChecklistsPage() {
     <div className="min-h-screen pb-28" style={{ backgroundColor: "#FAF7F2" }}>
       <div className="mx-auto max-w-md px-4 pt-8">
         {/* Back to Home */}
-        <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2 rounded-full font-body text-xs">
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="-ml-2 mb-2 rounded-full font-body text-xs"
+        >
           <Link to="/home">
             <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Home
           </Link>
@@ -158,11 +199,19 @@ function ChecklistsPage() {
         {/* Overall progress */}
         {!loading && (
           <div className="mb-8">
-            <div className="mb-2 flex justify-between font-body text-sm" style={{ color: "#8A8078" }}>
-              <span>{totalCompleted} of {totalItems} items complete</span>
+            <div
+              className="mb-2 flex justify-between font-body text-sm"
+              style={{ color: "#8A8078" }}
+            >
+              <span>
+                {totalCompleted} of {totalItems} items complete
+              </span>
               <span>{overallPct}%</span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full" style={{ backgroundColor: "#E8E2DA" }}>
+            <div
+              className="h-2 w-full overflow-hidden rounded-full"
+              style={{ backgroundColor: "#E8E2DA" }}
+            >
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{ width: `${overallPct}%`, backgroundColor: "#C4785A" }}
@@ -174,9 +223,11 @@ function ChecklistsPage() {
         {/* Quick links to special checklists */}
         <div className="mb-6 grid grid-cols-2 gap-3">
           {!homecomingCardDismissed && (
-            <Link to="/homecoming-checklist"
+            <Link
+              to="/homecoming-checklist"
               className="relative flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[#C4785A]/50"
-              style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}>
+              style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}
+            >
               <button
                 type="button"
                 onClick={dismissHomecomingCard}
@@ -185,52 +236,88 @@ function ChecklistsPage() {
               >
                 <X className="h-3.5 w-3.5" />
               </button>
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: "#F5F0E8" }}>
+              <span
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+                style={{ backgroundColor: "#F5F0E8" }}
+              >
                 <Home className="h-5 w-5" style={{ color: "#C4785A" }} />
               </span>
               <div>
-                <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>Bringing Baby Home</p>
-                <p className="font-body text-xs" style={{ color: "#8A8078" }}>For expecting parents</p>
+                <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>
+                  Bringing Baby Home
+                </p>
+                <p className="font-body text-xs" style={{ color: "#8A8078" }}>
+                  For expecting parents
+                </p>
               </div>
             </Link>
           )}
-          <Link to="/travel-checklist"
+          <Link
+            to="/travel-checklist"
             className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[#C4785A]/50"
-            style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}>
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: "#F5F0E8" }}>
+            style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}
+          >
+            <span
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+              style={{ backgroundColor: "#F5F0E8" }}
+            >
               <Luggage className="h-5 w-5" style={{ color: "#C4785A" }} />
             </span>
             <div>
-              <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>Travel Mode</p>
-              <p className="font-body text-xs" style={{ color: "#8A8078" }}>Packing + hotel safety</p>
+              <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>
+                Travel Mode
+              </p>
+              <p className="font-body text-xs" style={{ color: "#8A8078" }}>
+                Packing + hotel safety
+              </p>
             </div>
           </Link>
-          <Link to="/registry-check"
+          <Link
+            to="/registry-check"
             className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[#C4785A]/50"
-            style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}>
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: "#F5F0E8" }}>
+            style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}
+          >
+            <span
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+              style={{ backgroundColor: "#F5F0E8" }}
+            >
               <Gift className="h-5 w-5" style={{ color: "#C4785A" }} />
             </span>
             <div>
-              <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>Registry Check</p>
-              <p className="font-body text-xs" style={{ color: "#8A8078" }}>Recall check before you add</p>
+              <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>
+                Registry Check
+              </p>
+              <p className="font-body text-xs" style={{ color: "#8A8078" }}>
+                Recall check before you add
+              </p>
             </div>
           </Link>
-          <Link to="/emergency-info"
+          <Link
+            to="/emergency-info"
             className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[#C4785A]/50"
-            style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}>
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: "#F5F0E8" }}>
+            style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}
+          >
+            <span
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+              style={{ backgroundColor: "#F5F0E8" }}
+            >
               <HeartPulse className="h-5 w-5" style={{ color: "#C4785A" }} />
             </span>
             <div>
-              <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>Emergency Info</p>
-              <p className="font-body text-xs" style={{ color: "#8A8078" }}>Card for a babysitter or sitter</p>
+              <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>
+                Emergency Info
+              </p>
+              <p className="font-body text-xs" style={{ color: "#8A8078" }}>
+                Card for a babysitter or sitter
+              </p>
             </div>
           </Link>
         </div>
 
         {loading ? (
-          <p className="font-body text-sm" style={{ color: "#8A8078" }}>Loading checklists...</p>
+          <p className="font-body text-sm" style={{ color: "#8A8078" }}>
+            Loading checklists...
+          </p>
         ) : (
           <div className="flex flex-col gap-6">
             {visibleRooms.map((room) => {
@@ -243,7 +330,10 @@ function ChecklistsPage() {
                   className="rounded-2xl border"
                   style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}
                 >
-                  <div className="flex items-center justify-between border-b px-5 py-4" style={{ borderColor: "#E8E2DA" }}>
+                  <div
+                    className="flex items-center justify-between border-b px-5 py-4"
+                    style={{ borderColor: "#E8E2DA" }}
+                  >
                     <h2 className="font-display text-lg font-semibold" style={{ color: "#3D2B1F" }}>
                       {room.label}
                     </h2>
@@ -251,7 +341,10 @@ function ChecklistsPage() {
                       <span className="font-body text-xs" style={{ color: "#8A8078" }}>
                         {roomCompleted}/{room.items.length}
                       </span>
-                      <div className="h-1.5 w-16 overflow-hidden rounded-full" style={{ backgroundColor: "#E8E2DA" }}>
+                      <div
+                        className="h-1.5 w-16 overflow-hidden rounded-full"
+                        style={{ backgroundColor: "#E8E2DA" }}
+                      >
                         <div
                           className="h-full rounded-full transition-all duration-300"
                           style={{ width: `${roomPct}%`, backgroundColor: "#C4785A" }}
@@ -268,7 +361,9 @@ function ChecklistsPage() {
                           key={item.key}
                           onClick={() => toggleItem(item.key)}
                           className="flex w-full items-start gap-3 px-5 py-3.5 text-left transition-colors hover:bg-gray-50/50 active:bg-gray-100/50"
-                          style={idx === room.items.length - 1 ? { borderRadius: "0 0 1rem 1rem" } : {}}
+                          style={
+                            idx === room.items.length - 1 ? { borderRadius: "0 0 1rem 1rem" } : {}
+                          }
                         >
                           {done ? (
                             <CheckCircle2
