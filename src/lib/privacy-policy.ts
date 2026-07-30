@@ -61,7 +61,7 @@ We do not sell, rent, or share your personal data with advertisers, data brokers
 4. HOW LONG WE KEEP YOUR DATA
 ──────────────────────────────────────
 
-Your data is kept for as long as your account is active. If you delete your account (see Section 5), all of your personal data is permanently deleted from our database within 30 days.
+Your data is kept for as long as your account is active. If you delete your account (see Section 5), all of your personal data is permanently deleted from our database immediately.
 
 Anonymised aggregate statistics (counts only, no personal data) may be retained indefinitely.
 
@@ -73,7 +73,7 @@ You have full control over your data:
 
 • Delete a child — Go to Profile → tap the trash icon next to the child's name. This permanently deletes that child's profile, all measurements, milestones, and associated product alerts.
 
-• Delete your account and all data — Email us at ${SUPPORT_EMAIL} with the subject line "Delete my account". We will permanently delete your account and all associated data within 30 days and confirm by email when complete.
+• Delete your account and all data — Go to Profile → Our Privacy Promise → Delete my account. This immediately and permanently deletes your account and all associated data — no email required. If you'd rather request deletion by email instead, you can also write to ${SUPPORT_EMAIL} with the subject line "Delete my account".
 
 • Export your data — Pro subscribers can download a complete JSON export of all their data at any time from the Profile page. Use this before requesting deletion if you want a copy.
 
@@ -96,7 +96,7 @@ Peace of Mine is an app for parents and caregivers to track their own children's
 8. CHANGES TO THIS POLICY
 ──────────────────────────────────────
 
-If we make a material change to this policy we will notify you via the email address on your account at least 14 days before the change takes effect.
+If we make a material change to this policy we will show a notice in the app at least 14 days before the change takes effect.
 
 ──────────────────────────────────────
 9. CONTACT
