@@ -307,13 +307,6 @@ function MomentsPage() {
                       >
                         {entry}
                       </div>
-                      <span
-                        className="relative z-10 mt-[18px] h-2 w-2 shrink-0 rounded-full"
-                        style={{
-                          backgroundColor: "var(--background)",
-                          border: `1.5px solid ${MOMENT_ICON_ACCENT}`,
-                        }}
-                      />
                       <div className={onLeft ? "order-2 w-1/2" : "w-1/2"} />
                     </li>
                   );
