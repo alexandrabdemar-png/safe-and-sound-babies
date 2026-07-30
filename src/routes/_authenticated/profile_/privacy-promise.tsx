@@ -19,8 +19,8 @@ const PROMISES = [
   },
   {
     icon: "🔔",
-    title: "We only contact you for safety",
-    body: "The only emails and push notifications we send are safety alerts — recalls, replacement reminders, and urgent product notices. No marketing without your explicit opt-in.",
+    title: "We only contact you for what matters",
+    body: "Emails and push notifications are limited to safety alerts — recalls, replacement reminders, urgent product notices — and essential account activity, like a caregiver invite. No marketing without your explicit opt-in.",
   },
   {
     icon: "🗑️",
@@ -40,14 +40,19 @@ function PrivacyPromisePage() {
   const [deleting, setDeleting] = useState(false);
 
   async function handleDeleteAccount() {
-    if (!confirming) { setConfirming(true); return; }
+    if (!confirming) {
+      setConfirming(true);
+      return;
+    }
     setDeleting(true);
     try {
       const { deleteMyAccount } = await import("@/utils/deleteAccount.functions");
       const result = await deleteMyAccount();
       await supabase.auth.signOut();
       if (result.stripeErrors && result.stripeErrors.length > 0) {
-        toast.warning("Account deleted, but we couldn't cancel your subscription automatically. Please contact support.");
+        toast.warning(
+          "Account deleted, but we couldn't cancel your subscription automatically. Please contact support.",
+        );
       } else {
         toast.success("All your data has been removed.");
       }
@@ -58,7 +63,6 @@ function PrivacyPromisePage() {
       setConfirming(false);
     }
   }
-
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -79,9 +83,7 @@ function PrivacyPromisePage() {
       </header>
 
       <main className="mx-auto w-full max-w-md flex-1 px-5 py-6 sm:px-6">
-        <p className="mb-2 font-body text-sm text-muted-foreground">
-          Plain language. No legalese.
-        </p>
+        <p className="mb-2 font-body text-sm text-muted-foreground">Plain language. No legalese.</p>
 
         <div className="space-y-3">
           {PROMISES.map((p) => (
@@ -90,7 +92,9 @@ function PrivacyPromisePage() {
                 <span className="text-xl leading-none">{p.icon}</span>
                 <div>
                   <p className="font-display text-sm font-semibold">{p.title}</p>
-                  <p className="mt-1 font-body text-sm leading-relaxed text-muted-foreground">{p.body}</p>
+                  <p className="mt-1 font-body text-sm leading-relaxed text-muted-foreground">
+                    {p.body}
+                  </p>
                 </div>
               </div>
             </div>
@@ -104,7 +108,8 @@ function PrivacyPromisePage() {
             <p className="font-display text-sm font-semibold text-destructive">Delete my account</p>
           </div>
           <p className="font-body text-xs text-muted-foreground mb-4">
-            This permanently removes all your children's profiles, products, milestones, checklist progress, and alerts. This cannot be undone.
+            This permanently removes all your children's profiles, products, milestones, checklist
+            progress, and alerts. This cannot be undone.
           </p>
           {confirming ? (
             <div className="space-y-2">
@@ -117,7 +122,13 @@ function PrivacyPromisePage() {
                 disabled={deleting}
                 onClick={handleDeleteAccount}
               >
-                {deleting ? "Deleting…" : <><Trash2 className="mr-2 h-4 w-4" /> Yes, delete everything</>}
+                {deleting ? (
+                  "Deleting…"
+                ) : (
+                  <>
+                    <Trash2 className="mr-2 h-4 w-4" /> Yes, delete everything
+                  </>
+                )}
               </Button>
               <Button
                 variant="ghost"
