@@ -36,10 +36,8 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { useActiveChild } from "@/hooks/useActiveChild";
-import { CATEGORIES, guessCategoryFromText, type CategoryKey } from "@/lib/productCategories";
-import { ProductCatalogSearch } from "@/components/ProductCatalogSearch";
+import { CATEGORIES, type CategoryKey } from "@/lib/productCategories";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
-import type { CatalogSearchResult } from "@/lib/searchProductCatalog";
 import { resolveCarSeatReplaceAt } from "@/lib/carSeatExpiration";
 import { nextPacifierSizeUpDate } from "@/lib/pacifierSizeUp";
 
@@ -139,19 +137,6 @@ function NewProductPage() {
     productName: string;
     productId: string;
   } | null>(null);
-
-  // Picking a catalog search result prefills the manual form below rather
-  // than saving directly — car seats in particular need a manufacturer
-  // expiry date the search result can't supply, and reusing the manual
-  // form's existing, already-tested save path avoids a second one.
-  function handleCatalogPick(result: CatalogSearchResult) {
-    setName(result.name);
-    setBrand(result.brand ?? "");
-    setBarcode(result.barcode ?? "");
-    const guessed = guessCategoryFromText(`${result.category ?? ""} ${result.name}`);
-    if (guessed) setCategory(guessed as CategoryKey);
-    toast.success("Details filled in — review and save below");
-  }
 
   const computedReplaceAt = useMemo(() => {
     if (category === "car_seat") return resolveCarSeatReplaceAt(carSeatExpiry, carSeatManufactureDate) ?? "";
@@ -288,20 +273,6 @@ function NewProductPage() {
           <p className="-mt-2 font-body text-[11px] leading-relaxed text-muted-foreground/70">
             Product information is matched using trusted databases when available. Please verify that the model and details match your product before relying on reminders.
           </p>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="font-body text-xs text-muted-foreground">
-              or browse products
-            </span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
-          {/* Product catalog search — separate from barcode scanning and
-              from the AI safety-guidance search above: this searches the
-              shared barcode-lookup cache plus a live product database. */}
-          <ProductCatalogSearch onPick={handleCatalogPick} />
 
           {/* Divider */}
           <div className="flex items-center gap-3">
