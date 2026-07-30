@@ -81,4 +81,38 @@ describe("ROOMS", () => {
       expect(isItemRelevantForAge(item, null)).toBe(true);
     }
   });
+
+  // ── "Show full checklist" vs "Show age-relevant items only" toggle
+  // (checklists.tsx: filterAge = showAllAges ? null : ageMonths) — this
+  // mirrors that exact computation against the real ROOMS data, not just
+  // the pure isItemRelevantForAge function in isolation, since that's what
+  // was actually asked to be confirmed working.
+  function visibleCount(ageMonths: number | null): number {
+    return allItems.filter((item) => isItemRelevantForAge(item, ageMonths)).length;
+  }
+
+  it("regression: toggling showAllAges on actually reveals more items for a young child (real data, not just the pure filter)", () => {
+    const ageRelevantOnly = visibleCount(3);
+    const fullChecklist = visibleCount(null);
+    expect(fullChecklist).toBeGreaterThan(ageRelevantOnly);
+    expect(fullChecklist).toBe(allItems.length);
+  });
+
+  it("known data characteristic, not a wiring bug: no item currently has a minAgeMonths above 9, so the toggle is a no-op for any child 9mo or older", () => {
+    // Confirmed by testing every age from 0-12mo against the real ROOMS
+    // data: a 10-month-old (the age that prompted this test) already sees
+    // every single item, identical to "Show full checklist" — the filter
+    // mechanism itself is working correctly (see the newborn/9mo tests
+    // above), there's just no content currently gated past 9 months for
+    // it to hide. If a checklist item should only be relevant once a
+    // child is walking/older-toddler, it needs a minAgeMonths added — this
+    // test will start failing (in the good way) the day one is.
+    const highestMin = Math.max(
+      0,
+      ...allItems.map((i) => i.minAgeMonths).filter((v): v is number => v !== undefined),
+    );
+    expect(highestMin).toBeLessThanOrEqual(9);
+    expect(visibleCount(9)).toBe(allItems.length);
+    expect(visibleCount(10)).toBe(allItems.length);
+  });
 });
