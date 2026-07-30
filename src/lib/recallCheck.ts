@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { guessCategoryFromText } from "@/lib/productCategories";
+import { isColumnUnavailableError } from "@/lib/errors";
 
 /**
  * recallCheck.ts — Inline and background product recall detection
@@ -151,7 +152,12 @@ const NOISE_WORDS = new Set([
  */
 export function fuzzyMatchProduct(productName: string, recallText: string): boolean {
   const text = recallText.toLowerCase();
-  const textTokens = new Set(text.replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter(Boolean));
+  const textTokens = new Set(
+    text
+      .replace(/[^a-z0-9 ]+/g, " ")
+      .split(/\s+/)
+      .filter(Boolean),
+  );
   const tokens = productName
     .toLowerCase()
     .replace(/[^a-z0-9 ]+/g, " ")
@@ -190,7 +196,10 @@ export function fuzzyMatchProduct(productName: string, recallText: string): bool
  * "AB1234", and an exact single-code match either direction, without
  * guessing at ranges it can't reliably interpret.
  */
-export function lotMatches(productLot: string | null | undefined, recallLotPattern: string | null | undefined): boolean {
+export function lotMatches(
+  productLot: string | null | undefined,
+  recallLotPattern: string | null | undefined,
+): boolean {
   if (!productLot || !recallLotPattern) return false;
   const normalize = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]+/g, "");
   const a = normalize(productLot);
@@ -522,7 +531,10 @@ export async function recordRecallInDb(
  * happened and was already shown to the parent, so a failure to persist
  * the timestamp shouldn't surface as an error to them.
  */
-export async function stampRecallCheckedAt(productId: string, checkedAt: string = new Date().toISOString()): Promise<void> {
+export async function stampRecallCheckedAt(
+  productId: string,
+  checkedAt: string = new Date().toISOString(),
+): Promise<void> {
   try {
     const { error } = await supabase
       .from("products")
@@ -531,5 +543,82 @@ export async function stampRecallCheckedAt(productId: string, checkedAt: string 
     if (error) throw error;
   } catch (err) {
     console.error("[recall-db] failed to stamp recall_checked_at for product", productId, err);
+  }
+}
+
+type ResilientProductRow = {
+  id: string;
+  name: string;
+  brand: string | null;
+  size: string | null;
+  category: string | null;
+  added_at: string | null;
+  purchased_at: string | null;
+  predicted_sizeup_date: string | null;
+  predicted_replacement_date: string | null;
+  recalled: boolean;
+  child_id: string | null;
+  recall_checked_at: string | null;
+  lot_number: string | null;
+};
+
+const PRODUCT_DETAIL_BASE_SELECT =
+  "id, name, brand, size, category, added_at, purchased_at, predicted_sizeup_date, predicted_replacement_date, recalled, child_id";
+
+/**
+ * Reads a single product for the detail screen, tolerating the live
+ * column-unavailable bug the same way fetchMilestonesResilient does for
+ * the `icon` column: `recall_checked_at` and `lot_number` are both recent
+ * additions (see 20260715000000_recall_checked_at.sql and
+ * 20260719030000_recall_lot_matching.sql) and a database that hasn't
+ * picked up those migrations yet returns "column products.recall_checked_at
+ * does not exist" — a raw Postgres error that was previously shown
+ * verbatim to the parent (reported bug) instead of the page just loading
+ * without the "last synced" note and lot-matching feature.
+ */
+export async function fetchProductDetailResilient(productId: string): Promise<{
+  data: ResilientProductRow | null;
+  error: { message: string; code?: string | null } | null;
+}> {
+  try {
+    const first = await supabase
+      .from("products")
+      .select(`${PRODUCT_DETAIL_BASE_SELECT}, recall_checked_at, lot_number`)
+      .eq("id", productId)
+      .maybeSingle();
+
+    if (
+      first.error &&
+      (isColumnUnavailableError("recall_checked_at", first.error) ||
+        isColumnUnavailableError("lot_number", first.error))
+    ) {
+      console.error(
+        "[fetchProductDetailResilient] recall_checked_at/lot_number unavailable — retrying without them",
+        first.error,
+      );
+      const retry = await supabase
+        .from("products")
+        .select(PRODUCT_DETAIL_BASE_SELECT)
+        .eq("id", productId)
+        .maybeSingle();
+      return {
+        data: retry.data
+          ? ({ ...retry.data, recall_checked_at: null, lot_number: null } as ResilientProductRow)
+          : null,
+        error: retry.error,
+      };
+    }
+    return first as unknown as {
+      data: ResilientProductRow | null;
+      error: { message: string; code?: string | null } | null;
+    };
+  } catch (err) {
+    console.error("[fetchProductDetailResilient] network/unexpected failure", err);
+    return {
+      data: null,
+      error: {
+        message: err instanceof Error ? err.message : "Network error — couldn't load this product",
+      },
+    };
   }
 }

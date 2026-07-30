@@ -1,4 +1,10 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
+
+const mockFrom = vi.fn();
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: { from: (...args: unknown[]) => mockFrom(...args) },
+}));
+
 import {
   isAllowedRecallUrl,
   fetchCpscRecallsForProduct,
@@ -8,7 +14,22 @@ import {
   lotMatches,
   isLikelyNonFoodProduct,
   checkRecallsForProduct,
+  fetchProductDetailResilient,
 } from "./recallCheck";
+
+// Minimal thenable chain mimicking Supabase's query builder — every
+// intermediate call returns the same object, and `await`-ing it at any
+// point resolves to the given {data, error}. Matches the pattern already
+// established in momentIcons.test.ts for the same kind of resilient-fetch
+// function.
+function makeChain(result: { data: unknown; error: unknown }) {
+  const chain = {
+    select: vi.fn(() => chain),
+    eq: vi.fn(() => chain),
+    maybeSingle: vi.fn(() => Promise.resolve(result)),
+  };
+  return chain;
+}
 
 // ── Regression: "Beech-Nut" false-flagged against an unrelated Grizzlies
 // granola recall — reported bug. Root cause: this matcher used raw
@@ -89,10 +110,7 @@ describe("fuzzyMatchProduct — brand-only false positive (live bug report)", ()
       fuzzyMatchProduct("Graco SnugRide Comfort", "Graco Recalls SnugRide Infant Car Seat"),
     ).toBe(false);
     expect(
-      fuzzyMatchProduct(
-        "Graco SnugRide Comfort",
-        "Graco Recalls SnugRide Comfort Infant Car Seat",
-      ),
+      fuzzyMatchProduct("Graco SnugRide Comfort", "Graco Recalls SnugRide Comfort Infant Car Seat"),
     ).toBe(true);
   });
 });
@@ -200,7 +218,9 @@ describe("formatRecallSyncNote", () => {
     });
     expect(note).toContain("Data synced with CPSC.gov");
     expect(note).toContain(expectedDate);
-    expect(note).toContain("always cross-reference critical gear directly on official government recall sites");
+    expect(note).toContain(
+      "always cross-reference critical gear directly on official government recall sites",
+    );
   });
 
   it("returns an honest pending message rather than a fabricated date when null", () => {
@@ -221,7 +241,9 @@ describe("formatRecallSyncNote", () => {
 
   it("always includes the government cross-reference caveat regardless of sync state", () => {
     expect(formatRecallSyncNote(null)).toContain("official government recall sites");
-    expect(formatRecallSyncNote("2026-01-01T00:00:00.000Z")).toContain("official government recall sites");
+    expect(formatRecallSyncNote("2026-01-01T00:00:00.000Z")).toContain(
+      "official government recall sites",
+    );
   });
 });
 
@@ -499,5 +521,147 @@ describe("checkRecallsForProduct — food-vs-gear FDA skip (live bug report: Yoy
 
     expect(result?.source).toBe("fda");
     expect(result?.title).toContain("Bobbie Gentle Formula");
+  });
+});
+
+// ── Regression: reported bug — clicking into a product's detail page (via
+// the "RECALL — tap to review" banner) showed the raw Postgres error
+// "column products.recall_checked_at does not exist" instead of the page
+// loading. Root cause: recall_checked_at and lot_number are both recent
+// columns (see the migrations referenced in fetchProductDetailResilient's
+// doc comment), and the select() for the product detail screen included
+// them unconditionally with no fallback — unlike every other resilient
+// column-add in this codebase (fetchMilestonesResilient for
+// milestones.icon, etc.).
+describe("fetchProductDetailResilient", () => {
+  beforeEach(() => {
+    mockFrom.mockReset();
+  });
+
+  it("returns the product as-is when recall_checked_at/lot_number are available", async () => {
+    mockFrom.mockReturnValue(
+      makeChain({
+        data: {
+          id: "p1",
+          name: "Nuna Bassinet",
+          brand: "Nuna",
+          size: null,
+          category: "bassinet",
+          added_at: "2026-01-01",
+          purchased_at: null,
+          predicted_sizeup_date: null,
+          predicted_replacement_date: null,
+          recalled: true,
+          child_id: "c1",
+          recall_checked_at: "2026-07-01T00:00:00.000Z",
+          lot_number: "AB1234",
+        },
+        error: null,
+      }),
+    );
+
+    const result = await fetchProductDetailResilient("p1");
+
+    expect(result.error).toBeNull();
+    expect(result.data?.recall_checked_at).toBe("2026-07-01T00:00:00.000Z");
+    expect(result.data?.lot_number).toBe("AB1234");
+    expect(mockFrom).toHaveBeenCalledTimes(1);
+  });
+
+  it("regression: retries without recall_checked_at/lot_number and still returns the product when that column isn't live yet", async () => {
+    const columnMissing = makeChain({
+      data: null,
+      error: { message: "column products.recall_checked_at does not exist", code: "42703" },
+    });
+    const succeedsWithoutIt = makeChain({
+      data: {
+        id: "p1",
+        name: "Nuna Bassinet",
+        brand: "Nuna",
+        size: null,
+        category: "bassinet",
+        added_at: "2026-01-01",
+        purchased_at: null,
+        predicted_sizeup_date: null,
+        predicted_replacement_date: null,
+        recalled: true,
+        child_id: "c1",
+      },
+      error: null,
+    });
+    mockFrom.mockReturnValueOnce(columnMissing).mockReturnValueOnce(succeedsWithoutIt);
+
+    const result = await fetchProductDetailResilient("p1");
+
+    expect(result.error).toBeNull();
+    expect(result.data?.id).toBe("p1");
+    expect(result.data?.recall_checked_at).toBeNull();
+    expect(result.data?.lot_number).toBeNull();
+    expect(mockFrom).toHaveBeenCalledTimes(2);
+  });
+
+  it("also retries on the schema-cache-not-reloaded phrasing of the same error, not just the Postgres error code", async () => {
+    const columnMissing = makeChain({
+      data: null,
+      error: {
+        message: "Could not find the 'recall_checked_at' column of 'products' in the schema cache",
+      },
+    });
+    const succeedsWithoutIt = makeChain({
+      data: {
+        id: "p1",
+        name: "Test",
+        brand: null,
+        size: null,
+        category: null,
+        added_at: null,
+        purchased_at: null,
+        predicted_sizeup_date: null,
+        predicted_replacement_date: null,
+        recalled: false,
+        child_id: null,
+      },
+      error: null,
+    });
+    mockFrom.mockReturnValueOnce(columnMissing).mockReturnValueOnce(succeedsWithoutIt);
+
+    const result = await fetchProductDetailResilient("p1");
+
+    expect(result.error).toBeNull();
+    expect(result.data?.id).toBe("p1");
+  });
+
+  it("does not retry and surfaces the real error for an unrelated failure (e.g. permission denied)", async () => {
+    mockFrom.mockReturnValue(
+      makeChain({
+        data: null,
+        error: { message: "permission denied for table products", code: "42501" },
+      }),
+    );
+
+    const result = await fetchProductDetailResilient("p1");
+
+    expect(result.error?.message).toBe("permission denied for table products");
+    expect(mockFrom).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns a null product (not a thrown error) when the product genuinely doesn't exist", async () => {
+    mockFrom.mockReturnValue(makeChain({ data: null, error: null }));
+
+    const result = await fetchProductDetailResilient("nonexistent");
+
+    expect(result.data).toBeNull();
+    expect(result.error).toBeNull();
+  });
+
+  it("catches a thrown network failure instead of leaving it unhandled", async () => {
+    mockFrom.mockImplementation(() => {
+      throw new TypeError("Failed to fetch");
+    });
+
+    const result = await fetchProductDetailResilient("p1");
+
+    expect(result.data).toBeNull();
+    expect(result.error?.message).toBe("Failed to fetch");
   });
 });

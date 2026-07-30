@@ -2,7 +2,17 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, AlertTriangle, Ruler, RefreshCw, Trash2, ShieldCheck, ExternalLink, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  AlertTriangle,
+  Ruler,
+  RefreshCw,
+  Trash2,
+  ShieldCheck,
+  ExternalLink,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +21,13 @@ import { CATEGORY_BY_KEY, categoryFromLabel } from "@/lib/productCategories";
 import { formatMonthYear, daysBetween } from "@/lib/predictions";
 import { lookupAndSaveGuidelines, recomputePredictions } from "@/lib/guidelines.functions";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
-import { recallFallbackUrl, recallSourceLabel, formatRecallSyncNote, lotMatches } from "@/lib/recallCheck";
+import {
+  recallFallbackUrl,
+  recallSourceLabel,
+  formatRecallSyncNote,
+  lotMatches,
+  fetchProductDetailResilient,
+} from "@/lib/recallCheck";
 
 export const Route = createFileRoute("/_authenticated/products_/$id")({
   ssr: false,
@@ -32,7 +48,8 @@ type Product = {
   child_id: string | null;
   recall_checked_at: string | null;
   lot_number: string | null;
-}; type _u = never; // photo_url removed
+};
+type _u = never; // photo_url removed
 
 type Guideline = {
   max_weight_lbs: number | null;
@@ -73,11 +90,7 @@ function ProductDetailPage() {
 
   async function load() {
     setLoading(true);
-    const { data: p, error } = await supabase
-      .from("products")
-      .select("id, name, brand, size, category, added_at, purchased_at, predicted_sizeup_date, predicted_replacement_date, recalled, child_id, recall_checked_at, lot_number")
-      .eq("id", id)
-      .maybeSingle();
+    const { data: p, error } = await fetchProductDetailResilient(id);
     if (error || !p) {
       toast.error(error?.message ?? "Product not found");
       setLoading(false);
@@ -87,27 +100,60 @@ function ProductDetailPage() {
 
     const pAny = p as unknown as { child_id: string | null };
     const [{ data: g }, { data: r }, kidRes] = await Promise.all([
-      supabase.from("product_guidelines").select("max_weight_lbs, max_height_inches, average_use_months, replacement_interval_months, size_up_trigger, replacement_trigger, source").eq("product_id", id).maybeSingle(),
+      supabase
+        .from("product_guidelines")
+        .select(
+          "max_weight_lbs, max_height_inches, average_use_months, replacement_interval_months, size_up_trigger, replacement_trigger, source",
+        )
+        .eq("product_id", id)
+        .maybeSingle(),
       // Not filtered by acknowledged — this page shows recall history for
       // the product regardless of whether the parent already dismissed it
       // from the Alerts feed; "acknowledged" only controls whether it's
       // still an actionable item there, not whether the article is visible.
-      supabase.from("product_recalls").select("recalls(title, url, description, recall_date, source, lot_pattern)").eq("product_id", id),
-      pAny.child_id ? supabase.from("children").select("id, name, height_inches, weight_lbs, measurements_updated_at").eq("id", pAny.child_id).maybeSingle() : Promise.resolve({ data: null }),
+      supabase
+        .from("product_recalls")
+        .select("recalls(title, url, description, recall_date, source, lot_pattern)")
+        .eq("product_id", id),
+      pAny.child_id
+        ? supabase
+            .from("children")
+            .select("id, name, height_inches, weight_lbs, measurements_updated_at")
+            .eq("id", pAny.child_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
     setGuideline((g as Guideline) ?? null);
-    type RecallRow = { recalls: { title: string; url: string | null; description: string | null; recall_date: string | null; source: string | null; lot_pattern: string | null } | null };
+    type RecallRow = {
+      recalls: {
+        title: string;
+        url: string | null;
+        description: string | null;
+        recall_date: string | null;
+        source: string | null;
+        lot_pattern: string | null;
+      } | null;
+    };
     setRecalls(
       ((r ?? []) as unknown as RecallRow[])
         .map((x) => x.recalls)
         .filter((x): x is NonNullable<typeof x> => x !== null)
-        .map((x) => ({ title: x.title, url: x.url, description: x.description, recallDate: x.recall_date, source: x.source, lotPattern: x.lot_pattern }))
+        .map((x) => ({
+          title: x.title,
+          url: x.url,
+          description: x.description,
+          recallDate: x.recall_date,
+          source: x.source,
+          lotPattern: x.lot_pattern,
+        })),
     );
     setChild((kidRes?.data as Child) ?? null);
     setLoading(false);
   }
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+  useEffect(() => {
+    load(); /* eslint-disable-next-line */
+  }, [id]);
 
   async function refreshAI() {
     if (!product) return;
@@ -118,14 +164,19 @@ function ProductDetailPage() {
       await load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Couldn't refresh");
-    } finally { setRefreshingAI(false); }
+    } finally {
+      setRefreshingAI(false);
+    }
   }
 
   async function deleteProduct() {
     if (!product) return;
     if (!confirm("Delete this product?")) return;
     const { error } = await supabase.from("products").delete().eq("id", product.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Deleted");
     navigate({ to: "/products" });
   }
@@ -141,21 +192,34 @@ function ProductDetailPage() {
 
   const cat = categoryFromLabel(product.category);
   const Icon = cat?.icon ?? CATEGORY_BY_KEY.other.icon;
-  const added = product.added_at ? new Date(product.added_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : null;
+  const added = product.added_at
+    ? new Date(product.added_at).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : null;
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-16">
       <header className="px-5 pt-8 pb-2 sm:px-6">
         <div className="mx-auto max-w-md">
-          <Button asChild variant="ghost" size="sm" className="-ml-2 rounded-full font-body text-xs">
-            <Link to="/products"><ArrowLeft className="mr-1 h-3.5 w-3.5" /> Products</Link>
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="-ml-2 rounded-full font-body text-xs"
+          >
+            <Link to="/products">
+              <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Products
+            </Link>
           </Button>
         </div>
       </header>
       <main className="flex-1 px-5 sm:px-6">
         <div className="mx-auto max-w-md space-y-5">
           {/* Recall status */}
-          {(product.recalled || recalls.length > 0) ? (
+          {product.recalled || recalls.length > 0 ? (
             <div className="rounded-3xl bg-destructive/15 border border-destructive/30 p-4">
               <div className="flex items-center gap-2 font-body text-sm font-semibold text-destructive">
                 <AlertTriangle className="h-4 w-4" /> POSSIBLE RECALL MATCH
@@ -165,37 +229,48 @@ function ProductDetailPage() {
                   {recalls.map((rc, i) => {
                     const hasLotMatch = lotMatches(product.lot_number, rc.lotPattern);
                     return (
-                    <li key={i} className="space-y-1">
-                      <p className="font-body text-sm font-semibold text-destructive">{rc.title}</p>
-                      {rc.description && (
-                        <p className="font-body text-xs leading-relaxed text-destructive/90">{rc.description}</p>
-                      )}
-                      {rc.recallDate && (
-                        <p className="font-body text-[11px] text-destructive/70">Recall date: {rc.recallDate}</p>
-                      )}
-                      {rc.lotPattern && (
-                        <p className="font-body text-[11px] text-destructive/70">
-                          Affected batch/lot: <span className="font-semibold">{rc.lotPattern}</span> — check your
-                          product's sticker or packaging to compare.
+                      <li key={i} className="space-y-1">
+                        <p className="font-body text-sm font-semibold text-destructive">
+                          {rc.title}
                         </p>
-                      )}
-                      {product.lot_number && rc.lotPattern && (
-                        <p className={`font-body text-[11px] font-semibold ${hasLotMatch ? "text-destructive" : "text-emerald-700"}`}>
-                          {hasLotMatch
-                            ? "Your recorded batch/lot matches this recall."
-                            : "Your recorded batch/lot doesn't match this recall's listed batch/lot — still worth double-checking manually."}
+                        {rc.description && (
+                          <p className="font-body text-xs leading-relaxed text-destructive/90">
+                            {rc.description}
+                          </p>
+                        )}
+                        {rc.recallDate && (
+                          <p className="font-body text-[11px] text-destructive/70">
+                            Recall date: {rc.recallDate}
+                          </p>
+                        )}
+                        {rc.lotPattern && (
+                          <p className="font-body text-[11px] text-destructive/70">
+                            Affected batch/lot:{" "}
+                            <span className="font-semibold">{rc.lotPattern}</span> — check your
+                            product's sticker or packaging to compare.
+                          </p>
+                        )}
+                        {product.lot_number && rc.lotPattern && (
+                          <p
+                            className={`font-body text-[11px] font-semibold ${hasLotMatch ? "text-destructive" : "text-emerald-700"}`}
+                          >
+                            {hasLotMatch
+                              ? "Your recorded batch/lot matches this recall."
+                              : "Your recorded batch/lot doesn't match this recall's listed batch/lot — still worth double-checking manually."}
+                          </p>
+                        )}
+                        <a
+                          href={rc.url || recallFallbackUrl(rc.title)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive underline underline-offset-2"
+                        >
+                          View official recall notice <ExternalLink className="h-3 w-3" />
+                        </a>
+                        <p className="font-body text-[11px] text-destructive/60">
+                          Source: {recallSourceLabel(rc)}
                         </p>
-                      )}
-                      <a
-                        href={rc.url || recallFallbackUrl(rc.title)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive underline underline-offset-2"
-                      >
-                        View official recall notice <ExternalLink className="h-3 w-3" />
-                      </a>
-                      <p className="font-body text-[11px] text-destructive/60">Source: {recallSourceLabel(rc)}</p>
-                    </li>
+                      </li>
                     );
                   })}
                 </ul>
@@ -232,25 +307,43 @@ function ProductDetailPage() {
             </div>
             <div className="min-w-0 flex-1">
               <h1 className="font-display text-2xl font-semibold tracking-tight">{product.name}</h1>
-              <p className="font-body text-sm text-muted-foreground">{[product.brand, cat?.label ?? product.category].filter(Boolean).join(" · ")}</p>
-              {added && <p className="mt-1 font-body text-xs text-muted-foreground">Added {added}</p>}
+              <p className="font-body text-sm text-muted-foreground">
+                {[product.brand, cat?.label ?? product.category].filter(Boolean).join(" · ")}
+              </p>
+              {added && (
+                <p className="mt-1 font-body text-xs text-muted-foreground">Added {added}</p>
+              )}
             </div>
           </div>
 
           {/* Timeline */}
-          <DetailTimeline addedAt={product.added_at} sizeUpDate={product.predicted_sizeup_date} replacementDate={product.predicted_replacement_date} />
+          <DetailTimeline
+            addedAt={product.added_at}
+            sizeUpDate={product.predicted_sizeup_date}
+            replacementDate={product.predicted_replacement_date}
+          />
 
           {/* Measurements */}
-          {child && (
-            <MeasurementCard child={child} productId={product.id} onUpdated={load} />
-          )}
+          {child && <MeasurementCard child={child} productId={product.id} onUpdated={load} />}
 
           {/* Guidance */}
           <div className="rounded-3xl border border-border bg-card p-5 space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-base font-semibold">Safety guidelines</h2>
-              <Button variant="ghost" size="sm" onClick={refreshAI} disabled={refreshingAI} className="rounded-full text-xs">
-                {refreshingAI ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><RefreshCw className="h-3.5 w-3.5 mr-1" /> Refresh</>}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={refreshAI}
+                disabled={refreshingAI}
+                className="rounded-full text-xs"
+              >
+                {refreshingAI ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 mr-1" /> Refresh
+                  </>
+                )}
               </Button>
             </div>
             {guideline ? (
@@ -258,19 +351,41 @@ function ProductDetailPage() {
                 <div className="inline-flex items-center gap-1 rounded-full bg-sand/60 px-2.5 py-1 text-xs font-medium text-foreground/70 border border-border">
                   <Sparkles className="h-3 w-3" /> AI-generated estimate
                 </div>
-                <KV label="Max weight" value={guideline.max_weight_lbs ? `${guideline.max_weight_lbs} lb` : "—"} />
-                <KV label="Max height" value={guideline.max_height_inches ? `${guideline.max_height_inches}"` : "—"} />
-                <KV label="Average use" value={guideline.average_use_months ? `${guideline.average_use_months} months` : "—"} />
-                <KV label="Replace every" value={guideline.replacement_interval_months ? `${guideline.replacement_interval_months} months` : "—"} />
+                <KV
+                  label="Max weight"
+                  value={guideline.max_weight_lbs ? `${guideline.max_weight_lbs} lb` : "—"}
+                />
+                <KV
+                  label="Max height"
+                  value={guideline.max_height_inches ? `${guideline.max_height_inches}"` : "—"}
+                />
+                <KV
+                  label="Average use"
+                  value={
+                    guideline.average_use_months ? `${guideline.average_use_months} months` : "—"
+                  }
+                />
+                <KV
+                  label="Replace every"
+                  value={
+                    guideline.replacement_interval_months
+                      ? `${guideline.replacement_interval_months} months`
+                      : "—"
+                  }
+                />
                 {guideline.size_up_trigger && (
                   <div className="rounded-2xl bg-sand/60 px-3 py-2.5">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Size up when</p>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      Size up when
+                    </p>
                     <p>{guideline.size_up_trigger}</p>
                   </div>
                 )}
                 {guideline.replacement_trigger && (
                   <div className="rounded-2xl bg-sand/60 px-3 py-2.5">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Replace when</p>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      Replace when
+                    </p>
                     <p>{guideline.replacement_trigger}</p>
                   </div>
                 )}
@@ -284,11 +399,17 @@ function ProductDetailPage() {
                 </p>
               </div>
             ) : (
-              <p className="font-body text-sm text-muted-foreground">No guidelines yet. Tap Refresh to fetch.</p>
+              <p className="font-body text-sm text-muted-foreground">
+                No guidelines yet. Tap Refresh to fetch.
+              </p>
             )}
           </div>
 
-          <Button variant="ghost" onClick={deleteProduct} className="w-full rounded-full text-destructive">
+          <Button
+            variant="ghost"
+            onClick={deleteProduct}
+            className="w-full rounded-full text-destructive"
+          >
             <Trash2 className="h-4 w-4 mr-2" /> Delete product
           </Button>
 
@@ -308,7 +429,15 @@ function KV({ label, value }: { label: string; value: string }) {
   );
 }
 
-function DetailTimeline({ addedAt, sizeUpDate, replacementDate }: { addedAt: string | null; sizeUpDate: string | null; replacementDate: string | null }) {
+function DetailTimeline({
+  addedAt,
+  sizeUpDate,
+  replacementDate,
+}: {
+  addedAt: string | null;
+  sizeUpDate: string | null;
+  replacementDate: string | null;
+}) {
   if (!addedAt) return null;
   return (
     <div className="rounded-3xl border border-border bg-card p-5 space-y-3">
@@ -318,12 +447,29 @@ function DetailTimeline({ addedAt, sizeUpDate, replacementDate }: { addedAt: str
       ) : (
         <p className="font-body text-sm text-muted-foreground">Size-up prediction pending.</p>
       )}
-      {replacementDate && <TimelineRow label="Replace by" date={replacementDate} addedAt={addedAt} variant="replace" />}
+      {replacementDate && (
+        <TimelineRow
+          label="Replace by"
+          date={replacementDate}
+          addedAt={addedAt}
+          variant="replace"
+        />
+      )}
     </div>
   );
 }
 
-function TimelineRow({ label, date, addedAt, variant }: { label: string; date: string; addedAt: string; variant?: "replace" }) {
+function TimelineRow({
+  label,
+  date,
+  addedAt,
+  variant,
+}: {
+  label: string;
+  date: string;
+  addedAt: string;
+  variant?: "replace";
+}) {
   const start = new Date(addedAt);
   const end = new Date(date + "T00:00:00");
   const now = new Date();
@@ -354,10 +500,22 @@ function TimelineRow({ label, date, addedAt, variant }: { label: string; date: s
   );
 }
 
-function MeasurementCard({ child, productId: _productId, onUpdated }: { child: Child; productId: string; onUpdated: () => Promise<void> | void }) {
+function MeasurementCard({
+  child,
+  productId: _productId,
+  onUpdated,
+}: {
+  child: Child;
+  productId: string;
+  onUpdated: () => Promise<void> | void;
+}) {
   const [editing, setEditing] = useState(false);
-  const [heightStr, setHeightStr] = useState(child.height_inches != null ? child.height_inches.toFixed(1) : "");
-  const [weightStr, setWeightStr] = useState(child.weight_lbs != null ? child.weight_lbs.toFixed(1) : "");
+  const [heightStr, setHeightStr] = useState(
+    child.height_inches != null ? child.height_inches.toFixed(1) : "",
+  );
+  const [weightStr, setWeightStr] = useState(
+    child.weight_lbs != null ? child.weight_lbs.toFixed(1) : "",
+  );
   const [saving, setSaving] = useState(false);
   const [predictedMsg, setPredictedMsg] = useState<string | null>(null);
 
@@ -371,11 +529,14 @@ function MeasurementCard({ child, productId: _productId, onUpdated }: { child: C
       const nowIso = new Date().toISOString();
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Not signed in");
-      await supabase.from("children").update({
-        height_inches,
-        weight_lbs,
-        measurements_updated_at: nowIso,
-      } as never).eq("id", child.id);
+      await supabase
+        .from("children")
+        .update({
+          height_inches,
+          weight_lbs,
+          measurements_updated_at: nowIso,
+        } as never)
+        .eq("id", child.id);
       await supabase.from("child_measurements").insert({
         user_id: u.user.id,
         child_id: child.id,
@@ -387,17 +548,26 @@ function MeasurementCard({ child, productId: _productId, onUpdated }: { child: C
       await recomputePredictions({ data: { childId: child.id } });
       await onUpdated();
       // Re-fetch predicted_sizeup_date for confirmation message
-      const { data: refreshed } = await supabase.from("products").select("predicted_sizeup_date").eq("id", _productId).maybeSingle();
-      const date = (refreshed as { predicted_sizeup_date: string | null } | null)?.predicted_sizeup_date;
+      const { data: refreshed } = await supabase
+        .from("products")
+        .select("predicted_sizeup_date")
+        .eq("id", _productId)
+        .maybeSingle();
+      const date = (refreshed as { predicted_sizeup_date: string | null } | null)
+        ?.predicted_sizeup_date;
       if (date && weight_lbs) {
-        setPredictedMsg(`Based on ${child.name}'s current weight of ${weight_lbs} lbs, they will likely outgrow this product around ${formatMonthYear(date)}.`);
+        setPredictedMsg(
+          `Based on ${child.name}'s current weight of ${weight_lbs} lbs, they will likely outgrow this product around ${formatMonthYear(date)}.`,
+        );
       } else {
         setPredictedMsg("Measurements saved.");
       }
       setEditing(false);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Couldn't save");
-    } finally { setSaving(false); }
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -408,18 +578,29 @@ function MeasurementCard({ child, productId: _productId, onUpdated }: { child: C
           <h2 className="font-display text-base font-semibold">{child.name}'s measurements</h2>
         </div>
         {!editing && (
-          <Button variant="ghost" size="sm" onClick={() => setEditing(true)} className="rounded-full text-xs">Update</Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setEditing(true)}
+            className="rounded-full text-xs"
+          >
+            Update
+          </Button>
         )}
       </div>
       {!editing ? (
         <div className="grid grid-cols-2 gap-3 font-body text-sm">
           <div className="rounded-2xl bg-muted/40 px-3 py-2">
             <p className="text-xs text-muted-foreground">Weight</p>
-            <p className="font-semibold">{child.weight_lbs != null ? `${child.weight_lbs.toFixed(1)} lb` : "—"}</p>
+            <p className="font-semibold">
+              {child.weight_lbs != null ? `${child.weight_lbs.toFixed(1)} lb` : "—"}
+            </p>
           </div>
           <div className="rounded-2xl bg-muted/40 px-3 py-2">
             <p className="text-xs text-muted-foreground">Height</p>
-            <p className="font-semibold">{child.height_inches != null ? `${child.height_inches.toFixed(1)}"` : "—"}</p>
+            <p className="font-semibold">
+              {child.height_inches != null ? `${child.height_inches.toFixed(1)}"` : "—"}
+            </p>
           </div>
         </div>
       ) : (
@@ -427,15 +608,36 @@ function MeasurementCard({ child, productId: _productId, onUpdated }: { child: C
           <div className="grid grid-cols-2 gap-2">
             <div>
               <Label className="font-body text-xs">Weight (lb)</Label>
-              <Input type="number" step="0.1" min="0" value={weightStr} onChange={(e) => setWeightStr(e.target.value)} className="h-10 rounded-xl" />
+              <Input
+                type="number"
+                step="0.1"
+                min="0"
+                value={weightStr}
+                onChange={(e) => setWeightStr(e.target.value)}
+                className="h-10 rounded-xl"
+              />
             </div>
             <div>
               <Label className="font-body text-xs">Height (in)</Label>
-              <Input type="number" step="0.1" min="0" value={heightStr} onChange={(e) => setHeightStr(e.target.value)} className="h-10 rounded-xl" />
+              <Input
+                type="number"
+                step="0.1"
+                min="0"
+                value={heightStr}
+                onChange={(e) => setHeightStr(e.target.value)}
+                className="h-10 rounded-xl"
+              />
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setEditing(false)} className="flex-1 rounded-full">Cancel</Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setEditing(false)}
+              className="flex-1 rounded-full"
+            >
+              Cancel
+            </Button>
             <Button size="sm" onClick={save} disabled={saving} className="flex-1 rounded-full">
               {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Save"}
             </Button>
