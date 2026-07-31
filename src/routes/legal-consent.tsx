@@ -26,6 +26,7 @@ function getNextParam(): string {
 }
 
 const ACKNOWLEDGMENTS = [
+  "You are 18 years of age or older.",
   "Peace of Mine is an informational tracking tool only — not a substitute for manufacturer instructions, product manuals, safety warnings, healthcare providers, or your own judgment.",
   "You are solely responsible for the safety of your child and every product you purchase, use, install, inspect, maintain, store, and replace.",
   "You assume all risks associated with baby products and equipment you use. Peace of Mine does not manufacture, inspect, test, certify, or monitor any physical product.",
@@ -70,7 +71,11 @@ function LegalConsentPage() {
       if (error && !/duplicate key/i.test(error.message) && !isSchemaMissingTableError(error)) {
         throw error;
       }
-      if (error) console.error("[legal-consent] couldn't record acceptance, continuing anyway:", error.message);
+      if (error)
+        console.error(
+          "[legal-consent] couldn't record acceptance, continuing anyway:",
+          error.message,
+        );
       navigate({ to: getNextParam() } as never);
     } catch (err) {
       toast.error(friendlyError(err));
@@ -104,13 +109,17 @@ function LegalConsentPage() {
             Please review a few things
           </h1>
           <p className="mt-2 font-body text-sm text-muted-foreground">
-            We've updated our Terms of Service and Privacy Policy. Here's the short version of what you're agreeing to — the full text is linked below.
+            We've updated our Terms of Service and Privacy Policy. Here's the short version of what
+            you're agreeing to — the full text is linked below.
           </p>
 
           <div className="mt-6 max-h-72 overflow-y-auto rounded-2xl border border-border/60 bg-card p-4">
             <ul className="space-y-3">
               {ACKNOWLEDGMENTS.map((text, i) => (
-                <li key={i} className="flex gap-3 font-body text-sm leading-relaxed text-foreground">
+                <li
+                  key={i}
+                  className="flex gap-3 font-body text-sm leading-relaxed text-foreground"
+                >
                   <span className="mt-0.5 flex-shrink-0 text-primary">•</span>
                   <span>{text}</span>
                 </li>
@@ -123,7 +132,8 @@ function LegalConsentPage() {
             <Link to="/terms" className="underline hover:text-foreground">
               Terms of Service
             </Link>
-            , including the complete Safety Disclaimer, Assumption of Risk, and Limitation of Liability sections.
+            , including the complete Safety Disclaimer, Assumption of Risk, and Limitation of
+            Liability sections.
           </p>
 
           <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-2xl border border-border/70 bg-card p-4">
