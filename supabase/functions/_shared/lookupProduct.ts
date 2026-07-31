@@ -177,11 +177,17 @@ async function fetchJson(
 
 // ── Free sources ────────────────────────────────────────────────────────────
 
+// Open Food Facts / Open Beauty Facts's API terms require a custom
+// User-Agent identifying the calling app (not the fetch client's default) —
+// see https://wiki.openfoodfacts.org/API/Read#User-Agent.
+const OFF_USER_AGENT = "PeaceOfMine/1.0 (+https://peaceofmine.app)";
+
 export function fetchOpenFoodFacts(barcode: string, fetchImpl: typeof fetch): SourceFn {
   return async () => {
     const json = (await fetchJson(
       fetchImpl,
       `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json`,
+      { headers: { "User-Agent": OFF_USER_AGENT } },
     )) as { status?: number; product?: Record<string, unknown> } | null;
     if (!json || json.status !== 1 || !json.product) return null;
     const p = json.product;
@@ -211,6 +217,7 @@ export function fetchOpenBeautyFacts(barcode: string, fetchImpl: typeof fetch): 
     const json = (await fetchJson(
       fetchImpl,
       `https://world.openbeautyfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json`,
+      { headers: { "User-Agent": OFF_USER_AGENT } },
     )) as { status?: number; product?: Record<string, unknown> } | null;
     if (!json || json.status !== 1 || !json.product) return null;
     const p = json.product;

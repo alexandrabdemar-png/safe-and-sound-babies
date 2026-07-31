@@ -121,6 +121,16 @@ describe("individual source parsers", () => {
     expect(await fetchOpenFoodFacts("012345678905", fetchImpl)()).toBeNull();
   });
 
+  it("fetchOpenFoodFacts sends a custom User-Agent, per Open Food Facts' API terms", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ status: 0 }));
+    await fetchOpenFoodFacts("012345678905", fetchImpl)();
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    const [, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
+    const headers = init.headers as Record<string, string>;
+    expect(headers["User-Agent"]).toBeTruthy();
+    expect(headers["User-Agent"]).not.toBe("");
+  });
+
   it("fetchOpenBeautyFacts parses a valid match and tags non-baby items correctly", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(
       jsonResponse({
@@ -149,6 +159,15 @@ describe("individual source parsers", () => {
     );
     const result = await fetchOpenBeautyFacts("222222222222", fetchImpl)();
     expect(result?.isBabyProduct).toBe(true);
+  });
+
+  it("fetchOpenBeautyFacts sends a custom User-Agent, per Open Food Facts' API terms", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ status: 0 }));
+    await fetchOpenBeautyFacts("222222222222", fetchImpl)();
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    const [, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
+    const headers = init.headers as Record<string, string>;
+    expect(headers["User-Agent"]).toBeTruthy();
   });
 
   it("fetchUpcItemDb parses a valid match", async () => {
