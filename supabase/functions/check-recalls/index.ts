@@ -8,7 +8,7 @@
 // to exactly what the spec asks for: CPSC always, NHTSA additionally when
 // the product looks like a car seat. The existing daily batch sync
 // (src/routes/api/public/hooks/check-recalls.ts) and its broader source set
-// (FDA, USDA, Health Canada, EU Safety Gate, the hardcoded CRITICAL_RECALLS
+// (FDA, USDA, Health Canada, the hardcoded CRITICAL_RECALLS
 // fast-path) are a separate, already-shipped system for populating the
 // `recalls` table / Recall Radar page — this endpoint doesn't duplicate
 // that, it answers "does *this one scanned product* have an active CPSC or

@@ -3,7 +3,6 @@ import {
   fetchUsdaFsisRecalls,
   fetchNhtsaRecalls,
   fetchHealthCanadaRecalls,
-  fetchEuSafetyGateRecalls,
   fetchAllExtraRecallSources,
 } from "./allRecallSources";
 
@@ -127,42 +126,8 @@ describe("fetchHealthCanadaRecalls", () => {
   });
 });
 
-describe("fetchEuSafetyGateRecalls", () => {
-  it("is always marked official: false", async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(
-      jsonResponse({
-        results: [
-          {
-            product_brand: "SomeBrand",
-            product_type: "baby carrier",
-            technical_defect: "strap failure",
-          },
-        ],
-      }),
-    );
-    const results = await fetchEuSafetyGateRecalls(fetchImpl);
-    expect(results).toHaveLength(1);
-    expect(results[0].official).toBe(false);
-  });
-
-  it("filters out an irrelevant alert", async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(
-      jsonResponse({
-        results: [
-          {
-            product_brand: "SomeBrand",
-            product_type: "power drill",
-            technical_defect: "overheating",
-          },
-        ],
-      }),
-    );
-    expect(await fetchEuSafetyGateRecalls(fetchImpl)).toEqual([]);
-  });
-});
-
 describe("fetchAllExtraRecallSources", () => {
-  it("merges all four sources and one source's failure doesn't affect the others", async () => {
+  it("merges all three sources and one source's failure doesn't affect the others", async () => {
     const fetchImpl = vi.fn(async (url: string) => {
       if (url.includes("fsis.usda.gov")) throw new Error("USDA down");
       if (url.includes("transportation.gov")) {
@@ -171,13 +136,10 @@ describe("fetchAllExtraRecallSources", () => {
         ]);
       }
       if (url.includes("canada.ca")) return jsonResponse([{ Title_En: "Baby Item Recall" }]);
-      if (url.includes("opendatasoft.com")) {
-        return jsonResponse({ results: [{ product_brand: "X", product_type: "stroller" }] });
-      }
       throw new Error(`unexpected url ${url}`);
     });
     const results = await fetchAllExtraRecallSources(fetchImpl as unknown as typeof fetch);
     const sources = results.map((r) => r.source).sort();
-    expect(sources).toEqual(["eu_safety_gate", "health_canada", "nhtsa"]);
+    expect(sources).toEqual(["health_canada", "nhtsa"]);
   });
 });

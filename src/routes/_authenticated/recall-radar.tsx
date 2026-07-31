@@ -37,7 +37,6 @@ const SOURCE_LABEL: Record<string, string> = {
   usda_fsis: "USDA FSIS",
   nhtsa: "NHTSA",
   health_canada: "Health Canada",
-  eu_safety_gate: "EU Safety Gate",
 };
 
 function RecallRadarPage() {
@@ -74,15 +73,15 @@ function RecallRadarPage() {
         // It's already internally error-safe (returns [] on failure), but
         // Promise.allSettled gives us a second layer of protection.
         fetchRecentBabyRecalls(30),
-        // USDA FSIS, NHTSA, Health Canada, and EU Safety Gate are synced
-        // daily into our own recalls table by check-extra-recalls.ts
-        // rather than fetched live here — Health Canada is a multi-MB
-        // bulk dump unsuitable for a page load, and USDA/NHTSA/EU CORS
-        // support couldn't be confirmed from this build environment.
+        // USDA FSIS, NHTSA, and Health Canada are synced daily into our own
+        // recalls table by check-extra-recalls.ts rather than fetched live
+        // here — Health Canada is a multi-MB bulk dump unsuitable for a
+        // page load, and USDA/NHTSA CORS support couldn't be confirmed
+        // from this build environment.
         supabase
           .from("recalls")
           .select("id, source, title, description, hazard, url, recall_date, official, lot_pattern")
-          .in("source", ["usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"])
+          .in("source", ["usda_fsis", "nhtsa", "health_canada"])
           .order("recall_date", { ascending: false })
           .limit(50),
       ]);
@@ -235,19 +234,7 @@ function RecallRadarPage() {
                 cpsc.gov/Recalls
               </a>
             </p>
-            <p>
-              EU Safety Gate alerts are compiled from public listings, since the European Commission
-              doesn't offer a direct data feed. For the official, up-to-date record, visit{" "}
-              <a
-                href="https://ec.europa.eu/safety-gate-alerts/screen/webReport"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold text-foreground underline underline-offset-2"
-              >
-                Safety Gate
-              </a>
-              .
-            </p>
+            <p>Contains information licensed under the Open Government Licence – Canada.</p>
           </div>
         </div>
       </main>

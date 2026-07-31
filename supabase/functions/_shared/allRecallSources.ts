@@ -1,15 +1,25 @@
 // Ported from src/lib/recallSources.ts (copy, not import — see
 // recallMatch.ts's header comment for why). Fetches + normalizes recalls
-// from USDA FSIS, NHTSA, Health Canada, and the EU Safety Gate.
+// from USDA FSIS, NHTSA, and Health Canada — each a government's own
+// published open-data feed.
 //
-// IMPORTANT — these four integrations were built against publicly documented
+// An EU Safety Gate source was previously included here, but it pulled from
+// a third-party (Opendatasoft) mirror of the EU's *former* RAPEX system
+// rather than an official EU feed — the European Commission doesn't publish
+// a direct Safety Gate data feed. Given that provenance/freshness
+// uncertainty, and that this app's users and their products are US-based
+// (so a US-sold product's recall will already surface via CPSC/FDA/USDA/
+// NHTSA), it was removed rather than kept as a legally-uncertain,
+// unofficial source. See supabase/migrations/20260731000000_remove_eu_safety_gate_source.sql.
+//
+// IMPORTANT — these three integrations were built against publicly documented
 // API shapes but could not be live-tested from this development sandbox
 // (the outbound proxy returns 403 for every government/open-data domain
 // tried). Every fetch function fails closed (returns [] and logs a warning)
 // rather than throwing, so a bad or changed upstream shape can't take down
 // the other sources or the rest of the batch job.
 //
-// None of these four sources publish UPC/barcode fields for recalled units —
+// None of these three sources publish UPC/barcode fields for recalled units —
 // recalls track manufacture date/lot/serial ranges, not retail barcodes.
 import { BABY_KEYWORDS } from "./babyKeywords.ts";
 
@@ -226,71 +236,13 @@ export async function fetchHealthCanadaRecalls(
   }
 }
 
-export async function fetchEuSafetyGateRecalls(
-  fetchImpl: typeof fetch,
-): Promise<NormalizedRecall[]> {
-  try {
-    const url =
-      "https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/healthref-europe-rapex-en/records" +
-      "?order_by=alert_date%20DESC&limit=100";
-    const res = await fetchWithTimeout(fetchImpl, url);
-    if (!res.ok) {
-      console.warn(`[allRecallSources] EU Safety Gate mirror returned ${res.status}`);
-      return [];
-    }
-    const data = await res.json();
-    const rows: Record<string, unknown>[] = Array.isArray(data?.results) ? data.results : [];
-    const out: NormalizedRecall[] = [];
-    for (const r of rows) {
-      const brand = pick(r, "product_brand");
-      const productType = pick(r, "product_type");
-      const category = pick(r, "product_category");
-      const defect = pick(r, "technical_defect");
-      const blob = [brand, productType, category, defect].filter(Boolean).join(" ");
-      if (!isBabyRelevant(blob)) continue;
-
-      const title =
-        [brand, productType].filter(Boolean).join(" — ") || productType || "EU Safety Gate alert";
-      const sourceId =
-        pick(r, "alert_number", "id") ??
-        `${brand ?? ""}-${productType ?? ""}-${pick(r, "alert_date") ?? ""}`;
-      out.push({
-        source: "eu_safety_gate",
-        source_id: sourceId,
-        title,
-        brand,
-        product_name: productType,
-        category,
-        description: defect,
-        hazard: pick(r, "risk_type", "alert_group"),
-        remedy: pick(r, "measures_description"),
-        url: "https://ec.europa.eu/safety-gate-alerts/screen/webReport",
-        image_url: null,
-        recall_date: pick(r, "alert_date"),
-        model: null,
-        affected_date_start: null,
-        affected_date_end: null,
-        official: false,
-      });
-    }
-    return out;
-  } catch (err) {
-    console.warn(
-      "[allRecallSources] EU Safety Gate fetch failed:",
-      err instanceof Error ? err.message : "unknown",
-    );
-    return [];
-  }
-}
-
 export async function fetchAllExtraRecallSources(
   fetchImpl: typeof fetch,
 ): Promise<NormalizedRecall[]> {
-  const [usda, nhtsa, healthCanada, euSafetyGate] = await Promise.all([
+  const [usda, nhtsa, healthCanada] = await Promise.all([
     fetchUsdaFsisRecalls(fetchImpl),
     fetchNhtsaRecalls(fetchImpl),
     fetchHealthCanadaRecalls(fetchImpl),
-    fetchEuSafetyGateRecalls(fetchImpl),
   ]);
-  return [...usda, ...nhtsa, ...healthCanada, ...euSafetyGate];
+  return [...usda, ...nhtsa, ...healthCanada];
 }

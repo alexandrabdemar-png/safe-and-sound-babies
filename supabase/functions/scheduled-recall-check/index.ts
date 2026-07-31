@@ -4,10 +4,10 @@
 // for the schedule + private.call_edge_function() invocation helper).
 // Consolidates what used to be two separate TanStack Start hooks
 // (check-recalls.ts: CPSC/FDA/critical; check-extra-recalls.ts: USDA FSIS/
-// NHTSA/Health Canada/EU Safety Gate) into one pipeline:
+// NHTSA/Health Canada) into one pipeline:
 //
 //   1. Load every product across every user.
-//   2. Match them against all 6 recall sources (supabase/functions/_shared/recallBatch.ts).
+//   2. Match them against all 5 recall sources (supabase/functions/_shared/recallBatch.ts).
 //   3. Upsert the recall catalog (`recalls` table, unique on source+source_id
 //      — this is the "known recalls" dedup mechanism: a recall already in
 //      the catalog from a previous run just gets its fields refreshed, not
@@ -99,26 +99,29 @@ Deno.serve(async (req) => {
       .filter((m): m is typeof m & { recall_id: string } => Boolean(m.recall_id));
 
     // ── Cross-source dedup by hazard_fingerprint ─────────────────────────
-    // The same physical recall can arrive from CPSC + Health Canada + EU
-    // Safety Gate. We keep every catalog row (so provenance is preserved for
+    // The same physical recall can arrive from CPSC + Health Canada. We keep
+    // every catalog row (so provenance is preserved for
     // the "Sources" UI) but collapse the *match set* onto one canonical
     // recall per fingerprint so a single hazard produces one notification,
     // not three.
     const canonicalByFingerprint = new Map<string, string>(); // fp -> canonical recall_id
     if (catalogRows.length) {
       const fps = [
-        ...new Set(
-          catalogRows.map((r) => r.hazard_fingerprint).filter((s): s is string => !!s),
-        ),
+        ...new Set(catalogRows.map((r) => r.hazard_fingerprint).filter((s): s is string => !!s)),
       ];
       if (fps.length) {
         const { data: fpRows } = await supabase
           .from("recalls")
           .select("id, source, hazard_fingerprint, recall_date")
           .in("hazard_fingerprint", fps);
-        // Preference order: cpsc > nhtsa > fda > health_canada > usda_fsis > eu_safety_gate > critical
+        // Preference order: cpsc > nhtsa > fda > health_canada > usda_fsis > critical
         const priority: Record<string, number> = {
-          cpsc: 0, nhtsa: 1, fda: 2, health_canada: 3, usda_fsis: 4, eu_safety_gate: 5, critical: 6,
+          cpsc: 0,
+          nhtsa: 1,
+          fda: 2,
+          health_canada: 3,
+          usda_fsis: 4,
+          critical: 5,
         };
         const byFp = new Map<string, Array<{ id: string; source: string }>>();
         for (const row of fpRows ?? []) {
@@ -169,11 +172,25 @@ Deno.serve(async (req) => {
           .from("product_recalls")
           .select("product_id, recall_id, notified_content_hash")
           .in("product_id", productIds)
-      : { data: [] as Array<{ product_id: string; recall_id: string; notified_content_hash: string | null }> };
+      : {
+          data: [] as Array<{
+            product_id: string;
+            recall_id: string;
+            notified_content_hash: string | null;
+          }>,
+        };
     const existingByKey = new Map(
-      (existingRows ?? []).map((r) => [`${r.product_id}:${r.recall_id}`, r.notified_content_hash ?? null]),
+      (existingRows ?? []).map((r) => [
+        `${r.product_id}:${r.recall_id}`,
+        r.notified_content_hash ?? null,
+      ]),
     );
-    const newMatches: Array<{ user_id: string; product_id: string; recall_id: string; reason: "new" | "updated" }> = [];
+    const newMatches: Array<{
+      user_id: string;
+      product_id: string;
+      recall_id: string;
+      reason: "new" | "updated";
+    }> = [];
     for (const m of dedupedMatches) {
       const key = `${m.product_id}:${m.recall_id}`;
       const currentHash = contentHashByRecallId.get(m.recall_id) ?? "";
@@ -262,7 +279,9 @@ Deno.serve(async (req) => {
         },
         { onConflict: "source" },
       );
-    } catch { /* swallow — we're already in the error path */ }
+    } catch {
+      /* swallow — we're already in the error path */
+    }
     return json({ ok: false, error: err }, 500);
   }
 });
@@ -279,11 +298,14 @@ async function writeSourceStatus(
   // for the dead-man's-switch source). Individual source-level success
   // signals require deeper plumbing in allRecallSources.ts and are a
   // follow-up.
-  const sources = ["cpsc", "fda", "usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"];
+  const sources = ["cpsc", "fda", "usda_fsis", "nhtsa", "health_canada"];
   for (const source of sources) {
-    const records = source === "cpsc" ? (fetchCounts.cpsc ?? 0)
-      : source === "fda" ? 0 // FDA is per-name; count is not exposed
-      : (fetchCounts.extra ?? 0); // grouped; refine per-source in a follow-up
+    const records =
+      source === "cpsc"
+        ? (fetchCounts.cpsc ?? 0)
+        : source === "fda"
+          ? 0 // FDA is per-name; count is not exposed
+          : (fetchCounts.extra ?? 0); // grouped; refine per-source in a follow-up
     const ok = records > 0 || source === "fda"; // FDA presence-check would need per-source counts
     await supabase.from("recall_source_status").upsert(
       {
@@ -315,7 +337,12 @@ async function writeSourceStatus(
 
 type ProductRow = { id: string; name: string };
 
-type NewMatch = { user_id: string; product_id: string; recall_id: string; reason: "new" | "updated" };
+type NewMatch = {
+  user_id: string;
+  product_id: string;
+  recall_id: string;
+  reason: "new" | "updated";
+};
 
 async function notifyAffectedUsers(
   supabase: ReturnType<typeof createClient>,
@@ -326,7 +353,10 @@ async function notifyAffectedUsers(
   if (newMatches.length === 0) return { notified: 0, notify_skipped_unconfigured: false };
 
   const productNameById = new Map(products.map((p) => [p.id, p.name]));
-  const byUser = new Map<string, Array<{ product_id: string; recall_id: string; name: string; reason: "new" | "updated" }>>();
+  const byUser = new Map<
+    string,
+    Array<{ product_id: string; recall_id: string; name: string; reason: "new" | "updated" }>
+  >();
   for (const m of newMatches) {
     const arr = byUser.get(m.user_id) ?? [];
     arr.push({
@@ -390,7 +420,9 @@ async function notifyAffectedUsers(
     try {
       const { data: userResp } = await supabase.auth.admin.getUserById(userId);
       email = userResp?.user?.email ?? null;
-    } catch { /* stale/deleted user; email stays null */ }
+    } catch {
+      /* stale/deleted user; email stays null */
+    }
 
     // Split items into "new" and "updated" so the copy is honest about
     // which is which — an "Updated recall" push is different from a new one.
@@ -405,8 +437,12 @@ async function notifyAffectedUsers(
     const title = titleParts.join(" · ").slice(0, 180) || "⚠️ Safety Recall";
 
     const bodyParts: string[] = [];
-    if (newOnes.length) bodyParts.push(`${newOnes.map((i) => i.name).join(", ")} has an active recall.`);
-    if (updatedOnes.length) bodyParts.push(`Recall info for ${updatedOnes.map((i) => i.name).join(", ")} was updated — please review the changes.`);
+    if (newOnes.length)
+      bodyParts.push(`${newOnes.map((i) => i.name).join(", ")} has an active recall.`);
+    if (updatedOnes.length)
+      bodyParts.push(
+        `Recall info for ${updatedOnes.map((i) => i.name).join(", ")} was updated — please review the changes.`,
+      );
     const body = bodyParts.join(" ").slice(0, 300) + " Tap to review.";
 
     const jwt = await currentApnsJwt();

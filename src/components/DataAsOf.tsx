@@ -12,7 +12,6 @@ const SOURCE_LABEL: Record<string, string> = {
   nhtsa: "NHTSA",
   usda_fsis: "USDA FSIS",
   health_canada: "Health Canada",
-  eu_safety_gate: "EU Safety Gate (unofficial mirror)",
   critical: "Curated critical list",
   __pipeline__: "Pipeline health",
 };
@@ -46,7 +45,9 @@ export function DataAsOf({
       setRows((data as SourceRow[] | null) ?? []);
       setLoading(false);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (loading) return null;
@@ -55,11 +56,12 @@ export function DataAsOf({
     ? rows.filter((r) => sources.includes(r.source))
     : rows.filter((r) => r.source !== "__pipeline__");
 
-  const mostRecent = filtered
-    .map((r) => r.last_success_at)
-    .filter((s): s is string => Boolean(s))
-    .sort()
-    .at(-1) ?? null;
+  const mostRecent =
+    filtered
+      .map((r) => r.last_success_at)
+      .filter((s): s is string => Boolean(s))
+      .sort()
+      .at(-1) ?? null;
 
   const pipeline = rows.find((r) => r.source === "__pipeline__");
   // Only surface a "stale" warning when we actually have evidence of staleness:
@@ -77,7 +79,9 @@ export function DataAsOf({
 
   if (stale) {
     return (
-      <p className={`inline-flex items-center gap-1.5 font-body text-[11px] text-amber-700 dark:text-amber-400 ${className}`}>
+      <p
+        className={`inline-flex items-center gap-1.5 font-body text-[11px] text-amber-700 dark:text-amber-400 ${className}`}
+      >
         <AlertTriangle className="h-3 w-3" />
         Recall data may be stale — background checks haven't completed in the last 26 hours.
       </p>
@@ -88,16 +92,13 @@ export function DataAsOf({
   // ran is the source of truth; don't render a misleading "unavailable" line.
   if (!mostRecent) return null;
 
-
   return (
-    <p className={`inline-flex flex-wrap items-center gap-1.5 font-body text-[11px] text-muted-foreground ${className}`}>
+    <p
+      className={`inline-flex flex-wrap items-center gap-1.5 font-body text-[11px] text-muted-foreground ${className}`}
+    >
       <Clock className="h-3 w-3" aria-hidden />
       <span>{formatDataAsOf(mostRecent)}</span>
-      {sourceNames.length > 0 && (
-        <span>
-          · Sources: {sourceNames.join(", ")}
-        </span>
-      )}
+      {sourceNames.length > 0 && <span>· Sources: {sourceNames.join(", ")}</span>}
     </p>
   );
 }
