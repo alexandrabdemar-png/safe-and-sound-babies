@@ -9,6 +9,7 @@ import { hapticSuccess, hapticDismiss } from "@/lib/haptic";
 import { friendlyError } from "@/lib/errors";
 import { BellIllustration } from "@/components/EmptyIllustration";
 import { recallFallbackUrl, lotMatches } from "@/lib/recallCheck";
+import { DataAsOf } from "@/components/DataAsOf";
 
 export const Route = createFileRoute("/_authenticated/alerts")({
   ssr: false,
@@ -287,9 +288,13 @@ function AlertsPage() {
       {activeTab === "history" && (
         <main className="flex-1 px-5 pb-8 sm:px-6">
           <div className="mx-auto max-w-md">
-            <p className="mb-4 font-body text-xs text-muted-foreground">
+            <p className="mb-1.5 font-body text-xs text-muted-foreground">
               Recalls published in the last 90 days in your product categories — whether you own the specific product or not.
             </p>
+            <DataAsOf
+              sources={["usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"]}
+              className="mb-4"
+            />
             {historyLoading ? (
               <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
             ) : history.length === 0 ? (

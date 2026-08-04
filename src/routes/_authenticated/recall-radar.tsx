@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/BottomNav";
+import { DataAsOf } from "@/components/DataAsOf";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchRecentBabyRecalls } from "@/lib/cpscSearch";
 import { recallFallbackUrl } from "@/lib/recallCheck";
@@ -153,6 +154,10 @@ function RecallRadarPage() {
               </p>
             </div>
           </div>
+          <DataAsOf
+            sources={["cpsc", "fda", "usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"]}
+            className="mt-2"
+          />
         </div>
       </header>
 
