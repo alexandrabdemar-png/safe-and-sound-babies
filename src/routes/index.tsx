@@ -69,7 +69,7 @@ const categories = [
   { name: "Feeding & Solids", image: catBabyFood },
   { name: "Swaddles", image: catSwaddle },
   { name: "Strollers", image: catStroller },
-  { name: "Playards", image: catPacknPlay },
+  { name: "Play Pens", image: catPacknPlay },
   { name: "Baby Carriers", image: catCarrier },
   { name: "Activity Gear", image: catBouncer },
   { name: "Toys", image: catBlocks },
