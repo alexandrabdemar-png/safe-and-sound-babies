@@ -8,13 +8,7 @@ import "@fontsource/cormorant/300.css";
 import "@fontsource/cormorant/300-italic.css";
 import catCarseat from "@/assets/hd-carseat.png";
 import catPacifier from "@/assets/hd-pacifier.png";
-import catBreastMilk from "@/assets/hd-breastmilk.png";
 import catFormula from "@/assets/hd-formula.png";
-import catBabyFood from "@/assets/hd-babyfood.png";
-import catSwaddle from "@/assets/hd-swaddle.png";
-import catStroller from "@/assets/hd-stroller.png";
-import catPacknPlay from "@/assets/hd-packnplay.png";
-import catCarrier from "@/assets/hd-carrier.png";
 import catBouncer from "@/assets/hd-bouncer.png";
 import catBlocks from "@/assets/hd-blocks.png";
 import catCrib from "@/assets/hd-crib.png";
@@ -61,16 +55,10 @@ export const Route = createFileRoute("/")({
 });
 
 const categories = [
-  { name: "Car seats", image: catCarseat },
-  { name: "Cribs", image: catCrib },
+  { name: "Feeding", image: catFormula },
+  { name: "Sleep", image: catCrib },
+  { name: "On the Go", image: catCarseat },
   { name: "Pacifiers", image: catPacifier },
-  { name: "Breastfeeding & Milk Storage", image: catBreastMilk },
-  { name: "Bottle Feeding", image: catFormula },
-  { name: "Feeding & Solids", image: catBabyFood },
-  { name: "Swaddles", image: catSwaddle },
-  { name: "Strollers", image: catStroller },
-  { name: "Play Pens", image: catPacknPlay },
-  { name: "Baby Carriers", image: catCarrier },
   { name: "Activity Gear", image: catBouncer },
   { name: "Toys", image: catBlocks },
 ];
@@ -144,7 +132,7 @@ function Index() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 sm:gap-x-10 sm:gap-y-14 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 sm:gap-x-10 sm:gap-y-14">
             {categories.map((cat) => (
               <div key={cat.name} className="flex flex-col items-center text-center">
                 <div className="flex aspect-square w-full max-w-[180px] items-center justify-center overflow-hidden rounded-full bg-[#F5F1E8] p-6">
