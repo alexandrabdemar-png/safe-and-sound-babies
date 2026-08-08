@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   parseEnvFile,
@@ -105,5 +105,38 @@ describe("repo Supabase env configuration", () => {
     const keyRef = projectRefFromAnonKey(base.vars["VITE_SUPABASE_PUBLISHABLE_KEY"]);
     expect(urlRef).toBeTruthy();
     if (keyRef) expect(keyRef).toBe(urlRef);
+  });
+});
+
+// ── Guard: every VITE_* var the app reads must actually be declared ─────────
+// Deleting the committed mode env files also deleted the only declaration of
+// VITE_PAYMENTS_CLIENT_TOKEN, which would have silently disabled Stripe
+// checkout in the browser. This walks src/ for `import.meta.env.VITE_*` reads
+// and requires each one to exist in `.env` (or be explicitly optional).
+describe("required client env vars are declared", () => {
+  // Dev-only / documentation-only reads that are meant to be absent.
+  const OPTIONAL = new Set(["VITE_FORCE_PRO", "VITE_FOO"]);
+
+  function walk(dir: string): string[] {
+    return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+      const p = resolve(dir, e.name);
+      if (e.isDirectory()) return walk(p);
+      return /\.(ts|tsx)$/.test(e.name) ? [p] : [];
+    });
+  }
+
+  it("declares every non-optional import.meta.env.VITE_* read in .env", () => {
+    const used = new Set<string>();
+    for (const file of walk(resolve(ROOT, "src"))) {
+      const src = readFileSync(file, "utf8");
+      for (const m of src.matchAll(/import\.meta\.env\.(VITE_[A-Z0-9_]+)/g)) {
+        if (!OPTIONAL.has(m[1]!)) used.add(m[1]!);
+      }
+    }
+    expect(used.size, "expected the app to read at least one VITE_ var").toBeGreaterThan(0);
+    const base = loadEnvFile(".env")!;
+    const missing = [...used].filter((k) => !base.vars[k]).sort();
+    expect(missing, `these VITE_ vars are read by src/ but missing from .env: ${missing.join(", ")}`)
+      .toEqual([]);
   });
 });
