@@ -22,16 +22,46 @@ CREATE POLICY "Owners can view product photos (owner branch)"
   TO authenticated
   USING (bucket_id = 'product-photos' AND owner = auth.uid());
 
--- ── Seed: user A uploads a photo ───────────────────────────────────────────
+-- ── Seed: user A uploads a photo into their own uid-prefixed folder ────────
+-- The INSERT policy (migration 20260717014812) requires the first path
+-- segment to equal auth.uid(), so the upload path is `<uid>/<file>`.
 SELECT test.login('authenticated', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
 INSERT INTO storage.objects (bucket_id, name, owner)
-VALUES ('product-photos', '012345678905/photo1.jpg',
+VALUES ('product-photos', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/012345678905/photo1.jpg',
         'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
 SELECT test.assert(
-  (SELECT count(*) FROM storage.objects WHERE name = '012345678905/photo1.jpg') = 1,
+  (SELECT count(*) FROM storage.objects
+    WHERE name = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/012345678905/photo1.jpg') = 1,
   'Uploader can view their own product photo'
 );
+
+-- Adversarial: user A cannot upload into another user''s folder, even while
+-- correctly claiming ownership of the row itself.
+SELECT test.assert_raises(
+  $$INSERT INTO storage.objects (bucket_id, name, owner)
+    VALUES ('product-photos', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/steal.jpg',
+            'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')$$,
+  'Adversarial: user A cannot upload into user B''s folder'
+);
+
+-- Adversarial: user A cannot upload a row owned by user B (owner spoofing),
+-- even inside B''s folder where the foldername check would pass.
+SELECT test.assert_raises(
+  $$INSERT INTO storage.objects (bucket_id, name, owner)
+    VALUES ('product-photos', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/spoof.jpg',
+            'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb')$$,
+  'Adversarial: user A cannot forge an upload owned by user B'
+);
+
+-- Adversarial: no unprefixed (legacy, globally-shared) path may be created.
+SELECT test.assert_raises(
+  $$INSERT INTO storage.objects (bucket_id, name, owner)
+    VALUES ('product-photos', '012345678905/legacy.jpg',
+            'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')$$,
+  'Adversarial: an upload path not prefixed with the uploader uid is rejected'
+);
 SELECT test.logout();
+
 
 -- ── Adversarial: anon can NO LONGER view (policy TO authenticated only) ────
 SELECT test.login('anon');
