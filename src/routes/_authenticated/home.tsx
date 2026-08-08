@@ -38,6 +38,7 @@ import {
   buildHomeProfileAnswers,
   resolveHomeProfileSetupState,
   shouldShowHomeProfileCard,
+  shouldShowPoolAlarmNudge,
   type HomeProfileAnswers,
 } from "@/lib/homeProfile";
 
@@ -925,6 +926,15 @@ function HomePage() {
     // survives across devices and browser-data clears; previously stored
     // only in localStorage, which is why users saw the card reappear on
     // every new device.
+    //
+    // Note this upsert payload is intentionally partial (user_id +
+    // dismissed_at only) — it does NOT touch has_stairs/has_pool/etc, so
+    // tapping the Skip (X) button mid-quiz leaves whatever those were
+    // already set to completely unchanged, it does not reset them. If a
+    // user answered a question earlier in a previous session (e.g.
+    // has_pool: true) and later re-opens the quiz via "Edit home profile"
+    // but taps X instead of explicitly re-answering, that stale answer
+    // silently persists — see shouldShowPoolAlarmNudge in homeProfile.ts.
     setHomeProfileSetup("skipped");
     try {
       localStorage.setItem("safesound.homeProfileSetup", "skipped");
@@ -1138,7 +1148,7 @@ function HomePage() {
       )}
 
       {/* Pool alarm nudge — shown when home profile says they have a pool */}
-      {homeProfile?.has_pool && (
+      {shouldShowPoolAlarmNudge(homeProfile?.has_pool) && (
         <div className="px-5 pt-3 sm:px-6">
           <div className="mx-auto max-w-md">
             <div className="flex items-start gap-3 rounded-3xl border border-blue-200 bg-blue-50 px-4 py-4">

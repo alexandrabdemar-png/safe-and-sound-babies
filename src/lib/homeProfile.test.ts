@@ -4,6 +4,7 @@ import {
   buildHomeProfileAnswers,
   resolveHomeProfileSetupState,
   shouldShowHomeProfileCard,
+  shouldShowPoolAlarmNudge,
   HOME_PROFILE_QUESTION_COUNT,
 } from "./homeProfile";
 
@@ -50,6 +51,25 @@ describe("buildHomeProfileAnswers", () => {
       in_daycare: "both",
       has_pool: true,
     });
+  });
+
+  it("regression: preserves an explicit has_pool: false (not just the default) — this is what 'answering No' actually sends", () => {
+    // Distinct from the "fills in defaults" test below: this proves an
+    // explicitly-given `false` isn't accidentally treated the same as
+    // "not answered" by a `||`-style fallback. buildHomeProfileAnswers
+    // uses `??`, which correctly does the right thing here — this test
+    // guards against a future edit swapping it for `||` and silently
+    // reintroducing that class of bug (false would then read as "not
+    // answered" and fall through to the default instead).
+    const result = buildHomeProfileAnswers({
+      has_stairs: true,
+      home_type: "house",
+      has_pet: false,
+      has_car: true,
+      in_daycare: "home",
+      has_pool: false,
+    });
+    expect(result.has_pool).toBe(false);
   });
 
   it("accepts all three in_daycare options: daycare, home, and both", () => {
@@ -111,5 +131,40 @@ describe("shouldShowHomeProfileCard", () => {
   it("never shows the card once the user has skipped (skipped)", () => {
     expect(shouldShowHomeProfileCard("skipped", false)).toBe(false);
     expect(shouldShowHomeProfileCard("skipped", true)).toBe(false);
+  });
+});
+
+// ── Investigated a report: the pool alarm nudge showed on Home despite the
+// user answering "No" to "Do you have a pool or spa at home?" ────────────
+describe("shouldShowPoolAlarmNudge", () => {
+  it("shows only when has_pool is explicitly true", () => {
+    expect(shouldShowPoolAlarmNudge(true)).toBe(true);
+  });
+
+  it("does not show when has_pool is false (the reported case: answered 'No')", () => {
+    expect(shouldShowPoolAlarmNudge(false)).toBe(false);
+  });
+
+  it("does not show when has_pool is null (row exists, question unanswered)", () => {
+    expect(shouldShowPoolAlarmNudge(null)).toBe(false);
+  });
+
+  it("does not show when has_pool is undefined (no home_profile row at all)", () => {
+    expect(shouldShowPoolAlarmNudge(undefined)).toBe(false);
+  });
+
+  it("end-to-end: answering 'No' through the full pipeline correctly hides the nudge", () => {
+    // Simulates the actual user action: tapping the "No" pill on the pool
+    // question, exactly as HomePersonalizationCard's pick("has_pool", false)
+    // does, through buildHomeProfileAnswers, to the render gate.
+    const saved = buildHomeProfileAnswers({
+      has_stairs: false,
+      home_type: "house",
+      has_pet: false,
+      has_car: true,
+      in_daycare: "home",
+      has_pool: false,
+    });
+    expect(shouldShowPoolAlarmNudge(saved.has_pool)).toBe(false);
   });
 });

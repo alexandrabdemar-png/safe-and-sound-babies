@@ -77,3 +77,28 @@ export function shouldShowHomeProfileCard(
   return state === "pending" && loaded;
 }
 
+/**
+ * Whether the "Pool alarm recommended" nudge should show on Home. Extracted
+ * to a named, testable function (rather than an inline `homeProfile?.
+ * has_pool &&` in JSX) after investigating a report of the nudge showing
+ * despite the user answering "No" to "Do you have a pool or spa at home?".
+ *
+ * Traced end to end and found the answer-to-save path correct: picking
+ * "No" sends has_pool: false through buildHomeProfileAnswers (which uses
+ * `??`, not `||`, so an explicit false survives) into the upsert payload,
+ * and this function correctly returns false for it. The likely real
+ * explanation is a different control entirely: every question screen in
+ * the quiz (including this one) also has a Skip (✕) button in the corner,
+ * separate from the answer pills. Tapping ✕ — including by mistake,
+ * thinking it declines/dismisses the current question — abandons the
+ * whole quiz via skipHomeProfile(), whose upsert payload only ever
+ * contains `dismissed_at`, never has_pool. Whatever has_pool was already
+ * set to (possibly a stale `true` from an earlier session) is left
+ * completely untouched, not corrected to false. That reads to the user as
+ * "I said no and it's still showing", even though no "no" was ever
+ * actually saved for this row.
+ */
+export function shouldShowPoolAlarmNudge(hasPool: boolean | null | undefined): boolean {
+  return hasPool === true;
+}
+
