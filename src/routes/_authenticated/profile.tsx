@@ -263,7 +263,13 @@ function ProfilePage() {
             variant="ghost"
             className="w-full justify-start rounded-xl"
             onClick={() => {
-              try { localStorage.setItem("safesound.homeProfileSetup", "pending"); } catch {}
+              // A dedicated flag, not just "safesound.homeProfileSetup":
+              // Home's own load effect re-derives that value from whether
+              // a home_profile row exists at all, which — without this
+              // separate signal — would immediately override "pending"
+              // back to "done" the moment it saw the (still-unedited) row,
+              // before the user got a chance to change anything.
+              try { localStorage.setItem("safesound.homeProfileEditing", "1"); } catch {}
               navigate({ to: "/home" });
             }}
           >

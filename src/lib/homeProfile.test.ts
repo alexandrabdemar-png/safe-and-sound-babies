@@ -107,6 +107,32 @@ describe("resolveHomeProfileSetupState", () => {
       resolveHomeProfileSetupState({ dismissed_at: "2026-07-13T00:00:00Z" }),
     ).toBe("skipped");
   });
+
+  // ── Regression: "Edit home profile" silently doing nothing ──────────────
+  //
+  // Investigated a report: a user answered "No" to "Do you have a pool?"
+  // via Edit home profile, but the pool alarm nudge kept showing anyway.
+  // Root cause: profile.tsx's Edit button set localStorage's setup key to
+  // "pending" and navigated to Home, but Home's DB-load effect always
+  // called this function with a row that still had the OLD answers (the
+  // edit hadn't saved anything new yet), got back "done" (a row exists),
+  // and overwrote "pending" right back to "done" before the user could
+  // change anything — so their tap on "No" may never have had a chance to
+  // register against a card that was already being hidden again.
+  it("isEditing forces 'pending' even when a fully-answered row already exists", () => {
+    expect(resolveHomeProfileSetupState({ dismissed_at: null }, true)).toBe("pending");
+  });
+
+  it("isEditing forces 'pending' even when the row was previously dismissed via Skip", () => {
+    expect(
+      resolveHomeProfileSetupState({ dismissed_at: "2026-07-13T00:00:00Z" }, true),
+    ).toBe("pending");
+  });
+
+  it("isEditing=false (the default) preserves the original 'done' behavior — not a regression", () => {
+    expect(resolveHomeProfileSetupState({ dismissed_at: null })).toBe("done");
+    expect(resolveHomeProfileSetupState({ dismissed_at: null }, false)).toBe("done");
+  });
 });
 
 describe("shouldShowHomeProfileCard", () => {

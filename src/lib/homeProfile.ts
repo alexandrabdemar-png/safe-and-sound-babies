@@ -49,6 +49,20 @@ export function buildHomeProfileAnswers(updated: Partial<HomeProfileAnswers>): H
  * unit tested without React/Supabase.
  *
  * Rules (in priority order):
+ *   - isEditing → the user explicitly asked to re-answer via "Edit home
+ *     profile" (profile.tsx) → "pending", regardless of whether a row
+ *     already exists.
+ *
+ *     Bug this parameter fixes: before it existed, this function had no
+ *     way to know "the user just clicked Edit" versus "this is a routine
+ *     load" — it only ever looked at the DB row, and a row exists the
+ *     moment someone has answered once. So re-opening the quiz to change
+ *     one answer would show it very briefly, then Home's own DB-load
+ *     effect would re-fetch the (still-old, not-yet-resaved) row, get
+ *     "done" back from this function, and hide the card again — before
+ *     the user's tap on the new answer had a chance to matter. Reported
+ *     symptom: answering "No" to "Do you have a pool?" via Edit home
+ *     profile appeared to do nothing; the pool alarm nudge kept showing.
  *   - Row with `dismissed_at` set → user tapped "Skip" before → "skipped".
  *   - Row exists at all (any answered questions) → "done".
  *   - No row → "pending" (first-time user; show the card).
@@ -56,7 +70,9 @@ export function buildHomeProfileAnswers(updated: Partial<HomeProfileAnswers>): H
 export type HomeProfileSetupState = "pending" | "done" | "skipped";
 export function resolveHomeProfileSetupState(
   hp: { dismissed_at?: string | null } | null | undefined,
+  isEditing = false,
 ): HomeProfileSetupState {
+  if (isEditing) return "pending";
   if (!hp) return "pending";
   if (hp.dismissed_at) return "skipped";
   return "done";

@@ -278,6 +278,7 @@ function HomePage() {
   const [homeProfile, setHomeProfile] = useState<HomeProfile | null>(null);
   const [homeProfileSetup, setHomeProfileSetup] = useState<"pending" | "done" | "skipped">(() => {
     try {
+      if (localStorage.getItem("safesound.homeProfileEditing") === "1") return "pending";
       const v = localStorage.getItem("safesound.homeProfileSetup");
       if (v === "done" || v === "skipped") return v;
     } catch {}
@@ -531,7 +532,16 @@ function HomePage() {
               // reappears; same issue after a browser data clear.
               setHomeProfile(hp as HomeProfile);
             }
-            const nextState = resolveHomeProfileSetupState(hp);
+            // One-shot: honor an explicit "Edit home profile" request (see
+            // profile.tsx) by forcing "pending" even though a row already
+            // exists, then clear the flag so it doesn't keep forcing
+            // "pending" forever on every future load — just this one.
+            let isEditing = false;
+            try {
+              isEditing = localStorage.getItem("safesound.homeProfileEditing") === "1";
+              if (isEditing) localStorage.removeItem("safesound.homeProfileEditing");
+            } catch {}
+            const nextState = resolveHomeProfileSetupState(hp, isEditing);
             try {
               localStorage.setItem("safesound.homeProfileSetup", nextState);
             } catch {}
