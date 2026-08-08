@@ -149,3 +149,68 @@ describe("pacifier size-appropriateness tip", () => {
     expect(seen.has("t061")).toBe(true);
   });
 });
+
+// ── Answers a direct question: does the tip actually change week to week? ──
+//
+// selectWeeklyTip is deterministic — basePool[weekNumber % basePool.length]
+// — so "does it update weekly" reduces to two provable facts: (1) every
+// age's eligible pool has more than one tip, so consecutive week numbers
+// can't land on the same index by construction, and (2) home.tsx actually
+// feeds it a week number that increments every real calendar week (already
+// covered by the getIsoWeekNumber suite above). This tests fact (1)
+// directly, plus a live simulation of "this week vs. next week" per age.
+describe("weekly tip rotation actually changes week to week", () => {
+  it("structural guard: every month of age from 0–240 has more than one eligible tip in its pool", () => {
+    // Prevents a future SAFETY_TIPS edit from silently narrowing some age's
+    // pool down to a single tip, which would freeze that age's "weekly" tip
+    // permanently — the exact bug this whole test suite is here to rule out.
+    for (let ageMonths = 0; ageMonths <= 240; ageMonths++) {
+      const ageTips = SAFETY_TIPS.filter(
+        (t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths,
+      );
+      const poolSize = ageTips.length > 0 ? ageTips.length : SAFETY_TIPS.length;
+      expect(poolSize).toBeGreaterThan(1);
+    }
+  });
+
+  it("simulated 'this week' vs. 'next week' picks a different tip, for a representative age at every stage", () => {
+    // Representative ages spanning the defined tip bands (0–3mo through
+    // 24mo+), each tested at an arbitrary real ISO week so this isn't
+    // tied to a hardcoded week number that could coincidentally repeat.
+    const representativeAges = [1, 4, 7, 10, 13, 16, 19, 22, 25, 30, 36];
+    const thisWeek = getIsoWeekNumber(new Date("2026-08-03T00:00:00Z")); // an arbitrary Monday
+    const nextWeek = getIsoWeekNumber(new Date("2026-08-10T00:00:00Z")); // the following Monday
+    expect(nextWeek).toBe(thisWeek + 1);
+
+    for (const ageMonths of representativeAges) {
+      const tipThisWeek = selectWeeklyTip(ageMonths, thisWeek);
+      const tipNextWeek = selectWeeklyTip(ageMonths, nextWeek);
+      expect(tipNextWeek.id).not.toBe(tipThisWeek.id);
+    }
+  });
+
+  it("over one full lap of an age's pool, every tip in that pool is actually shown (no index is unreachable)", () => {
+    const ageMonths = 8;
+    const pool = SAFETY_TIPS.filter(
+      (t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths,
+    );
+    const seenIds = new Set<string>();
+    for (let week = 0; week < pool.length; week++) {
+      seenIds.add(selectWeeklyTip(ageMonths, week).id);
+    }
+    expect(seenIds.size).toBe(pool.length);
+  });
+
+  it("the tip only repeats after a full lap of the pool, not sooner (rotation isn't secretly shorter than it looks)", () => {
+    const ageMonths = 8;
+    const pool = SAFETY_TIPS.filter(
+      (t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths,
+    );
+    const firstTip = selectWeeklyTip(ageMonths, 0);
+    for (let week = 1; week < pool.length; week++) {
+      expect(selectWeeklyTip(ageMonths, week).id).not.toBe(firstTip.id);
+    }
+    // It's expected (and correct) to repeat exactly on the next lap.
+    expect(selectWeeklyTip(ageMonths, pool.length).id).toBe(firstTip.id);
+  });
+});
