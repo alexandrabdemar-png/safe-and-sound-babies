@@ -30,7 +30,7 @@ import { evaluateInsights, URGENCY_LABEL, type Insight, type ProductInput } from
 import { friendlyError, diagnosticDetail } from "@/lib/errors";
 import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
 import { checkCriticalRecalls, CRITICAL_RECALLS } from "@/lib/recallCheck";
-import { selectWeeklyTip, getIsoWeekNumber, weekKey as getTipWeekKey } from "@/lib/safetyTips";
+import { selectDailyTip, dayIndexFromDate, dayKey as getTipDayKey } from "@/lib/safetyTips";
 import { WHATS_NEW, LATEST_VERSION, whatsNewDismissalKey } from "@/lib/whatsNew";
 import { fetchMilestonesResilient } from "@/lib/momentIcons";
 import {
@@ -218,18 +218,19 @@ function HomePage() {
   // FDA baby recall count (Wednesday only), cached daily
   const [fdaRecallCount, setFdaRecallCount] = useState<number | null>(null);
 
-  // Notification preferences (tip_day, paused_until, expiry_advance_days)
+  // Notification preferences (paused_until, expiry_advance_days) — the
+  // daily safety tip has no "which day" setting to read here anymore
+  // (it shows every day, subject only to the pause-alerts toggle).
   const [notifPrefs, setNotifPrefs] = useState<{
-    tip_day: number;
     paused_until: string | null;
     expiry_advance_days: number;
-  }>({ tip_day: 1, paused_until: null, expiry_advance_days: 30 });
+  }>({ paused_until: null, expiry_advance_days: 30 });
 
-  // Weekly safety tip
+  // Daily safety tip
   const [tipCompleted, setTipCompleted] = useState(() => {
     if (typeof window === "undefined") return false;
     try {
-      return !!localStorage.getItem(`safesound.tipDone.${getTipWeekKey()}`);
+      return !!localStorage.getItem(`safesound.tipDone.${getTipDayKey()}`);
     } catch {
       return false;
     }
@@ -554,18 +555,18 @@ function HomePage() {
         if (sess?.user) {
           const { data: prefData } = await (supabase as any)
             .from("notification_preferences")
-            .select("tip_day, paused_until, expiry_advance_days")
+            .select("paused_until, expiry_advance_days")
             .eq("user_id", sess.user.id)
             .maybeSingle();
           if (prefData) setNotifPrefs(prefData as typeof notifPrefs);
 
-          // Check if this week's tip is already completed
-          const wk = getTipWeekKey();
+          // Check if today's tip is already completed
+          const dk = getTipDayKey();
           const { data: tipData } = await (supabase as any)
             .from("completed_tips")
             .select("id")
             .eq("user_id", sess.user.id)
-            .eq("week_key", wk)
+            .eq("week_key", dk)
             .maybeSingle();
           if (tipData) setTipCompleted(true);
         }
@@ -757,9 +758,9 @@ function HomePage() {
   }
 
   async function markTipDone() {
-    const wk = getTipWeekKey();
+    const dk = getTipDayKey();
     try {
-      localStorage.setItem(`safesound.tipDone.${wk}`, "1");
+      localStorage.setItem(`safesound.tipDone.${dk}`, "1");
     } catch {}
     setTipCompleted(true);
     setTipSuccess(true);
@@ -769,23 +770,26 @@ function HomePage() {
         data: { session: sess },
       } = await supabase.auth.getSession();
       if (!sess?.user) return;
-      const wk = getTipWeekKey();
       const tip = child
-        ? selectWeeklyTip(
+        ? selectDailyTip(
             Math.floor(
               (Date.now() - new Date(child.date_of_birth ?? new Date().toISOString()).getTime()) /
                 (30.44 * 86400000),
             ),
-            getIsoWeekNumber(),
+            dayIndexFromDate(),
             homeProfile?.has_stairs,
           )
         : null;
+      // completed_tips.week_key predates the daily cadence and still has
+      // that name in the database — it's just a plain text dedup key
+      // column, now holding a YYYY-MM-DD day key instead of an ISO week
+      // key. Not renamed to avoid an unrelated migration for this change.
       await (supabase as any).from("completed_tips").upsert(
         {
           user_id: sess.user.id,
           child_id: child?.id ?? null,
           tip_id: tip?.id ?? "unknown",
-          week_key: wk,
+          week_key: dk,
         },
         { onConflict: "user_id,week_key" },
       );
@@ -944,14 +948,13 @@ function HomePage() {
       console.error("[home] failed to persist home_profile skip (network):", err);
     }
   }
-  // Weekly safety tip
+  // Daily safety tip
   const alertsPaused = notifPrefs.paused_until && new Date(notifPrefs.paused_until) > new Date();
-  const today = new Date().getDay();
-  const showTipCard = !alertsPaused && !tipCompleted && today >= notifPrefs.tip_day;
+  const showTipCard = !alertsPaused && !tipCompleted;
   const ageMonthsForTip = child?.date_of_birth
     ? Math.floor((Date.now() - new Date(child.date_of_birth).getTime()) / (30.44 * 86400000))
     : 0;
-  const weeklyTip = selectWeeklyTip(ageMonthsForTip, getIsoWeekNumber());
+  const dailyTip = selectDailyTip(ageMonthsForTip, dayIndexFromDate(), homeProfile?.has_stairs);
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28 animate-fade-in">
@@ -1009,11 +1012,11 @@ function HomePage() {
         </div>
       )}
 
-      {/* Weekly Safety Tip */}
-      {showTipCard && weeklyTip && (
+      {/* Daily Safety Tip */}
+      {showTipCard && dailyTip && (
         <div className="px-5 pt-3 sm:px-6">
           <div className="mx-auto max-w-md">
-            <WeeklySafetyTipCard tip={weeklyTip} onDone={markTipDone} showSuccess={tipSuccess} />
+            <DailySafetyTipCard tip={dailyTip} onDone={markTipDone} showSuccess={tipSuccess} />
           </div>
         </div>
       )}
@@ -1657,8 +1660,8 @@ function RecallRadarCard({
   );
 }
 
-// ── Weekly Safety Tip Card ──────────────────────────────────────────────────
-function WeeklySafetyTipCard({
+// ── Daily Safety Tip Card ───────────────────────────────────────────────────
+function DailySafetyTipCard({
   tip,
   onDone,
   showSuccess,
@@ -1675,7 +1678,7 @@ function WeeklySafetyTipCard({
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-body text-[11px] font-semibold uppercase tracking-widest text-primary mb-1">
-            Safety tip this week
+            Today's safety tip
           </p>
           <p className="font-body text-sm text-foreground leading-relaxed">{tip.text}</p>
           <div className="mt-3 flex items-center gap-2">

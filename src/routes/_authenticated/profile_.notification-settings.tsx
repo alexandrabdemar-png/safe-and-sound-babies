@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, Bell, Clock, Calendar, Package, PauseCircle } from "lucide-react";
+import { ChevronLeft, Bell, Clock, Package, PauseCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
@@ -21,12 +21,10 @@ type AlertSettings = {
 
 type NotifPrefs = {
   reminder_time: string;
-  tip_day: number;
   expiry_advance_days: number;
   paused_until: string | null;
 };
 
-const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const ADVANCE_OPTIONS = [7, 14, 30] as const;
 const PAUSE_OPTIONS = [
   { label: "1 week", days: 7 },
@@ -42,7 +40,6 @@ function NotificationSettingsPage() {
   });
   const [prefs, setPrefs] = useState<NotifPrefs>({
     reminder_time: "09:00",
-    tip_day: 1,
     expiry_advance_days: 30,
     paused_until: null,
   });
@@ -66,7 +63,7 @@ function NotificationSettingsPage() {
 
       const { data: prefData } = await (supabase as any)
         .from("notification_preferences")
-        .select("reminder_time, tip_day, expiry_advance_days, paused_until")
+        .select("reminder_time, expiry_advance_days, paused_until")
         .eq("user_id", user.id)
         .maybeSingle();
       if (prefData) setPrefs(prefData as NotifPrefs);
@@ -193,33 +190,6 @@ function NotificationSettingsPage() {
 
             <div className="px-5 py-4">
               <div className="flex items-center gap-2 mb-1">
-                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                <p className="font-body text-sm font-medium">Weekly tip day</p>
-              </div>
-              <p className="font-body text-xs text-muted-foreground mb-3">
-                Which day of the week your weekly safety tip appears on the home screen.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {DAY_NAMES.map((name, i) => (
-                  <button
-                    key={name}
-                    type="button"
-                    disabled={loading || savingPrefs}
-                    onClick={() => savePrefs({ ...prefs, tip_day: i })}
-                    className={`rounded-full border px-3 py-1.5 font-body text-xs font-medium transition-colors ${
-                      prefs.tip_day === i
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border/60 bg-background text-muted-foreground hover:border-primary/60"
-                    }`}
-                  >
-                    {name.slice(0, 3)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="px-5 py-4">
-              <div className="flex items-center gap-2 mb-1">
                 <Package className="h-3.5 w-3.5 text-muted-foreground" />
                 <p className="font-body text-sm font-medium">Product reminders — how far ahead</p>
               </div>
@@ -251,8 +221,8 @@ function NotificationSettingsPage() {
                 <p className="font-body text-sm font-medium">Pause non-recall alerts</p>
               </div>
               <p className="font-body text-xs text-muted-foreground mb-3">
-                Temporarily hide weekly tips and product reminders. This toggle doesn't apply to
-                recall alerts — those stay on.
+                Temporarily hide the daily safety tip and product reminders. This toggle doesn't
+                apply to recall alerts — those stay on.
               </p>
               {isPaused ? (
                 <div className="flex items-center gap-3 flex-wrap">

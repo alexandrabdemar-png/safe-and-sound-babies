@@ -1,58 +1,63 @@
 import { describe, it, expect } from "vitest";
-import { getIsoWeekNumber, weekKey, SAFETY_TIPS, selectWeeklyTip } from "./safetyTips";
+import { dayIndexFromDate, dayKey, SAFETY_TIPS, selectDailyTip } from "./safetyTips";
 
-describe("getIsoWeekNumber", () => {
-  it("returns the same week number for every day in the same ISO week (Mon–Sun)", () => {
-    // 2026-07-13 is a Monday; the ISO week runs through Sunday 2026-07-19.
-    const monday = new Date("2026-07-13T00:00:00Z");
-    const wednesday = new Date("2026-07-15T00:00:00Z");
-    const sunday = new Date("2026-07-19T00:00:00Z");
-    const weekNum = getIsoWeekNumber(monday);
-    expect(getIsoWeekNumber(wednesday)).toBe(weekNum);
-    expect(getIsoWeekNumber(sunday)).toBe(weekNum);
+describe("dayIndexFromDate", () => {
+  it("returns the same index for every moment within the same UTC calendar day", () => {
+    const morning = new Date("2026-07-13T00:00:01Z");
+    const evening = new Date("2026-07-13T23:59:59Z");
+    expect(dayIndexFromDate(evening)).toBe(dayIndexFromDate(morning));
   });
 
-  it("returns a different week number once the ISO week rolls over on Monday", () => {
-    const sunday = new Date("2026-07-19T00:00:00Z");
-    const nextMonday = new Date("2026-07-20T00:00:00Z");
-    expect(getIsoWeekNumber(nextMonday)).toBe(getIsoWeekNumber(sunday) + 1);
+  it("increments by exactly 1 for the next calendar day", () => {
+    const day = new Date("2026-07-13T12:00:00Z");
+    const nextDay = new Date("2026-07-14T12:00:00Z");
+    expect(dayIndexFromDate(nextDay)).toBe(dayIndexFromDate(day) + 1);
   });
 
-  it("handles the year-boundary edge case correctly (ISO week can belong to the prior/next year)", () => {
-    // 2026-01-01 is a Thursday, which ISO 8601 places in week 1 of 2026 —
-    // a naive day-of-year calculation would get this wrong.
-    expect(getIsoWeekNumber(new Date("2026-01-01T00:00:00Z"))).toBe(1);
-  });
-});
-
-describe("weekKey", () => {
-  it("is stable across every day within the same ISO week", () => {
-    const monday = new Date("2026-07-13T00:00:00Z");
-    const friday = new Date("2026-07-17T00:00:00Z");
-    expect(weekKey(friday)).toBe(weekKey(monday));
+  it("handles a year boundary with no discontinuity", () => {
+    const dec31 = new Date("2025-12-31T12:00:00Z");
+    const jan1 = new Date("2026-01-01T12:00:00Z");
+    expect(dayIndexFromDate(jan1)).toBe(dayIndexFromDate(dec31) + 1);
   });
 
-  it("changes once the ISO week rolls over", () => {
-    const sunday = new Date("2026-07-19T00:00:00Z");
-    const nextMonday = new Date("2026-07-20T00:00:00Z");
-    expect(weekKey(nextMonday)).not.toBe(weekKey(sunday));
-  });
-
-  it("produces a YYYY-Www formatted key", () => {
-    expect(weekKey(new Date("2026-07-13T00:00:00Z"))).toMatch(/^\d{4}-W\d{2}$/);
+  it("handles a leap-year February boundary with no discontinuity", () => {
+    // 2028 is a leap year.
+    const feb28 = new Date("2028-02-28T12:00:00Z");
+    const feb29 = new Date("2028-02-29T12:00:00Z");
+    const mar1 = new Date("2028-03-01T12:00:00Z");
+    expect(dayIndexFromDate(feb29)).toBe(dayIndexFromDate(feb28) + 1);
+    expect(dayIndexFromDate(mar1)).toBe(dayIndexFromDate(feb29) + 1);
   });
 });
 
-// ── Regression: "safety tip of the week" dismissal persistence ────────────
+describe("dayKey", () => {
+  it("changes every calendar day", () => {
+    const day = new Date("2026-07-13T12:00:00Z");
+    const nextDay = new Date("2026-07-14T12:00:00Z");
+    expect(dayKey(nextDay)).not.toBe(dayKey(day));
+  });
+
+  it("is stable across every moment within the same UTC calendar day", () => {
+    const morning = new Date("2026-07-13T00:00:01Z");
+    const evening = new Date("2026-07-13T23:59:59Z");
+    expect(dayKey(evening)).toBe(dayKey(morning));
+  });
+
+  it("produces a YYYY-MM-DD formatted key", () => {
+    expect(dayKey(new Date("2026-07-13T00:00:00Z"))).toBe("2026-07-13");
+  });
+});
+
+// ── Regression: "safety tip of the day" dismissal persistence ─────────────
 //
 // home.tsx's markTipDone() writes localStorage.setItem(`safesound.tipDone.
-// ${weekKey}`, "1"), and the initial tipCompleted state reads
-// localStorage.getItem(`safesound.tipDone.${weekKey}`) for the CURRENT
-// week's key. Since the key itself is week-scoped, dismissing this week
-// naturally has no effect on next week's key — this test proves that
-// design is actually correct using the exact same key convention and a
-// minimal in-memory stand-in for localStorage (this project's vitest
-// config runs in a plain Node environment, no DOM/localStorage global).
+// ${dayKey}`, "1"), and the initial tipCompleted state reads
+// localStorage.getItem(`safesound.tipDone.${dayKey}`) for the CURRENT
+// day's key. Since the key itself is day-scoped, dismissing today
+// naturally has no effect on tomorrow's key — this test proves that design
+// is actually correct using the exact same key convention and a minimal
+// in-memory stand-in for localStorage (this project's vitest config runs
+// in a plain Node environment, no DOM/localStorage global).
 function makeFakeLocalStorage() {
   const store = new Map<string, string>();
   return {
@@ -63,33 +68,33 @@ function makeFakeLocalStorage() {
   };
 }
 
-function isTipDismissedForWeek(storage: ReturnType<typeof makeFakeLocalStorage>, date: Date): boolean {
-  return !!storage.getItem(`safesound.tipDone.${weekKey(date)}`);
+function isTipDismissedForDay(storage: ReturnType<typeof makeFakeLocalStorage>, date: Date): boolean {
+  return !!storage.getItem(`safesound.tipDone.${dayKey(date)}`);
 }
 
 function markTipDismissed(storage: ReturnType<typeof makeFakeLocalStorage>, date: Date): void {
-  storage.setItem(`safesound.tipDone.${weekKey(date)}`, "1");
+  storage.setItem(`safesound.tipDone.${dayKey(date)}`, "1");
 }
 
-describe("weekly safety tip dismissal (via the weekKey-scoped storage key)", () => {
-  it("regression: dismissing the tip hides it for the rest of the same week, then it reappears the following week", () => {
+describe("daily safety tip dismissal (via the dayKey-scoped storage key)", () => {
+  it("regression: dismissing the tip hides it for the rest of the same day, then it reappears the following day", () => {
     const storage = makeFakeLocalStorage();
-    const mondayThisWeek = new Date("2026-07-13T00:00:00Z");
-    const fridaySameWeek = new Date("2026-07-17T00:00:00Z");
-    const mondayNextWeek = new Date("2026-07-20T00:00:00Z");
+    const morningToday = new Date("2026-07-13T08:00:00Z");
+    const eveningSameDay = new Date("2026-07-13T22:00:00Z");
+    const morningTomorrow = new Date("2026-07-14T08:00:00Z");
 
     // Not dismissed yet — the card would show.
-    expect(isTipDismissedForWeek(storage, mondayThisWeek)).toBe(false);
+    expect(isTipDismissedForDay(storage, morningToday)).toBe(false);
 
-    // Tap "Done" on Monday.
-    markTipDismissed(storage, mondayThisWeek);
+    // Tap "Done" in the morning.
+    markTipDismissed(storage, morningToday);
 
-    // "Reload" later in the same week — still hidden.
-    expect(isTipDismissedForWeek(storage, fridaySameWeek)).toBe(true);
+    // "Reload" later the same day — still hidden.
+    expect(isTipDismissedForDay(storage, eveningSameDay)).toBe(true);
 
-    // "Reload" the following week — visible again, since that week's key
-    // was never written.
-    expect(isTipDismissedForWeek(storage, mondayNextWeek)).toBe(false);
+    // "Reload" the next day — visible again, since that day's key was
+    // never written.
+    expect(isTipDismissedForDay(storage, morningTomorrow)).toBe(false);
   });
 });
 
@@ -98,11 +103,11 @@ describe("weekly safety tip dismissal (via the weekKey-scoped storage key)", () 
 // Reported bug: a user answered "no stairs" on the home_profile setup card
 // but still saw a stair-gate safety tip on Home. home.tsx's AgeJumpCard
 // already filtered its own stair-related content by home_profile.has_stairs
-// — this weekly tip pool (t021, t035) didn't get the same treatment.
-describe("selectWeeklyTip with hasStairs === false", () => {
+// — this tip pool (t021, t035) didn't get the same treatment.
+describe("selectDailyTip with hasStairs === false", () => {
   it("never returns a stair-gate tip across a full lap of the pool, at ages where one would otherwise be selected", () => {
-    for (let week = 1; week <= 60; week++) {
-      const tip = selectWeeklyTip(12, week, false);
+    for (let day = 1; day <= 60; day++) {
+      const tip = selectDailyTip(12, day, false);
       expect(tip.text).not.toMatch(/stair/i);
     }
   });
@@ -110,9 +115,9 @@ describe("selectWeeklyTip with hasStairs === false", () => {
   it("can still return the stair-gate tip when hasStairs is true or unset (unchanged default behavior)", () => {
     const seenWithStairs = new Set<string>();
     const seenUnset = new Set<string>();
-    for (let week = 1; week <= 60; week++) {
-      seenWithStairs.add(selectWeeklyTip(12, week, true).id);
-      seenUnset.add(selectWeeklyTip(12, week).id);
+    for (let day = 1; day <= 60; day++) {
+      seenWithStairs.add(selectDailyTip(12, day, true).id);
+      seenUnset.add(selectDailyTip(12, day).id);
     }
     expect(seenWithStairs.has("t021") || seenWithStairs.has("t035")).toBe(true);
     expect(seenUnset.has("t021") || seenUnset.has("t035")).toBe(true);
@@ -121,9 +126,9 @@ describe("selectWeeklyTip with hasStairs === false", () => {
   it("falls back to the full age-appropriate pool rather than an empty one, for an age where every tip in range happens to mention stairs", () => {
     // Sanity guard on the exclusion logic itself, using a narrow age slice
     // (5 months) where t021 is in range — exercised indirectly above, this
-    // just confirms selectWeeklyTip never throws or returns undefined.
-    for (let week = 1; week <= 10; week++) {
-      expect(selectWeeklyTip(5, week, false)).toBeDefined();
+    // just confirms selectDailyTip never throws or returns undefined.
+    for (let day = 1; day <= 10; day++) {
+      expect(selectDailyTip(5, day, false)).toBeDefined();
     }
   });
 });
@@ -138,31 +143,31 @@ describe("pacifier size-appropriateness tip", () => {
     expect(tip!.maxMonths).toBeGreaterThanOrEqual(18);
   });
 
-  it("can actually be selected by selectWeeklyTip for an age within its range", () => {
-    // Cycle through enough weeks to prove it's reachable — selectWeeklyTip
-    // is deterministic (age-filtered pool, indexed by week number), so if
+  it("can actually be selected by selectDailyTip for an age within its range", () => {
+    // Cycle through enough days to prove it's reachable — selectDailyTip
+    // is deterministic (age-filtered pool, indexed by day index), so if
     // the tip is in range it must show up within one lap of the pool.
     const seen = new Set<string>();
-    for (let week = 1; week <= 60; week++) {
-      seen.add(selectWeeklyTip(3, week).id);
+    for (let day = 1; day <= 60; day++) {
+      seen.add(selectDailyTip(3, day).id);
     }
     expect(seen.has("t061")).toBe(true);
   });
 });
 
-// ── Answers a direct question: does the tip actually change week to week? ──
+// ── Answers a direct question: does the tip actually change day to day? ───
 //
-// selectWeeklyTip is deterministic — basePool[weekNumber % basePool.length]
-// — so "does it update weekly" reduces to two provable facts: (1) every
-// age's eligible pool has more than one tip, so consecutive week numbers
-// can't land on the same index by construction, and (2) home.tsx actually
-// feeds it a week number that increments every real calendar week (already
-// covered by the getIsoWeekNumber suite above). This tests fact (1)
-// directly, plus a live simulation of "this week vs. next week" per age.
-describe("weekly tip rotation actually changes week to week", () => {
+// selectDailyTip is deterministic — basePool[dayIndex % basePool.length] —
+// so "does it update daily" reduces to two provable facts: (1) every age's
+// eligible pool has more than one tip, so consecutive day indices can't
+// land on the same index by construction, and (2) home.tsx actually feeds
+// it a day index that increments every real calendar day (already covered
+// by the dayIndexFromDate suite above). This tests fact (1) directly, plus
+// a live simulation of "today vs. tomorrow" per age.
+describe("daily tip rotation actually changes day to day", () => {
   it("structural guard: every month of age from 0–240 has more than one eligible tip in its pool", () => {
     // Prevents a future SAFETY_TIPS edit from silently narrowing some age's
-    // pool down to a single tip, which would freeze that age's "weekly" tip
+    // pool down to a single tip, which would freeze that age's "daily" tip
     // permanently — the exact bug this whole test suite is here to rule out.
     for (let ageMonths = 0; ageMonths <= 240; ageMonths++) {
       const ageTips = SAFETY_TIPS.filter(
@@ -173,19 +178,19 @@ describe("weekly tip rotation actually changes week to week", () => {
     }
   });
 
-  it("simulated 'this week' vs. 'next week' picks a different tip, for a representative age at every stage", () => {
+  it("simulated 'today' vs. 'tomorrow' picks a different tip, for a representative age at every stage", () => {
     // Representative ages spanning the defined tip bands (0–3mo through
-    // 24mo+), each tested at an arbitrary real ISO week so this isn't
-    // tied to a hardcoded week number that could coincidentally repeat.
+    // 24mo+), each tested at an arbitrary real date so this isn't tied to
+    // a hardcoded day index that could coincidentally repeat.
     const representativeAges = [1, 4, 7, 10, 13, 16, 19, 22, 25, 30, 36];
-    const thisWeek = getIsoWeekNumber(new Date("2026-08-03T00:00:00Z")); // an arbitrary Monday
-    const nextWeek = getIsoWeekNumber(new Date("2026-08-10T00:00:00Z")); // the following Monday
-    expect(nextWeek).toBe(thisWeek + 1);
+    const today = dayIndexFromDate(new Date("2026-08-03T00:00:00Z"));
+    const tomorrow = dayIndexFromDate(new Date("2026-08-04T00:00:00Z"));
+    expect(tomorrow).toBe(today + 1);
 
     for (const ageMonths of representativeAges) {
-      const tipThisWeek = selectWeeklyTip(ageMonths, thisWeek);
-      const tipNextWeek = selectWeeklyTip(ageMonths, nextWeek);
-      expect(tipNextWeek.id).not.toBe(tipThisWeek.id);
+      const tipToday = selectDailyTip(ageMonths, today);
+      const tipTomorrow = selectDailyTip(ageMonths, tomorrow);
+      expect(tipTomorrow.id).not.toBe(tipToday.id);
     }
   });
 
@@ -195,8 +200,8 @@ describe("weekly tip rotation actually changes week to week", () => {
       (t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths,
     );
     const seenIds = new Set<string>();
-    for (let week = 0; week < pool.length; week++) {
-      seenIds.add(selectWeeklyTip(ageMonths, week).id);
+    for (let day = 0; day < pool.length; day++) {
+      seenIds.add(selectDailyTip(ageMonths, day).id);
     }
     expect(seenIds.size).toBe(pool.length);
   });
@@ -206,11 +211,27 @@ describe("weekly tip rotation actually changes week to week", () => {
     const pool = SAFETY_TIPS.filter(
       (t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths,
     );
-    const firstTip = selectWeeklyTip(ageMonths, 0);
-    for (let week = 1; week < pool.length; week++) {
-      expect(selectWeeklyTip(ageMonths, week).id).not.toBe(firstTip.id);
+    const firstTip = selectDailyTip(ageMonths, 0);
+    for (let day = 1; day < pool.length; day++) {
+      expect(selectDailyTip(ageMonths, day).id).not.toBe(firstTip.id);
     }
     // It's expected (and correct) to repeat exactly on the next lap.
-    expect(selectWeeklyTip(ageMonths, pool.length).id).toBe(firstTip.id);
+    expect(selectDailyTip(ageMonths, pool.length).id).toBe(firstTip.id);
+  });
+
+  it("a full lap now takes as little as ~11 days (down from ~11 weeks) — documents the cadence tradeoff", () => {
+    // Not a bug — just makes the tradeoff mentioned in selectDailyTip's
+    // doc comment concrete and monitorable: the smallest age-filtered pool
+    // anywhere in 0-240mo is 11, so that age sees its tips repeat roughly
+    // every 11 days under a daily cadence.
+    let minPoolSize = Infinity;
+    for (let ageMonths = 0; ageMonths <= 240; ageMonths++) {
+      const ageTips = SAFETY_TIPS.filter(
+        (t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths,
+      );
+      const poolSize = ageTips.length > 0 ? ageTips.length : SAFETY_TIPS.length;
+      minPoolSize = Math.min(minPoolSize, poolSize);
+    }
+    expect(minPoolSize).toBe(11);
   });
 });

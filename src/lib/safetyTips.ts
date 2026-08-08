@@ -5,8 +5,9 @@ export type SafetyTip = {
   maxMonths: number;
 };
 
-// 52 weekly safety tips — gentle, non-prescriptive language throughout.
-// minMonths/maxMonths define the age range where the tip is most relevant.
+// Safety tips shown one per day (see selectDailyTip below) — gentle,
+// non-prescriptive language throughout. minMonths/maxMonths define the age
+// range where the tip is most relevant.
 export const SAFETY_TIPS: SafetyTip[] = [
   // ── 0–3 months ──
   {
@@ -389,7 +390,7 @@ export const SAFETY_TIPS: SafetyTip[] = [
   },
 ];
 
-// Select the best tip for a given age and ISO week number.
+// Select the best tip for a given age and day index (see dayIndexFromDate).
 // Prefers age-appropriate tips; falls back to any tip if none match.
 //
 // hasStairs === false excludes stair-gate tips (a home_profile answer of
@@ -397,9 +398,16 @@ export const SAFETY_TIPS: SafetyTip[] = [
 // ageSafetyTip, which do the equivalent filtering elsewhere on Home).
 // Unset/unknown (undefined or true) leaves every tip in play, same as
 // before this parameter existed. Never lets the filter empty the pool.
-export function selectWeeklyTip(
+//
+// Note on cadence: the smallest age-filtered pool across the whole 0–240mo
+// range is 11 tips (see safetyTips.test.ts), so a daily cadence completes a
+// full lap of an age's pool in as little as ~11 days before repeating —
+// noticeably faster than the old weekly cadence's ~11-week lap. Acceptable
+// here since every tip is evergreen advisory content, not something that
+// goes stale, but worth knowing if the pool ever needs to grow.
+export function selectDailyTip(
   ageMonths: number,
-  weekNumber: number,
+  dayIndex: number,
   hasStairs?: boolean | null,
 ): SafetyTip {
   const ageTips = SAFETY_TIPS.filter(
@@ -408,23 +416,22 @@ export function selectWeeklyTip(
   const basePool = ageTips.length > 0 ? ageTips : SAFETY_TIPS;
   if (hasStairs === false) {
     const withoutStairs = basePool.filter((t) => !/stair/i.test(t.text));
-    if (withoutStairs.length > 0) return withoutStairs[weekNumber % withoutStairs.length];
+    if (withoutStairs.length > 0) return withoutStairs[dayIndex % withoutStairs.length];
   }
-  return basePool[weekNumber % basePool.length];
+  return basePool[dayIndex % basePool.length];
 }
 
-// ISO week number (1–53)
-export function getIsoWeekNumber(date = new Date()): number {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+// A day index that increments by exactly 1 every calendar day, forever —
+// no year-boundary or leap-year edge cases to handle (unlike an ISO week
+// number), since it's just a whole-day count from the Unix epoch in UTC.
+export function dayIndexFromDate(date = new Date()): number {
+  const utcMidnight = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  return Math.floor(utcMidnight / 86400000);
 }
 
-// Week key for localStorage / Supabase dedup
-export function weekKey(date = new Date()): string {
+// Day key (UTC, YYYY-MM-DD) for localStorage / Supabase dedup — one
+// completed-tip row per user per calendar day.
+export function dayKey(date = new Date()): string {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-  const week = getIsoWeekNumber(date);
-  return `${d.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
+  return d.toISOString().slice(0, 10);
 }
