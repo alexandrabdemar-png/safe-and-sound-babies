@@ -74,7 +74,7 @@ SELECT test.logout();
 -- ── Adversarial: unrelated authenticated user B cannot view ────────────────
 SELECT test.login('authenticated', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
 SELECT test.assert(
-  (SELECT count(*) FROM storage.objects WHERE name = '012345678905/photo1.jpg') = 0,
+  (SELECT count(*) FROM storage.objects WHERE name = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/012345678905/photo1.jpg') = 0,
   'Adversarial: unrelated authenticated user B cannot view user A''s photo'
 );
 
@@ -99,7 +99,7 @@ SELECT test.logout();
 -- ── Owner (user A) can still view their own photo ──────────────────────────
 SELECT test.login('authenticated', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
 SELECT test.assert(
-  (SELECT count(*) FROM storage.objects WHERE name = '012345678905/photo1.jpg') = 1,
+  (SELECT count(*) FROM storage.objects WHERE name = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/012345678905/photo1.jpg') = 1,
   'Owner A can still view their own photo after lockdown'
 );
 SELECT test.logout();
