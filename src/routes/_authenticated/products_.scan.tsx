@@ -46,6 +46,8 @@ import { resolveCarSeatReplaceAt } from "@/lib/carSeatExpiration";
 import { evaluateAgeAppropriateness } from "@/lib/ageAppropriateness";
 import { isPreviewHost } from "@/lib/previewHost";
 import { nextPacifierSizeUpDate } from "@/lib/pacifierSizeUp";
+import { extractFunctionsErrorMessage } from "@/lib/functionsError";
+
 
 const CATEGORY_ORDER: CategoryKey[] = CATEGORIES.map((c) => c.key);
 
