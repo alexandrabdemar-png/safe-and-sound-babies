@@ -46,6 +46,8 @@ import { resolveCarSeatReplaceAt } from "@/lib/carSeatExpiration";
 import { evaluateAgeAppropriateness } from "@/lib/ageAppropriateness";
 import { isPreviewHost } from "@/lib/previewHost";
 import { nextPacifierSizeUpDate } from "@/lib/pacifierSizeUp";
+import { extractFunctionsErrorMessage } from "@/lib/functionsError";
+
 
 const CATEGORY_ORDER: CategoryKey[] = CATEGORIES.map((c) => c.key);
 
@@ -224,11 +226,21 @@ function ScanPage() {
             : "We couldn't find this product in any database. Add the details manually below.",
         );
       }
-    } catch {
+    } catch (err) {
       if (generation !== scanGenerationRef.current) return;
       setFoundProduct(null);
-      setLookupError("Lookup failed — check your connection.");
+      // Surface the underlying reason. A blanket "check your connection"
+      // hid a real misconfiguration (the app was calling a stale backend
+      // project, so every lookup failed at the network layer) and sent
+      // parents chasing their wifi instead.
+      const detail = await extractFunctionsErrorMessage(err, "");
+      setLookupError(
+        detail
+          ? `Lookup failed (${detail}). Add the details manually below, or retry.`
+          : "Lookup failed. Add the details manually below, or retry.",
+      );
     } finally {
+
       if (generation === scanGenerationRef.current) setStep("form");
     }
   }
