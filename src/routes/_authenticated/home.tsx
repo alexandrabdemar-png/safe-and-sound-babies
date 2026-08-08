@@ -23,7 +23,6 @@ import {
 import { MomentTimeline } from "@/components/MomentTimeline";
 import { SparkleIllustration } from "@/components/EmptyIllustration";
 import { BottomNav } from "@/components/BottomNav";
-import { DailyDiscoveryCard } from "@/components/DailyDiscoveryCard";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -1009,16 +1008,6 @@ function HomePage() {
           </div>
         </div>
       )}
-
-      {/* Today Section — card-of-the-day (replaces the old day-of-week
-          alerts/reminders card; recall counts, replacement alerts, and the
-          measurement reminder are still surfaced elsewhere on this page —
-          the header alert pill, the recall banner, and Recall Radar). */}
-      <div className="px-5 pt-4 sm:px-6">
-        <div className="mx-auto max-w-md">
-          <DailyDiscoveryCard dob={child?.date_of_birth ?? null} />
-        </div>
-      </div>
 
       {/* Weekly Safety Tip */}
       {showTipCard && weeklyTip && (
