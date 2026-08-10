@@ -25,14 +25,20 @@ export function useUnackedRecalls(): number {
 
     void refresh();
 
+    // Unique topic per hook instance. A fixed name made supabase-js hand back
+    // an *already-subscribed* channel whenever this hook was mounted twice
+    // (e.g. BottomNav + a products screen, or StrictMode's double effect),
+    // and calling .on("postgres_changes") on a joined channel throws
+    // "cannot add postgres_changes callbacks after subscribe()".
     const channel = supabase
-      .channel("unacked-recalls")
+      .channel(`unacked-recalls:${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "product_recalls" },
         () => { void refresh(); },
       )
       .subscribe();
+
 
     return () => {
       cancelled = true;
