@@ -394,6 +394,79 @@ export type Database = {
           },
         ]
       }
+      first_foods: {
+        Row: {
+          child_id: string
+          created_at: string
+          date_introduced: string
+          food_name: string
+          id: string
+          is_allergen: boolean
+          reaction_notes: string | null
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          date_introduced?: string
+          food_name: string
+          id?: string
+          is_allergen?: boolean
+          reaction_notes?: string | null
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          date_introduced?: string
+          food_name?: string
+          id?: string
+          is_allergen?: boolean
+          reaction_notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "first_foods_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      growth_logs: {
+        Row: {
+          child_id: string
+          created_at: string
+          height_inches: number | null
+          id: string
+          recorded_at: string
+          weight_lbs: number | null
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          height_inches?: number | null
+          id?: string
+          recorded_at?: string
+          weight_lbs?: number | null
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          height_inches?: number | null
+          id?: string
+          recorded_at?: string
+          weight_lbs?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "growth_logs_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       home_profile: {
         Row: {
           created_at: string | null
