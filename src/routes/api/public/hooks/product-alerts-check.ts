@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { hookUnauthorizedResponse } from "@/lib/hookAuth";
+
 
 /**
  * Daily product alerts job.
@@ -19,16 +21,10 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey =
-          request.headers.get("apikey") ??
-          request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-        const expected = process.env.HOOK_SECRET;
-        if (!expected || !apiKey || apiKey !== expected) {
-          return new Response(JSON.stringify({ error: "Unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
+        const unauthorized = hookUnauthorizedResponse(request);
+        if (unauthorized) return unauthorized;
+
+
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
