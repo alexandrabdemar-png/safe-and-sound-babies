@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { hookUnauthorizedResponse } from "@/lib/hookAuth";
+
 
 /**
  * Daily product alerts job.
