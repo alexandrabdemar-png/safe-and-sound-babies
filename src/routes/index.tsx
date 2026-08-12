@@ -145,7 +145,7 @@ function Index() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 sm:gap-x-10 sm:gap-y-14">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 sm:gap-x-10 sm:gap-y-14 lg:grid-cols-4">
             {categories.map((cat) => (
               <div key={cat.name} className="flex flex-col items-center text-center">
                 <div className="flex aspect-square w-full max-w-[180px] items-center justify-center overflow-hidden rounded-full bg-[#F5F1E8] p-6">
