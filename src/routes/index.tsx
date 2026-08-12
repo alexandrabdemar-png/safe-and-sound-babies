@@ -166,8 +166,8 @@ function Index() {
           }}
           className="mx-auto max-w-2xl text-center text-2xl leading-snug sm:text-3xl"
         >
-          We help you remember the little things that are easy to forget and the things you
-          haven't thought of yet.
+          Peace of Mine helps you remember the little things that are easy to forget and the
+          things you haven't thought of yet.
         </p>
       </section>
 
