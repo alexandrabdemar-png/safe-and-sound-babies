@@ -12,6 +12,12 @@ import catFormula from "@/assets/hd-formula.png";
 import catBouncer from "@/assets/hd-bouncer.png";
 import catBlocks from "@/assets/hd-blocks.png";
 import catCrib from "@/assets/hd-crib.png";
+import catStroller from "@/assets/hd-stroller.png";
+import catPacknplay from "@/assets/hd-packnplay.png";
+import catSwaddle from "@/assets/hd-swaddle.png";
+import catCarrier from "@/assets/hd-carrier.png";
+import catBreastmilk from "@/assets/hd-breastmilk.png";
+import catBabyfood from "@/assets/hd-babyfood.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
