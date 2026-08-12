@@ -1,0 +1,1 @@
+DELETE FROM public.milestones WHERE title LIKE 'PWTEST%';
