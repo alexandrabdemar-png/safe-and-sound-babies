@@ -61,13 +61,20 @@ export const Route = createFileRoute("/")({
 });
 
 const categories = [
-  { name: "Feeding", image: catFormula },
-  { name: "Sleep", image: catCrib },
-  { name: "On the Go", image: catCarseat },
+  { name: "Car Seats", image: catCarseat },
+  { name: "Cribs", image: catCrib },
+  { name: "Strollers", image: catStroller },
+  { name: "Carriers", image: catCarrier },
+  { name: "Pack 'n Plays", image: catPacknplay },
+  { name: "Swaddles", image: catSwaddle },
   { name: "Pacifiers", image: catPacifier },
+  { name: "Formula", image: catFormula },
+  { name: "Breast Milk", image: catBreastmilk },
+  { name: "Baby Food", image: catBabyfood },
   { name: "Activity Gear", image: catBouncer },
   { name: "Toys", image: catBlocks },
 ];
+
 
 function Index() {
   return (
