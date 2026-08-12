@@ -595,6 +595,7 @@ export type Database = {
           completed: boolean
           created_at: string
           due_date: string | null
+          icon: string | null
           id: string
           logged_at: string
           notes: string | null
@@ -608,6 +609,7 @@ export type Database = {
           completed?: boolean
           created_at?: string
           due_date?: string | null
+          icon?: string | null
           id?: string
           logged_at?: string
           notes?: string | null
@@ -621,6 +623,7 @@ export type Database = {
           completed?: boolean
           created_at?: string
           due_date?: string | null
+          icon?: string | null
           id?: string
           logged_at?: string
           notes?: string | null
@@ -637,6 +640,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          expiry_advance_days: number
+          id: string
+          paused_until: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expiry_advance_days?: number
+          id?: string
+          paused_until?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expiry_advance_days?: number
+          id?: string
+          paused_until?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       product_alerts: {
         Row: {
@@ -857,6 +887,7 @@ export type Database = {
           created_at: string
           expiration_date: string | null
           id: string
+          lot_number: string | null
           manufacture_date: string | null
           model: string | null
           name: string
@@ -883,6 +914,7 @@ export type Database = {
           created_at?: string
           expiration_date?: string | null
           id?: string
+          lot_number?: string | null
           manufacture_date?: string | null
           model?: string | null
           name: string
@@ -909,6 +941,7 @@ export type Database = {
           created_at?: string
           expiration_date?: string | null
           id?: string
+          lot_number?: string | null
           manufacture_date?: string | null
           model?: string | null
           name?: string
@@ -1012,6 +1045,7 @@ export type Database = {
           hazard_fingerprint: string | null
           id: string
           image_url: string | null
+          lot_pattern: string | null
           model: string | null
           official: boolean
           product_name: string | null
@@ -1036,6 +1070,7 @@ export type Database = {
           hazard_fingerprint?: string | null
           id?: string
           image_url?: string | null
+          lot_pattern?: string | null
           model?: string | null
           official?: boolean
           product_name?: string | null
@@ -1060,6 +1095,7 @@ export type Database = {
           hazard_fingerprint?: string | null
           id?: string
           image_url?: string | null
+          lot_pattern?: string | null
           model?: string | null
           official?: boolean
           product_name?: string | null
