@@ -1,87 +1,236 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Utensils, ClipboardList, Milk } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowRight, Utensils, ClipboardList, Milk, Sparkles, LineChart } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
+import { supabase } from "@/integrations/supabase/client";
+import { useActiveChild } from "@/hooks/useActiveChild";
+import {
+  bottlesSummary,
+  checklistsSummary,
+  firstFoodsSummary,
+  growthSummary,
+  momentsSummary,
+} from "@/lib/trackingSummaries";
 
 export const Route = createFileRoute("/_authenticated/tracking")({
   ssr: false,
   component: TrackingPage,
-  head: () => ({ meta: [{ title: "Tracking — Peace of Mine" }] }),
+  head: () => ({
+    meta: [
+      { title: "Track — Peace of Mine" },
+      {
+        name: "description",
+        content:
+          "Everything you've logged for your baby: moments, first foods, bottles, growth, and safety checklists.",
+      },
+      { property: "og:title", content: "Track — Peace of Mine" },
+      {
+        property: "og:description",
+        content: "Your baby's logged moments, foods, bottles, growth, and checklists in one place.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
 });
 
+type Summaries = {
+  moments: string | null;
+  foods: string | null;
+  bottles: string | null;
+  growth: string | null;
+  checklists: string | null;
+};
+
+const EMPTY: Summaries = {
+  moments: null,
+  foods: null,
+  bottles: null,
+  growth: null,
+  checklists: null,
+};
+
 function TrackingPage() {
+  const { activeChild, loading: childLoading } = useActiveChild();
+  const [summaries, setSummaries] = useState<Summaries>(EMPTY);
+
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (childLoading) return;
+    const childId = activeChild?.id;
+    const nowIso = new Date().toISOString();
+
+    // Each summary is independent: one failing read (e.g. a table a
+    // migration hasn't reached yet) must not blank the other cards, so
+    // every query is settled separately and falls back to its static blurb.
+    (async () => {
+      const [foods, bottlesActive, bottlesLast, moments, checklists] = await Promise.all([
+        childId
+          ? supabase
+              .from("first_foods")
+              .select("is_allergen")
+              .eq("child_id", childId)
+          : Promise.resolve({ data: null, error: null }),
+        supabase
+          .from("bottles")
+          .select("id", { count: "exact", head: true })
+          .is("finished_at", null)
+          .gt("expires_at", nowIso),
+        supabase
+          .from("bottles")
+          .select("started_at")
+          .order("started_at", { ascending: false })
+          .limit(1),
+        childId
+          ? supabase
+              .from("milestones")
+              .select("logged_at")
+              .eq("child_id", childId)
+              .order("logged_at", { ascending: false })
+          : Promise.resolve({ data: null, error: null }),
+        supabase.from("checklist_completions").select("id", { count: "exact", head: true }),
+      ]);
+
+      if (!mountedRef.current) return;
+
+      const foodRows = (foods.data ?? []) as { is_allergen: boolean }[];
+      const momentRows = (moments.data ?? []) as { logged_at: string | null }[];
+      const lastBottle = ((bottlesLast.data ?? []) as { started_at: string }[])[0]?.started_at ?? null;
+
+      setSummaries({
+        foods: foods.error
+          ? null
+          : firstFoodsSummary(foodRows.length, foodRows.filter((f) => f.is_allergen).length),
+        bottles: bottlesActive.error
+          ? null
+          : bottlesSummary(bottlesActive.count ?? 0, lastBottle),
+        moments: moments.error
+          ? null
+          : momentsSummary(momentRows.length, momentRows[0]?.logged_at ?? null),
+        growth: growthSummary(
+          activeChild?.weight_lbs ?? null,
+          activeChild?.height_inches ?? null,
+          activeChild?.measurements_updated_at ?? null,
+        ),
+        checklists: checklists.error ? null : checklistsSummary(checklists.count ?? 0),
+      });
+    })().catch((err) => console.error("[tracking] failed to load summaries", err));
+  }, [childLoading, activeChild?.id, activeChild?.measurements_updated_at]);
+
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28 animate-fade-in">
       <header className="px-5 pt-10 pb-6 sm:px-6">
         <div className="mx-auto max-w-md">
-          <p className="font-body text-sm font-medium uppercase tracking-[0.2em] text-accent">Your tools</p>
+          <p className="font-body text-sm font-medium uppercase tracking-[0.2em] text-accent">
+            Your history
+          </p>
           <h1 className="mt-2 font-display text-4xl font-semibold leading-tight tracking-tight text-foreground">
-            Tracking
+            Track
           </h1>
           <p className="mt-2 font-body text-base text-muted-foreground">
-            Quick, everyday logs and reference checklists in one place.
+            Everything you've logged{activeChild ? ` for ${activeChild.name}` : ""} — tap any card to
+            see the full log.
           </p>
         </div>
       </header>
 
       <main className="px-5 sm:px-6">
         <div className="mx-auto max-w-md space-y-3">
-          <Link
+          <TrackCard
+            to="/moments"
+            icon={Sparkles}
+            title="Moments"
+            blurb="Milestones and firsts, on a timeline"
+            summary={summaries.moments}
+            stagger="stagger-1"
+          />
+          <TrackCard
             to="/first-foods"
-            className="flex items-center justify-between rounded-3xl border border-border/60 bg-card p-5 transition-all hover:border-primary/40 animate-fade-up stagger-1"
-          >
-            <div className="flex items-center gap-4">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-                <Utensils className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="font-display text-base font-semibold tracking-tight">First Foods</p>
-                <p className="mt-0.5 font-body text-sm text-muted-foreground">
-                  Log the first time your baby tries a food and any allergen reactions
-                </p>
-              </div>
-            </div>
-            <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-          </Link>
-
-          <Link
+            icon={Utensils}
+            title="First Foods"
+            blurb="Foods introduced and any allergen reactions"
+            summary={summaries.foods}
+            stagger="stagger-2"
+          />
+          <TrackCard
             to="/bottles"
-            className="flex items-center justify-between rounded-3xl border border-border/60 bg-card p-5 transition-all hover:border-primary/40 animate-fade-up stagger-2"
-          >
-            <div className="flex items-center gap-4">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-                <Milk className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="font-display text-base font-semibold tracking-tight">Bottles</p>
-                <p className="mt-0.5 font-body text-sm text-muted-foreground">
-                  Track prepared bottles and safe-use windows
-                </p>
-              </div>
-            </div>
-            <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-          </Link>
-
-          <Link
+            icon={Milk}
+            title="Bottles"
+            blurb="Prepared bottles and safe-use windows"
+            summary={summaries.bottles}
+            stagger="stagger-3"
+          />
+          <TrackCard
+            to="/growth"
+            icon={LineChart}
+            title="Growth"
+            blurb="Height and weight over time"
+            summary={summaries.growth}
+            stagger="stagger-4"
+          />
+          <TrackCard
             to="/checklists"
-            className="flex items-center justify-between rounded-3xl border border-border/60 bg-card p-5 transition-all hover:border-primary/40 animate-fade-up stagger-3"
+            icon={ClipboardList}
+            title="Safety Checklists"
+            blurb="Room-by-room babyproofing and travel guides"
+            summary={summaries.checklists}
+            stagger="stagger-5"
+          />
+        </div>
+
+        <div className="mx-auto mt-4 max-w-md">
+          <Link
+            to="/add"
+            className="flex items-center justify-center gap-2 rounded-3xl border border-dashed border-border/70 p-4 font-body text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
           >
-            <div className="flex items-center gap-4">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-                <ClipboardList className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="font-display text-base font-semibold tracking-tight">Safety Checklists</p>
-                <p className="mt-0.5 font-body text-sm text-muted-foreground">
-                  Room-by-room babyproofing and travel guides
-                </p>
-              </div>
-            </div>
-            <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+            Need to log something? Go to Add
+            <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </main>
 
       <BottomNav />
     </div>
+  );
+}
+
+function TrackCard({
+  to,
+  icon: Icon,
+  title,
+  blurb,
+  summary,
+  stagger,
+}: {
+  to: string;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  blurb: string;
+  summary: string | null;
+  stagger: string;
+}) {
+  return (
+    <Link
+      to={to}
+      className={`flex items-center justify-between rounded-3xl border border-border/60 bg-card p-5 transition-all hover:border-primary/40 animate-fade-up ${stagger}`}
+    >
+      <div className="flex items-center gap-4">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary">
+          <Icon className="h-5 w-5" />
+        </span>
+        <div className="min-w-0">
+          <p className="font-display text-base font-semibold tracking-tight">{title}</p>
+          <p className="mt-0.5 font-body text-sm text-muted-foreground">{summary ?? blurb}</p>
+        </div>
+      </div>
+      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+    </Link>
   );
 }
