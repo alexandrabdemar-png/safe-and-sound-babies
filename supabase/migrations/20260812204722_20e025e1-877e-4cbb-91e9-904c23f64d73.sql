@@ -1,0 +1,4 @@
+UPDATE public.recalls SET url = 'https://recalls-rappels.canada.ca/en/alert-recall/pufferz-puffer-yoyo-type-ball-recalled-due-strangulation-hazard' WHERE source = 'health_canada' AND source_id = '77366';
+UPDATE public.recalls SET url = 'https://recalls-rappels.canada.ca/en/alert-recall/stokke-r-yoyo3-stroller-recalled-due-injury-hazard' WHERE source = 'health_canada' AND source_id = '76518';
+UPDATE public.recalls SET url = 'https://recalls-rappels.canada.ca/en/alert-recall/babyzen-yoyo-bassinets-recalled-due-strangulation-hazard' WHERE source = 'health_canada' AND source_id = '62273';
+UPDATE public.recalls SET url = 'https://recalls-rappels.canada.ca/en/alert-recall/philips-avent-smart-ear-thermometer-2018-01-25' WHERE source = 'health_canada' AND source_id = '57860';

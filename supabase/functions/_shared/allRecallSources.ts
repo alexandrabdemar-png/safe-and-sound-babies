@@ -188,33 +188,39 @@ export async function fetchHealthCanadaRecalls(
       : (data?.results ?? data?.records ?? []);
     const out: NormalizedRecall[] = [];
     for (const r of rows) {
-      const title = pick(r, "Title_En", "title_en", "Title", "title");
+      const title = pick(r, "Title", "Title_En", "title_en", "title");
       if (!title) continue;
-      const category = pick(r, "Category_En", "category_en", "Category");
-      const summary = pick(r, "Summary_En", "summary_en", "Description_En", "description");
-      const blob = [title, category, summary].filter(Boolean).join(" ");
+      const category = pick(r, "Category", "Category_En", "category_en");
+      const productName = pick(r, "Product", "Product_En", "product_en");
+      const summary = pick(r, "Product", "Summary_En", "summary_en", "Description_En", "description");
+      const blob = [title, category, productName, summary].filter(Boolean).join(" ");
       const categoryHint = category ? /toy|child|infant|nursery|baby/i.test(category) : false;
       if (!isBabyRelevant(blob) && !categoryHint) continue;
 
-      const sourceId = pick(r, "RecallID", "recall_id", "NID", "nid") ?? title;
+      const sourceId = pick(r, "NID", "nid", "RecallID", "recall_id") ?? title;
+      // The open-data feed uses plain "URL" (deep link to the specific recall
+      // notice). Older code only looked for "URL_En"/"Link", so every Canadian
+      // recall fell back to the generic landing page.
+      const url = pick(r, "URL", "URL_En", "url_en", "Link");
       out.push({
         source: "health_canada",
         source_id: sourceId,
         title,
         brand: pick(r, "Brand_En", "brand_en", "Brand"),
-        product_name: pick(r, "Product_En", "product_en"),
+        product_name: productName,
         category,
         description: summary,
-        hazard: pick(r, "Hazard_En", "hazard_en"),
-        remedy: pick(r, "Remedy_En", "remedy_en"),
-        url: pick(r, "URL_En", "url_en", "Link") ?? "https://recalls-rappels.canada.ca/en",
+        hazard: pick(r, "Issue", "Hazard_En", "hazard_en"),
+        remedy: pick(r, "What you should do", "Remedy_En", "remedy_en"),
+        url: url ?? "https://recalls-rappels.canada.ca/en",
         image_url: null,
-        recall_date: pick(r, "Date", "PublishDate", "publish_date"),
+        recall_date: pick(r, "Last updated", "Date", "PublishDate", "publish_date"),
         model: null,
         affected_date_start: null,
         affected_date_end: null,
         official: true,
       });
+
     }
     return out;
   } catch (err) {

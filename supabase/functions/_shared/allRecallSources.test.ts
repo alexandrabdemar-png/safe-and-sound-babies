@@ -106,6 +106,37 @@ describe("fetchHealthCanadaRecalls", () => {
     expect(results[0].source).toBe("health_canada");
   });
 
+  // Regression: the live open-data feed uses plain "NID"/"Title"/"URL"/"Issue"/
+  // "What you should do" keys. Reading only the *_En variants made every
+  // Canadian recall fall back to the generic landing page.
+  it("uses the deep-linked URL and hazard/remedy from the real open-data field names", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      jsonResponse([
+        {
+          NID: "77366",
+          Title: "Pufferz Puffer Yoyo type ball recalled due to strangulation hazard",
+          URL: "https://recalls-rappels.canada.ca/en/alert-recall/pufferz-puffer-yoyo-type-ball-recalled-due-strangulation-hazard",
+          Product: "Pufferz Puffer Yoyo type ball (toy)",
+          Issue: "Strangulation hazard",
+          "What you should do": "Stop using the product immediately.",
+          Category: "Toys",
+          "Last updated": "2025-03-04",
+        },
+      ]),
+    );
+    const results = await fetchHealthCanadaRecalls(fetchImpl);
+    expect(results).toHaveLength(1);
+    expect(results[0]).toMatchObject({
+      source_id: "77366",
+      url: "https://recalls-rappels.canada.ca/en/alert-recall/pufferz-puffer-yoyo-type-ball-recalled-due-strangulation-hazard",
+      hazard: "Strangulation hazard",
+      remedy: "Stop using the product immediately.",
+      recall_date: "2025-03-04",
+    });
+    expect(results[0].url).not.toBe("https://recalls-rappels.canada.ca/en");
+  });
+
+
   it("filters out an irrelevant recall", async () => {
     const fetchImpl = vi
       .fn()
