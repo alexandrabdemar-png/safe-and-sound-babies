@@ -12,6 +12,12 @@ import catFormula from "@/assets/hd-formula.png";
 import catBouncer from "@/assets/hd-bouncer.png";
 import catBlocks from "@/assets/hd-blocks.png";
 import catCrib from "@/assets/hd-crib.png";
+import catStroller from "@/assets/hd-stroller.png";
+import catPacknplay from "@/assets/hd-packnplay.png";
+import catSwaddle from "@/assets/hd-swaddle.png";
+import catCarrier from "@/assets/hd-carrier.png";
+import catBreastmilk from "@/assets/hd-breastmilk.png";
+import catBabyfood from "@/assets/hd-babyfood.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -55,13 +61,20 @@ export const Route = createFileRoute("/")({
 });
 
 const categories = [
-  { name: "Feeding", image: catFormula },
-  { name: "Sleep", image: catCrib },
-  { name: "On the Go", image: catCarseat },
+  { name: "Car Seats", image: catCarseat },
+  { name: "Cribs", image: catCrib },
+  { name: "Strollers", image: catStroller },
+  { name: "Carriers", image: catCarrier },
+  { name: "Pack 'n Plays", image: catPacknplay },
+  { name: "Swaddles", image: catSwaddle },
   { name: "Pacifiers", image: catPacifier },
+  { name: "Formula", image: catFormula },
+  { name: "Breast Milk", image: catBreastmilk },
+  { name: "Baby Food", image: catBabyfood },
   { name: "Activity Gear", image: catBouncer },
   { name: "Toys", image: catBlocks },
 ];
+
 
 function Index() {
   return (
@@ -132,7 +145,7 @@ function Index() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 sm:gap-x-10 sm:gap-y-14">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 sm:gap-x-10 sm:gap-y-14 lg:grid-cols-4">
             {categories.map((cat) => (
               <div key={cat.name} className="flex flex-col items-center text-center">
                 <div className="flex aspect-square w-full max-w-[180px] items-center justify-center overflow-hidden rounded-full bg-[#F5F1E8] p-6">
