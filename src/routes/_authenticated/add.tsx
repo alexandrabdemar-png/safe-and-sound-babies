@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
-import { Package, Sparkles, ArrowRight, Milk } from "lucide-react";
+import { Package, Sparkles, ArrowRight, Milk, Utensils, LineChart } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/add")({
   ssr: false,
@@ -19,6 +19,9 @@ function AddPage() {
           <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight">
             What would you like to add?
           </h1>
+          <p className="mt-2 font-body text-sm text-muted-foreground">
+            One quick entry, then you're out. Everything you log shows up under Track.
+          </p>
         </div>
       </header>
 
@@ -35,6 +38,18 @@ function AddPage() {
             icon={Milk}
             title="A bottle"
             blurb="Log formula or breastmilk and get reminded before it expires."
+          />
+          <AddTile
+            to="/first-foods"
+            icon={Utensils}
+            title="A first food"
+            blurb="Record a new food and note any allergen reactions."
+          />
+          <AddTile
+            to="/growth"
+            icon={LineChart}
+            title="A measurement"
+            blurb="Height and weight — keeps size-up reminders accurate."
           />
           <AddTile
             to="/products/new"
