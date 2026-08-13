@@ -517,26 +517,41 @@ function ReferFriendSection() {
 
   function copyLink() {
     if (!referralUrl) return;
-    navigator.clipboard.writeText(referralUrl).then(() => {
+    const done = () => {
       setCopied(true);
+      toast.success("Referral link copied", { description: referralUrl });
       setTimeout(() => setCopied(false), 2500);
-    }).catch(() => {
-      toast("Link: " + referralUrl);
-    });
+    };
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(referralUrl).then(done).catch(() => {
+        toast("Copy this link", { description: referralUrl });
+      });
+    } else {
+      toast("Copy this link", { description: referralUrl });
+    }
   }
 
   async function shareLink() {
     if (!referralUrl) return;
-    if (typeof navigator !== "undefined" && "share" in navigator) {
-      await navigator.share({
-        title: "Peace of Mine — baby safety app",
-        text: "I've been using Peace of Mine to track recalls and safety milestones for my baby. Try it free:",
-        url: referralUrl,
-      }).catch(() => {});
-    } else {
-      copyLink();
+    // Web Share is only available on (mostly mobile) browsers and requires a
+    // user gesture; on desktop it's absent or throws, so always fall back to
+    // copying the link and telling the user what happened.
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: "Peace of Mine — baby safety app",
+          text: "I've been using Peace of Mine to track recalls and safety milestones for my baby. Try it free:",
+          url: referralUrl,
+        });
+        return;
+      } catch (err) {
+        // User cancelled the native sheet — don't nag them with a fallback.
+        if ((err as DOMException)?.name === "AbortError") return;
+      }
     }
+    copyLink();
   }
+
 
   return (
     <section className="rounded-3xl border border-border/60 bg-card p-5">
