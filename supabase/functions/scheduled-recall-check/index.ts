@@ -220,6 +220,32 @@ Deno.serve(async (req) => {
       if (stampErr) throw stampErr;
     }
 
+    // ── Heal orphaned flags ──────────────────────────────────────────────
+    // A product can carry `recalled = true` with no linked product_recalls
+    // row (legacy writes that RLS silently rejected, or a recall that was
+    // later removed from the source feed). That state renders as the scary
+    // "flagged for a recall, but details aren't available yet" banner
+    // forever, because nothing ever clears it. Every product in this batch
+    // was just re-checked against every source, so the link table is now
+    // authoritative: clear the flag where no link exists.
+    if (allProductIds.length) {
+      const { data: linkedRows } = await supabase
+        .from("product_recalls")
+        .select("product_id")
+        .in("product_id", allProductIds);
+      const linked = new Set((linkedRows ?? []).map((r) => r.product_id as string));
+      const orphaned = batchProducts
+        .filter((p) => (p as { recalled?: boolean }).recalled && !linked.has(p.id))
+        .map((p) => p.id);
+      if (orphaned.length) {
+        const { error: clearErr } = await supabase
+          .from("products")
+          .update({ recalled: false })
+          .in("id", orphaned);
+        if (clearErr) throw clearErr;
+      }
+    }
+
     // ── Notify users with new or updated matches ─────────────────────────
     const notifyResult = await notifyAffectedUsers(
       supabase,
