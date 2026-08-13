@@ -105,6 +105,45 @@ export type Database = {
           },
         ]
       }
+      caregiver_invites: {
+        Row: {
+          accepted_at: string | null
+          child_ids: string[]
+          created_at: string
+          expires_at: string
+          id: string
+          invitee_email: string
+          inviter_user_id: string
+          revoked_at: string | null
+          role: string
+          token_hash: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          child_ids: string[]
+          created_at?: string
+          expires_at: string
+          id?: string
+          invitee_email: string
+          inviter_user_id: string
+          revoked_at?: string | null
+          role?: string
+          token_hash: string
+        }
+        Update: {
+          accepted_at?: string | null
+          child_ids?: string[]
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invitee_email?: string
+          inviter_user_id?: string
+          revoked_at?: string | null
+          role?: string
+          token_hash?: string
+        }
+        Relationships: []
+      }
       category_watchlist: {
         Row: {
           category: string
