@@ -288,7 +288,7 @@ function ChecklistsPage() {
                 Recall Check
               </p>
               <p className="font-body text-xs" style={{ color: "#8A8078" }}>
-                Check before you register or accept a hand-me-down
+                Check before you add to your registry or use a hand-me-down
               </p>
             </div>
           </Link>
