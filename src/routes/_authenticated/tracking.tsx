@@ -54,6 +54,7 @@ const EMPTY: Summaries = {
 function TrackingPage() {
   const { activeChild, loading: childLoading } = useActiveChild();
   const [summaries, setSummaries] = useState<Summaries>(EMPTY);
+  const [addOpen, setAddOpen] = useState(false);
 
   const mountedRef = useRef(true);
   useEffect(() => {
