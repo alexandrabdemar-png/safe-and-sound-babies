@@ -1165,21 +1165,18 @@ export type Database = {
         Row: {
           agreed_at: string
           id: string
-          is_18_or_older: boolean
           terms_version: string
           user_id: string
         }
         Insert: {
           agreed_at?: string
           id?: string
-          is_18_or_older?: boolean
           terms_version: string
           user_id: string
         }
         Update: {
           agreed_at?: string
           id?: string
-          is_18_or_older?: boolean
           terms_version?: string
           user_id?: string
         }
