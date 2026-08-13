@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Utensils, ClipboardList, Milk, Sparkles, LineChart } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
+import { AddSheet } from "@/components/AddSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import {
@@ -53,6 +54,7 @@ const EMPTY: Summaries = {
 function TrackingPage() {
   const { activeChild, loading: childLoading } = useActiveChild();
   const [summaries, setSummaries] = useState<Summaries>(EMPTY);
+  const [addOpen, setAddOpen] = useState(false);
 
   const mountedRef = useRef(true);
   useEffect(() => {
@@ -186,13 +188,16 @@ function TrackingPage() {
         </div>
 
         <div className="mx-auto mt-4 max-w-md">
-          <Link
-            to="/add"
-            className="flex items-center justify-center gap-2 rounded-3xl border border-dashed border-border/70 p-4 font-body text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+          <button
+            type="button"
+            onClick={() => setAddOpen(true)}
+            aria-haspopup="dialog"
+            className="flex w-full items-center justify-center gap-2 rounded-3xl border border-dashed border-border/70 p-4 font-body text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
           >
-            Need to log something? Go to Add
+            Need to log something?
             <ArrowRight className="h-4 w-4" />
-          </Link>
+          </button>
+          <AddSheet open={addOpen} onOpenChange={setAddOpen} />
         </div>
       </main>
 
