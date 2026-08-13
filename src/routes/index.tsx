@@ -140,7 +140,14 @@ function Index() {
       <section className="w-full px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
         <div className="mx-auto max-w-5xl">
           <div className="mb-14 text-center">
-            <h2 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            <h2
+              style={{
+                fontFamily: "'Cormorant', Georgia, serif",
+                fontWeight: 300,
+                color: "#2B2927",
+              }}
+              className="text-4xl leading-[1.08] tracking-tight sm:text-5xl"
+            >
               Track what matters
             </h2>
           </div>
