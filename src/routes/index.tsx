@@ -102,8 +102,8 @@ function Index() {
               </h1>
 
               <p
-                style={{ fontWeight: 300, color: "#605C58" }}
-                className="mt-12 max-w-lg font-body text-lg leading-relaxed"
+                style={{ color: "#605C58" }}
+                className="mt-12 max-w-lg font-body text-base font-medium leading-relaxed sm:text-lg"
               >
                 Track your baby's products and milestones in one place, with reminders to check for
                 upcoming replacements, size changes, and fit as your child grows — plus alerts if a
