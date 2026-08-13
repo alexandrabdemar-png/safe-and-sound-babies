@@ -33,6 +33,7 @@ import { checkCriticalRecalls, CRITICAL_RECALLS } from "@/lib/recallCheck";
 import { selectDailyTip, dayIndexFromDate, dayKey as getTipDayKey } from "@/lib/safetyTips";
 import { WHATS_NEW, LATEST_VERSION, whatsNewDismissalKey } from "@/lib/whatsNew";
 import { fetchMilestonesResilient } from "@/lib/momentIcons";
+import { computeBlockedRuleIds } from "@/lib/insightDismissals";
 import {
   isLastHomeProfileQuestionStep,
   buildHomeProfileAnswers,
@@ -495,16 +496,12 @@ function HomePage() {
         console.error("[home] failed to load insight_dismissals:", dismRes.error.message);
         toast.error(friendlyError(dismRes.error.message));
       } else {
-        const blocked = new Set<string>();
-        for (const d of (dismRes.data ?? []) as {
+        const rows = (dismRes.data ?? []) as {
           rule_id: string;
           action: string;
           until: string | null;
-        }[]) {
-          if (d.action === "done" || d.action === "dismissed") blocked.add(d.rule_id);
-          else if (d.action === "snoozed" && d.until && d.until > nowIso) blocked.add(d.rule_id);
-        }
-        setDismissedIds(blocked);
+        }[];
+        setDismissedIds(computeBlockedRuleIds(rows, nowIso));
       }
 
       // Load home profile

@@ -143,6 +143,18 @@ export function classifyRecallFetchStatus(
   return { error: null, degradedSources: failedSources };
 }
 
+/**
+ * Filters out recalls the user has already marked as done. Extracted as a
+ * pure function so "a dismissed recall stays hidden" is unit-testable
+ * without a live Supabase round-trip.
+ */
+export function filterDismissedRecalls(
+  recalls: RadarRecall[],
+  dismissedIds: Set<string>,
+): RadarRecall[] {
+  return recalls.filter((r) => !dismissedIds.has(r.id));
+}
+
 /** Dedupe by lowercased title (across sources) and sort newest-first. */
 export function mergeRecallSources(...groups: RadarRecall[][]): RadarRecall[] {
   const seen = new Set<string>();

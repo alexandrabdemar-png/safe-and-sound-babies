@@ -1,12 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Package, Sparkles, Milk, Utensils, LineChart, ArrowRight } from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 export const addOptions = [
   {
@@ -61,9 +55,6 @@ export function AddSheet({
             <SheetTitle className="font-display text-2xl font-semibold tracking-tight">
               What would you like to add?
             </SheetTitle>
-            <SheetDescription className="font-body text-sm">
-              One quick entry, then you're out. Everything you log shows up under Track.
-            </SheetDescription>
           </SheetHeader>
 
           <div className="mt-5 space-y-3">

@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowUpRight,
+  Check,
   Loader2,
   Radio,
   RotateCw,
@@ -15,12 +16,15 @@ import { DataAsOf } from "@/components/DataAsOf";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchRecentBabyRecalls } from "@/lib/cpscSearch";
 import { recallFallbackUrl } from "@/lib/recallCheck";
+import { toast } from "sonner";
+import { friendlyError } from "@/lib/errors";
 import {
   mapCpscResults,
   mapCriticalRecalls,
   mapExtraResults,
   mergeRecallSources,
   classifyRecallFetchStatus,
+  filterDismissedRecalls,
   type ExtraRecallRow,
   type RadarRecall,
 } from "@/lib/recallRadarMerge";
@@ -47,10 +51,44 @@ function RecallRadarPage() {
   const [error, setError] = useState<string | null>(null);
   const [degradedSources, setDegradedSources] = useState<string[]>([]);
   const [reloadKey, setReloadKey] = useState(0);
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
   const retry = useCallback(() => {
     setReloadKey((k) => k + 1);
   }, []);
+
+  // Manual select-then-insert instead of a plain upsert on (user_id,
+  // recall_id) — matches the established pattern in alerts.tsx/home.tsx for
+  // insight_dismissals, kept here too for consistency even though this
+  // table's constraint is unambiguous (only one migration ever created it).
+  async function markRecallDone(recallId: string) {
+    setDismissedIds((prev) => new Set([...prev, recallId]));
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+    if (!userId) return;
+    try {
+      const { data: existing, error: selectError } = await supabase
+        .from("recall_radar_dismissals")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("recall_id", recallId)
+        .maybeSingle();
+      if (selectError) throw selectError;
+      if (!existing) {
+        const { error: insertError } = await supabase
+          .from("recall_radar_dismissals")
+          .insert({ user_id: userId, recall_id: recallId });
+        if (insertError) throw insertError;
+      }
+    } catch (err) {
+      setDismissedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(recallId);
+        return next;
+      });
+      toast.error(friendlyError((err as { message?: string })?.message ?? err));
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -67,7 +105,7 @@ function RecallRadarPage() {
       // Each remote source is isolated so one failing source degrades
       // gracefully instead of blanking the whole page. Both promises always
       // resolve (never reject) — failures are caught here and logged.
-      const [cpscSettled, extraSettled] = await Promise.allSettled([
+      const [cpscSettled, extraSettled, dismissedSettled] = await Promise.allSettled([
         // fetchRecentBabyRecalls already merges CPSC + FDA internally
         // (FDA results are mapped into the same shape, RecallID prefixed
         // "fda-") — this is where Nara-class food/formula recalls live,
@@ -86,9 +124,21 @@ function RecallRadarPage() {
           .in("source", ["usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"])
           .order("recall_date", { ascending: false })
           .limit(50),
+        // A failure here shouldn't block the radar list itself — fail open
+        // (nothing hidden) the same way the other two sources degrade
+        // gracefully rather than blank the page.
+        supabase.from("recall_radar_dismissals").select("recall_id"),
       ]);
 
       if (cancelled) return;
+
+      if (dismissedSettled.status === "fulfilled" && !dismissedSettled.value.error) {
+        setDismissedIds(new Set((dismissedSettled.value.data ?? []).map((d) => d.recall_id)));
+      } else if (dismissedSettled.status === "rejected") {
+        console.error("Recall Radar: dismissals fetch rejected", dismissedSettled.reason);
+      } else if (dismissedSettled.status === "fulfilled" && dismissedSettled.value.error) {
+        console.error("Recall Radar: dismissals fetch failed", dismissedSettled.value.error);
+      }
 
       let cpscFailed = false;
       let cpscItems: RadarRecall[] = [];
@@ -128,6 +178,11 @@ function RecallRadarPage() {
       cancelled = true;
     };
   }, [reloadKey]);
+
+  const visibleRecalls = useMemo(
+    () => filterDismissedRecalls(recalls, dismissedIds),
+    [recalls, dismissedIds],
+  );
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28 animate-fade-in">
@@ -181,24 +236,25 @@ function RecallRadarPage() {
                 <RotateCw className="mr-1.5 h-3.5 w-3.5" /> Try again
               </Button>
             </div>
-          ) : recalls.length === 0 ? (
+          ) : visibleRecalls.length === 0 ? (
             <div className="rounded-3xl border border-border/60 bg-card px-5 py-10 text-center animate-scale-in">
               <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <ShieldCheck className="h-6 w-6" />
               </div>
               <p className="font-display text-lg font-semibold tracking-tight">
-                No recalls found this month
+                {recalls.length > 0 ? "You're all caught up" : "No recalls found this month"}
               </p>
               <p className="mt-1 mx-auto max-w-xs font-body text-sm text-muted-foreground">
-                No baby or kids product recalls were issued in the last 30 days, based on the
-                sources we check roughly every 24 hours.
+                {recalls.length > 0
+                  ? "You've marked every recall from the last 30 days as done."
+                  : "No baby or kids product recalls were issued in the last 30 days, based on the sources we check roughly every 24 hours."}
               </p>
             </div>
           ) : (
             <>
               <div className="flex items-center justify-between">
                 <p className="font-body text-sm font-semibold text-destructive">
-                  {recalls.length} recall{recalls.length !== 1 ? "s" : ""}
+                  {visibleRecalls.length} recall{visibleRecalls.length !== 1 ? "s" : ""}
                 </p>
                 <span className="font-body text-xs text-muted-foreground">
                   6 agencies + brand watch
@@ -220,8 +276,8 @@ function RecallRadarPage() {
                 </div>
               )}
               <ul className="space-y-3">
-                {recalls.map((r) => (
-                  <RecallCard key={r.id} recall={r} />
+                {visibleRecalls.map((r) => (
+                  <RecallCard key={r.id} recall={r} onDone={() => markRecallDone(r.id)} />
                 ))}
               </ul>
             </>
@@ -262,7 +318,7 @@ function RecallRadarPage() {
   );
 }
 
-function RecallCard({ recall }: { recall: RadarRecall }) {
+function RecallCard({ recall, onDone }: { recall: RadarRecall; onDone?: () => void }) {
   return (
     <li className="rounded-2xl border border-destructive/25 bg-destructive/5 px-4 py-4 space-y-2">
       <div className="flex items-start gap-3">
@@ -299,7 +355,7 @@ function RecallCard({ recall }: { recall: RadarRecall }) {
           <span className="font-semibold text-foreground">{recall.lotPattern}</span>
         </p>
       )}
-      <div className="pl-10">
+      <div className="pl-10 flex items-center gap-3">
         <a
           href={recall.url || recallFallbackUrl(recall.title)}
           target="_blank"
@@ -308,6 +364,16 @@ function RecallCard({ recall }: { recall: RadarRecall }) {
         >
           Full recall details <ArrowUpRight className="h-3 w-3" />
         </a>
+        {onDone && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onDone}
+            className="rounded-full font-body text-xs text-muted-foreground"
+          >
+            <Check className="mr-1 h-3.5 w-3.5" /> Mark as done
+          </Button>
+        )}
       </div>
     </li>
   );

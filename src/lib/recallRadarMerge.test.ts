@@ -5,9 +5,54 @@ import {
   mapExtraResults,
   mergeRecallSources,
   classifyRecallFetchStatus,
+  filterDismissedRecalls,
 } from "./recallRadarMerge";
 import type { CpscRecall } from "./cpscSearch";
-import type { ExtraRecallRow } from "./recallRadarMerge";
+import type { ExtraRecallRow, RadarRecall } from "./recallRadarMerge";
+
+function radarRecall(overrides: Partial<RadarRecall> = {}): RadarRecall {
+  return {
+    id: "cpsc-1",
+    source: "cpsc",
+    title: "Test recall",
+    description: "",
+    dateLabel: null,
+    sortDate: 0,
+    url: "",
+    official: true,
+    lotPattern: null,
+    ...overrides,
+  };
+}
+
+describe("filterDismissedRecalls", () => {
+  it("returns everything unchanged when nothing is dismissed", () => {
+    const recalls = [radarRecall({ id: "a" }), radarRecall({ id: "b" })];
+    expect(filterDismissedRecalls(recalls, new Set())).toEqual(recalls);
+  });
+
+  it("removes a recall whose id is marked as done — the actual 'stays hidden' behavior", () => {
+    const recalls = [radarRecall({ id: "cpsc-12345" }), radarRecall({ id: "critical-rocknplay" })];
+    const out = filterDismissedRecalls(recalls, new Set(["cpsc-12345"]));
+    expect(out.map((r) => r.id)).toEqual(["critical-rocknplay"]);
+  });
+
+  it("only removes the exact matching id — a similarly-named recall from a different source stays", () => {
+    const recalls = [radarRecall({ id: "cpsc-1" }), radarRecall({ id: "fda-1" })];
+    const out = filterDismissedRecalls(recalls, new Set(["cpsc-1"]));
+    expect(out.map((r) => r.id)).toEqual(["fda-1"]);
+  });
+
+  it("removes all matching recalls when the whole list is dismissed", () => {
+    const recalls = [radarRecall({ id: "a" }), radarRecall({ id: "b" })];
+    expect(filterDismissedRecalls(recalls, new Set(["a", "b"]))).toEqual([]);
+  });
+
+  it("a dismissed id that no longer appears in the current fetch is simply a no-op, not an error", () => {
+    const recalls = [radarRecall({ id: "a" })];
+    expect(filterDismissedRecalls(recalls, new Set(["stale-id-from-last-month"]))).toEqual(recalls);
+  });
+});
 
 describe("mapCpscResults", () => {
   it("maps a well-formed CPSC result", () => {

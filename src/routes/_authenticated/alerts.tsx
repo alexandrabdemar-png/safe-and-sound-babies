@@ -10,6 +10,7 @@ import { friendlyError } from "@/lib/errors";
 import { BellIllustration } from "@/components/EmptyIllustration";
 import { recallFallbackUrl, lotMatches } from "@/lib/recallCheck";
 import { DataAsOf } from "@/components/DataAsOf";
+import { computeBlockedRuleIds } from "@/lib/insightDismissals";
 
 export const Route = createFileRoute("/_authenticated/alerts")({
   ssr: false,
@@ -65,7 +66,11 @@ function relative(dateStr: string): string {
   if (days === 1) return "tomorrow";
   if (days < 7) return `in ${days} days`;
   if (days < 14) return "next week";
-  return new Date(dateStr + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return new Date(dateStr + "T00:00:00").toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 type RecallHistoryItem = {
@@ -137,7 +142,7 @@ function AlertsPage() {
     }
     setActiveChildIdState(childId);
 
-    const [pRes, rRes] = await Promise.all([
+    const [pRes, rRes, dismRes] = await Promise.all([
       supabase
         .from("products")
         .select("id, name, brand, size, replace_at, next_size_at, predicted_sizeup_date, predicted_replacement_date")
@@ -148,12 +153,33 @@ function AlertsPage() {
           "id, acknowledged, product_id, products(name, brand, lot_number), recalls(id, title, hazard, remedy, url, recall_date, lot_pattern)",
         )
         .eq("acknowledged", false),
+      // Previously missing entirely: a "Mark as done" wrote to
+      // insight_dismissals correctly, but nothing here ever read it back,
+      // so a dismissed replacement/size-up reappeared on every reload —
+      // it only stayed hidden for the rest of the current in-memory
+      // session. Mirrors home.tsx's dismissedIds load for the exact same
+      // table (see saveInsightResponse there for the write-side twin of
+      // markInsightDone below).
+      childId
+        ? supabase
+            .from("insight_dismissals")
+            .select("rule_id, action, until")
+            .eq("child_id", childId)
+        : Promise.resolve({
+            data: [] as { rule_id: string; action: string; until: string | null }[],
+            error: null,
+          }),
     ]);
 
     if (pRes.error) toast.error(friendlyError(pRes.error.message));
     else setProducts((pRes.data ?? []) as Product[]);
     if (rRes.error) toast.error(friendlyError(rRes.error.message));
     else setRecalls((rRes.data ?? []) as unknown as RecallMatch[]);
+    if (dismRes.error) {
+      toast.error(friendlyError(dismRes.error.message));
+    } else {
+      setDismissedRuleIds(computeBlockedRuleIds(dismRes.data ?? []));
+    }
     setLoading(false);
   }
 
