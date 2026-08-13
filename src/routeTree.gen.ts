@@ -38,7 +38,6 @@ import { Route as AuthenticatedGrowthRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedFirstFoodsRouteImport } from './routes/_authenticated/first-foods'
 import { Route as AuthenticatedEmergencyInfoRouteImport } from './routes/_authenticated/emergency-info'
 import { Route as AuthenticatedChecklistsRouteImport } from './routes/_authenticated/checklists'
-import { Route as AuthenticatedCaregiverCardRouteImport } from './routes/_authenticated/caregiver-card'
 import { Route as AuthenticatedBottlesRouteImport } from './routes/_authenticated/bottles'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
@@ -208,12 +207,6 @@ const AuthenticatedChecklistsRoute = AuthenticatedChecklistsRouteImport.update({
   path: '/checklists',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedCaregiverCardRoute =
-  AuthenticatedCaregiverCardRouteImport.update({
-    id: '/caregiver-card',
-    path: '/caregiver-card',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedBottlesRoute = AuthenticatedBottlesRouteImport.update({
   id: '/bottles',
   path: '/bottles',
@@ -323,7 +316,6 @@ export interface FileRoutesByFullPath {
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
   '/bottles': typeof AuthenticatedBottlesRoute
-  '/caregiver-card': typeof AuthenticatedCaregiverCardRoute
   '/checklists': typeof AuthenticatedChecklistsRoute
   '/emergency-info': typeof AuthenticatedEmergencyInfoRoute
   '/first-foods': typeof AuthenticatedFirstFoodsRoute
@@ -371,7 +363,6 @@ export interface FileRoutesByTo {
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
   '/bottles': typeof AuthenticatedBottlesRoute
-  '/caregiver-card': typeof AuthenticatedCaregiverCardRoute
   '/checklists': typeof AuthenticatedChecklistsRoute
   '/emergency-info': typeof AuthenticatedEmergencyInfoRoute
   '/first-foods': typeof AuthenticatedFirstFoodsRoute
@@ -421,7 +412,6 @@ export interface FileRoutesById {
   '/_authenticated/add': typeof AuthenticatedAddRoute
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
   '/_authenticated/bottles': typeof AuthenticatedBottlesRoute
-  '/_authenticated/caregiver-card': typeof AuthenticatedCaregiverCardRoute
   '/_authenticated/checklists': typeof AuthenticatedChecklistsRoute
   '/_authenticated/emergency-info': typeof AuthenticatedEmergencyInfoRoute
   '/_authenticated/first-foods': typeof AuthenticatedFirstFoodsRoute
@@ -471,7 +461,6 @@ export interface FileRouteTypes {
     | '/add'
     | '/alerts'
     | '/bottles'
-    | '/caregiver-card'
     | '/checklists'
     | '/emergency-info'
     | '/first-foods'
@@ -519,7 +508,6 @@ export interface FileRouteTypes {
     | '/add'
     | '/alerts'
     | '/bottles'
-    | '/caregiver-card'
     | '/checklists'
     | '/emergency-info'
     | '/first-foods'
@@ -568,7 +556,6 @@ export interface FileRouteTypes {
     | '/_authenticated/add'
     | '/_authenticated/alerts'
     | '/_authenticated/bottles'
-    | '/_authenticated/caregiver-card'
     | '/_authenticated/checklists'
     | '/_authenticated/emergency-info'
     | '/_authenticated/first-foods'
@@ -829,13 +816,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChecklistsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/caregiver-card': {
-      id: '/_authenticated/caregiver-card'
-      path: '/caregiver-card'
-      fullPath: '/caregiver-card'
-      preLoaderRoute: typeof AuthenticatedCaregiverCardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/bottles': {
       id: '/_authenticated/bottles'
       path: '/bottles'
@@ -962,7 +942,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAddRoute: typeof AuthenticatedAddRoute
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
   AuthenticatedBottlesRoute: typeof AuthenticatedBottlesRoute
-  AuthenticatedCaregiverCardRoute: typeof AuthenticatedCaregiverCardRoute
   AuthenticatedChecklistsRoute: typeof AuthenticatedChecklistsRoute
   AuthenticatedEmergencyInfoRoute: typeof AuthenticatedEmergencyInfoRoute
   AuthenticatedFirstFoodsRoute: typeof AuthenticatedFirstFoodsRoute
@@ -994,7 +973,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAddRoute: AuthenticatedAddRoute,
   AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
   AuthenticatedBottlesRoute: AuthenticatedBottlesRoute,
-  AuthenticatedCaregiverCardRoute: AuthenticatedCaregiverCardRoute,
   AuthenticatedChecklistsRoute: AuthenticatedChecklistsRoute,
   AuthenticatedEmergencyInfoRoute: AuthenticatedEmergencyInfoRoute,
   AuthenticatedFirstFoodsRoute: AuthenticatedFirstFoodsRoute,
