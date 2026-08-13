@@ -234,14 +234,13 @@ Deno.serve(async (req) => {
         .select("product_id")
         .in("product_id", allProductIds);
       const linked = new Set((linkedRows ?? []).map((r) => r.product_id as string));
-      const orphaned = batchProducts
-        .filter((p) => (p as { recalled?: boolean }).recalled && !linked.has(p.id))
-        .map((p) => p.id);
+      const orphaned = allProductIds.filter((id) => !linked.has(id));
       if (orphaned.length) {
         const { error: clearErr } = await supabase
           .from("products")
           .update({ recalled: false })
-          .in("id", orphaned);
+          .in("id", orphaned)
+          .eq("recalled", true);
         if (clearErr) throw clearErr;
       }
     }
