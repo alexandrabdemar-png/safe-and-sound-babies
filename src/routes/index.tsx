@@ -183,7 +183,7 @@ function Index() {
             fontWeight: 300,
             color: "#605C58",
           }}
-          className="mx-auto max-w-2xl text-center text-3xl leading-[1.12] sm:text-4xl"
+          className="mx-auto max-w-2xl text-center text-lg leading-[1.25] sm:text-xl"
         >
           Peace of Mine helps you remember the little things that are easy to forget and the
           things you haven't thought of yet.
