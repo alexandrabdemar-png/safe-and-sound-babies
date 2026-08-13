@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Package, User, Plus, BarChart2 } from "lucide-react";
+import { Home, Package, User, Plus, BarChart2, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUnackedRecalls } from "@/hooks/useUnackedRecalls";
 
@@ -9,6 +9,7 @@ const tabs = [
 ] as const;
 
 const rightTabs = [
+  { to: "/alerts", label: "Alerts", icon: Bell },
   { to: "/products", label: "Products", icon: Package },
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
@@ -22,7 +23,7 @@ export function BottomNav() {
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white"
       style={{ boxShadow: "0 -2px 16px rgba(0,0,0,0.06)" }}
     >
-      <div className="mx-auto flex max-w-md items-end justify-between px-6 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-2">
+      <div className="mx-auto flex max-w-md items-end justify-between px-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-2 sm:px-4">
         {tabs.map((t) => (
           <TabItem
             key={t.to}
@@ -36,7 +37,11 @@ export function BottomNav() {
         ))}
 
         {/* Center Add FAB */}
-        <Link to="/add" className="relative flex w-14 flex-col items-center gap-0.5 py-1" aria-label="Add">
+        <Link
+          to="/add"
+          className="relative flex flex-1 flex-col items-center gap-0.5 py-1"
+          aria-label="Add"
+        >
           <div
             className="-mt-8 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white ring-4 ring-white transition-transform duration-150 hover:scale-105 active:scale-95"
             style={{ boxShadow: "0 4px 16px rgba(44,95,90,0.35)" }}
@@ -56,7 +61,7 @@ export function BottomNav() {
             key={t.to}
             {...t}
             active={pathname === t.to}
-            badge={t.to === "/products" ? unackedRecalls : 0}
+            badge={t.to === "/alerts" ? unackedRecalls : 0}
           />
         ))}
       </div>
@@ -81,7 +86,7 @@ function TabItem({
     <Link
       to={to}
       className={cn(
-        "relative flex w-14 flex-col items-center gap-0.5 py-1 transition-colors duration-150",
+        "relative flex flex-1 flex-col items-center gap-0.5 py-1 transition-colors duration-150",
         active ? "text-primary" : "text-muted-foreground hover:text-foreground/70",
       )}
     >

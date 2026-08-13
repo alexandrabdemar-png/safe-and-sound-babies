@@ -1,7 +1,7 @@
 // useUnackedRecalls — realtime unread-count of unacknowledged product_recalls
-// for the current user. Feeds the red dot on the Products tab so a missed
-// push notification (OS throttled / notifications off) still surfaces
-// in-app.
+// for the current user. Feeds the red dot on the Alerts tab (where recalls
+// are actually acknowledged, on /alerts) so a missed push notification (OS
+// throttled / notifications off) still surfaces in-app.
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 

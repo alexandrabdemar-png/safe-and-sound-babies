@@ -375,11 +375,13 @@ function ChildRow({
   const [editing, setEditing] = useState(false);
   const [heightStr, setHeightStr] = useState("");
   const [weightStr, setWeightStr] = useState("");
+  const [dobStr, setDobStr] = useState("");
   const [saving, setSaving] = useState(false);
 
   function open() {
     setHeightStr(child.height_inches != null ? child.height_inches.toFixed(1) : "");
     setWeightStr(child.weight_lbs != null ? child.weight_lbs.toFixed(1) : "");
+    setDobStr(child.date_of_birth ?? "");
     setEditing(true);
   }
 
@@ -389,12 +391,14 @@ function ChildRow({
     const w = parseFloat(weightStr);
     const height_inches = Number.isFinite(h) && h > 0 ? h : null;
     const weight_lbs = Number.isFinite(w) && w > 0 ? w : null;
+    const date_of_birth = dobStr || null;
     const nowIso = new Date().toISOString();
     const { error } = await supabase
       .from("children")
       .update({
         height_inches,
         weight_lbs,
+        date_of_birth,
         measurements_updated_at: (height_inches !== null || weight_lbs !== null) ? nowIso : null,
       } as never)
       .eq("id", child.id);
@@ -441,10 +445,24 @@ function ChildRow({
 
       {!editing ? (
         <Button variant="outline" size="sm" onClick={open} className="rounded-full text-xs">
-          {displayHeight || displayWeight ? "Update measurements" : "Add height & weight"}
+          {child.date_of_birth
+            ? displayHeight || displayWeight
+              ? "Update measurements"
+              : "Add height & weight"
+            : "Add birth date"}
         </Button>
       ) : (
         <div className="space-y-2 rounded-xl border border-border bg-background p-3">
+          <label className="block">
+            <span className="mb-1 block font-body text-xs text-muted-foreground">Birth date</span>
+            <Input
+              type="date"
+              value={dobStr}
+              max={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => setDobStr(e.target.value)}
+              className="h-10 rounded-xl"
+            />
+          </label>
           <div className="grid grid-cols-2 gap-2">
             <Input
               type="number"

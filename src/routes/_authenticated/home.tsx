@@ -263,6 +263,12 @@ function HomePage() {
   // Measurements reminder dismiss (resets after 7 days)
   const [measReminderDismissed, setMeasReminderDismissed] = useState(false);
 
+  // Whether the bundled "a few more things" digest (see secondaryNudges
+  // below) is expanded. Only relevant once 2+ low-urgency cards are active
+  // at the same time — a single active one still renders full-size with no
+  // extra tap needed.
+  const [secondaryExpanded, setSecondaryExpanded] = useState(false);
+
   // Bottle weaning reminder dismiss
   const [bottleWeaningDismissed, setBottleWeaningDismissed] = useState(false);
 
@@ -976,6 +982,121 @@ function HomePage() {
     : 0;
   const dailyTip = selectDailyTip(ageMonthsForTip, dayIndexFromDate(), homeProfile?.has_stairs);
 
+  // Low-urgency, informational nudges — daily tip, bottle-weaning note,
+  // measurements reminder, what's-new — get bundled into a single compact
+  // digest once 2+ are active at the same time, instead of stacking as
+  // separate full-size cards. On a typical day only one of these is ever
+  // active, so it still renders exactly as it did before this grouping
+  // existed; the digest only kicks in on the "several unrelated things
+  // happen to line up" day this was meant to fix. Genuinely urgent items
+  // (recall banner, pool alarm nudge, age-jump safety actions, alert
+  // summary, up-next insights) are deliberately NOT part of this group —
+  // they stay exactly as prominent as they already were.
+  const secondaryNudges: { key: string; summary: string; render: () => React.ReactNode }[] = [];
+  if (showTipCard && dailyTip) {
+    secondaryNudges.push({
+      key: "tip",
+      summary: "Today's safety tip",
+      render: () => (
+        <DailySafetyTipCard tip={dailyTip} onDone={markTipDone} showSuccess={tipSuccess} />
+      ),
+    });
+  }
+  if (showBottleWeaning && child) {
+    secondaryNudges.push({
+      key: "bottle",
+      summary: "A note on bottle-weaning timing",
+      render: () => (
+        <div className="flex items-start justify-between gap-3 rounded-2xl border border-[#8FAF8C]/40 bg-[#F2F7F1] px-4 py-3.5">
+          <div className="min-w-0 flex-1">
+            <p className="font-body text-xs font-semibold uppercase tracking-wider text-[#4A7A47] mb-1">
+              A gentle heads-up
+            </p>
+            <p className="font-body text-sm leading-snug text-foreground/80">
+              Many pediatric dentists suggest beginning to transition away from bottle use around 12
+              to 15 months to support healthy tooth development — every child is different so check
+              with your own dentist or pediatrician about what feels right for your family.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={dismissBottleWeaning}
+            className="mt-0.5 shrink-0 rounded-full p-1 text-muted-foreground hover:bg-black/10"
+            aria-label="Dismiss"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      ),
+    });
+  }
+  if (showMeasReminder && child) {
+    secondaryNudges.push({
+      key: "measurements",
+      summary: `Update ${child.name}'s measurements`,
+      render: () => (
+        <div className="flex items-start justify-between gap-3 rounded-2xl border border-[#8FAF8C]/40 bg-[#F2F7F1] px-4 py-3.5">
+          <div className="min-w-0 flex-1">
+            <p className="font-body text-sm leading-snug text-foreground/80">
+              It may be worth updating {child.name}'s measurements — keeping them current helps us
+              estimate size-up timing more accurately.
+            </p>
+            <Link
+              to="/profile"
+              className="mt-2 inline-block font-body text-xs font-semibold text-[#4A7A47] underline underline-offset-2"
+            >
+              Update measurements →
+            </Link>
+          </div>
+          <button
+            type="button"
+            onClick={dismissMeasReminder}
+            className="mt-0.5 shrink-0 rounded-full p-1 text-muted-foreground hover:bg-black/10"
+            aria-label="Dismiss"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      ),
+    });
+  }
+  if (!whatsNewDismissed) {
+    secondaryNudges.push({
+      key: "whatsnew",
+      summary: "What's new in Peace of Mine",
+      render: () => <WhatsNewCard updates={WHATS_NEW.slice(0, 2)} onDismiss={dismissWhatsNew} />,
+    });
+  }
+  // Missing DOB quietly degrades most of the age-aware parts of this page
+  // (age label, milestone timing, size-up predictions, daily tip
+  // targeting) — onboarding lets it be skipped, so nudge for it here
+  // rather than leaving that degradation invisible. Not dismissible: it's
+  // a data gap, not a one-off notice, so it should keep surfacing (inside
+  // the low-urgency digest, not as its own separate always-on card) until
+  // actually filled in.
+  if (child && !child.date_of_birth) {
+    secondaryNudges.push({
+      key: "missing-dob",
+      summary: `Add ${child.name}'s birth date`,
+      render: () => (
+        <div className="flex items-start justify-between gap-3 rounded-2xl border border-[#8FAF8C]/40 bg-[#F2F7F1] px-4 py-3.5">
+          <div className="min-w-0 flex-1">
+            <p className="font-body text-sm leading-snug text-foreground/80">
+              Adding {child.name}'s birth date helps us tailor safety tips, milestones, and size-up
+              predictions to their actual age instead of general guidance.
+            </p>
+            <Link
+              to="/profile"
+              className="mt-2 inline-block font-body text-xs font-semibold text-[#4A7A47] underline underline-offset-2"
+            >
+              Add birth date →
+            </Link>
+          </div>
+        </div>
+      ),
+    });
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28 animate-fade-in">
       <header className="relative overflow-hidden px-5 pt-10 pb-4 sm:px-6">
@@ -1032,39 +1153,50 @@ function HomePage() {
         </div>
       )}
 
-      {/* Daily Safety Tip */}
-      {showTipCard && dailyTip && (
+      {/* A few more things — bundled digest of low-urgency nudges (daily
+          tip, bottle-weaning note, measurements reminder, what's-new). A
+          single active nudge renders full-size exactly as before; 2+
+          collapse into one compact expandable card. */}
+      {secondaryNudges.length === 1 && (
         <div className="px-5 pt-3 sm:px-6">
-          <div className="mx-auto max-w-md">
-            <DailySafetyTipCard tip={dailyTip} onDone={markTipDone} showSuccess={tipSuccess} />
-          </div>
+          <div className="mx-auto max-w-md">{secondaryNudges[0].render()}</div>
         </div>
       )}
-
-      {/* Bottle weaning reminder — 12–15 months only */}
-      {showBottleWeaning && child && (
+      {secondaryNudges.length > 1 && (
         <div className="px-5 pt-3 sm:px-6">
           <div className="mx-auto max-w-md">
-            <div className="flex items-start justify-between gap-3 rounded-2xl border border-[#8FAF8C]/40 bg-[#F2F7F1] px-4 py-3.5">
-              <div className="min-w-0 flex-1">
-                <p className="font-body text-xs font-semibold uppercase tracking-wider text-[#4A7A47] mb-1">
-                  A gentle heads-up
-                </p>
-                <p className="font-body text-sm leading-snug text-foreground/80">
-                  Many pediatric dentists suggest beginning to transition away from bottle use
-                  around 12 to 15 months to support healthy tooth development — every child is
-                  different so check with your own dentist or pediatrician about what feels right
-                  for your family.
-                </p>
-              </div>
+            <div className="rounded-3xl border border-border/60 bg-card p-4">
               <button
                 type="button"
-                onClick={dismissBottleWeaning}
-                className="mt-0.5 shrink-0 rounded-full p-1 text-muted-foreground hover:bg-black/10"
-                aria-label="Dismiss"
+                onClick={() => setSecondaryExpanded((v) => !v)}
+                className="flex w-full items-center justify-between gap-2"
+                aria-expanded={secondaryExpanded}
               >
-                <X className="h-4 w-4" />
+                <p className="font-body text-sm font-medium text-foreground">
+                  {secondaryNudges.length} more things for today
+                </p>
+                {secondaryExpanded ? (
+                  <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                )}
               </button>
+              {!secondaryExpanded && (
+                <ul className="mt-2 space-y-1">
+                  {secondaryNudges.map((n) => (
+                    <li key={n.key} className="font-body text-xs text-muted-foreground">
+                      • {n.summary}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {secondaryExpanded && (
+                <div className="mt-3 space-y-3">
+                  {secondaryNudges.map((n) => (
+                    <div key={n.key}>{n.render()}</div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1094,36 +1226,6 @@ function HomePage() {
                 <X className="h-4 w-4" />
               </button>
             </Link>
-          </div>
-        </div>
-      )}
-
-      {/* Measurements reminder card */}
-      {showMeasReminder && child && (
-        <div className="px-5 pt-3 sm:px-6">
-          <div className="mx-auto max-w-md">
-            <div className="flex items-start justify-between gap-3 rounded-2xl border border-[#8FAF8C]/40 bg-[#F2F7F1] px-4 py-3.5">
-              <div className="min-w-0 flex-1">
-                <p className="font-body text-sm leading-snug text-foreground/80">
-                  It may be worth updating {child.name}'s measurements — keeping them current helps
-                  us estimate size-up timing more accurately.
-                </p>
-                <Link
-                  to="/profile"
-                  className="mt-2 inline-block font-body text-xs font-semibold text-[#4A7A47] underline underline-offset-2"
-                >
-                  Update measurements →
-                </Link>
-              </div>
-              <button
-                type="button"
-                onClick={dismissMeasReminder}
-                className="mt-0.5 shrink-0 rounded-full p-1 text-muted-foreground hover:bg-black/10"
-                aria-label="Dismiss"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
           </div>
         </div>
       )}
@@ -1211,15 +1313,6 @@ function HomePage() {
           )}
         </div>
       </section>
-
-      {/* What's New */}
-      {!whatsNewDismissed && (
-        <section className="px-5 pt-4 sm:px-6 animate-fade-up stagger-3">
-          <div className="mx-auto max-w-md">
-            <WhatsNewCard updates={WHATS_NEW.slice(0, 2)} onDismiss={dismissWhatsNew} />
-          </div>
-        </section>
-      )}
 
       {/* Up next — proactive guidance */}
       {upNext.length > 0 && (
