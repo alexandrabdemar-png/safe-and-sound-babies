@@ -140,7 +140,14 @@ function Index() {
       <section className="w-full px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
         <div className="mx-auto max-w-5xl">
           <div className="mb-14 text-center">
-            <h2 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            <h2
+              style={{
+                fontFamily: "'Cormorant', Georgia, serif",
+                fontWeight: 300,
+                color: "#2B2927",
+              }}
+              className="text-4xl leading-[1.08] tracking-tight sm:text-5xl"
+            >
               Track what matters
             </h2>
           </div>
@@ -174,10 +181,9 @@ function Index() {
           style={{
             fontFamily: "'Cormorant', Georgia, serif",
             fontWeight: 300,
-            fontStyle: "italic",
             color: "#605C58",
           }}
-          className="mx-auto max-w-2xl text-center text-2xl leading-snug sm:text-3xl"
+          className="mx-auto max-w-2xl text-center text-3xl leading-[1.12] sm:text-4xl"
         >
           Peace of Mine helps you remember the little things that are easy to forget and the
           things you haven't thought of yet.
