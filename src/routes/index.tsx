@@ -181,10 +181,9 @@ function Index() {
           style={{
             fontFamily: "'Cormorant', Georgia, serif",
             fontWeight: 300,
-            fontStyle: "italic",
             color: "#605C58",
           }}
-          className="mx-auto max-w-2xl text-center text-2xl leading-snug sm:text-3xl"
+          className="mx-auto max-w-2xl text-center text-3xl leading-[1.12] sm:text-4xl"
         >
           Peace of Mine helps you remember the little things that are easy to forget and the
           things you haven't thought of yet.
