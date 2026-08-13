@@ -30,6 +30,7 @@ import { evaluateInsights, URGENCY_LABEL, type Insight, type ProductInput } from
 import { friendlyError, diagnosticDetail } from "@/lib/errors";
 import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
 import { checkCriticalRecalls, CRITICAL_RECALLS } from "@/lib/recallCheck";
+import { recordProductRecall } from "@/lib/recallRecord.functions";
 import { selectDailyTip, dayIndexFromDate, dayKey as getTipDayKey } from "@/lib/safetyTips";
 import { WHATS_NEW, LATEST_VERSION, whatsNewDismissalKey } from "@/lib/whatsNew";
 import { fetchMilestonesResilient } from "@/lib/momentIcons";
