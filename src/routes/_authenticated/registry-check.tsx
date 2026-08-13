@@ -9,7 +9,7 @@ import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 export const Route = createFileRoute("/_authenticated/registry-check")({
   ssr: false,
   component: RegistryCheckPage,
-  head: () => ({ meta: [{ title: "Registry Check — Peace of Mine" }] }),
+  head: () => ({ meta: [{ title: "Recall Check — Peace of Mine" }] }),
 });
 
 function RegistryCheckPage() {
@@ -48,9 +48,10 @@ function RegistryCheckPage() {
           <Button asChild variant="ghost" size="sm" className="-ml-2 rounded-full font-body text-xs">
             <Link to="/checklists"><ArrowLeft className="mr-1 h-3.5 w-3.5" /> Checklists</Link>
           </Button>
-          <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight">Registry Check</h1>
+          <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight">Recall Check</h1>
           <p className="mt-1.5 font-body text-sm text-muted-foreground">
-            Search a product name to check for official recalls before you add it to your registry.
+            Search a product name to check official recall databases before you buy, register, or
+            accept a hand-me-down.
           </p>
         </div>
       </header>

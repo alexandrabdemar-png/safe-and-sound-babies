@@ -5,7 +5,7 @@ import {
   Circle,
   ClipboardList,
   ArrowLeft,
-  Gift,
+  ShieldCheck,
   Luggage,
   HeartPulse,
   Home,
@@ -281,14 +281,14 @@ function ChecklistsPage() {
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
               style={{ backgroundColor: "#F5F0E8" }}
             >
-              <Gift className="h-5 w-5" style={{ color: "#C4785A" }} />
+              <ShieldCheck className="h-5 w-5" style={{ color: "#C4785A" }} />
             </span>
             <div>
               <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>
-                Registry Check
+                Recall Check
               </p>
               <p className="font-body text-xs" style={{ color: "#8A8078" }}>
-                Recall check before you add
+                Check before you register or accept a hand-me-down
               </p>
             </div>
           </Link>
