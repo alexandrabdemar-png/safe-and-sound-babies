@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Package, User, Plus, BarChart2, Bell } from "lucide-react";
+import { Home, Package, Plus, BarChart2, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUnackedRecalls } from "@/hooks/useUnackedRecalls";
+import { AddSheet } from "@/components/AddSheet";
 
 const tabs = [
   { to: "/home", label: "Home", icon: Home },
@@ -11,15 +13,17 @@ const tabs = [
 const rightTabs = [
   { to: "/alerts", label: "Alerts", icon: Bell },
   { to: "/products", label: "Products", icon: Package },
-  { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
 export function BottomNav() {
   const { pathname } = useLocation();
   const unackedRecalls = useUnackedRecalls();
+  const [addOpen, setAddOpen] = useState(false);
 
   return (
-    <nav
+    <>
+      <AddSheet open={addOpen} onOpenChange={setAddOpen} />
+      <nav
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white"
       style={{ boxShadow: "0 -2px 16px rgba(0,0,0,0.06)" }}
     >
@@ -36,11 +40,14 @@ export function BottomNav() {
           />
         ))}
 
-        {/* Center Add FAB */}
-        <Link
-          to="/add"
+        {/* Center Add FAB — opens the quick-add sheet */}
+        <button
+          type="button"
+          onClick={() => setAddOpen(true)}
           className="relative flex flex-1 flex-col items-center gap-0.5 py-1"
           aria-label="Add"
+          aria-haspopup="dialog"
+          aria-expanded={addOpen}
         >
           <div
             className="-mt-8 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white ring-4 ring-white transition-transform duration-150 hover:scale-105 active:scale-95"
@@ -54,7 +61,7 @@ export function BottomNav() {
           >
             Add
           </span>
-        </Link>
+        </button>
 
         {rightTabs.map((t) => (
           <TabItem
@@ -64,8 +71,9 @@ export function BottomNav() {
             badge={t.to === "/alerts" ? unackedRecalls : 0}
           />
         ))}
-      </div>
-    </nav>
+        </div>
+      </nav>
+    </>
   );
 }
 
