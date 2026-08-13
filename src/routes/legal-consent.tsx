@@ -26,6 +26,7 @@ function getNextParam(): string {
 }
 
 const ACKNOWLEDGMENTS = [
+  "Peace of Mine is intended for use by adults 18 years of age or older only.",
   "Peace of Mine is an informational tracking tool only — not a substitute for manufacturer instructions, product manuals, safety warnings, healthcare providers, or your own judgment.",
   "You are solely responsible for the safety of your child and every product you purchase, use, install, inspect, maintain, store, and replace.",
   "You assume all risks associated with baby products and equipment you use. Peace of Mine does not manufacture, inspect, test, certify, or monitor any physical product.",
@@ -39,6 +40,7 @@ function LegalConsentPage() {
   const [checking, setChecking] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [agreed, setAgreed] = useState(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -53,12 +55,13 @@ function LegalConsentPage() {
   }, [navigate]);
 
   async function handleContinue() {
-    if (!userId || !agreed) return;
+    if (!userId || !agreed || !ageConfirmed) return;
     setSubmitting(true);
     try {
       const { error } = await supabase.from("user_agreements").insert({
         user_id: userId,
         terms_version: CURRENT_TERMS_VERSION,
+        is_18_or_older: ageConfirmed,
       } as never);
       // A duplicate-key error here just means this version was already
       // recorded (e.g. a double-click, or a retry after a network blip) —
@@ -129,6 +132,18 @@ function LegalConsentPage() {
           <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-2xl border border-border/70 bg-card p-4">
             <input
               type="checkbox"
+              checked={ageConfirmed}
+              onChange={(e) => setAgeConfirmed(e.target.checked)}
+              className="mt-0.5 h-4 w-4 flex-shrink-0 accent-primary"
+            />
+            <span className="font-body text-sm text-foreground">
+              I confirm that I am 18 years of age or older.
+            </span>
+          </label>
+
+          <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-2xl border border-border/70 bg-card p-4">
+            <input
+              type="checkbox"
               checked={agreed}
               onChange={(e) => setAgreed(e.target.checked)}
               className="mt-0.5 h-4 w-4 flex-shrink-0 accent-primary"
@@ -141,7 +156,7 @@ function LegalConsentPage() {
 
           <Button
             className="mt-6 h-12 w-full rounded-full bg-primary font-body text-sm font-semibold"
-            disabled={!agreed || submitting}
+            disabled={!agreed || !ageConfirmed || submitting}
             onClick={handleContinue}
           >
             {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Agree and continue"}

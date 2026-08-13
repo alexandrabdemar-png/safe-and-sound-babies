@@ -47,35 +47,42 @@ function TermsPage() {
 
           <div className="mt-10 space-y-8 font-body text-base leading-relaxed text-foreground">
             <section>
-              <h2 className="font-display text-xl font-semibold text-foreground">1. Suggestions Only</h2>
+              <h2 className="font-display text-xl font-semibold text-foreground">1. Eligibility</h2>
+              <p className="mt-2 text-muted-foreground">
+                Peace of Mine is intended for use by adults who are 18 years of age or older. By creating an account or using the app, you represent and confirm that you meet this age requirement. Peace of Mine is not directed at children, and no one under 18 may create an account or use the service, regardless of whether a parent or guardian is involved.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="font-display text-xl font-semibold text-foreground">2. Suggestions Only</h2>
               <p className="mt-2 text-muted-foreground">
                 Everything provided by Peace of Mine is for informational and suggestion purposes only. Our reminders, recommendations, timelines, and any other content are not medical advice, legal advice, or professional guidance of any kind. Always consult a qualified professional before making decisions about your child’s health, safety, or care.
               </p>
             </section>
 
             <section>
-              <h2 className="font-display text-xl font-semibold text-foreground">2. No Guarantee of Accuracy</h2>
+              <h2 className="font-display text-xl font-semibold text-foreground">3. No Guarantee of Accuracy</h2>
               <p className="mt-2 text-muted-foreground">
                 While we aim to keep information helpful and up to date, we do not guarantee that any reminder, recommendation, or piece of content is accurate, complete, reliable, or suitable for your specific situation. You use Peace of Mine at your own discretion and assume full responsibility for any actions you take based on what you see here.
               </p>
             </section>
 
             <section>
-              <h2 className="font-display text-xl font-semibold text-foreground">3. Not a Substitute for Professional Advice</h2>
+              <h2 className="font-display text-xl font-semibold text-foreground">4. Not a Substitute for Professional Advice</h2>
               <p className="mt-2 text-muted-foreground">
                 Peace of Mine is not a replacement for pediatricians, child safety experts, car seat technicians, lactation consultants, or any other licensed professional. If you have concerns about your child’s safety or wellbeing, please contact the appropriate expert immediately.
               </p>
             </section>
 
             <section>
-              <h2 className="font-display text-xl font-semibold text-foreground">4. User Responsibility</h2>
+              <h2 className="font-display text-xl font-semibold text-foreground">5. User Responsibility</h2>
               <p className="mt-2 text-muted-foreground">
                 You are responsible for verifying product expiration dates, recall notices, installation instructions, and any other safety-critical details directly with manufacturers and certified professionals. Peace of Mine is a tool to help you stay organized — not the final authority.
               </p>
             </section>
 
             <section>
-              <h2 className="font-display text-xl font-semibold text-foreground">5. Safety Disclaimer &amp; Assumption of Risk</h2>
+              <h2 className="font-display text-xl font-semibold text-foreground">6. Safety Disclaimer &amp; Assumption of Risk</h2>
               <p className="mt-2 text-muted-foreground">
                 Peace of Mine is an informational tracking tool only. It is designed to help you organize, track, and receive informational reminders about baby products, milestones, recalls, and related topics. It is not a substitute for manufacturer instructions, product manuals, product labeling, safety warnings, healthcare providers, or your own independent judgment.
               </p>
@@ -88,7 +95,7 @@ function TermsPage() {
             </section>
 
             <section>
-              <h2 className="font-display text-xl font-semibold text-foreground">6. Data Freshness &amp; the Sync Gap</h2>
+              <h2 className="font-display text-xl font-semibold text-foreground">7. Data Freshness &amp; the Sync Gap</h2>
               <p className="mt-2 text-muted-foreground">
                 Recall, guideline, and product information shown in Peace of Mine is only as current as the last time it was synced from CPSC, FDA, and other official sources — it is not real-time. A manufacturer or government agency can issue a recall or safety update at any moment, including in the window between one sync and the next, before it has reached the app. Every product screen shows when that product's information was actually last synced, for exactly this reason.
               </p>
@@ -98,14 +105,14 @@ function TermsPage() {
             </section>
 
             <section>
-              <h2 className="font-display text-xl font-semibold text-foreground">7. Release</h2>
+              <h2 className="font-display text-xl font-semibold text-foreground">8. Release</h2>
               <p className="mt-2 text-muted-foreground">
                 To the fullest extent permitted by applicable law, you assume full responsibility for any decisions you make regarding your child's care and the use of any products, and you release and hold harmless Peace of Mine, its owners, employees, contractors, affiliates, licensors, and partners from claims arising from your use of the app, except where such liability cannot legally be excluded.
               </p>
             </section>
 
             <section>
-              <h2 className="font-display text-xl font-semibold text-foreground">8. Limitation of Liability</h2>
+              <h2 className="font-display text-xl font-semibold text-foreground">9. Limitation of Liability</h2>
               <p className="mt-2 text-muted-foreground">
                 To the fullest extent permitted by law, Peace of Mine and its creators will not be liable for any direct, indirect, incidental, consequential, special, or punitive damages arising from your use of (or inability to use) the app or its content, including any damages resulting from a product recall, injury, or safety incident, regardless of the legal theory under which such damages are sought.
               </p>
@@ -115,21 +122,21 @@ function TermsPage() {
             </section>
 
             <section>
-              <h2 className="font-display text-xl font-semibold text-foreground">9. Class-Action Waiver</h2>
+              <h2 className="font-display text-xl font-semibold text-foreground">10. Class-Action Waiver</h2>
               <p className="mt-2 text-muted-foreground">
                 To the fullest extent permitted by applicable law, you agree that any claim against Peace of Mine will be brought individually, and not as a plaintiff or class member in any purported class, collective, consolidated, or representative action. You waive any right to have your claim heard or resolved as part of a class action, and to join your claim with the claims of other users, including in connection with a recall that Peace of Mine's notifications did not flag or flagged late. This section does not apply where prohibited by law.
               </p>
             </section>
 
             <section>
-              <h2 className="font-display text-xl font-semibold text-foreground">10. Changes to These Terms</h2>
+              <h2 className="font-display text-xl font-semibold text-foreground">11. Changes to These Terms</h2>
               <p className="mt-2 text-muted-foreground">
                 We may update these Terms from time to time. When we make a material change, you will be asked to explicitly accept the updated Terms again before continuing to use the app. Continued use of Peace of Mine after a non-material change means you accept the revised Terms.
               </p>
             </section>
 
             <section>
-              <h2 className="font-display text-xl font-semibold text-foreground">11. Contact</h2>
+              <h2 className="font-display text-xl font-semibold text-foreground">12. Contact</h2>
               <p className="mt-2 text-muted-foreground">
                 If you have questions about these Terms, reach out to us at hello@safeandsound.app.
               </p>

@@ -7,7 +7,13 @@ import { isSchemaMissingTableError } from "@/lib/errors";
 // new version. Old acceptances are never overwritten (see
 // supabase/migrations/20260716000000_legal_consent_wall.sql), so this is
 // also what /legal-consent writes to user_agreements.terms_version.
-export const CURRENT_TERMS_VERSION = "2026-07-16";
+//
+// Bumped 2026-08-13 to add the 18+ eligibility clause and the
+// is_18_or_older checkbox (supabase/migrations/20260813000000_...sql) —
+// this re-prompts every existing user, not just new signups, so the age
+// attestation actually covers the whole user base rather than only
+// accounts created after this change shipped.
+export const CURRENT_TERMS_VERSION = "2026-08-13";
 
 /**
  * True when the user has NEVER accepted the terms. Once a user has any
