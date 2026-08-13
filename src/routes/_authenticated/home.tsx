@@ -633,25 +633,20 @@ function HomePage() {
           const hit = checkCriticalRecalls(p.name);
           if (!hit) continue;
 
-          // Upsert into recall catalog
-          const { data: catalogEntry } = await (supabase as any)
-            .from("recalls")
-            .upsert(
-              { source: "critical", source_id: hit.id, title: hit.title, url: hit.url },
-              { onConflict: "source,source_id" },
-            )
-            .select("id")
-            .single();
-          const recallId = (catalogEntry as { id: string } | null)?.id;
-          if (recallId) {
-            await (supabase as any)
-              .from("product_recalls")
-              .upsert(
-                { product_id: p.id, recall_id: recallId, acknowledged: false },
-                { onConflict: "product_id,recall_id" },
-              );
-          }
-          await (supabase as any).from("products").update({ recalled: true }).eq("id", p.id);
+          // Writes to `recalls` / `product_recalls` are RLS-blocked from the
+          // browser; going through the server fn keeps the flag and the
+          // linked recall row in sync (otherwise the product shows the
+          // "flagged for a recall, but details aren't available yet" banner
+          // forever).
+          await recordProductRecall({
+            data: {
+              productId: p.id,
+              source: "critical",
+              sourceId: hit.id,
+              title: hit.title,
+              url: hit.url,
+            },
+          });
           newRecalls++;
         }
         if (newRecalls > 0) {
