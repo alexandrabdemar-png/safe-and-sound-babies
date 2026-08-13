@@ -55,9 +55,15 @@ describe("isPipelineStale", () => {
     expect(isPipelineStale(null, now)).toBe(true);
   });
   it("returns false for a recent success", () => {
-    expect(isPipelineStale("2026-11-01T00:00:00Z", now)).toBe(false);
+    expect(isPipelineStale("2026-11-01T11:00:00Z", now)).toBe(false);
   });
-  it("returns true after 26 hours", () => {
+  it("returns false right at the edge — just under 3 hours", () => {
+    expect(isPipelineStale("2026-11-01T09:01:00Z", now)).toBe(false);
+  });
+  it("returns true after 3 hours — tightened from 26h to match the hourly cadence", () => {
+    expect(isPipelineStale("2026-11-01T08:00:00Z", now)).toBe(true);
+  });
+  it("returns true after what used to be the 26h threshold, now well past stale", () => {
     expect(isPipelineStale("2026-10-30T08:00:00Z", now)).toBe(true);
   });
 });

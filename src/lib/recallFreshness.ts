@@ -88,11 +88,14 @@ export function formatDataAsOf(iso: string | Date | null | undefined, now: Date 
 
 /**
  * Staleness label for the pipeline itself — shown in the alerts inbox when
- * the daily batch hasn't completed successfully in >26h.
+ * the hourly batch hasn't completed successfully in >3h. Was 26h when the
+ * batch ran once daily; tightened to match the hourly cadence (see
+ * 20260813210000_recall_check_hourly.sql) so a genuine outage doesn't stay
+ * silent for most of a day before this flags it.
  */
 export function isPipelineStale(lastSuccessAt: string | Date | null | undefined, now: Date = new Date()): boolean {
   if (!lastSuccessAt) return true;
   const d = lastSuccessAt instanceof Date ? lastSuccessAt : new Date(lastSuccessAt);
   if (isNaN(d.getTime())) return true;
-  return now.getTime() - d.getTime() > 26 * 3_600_000;
+  return now.getTime() - d.getTime() > 3 * 3_600_000;
 }

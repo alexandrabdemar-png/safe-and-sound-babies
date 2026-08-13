@@ -79,7 +79,7 @@ export function DataAsOf({
     return (
       <p className={`inline-flex items-center gap-1.5 font-body text-[11px] text-amber-700 dark:text-amber-400 ${className}`}>
         <AlertTriangle className="h-3 w-3" />
-        Recall data may be stale — background checks haven't completed in the last 26 hours.
+        Recall data may be stale — background checks haven't completed in the last 3 hours.
       </p>
     );
   }
