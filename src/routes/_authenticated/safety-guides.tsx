@@ -5,6 +5,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { CheckCircle2, ChevronDown, ChevronUp, Clock, Download, Share2, Shield, ShieldCheck, Star, Stethoscope, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PediatricianDisclaimer } from "@/components/PediatricianDisclaimer";
+import { SUPPORT_EMAIL } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/safety-guides")({
   ssr: false,
@@ -457,7 +458,7 @@ function SafetyGuidesPage() {
             ) : (
               <>
                 <p className="font-display text-lg font-semibold tracking-tight">Thanks for being honest</p>
-                <p className="mt-1 font-body text-sm text-muted-foreground">We're always improving. If there's something we can do better, email us at hello@safeandsound.app.</p>
+                <p className="mt-1 font-body text-sm text-muted-foreground">We're always improving. If there's something we can do better, email us at {SUPPORT_EMAIL}.</p>
               </>
             )}
           </div>

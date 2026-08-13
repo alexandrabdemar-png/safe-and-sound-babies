@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { SUPPORT_EMAIL } from "@/lib/constants";
 
 export const Route = createFileRoute("/terms")({
   head: () => ({
@@ -138,7 +139,7 @@ function TermsPage() {
             <section>
               <h2 className="font-display text-xl font-semibold text-foreground">12. Contact</h2>
               <p className="mt-2 text-muted-foreground">
-                If you have questions about these Terms, reach out to us at hello@safeandsound.app.
+                If you have questions about these Terms, reach out to us at {SUPPORT_EMAIL}.
               </p>
             </section>
           </div>
