@@ -374,7 +374,6 @@ function HomePage() {
       horizon30.setDate(horizon30.getDate() + 30);
       const horizon90 = new Date();
       horizon90.setDate(horizon90.getDate() + 90);
-      const todayStr = new Date().toISOString().slice(0, 10);
       const horizon30Str = horizon30.toISOString().slice(0, 10);
       const horizon90Str = horizon90.toISOString().slice(0, 10);
       const nowIso = new Date().toISOString();
@@ -389,16 +388,21 @@ function HomePage() {
             .from("product_recalls")
             .select("id", { count: "exact", head: true })
             .eq("acknowledged", false),
+          // No lower bound on these two — an overdue replacement/size-up
+          // (past due, not just "coming up") still needs to count and show
+          // here. A .gte(todayStr) lower bound previously excluded anything
+          // already overdue entirely, so a product due back in June stayed
+          // invisible on Home even in August. Checks both the legacy field
+          // and the AI-predicted one, matching the precedence products.tsx
+          // and the comingUp query below already use.
           supabase
             .from("products")
             .select("id", { count: "exact", head: true })
-            .gte("replace_at", todayStr)
-            .lte("replace_at", horizon30Str),
+            .or(`replace_at.lte.${horizon30Str},predicted_replacement_date.lte.${horizon30Str}`),
           supabase
             .from("products")
             .select("id", { count: "exact", head: true })
-            .gte("next_size_at", todayStr)
-            .lte("next_size_at", horizon30Str),
+            .or(`next_size_at.lte.${horizon30Str},predicted_sizeup_date.lte.${horizon30Str}`),
           supabase
             .from("products")
             .select("id, category, purchased_at, size")
@@ -409,8 +413,11 @@ function HomePage() {
             .select(
               "id, name, brand, replace_at, next_size_at, predicted_replacement_date, predicted_sizeup_date, expiration_date",
             )
+            // No lower bound here either, for the same reason as the count
+            // queries above — an already-overdue item belongs in "coming
+            // up" too, not just ones still ahead of today.
             .or(
-              `and(replace_at.gte.${todayStr},replace_at.lte.${horizon90Str}),and(next_size_at.gte.${todayStr},next_size_at.lte.${horizon90Str}),and(predicted_replacement_date.gte.${todayStr},predicted_replacement_date.lte.${horizon90Str}),and(predicted_sizeup_date.gte.${todayStr},predicted_sizeup_date.lte.${horizon90Str}),expiration_date.lte.${horizon90Str}`,
+              `replace_at.lte.${horizon90Str},next_size_at.lte.${horizon90Str},predicted_replacement_date.lte.${horizon90Str},predicted_sizeup_date.lte.${horizon90Str},expiration_date.lte.${horizon90Str}`,
             ),
         ]);
 
@@ -456,7 +463,7 @@ function HomePage() {
         for (const p of comingUpRes.data as Raw[]) {
           const replaceDate = p.predicted_replacement_date ?? p.replace_at;
           const sizeDate = p.predicted_sizeup_date ?? p.next_size_at;
-          if (replaceDate && replaceDate >= todayStr && replaceDate <= horizon90Str) {
+          if (replaceDate && replaceDate <= horizon90Str) {
             items.push({
               id: `replace:${p.id}`,
               name: p.name,
@@ -465,7 +472,7 @@ function HomePage() {
               type: "replace",
             });
           }
-          if (sizeDate && sizeDate >= todayStr && sizeDate <= horizon90Str) {
+          if (sizeDate && sizeDate <= horizon90Str) {
             items.push({
               id: `sizeup:${p.id}`,
               name: p.name,

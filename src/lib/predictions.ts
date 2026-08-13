@@ -138,3 +138,12 @@ export function formatMonthYear(iso: string | null): string | null {
 export function daysBetween(a: Date, b: Date): number {
   return Math.round((b.getTime() - a.getTime()) / 86_400_000);
 }
+
+/** True when a size-up/replacement date has already passed. */
+export function isOverdue(
+  iso: string | null,
+  todayIso: string = new Date().toISOString().slice(0, 10),
+): boolean {
+  if (!iso) return false;
+  return iso.slice(0, 10) < todayIso;
+}

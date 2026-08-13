@@ -1,5 +1,27 @@
 import { describe, it, expect } from "vitest";
-import { predictSizeUpDate, predictReplacementDate, formatMonthYear, daysBetween } from "./predictions";
+import { predictSizeUpDate, predictReplacementDate, formatMonthYear, daysBetween, isOverdue } from "./predictions";
+
+describe("isOverdue", () => {
+  it("is false for a null date", () => {
+    expect(isOverdue(null, "2026-08-13")).toBe(false);
+  });
+
+  it("is true for a date before today — the actual 'June 2026 replace date, it's August' bug", () => {
+    expect(isOverdue("2026-06-01", "2026-08-13")).toBe(true);
+  });
+
+  it("is false for today itself", () => {
+    expect(isOverdue("2026-08-13", "2026-08-13")).toBe(false);
+  });
+
+  it("is false for a future date", () => {
+    expect(isOverdue("2026-09-01", "2026-08-13")).toBe(false);
+  });
+
+  it("handles a full timestamp, not just a plain date, by comparing only the date portion", () => {
+    expect(isOverdue("2026-06-01T23:59:59.000Z", "2026-08-13")).toBe(true);
+  });
+});
 
 describe("predictSizeUpDate", () => {
   it("returns null when the child has no date_of_birth", () => {

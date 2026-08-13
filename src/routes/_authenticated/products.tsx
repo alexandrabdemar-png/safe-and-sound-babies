@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 
-import { formatMonthYear, daysBetween } from "@/lib/predictions";
+import { formatMonthYear, daysBetween, isOverdue } from "@/lib/predictions";
 import { CATEGORY_BY_KEY, categoryFromLabel, type CategoryKey } from "@/lib/productCategories";
 import { isOnboardingPlaceholderProduct } from "@/lib/onboardingPlaceholderProduct";
 
@@ -163,13 +163,27 @@ function ProductCard({ product }: { product: Product }) {
             <SizeTimeline addedAt={product.added_at} sizeUpDate={sizeUpDate} />
             <div className="mt-2 flex flex-wrap gap-2 font-body text-[11px]">
               {sizeUpDate && (
-                <span className="rounded-full bg-sand/60 px-2.5 py-1 text-foreground/70">
-                  Size-up · {formatMonthYear(sizeUpDate)}
+                <span
+                  className={
+                    isOverdue(sizeUpDate)
+                      ? "rounded-full bg-destructive/15 px-2.5 py-1 font-semibold text-destructive"
+                      : "rounded-full bg-sand/60 px-2.5 py-1 text-foreground/70"
+                  }
+                >
+                  {isOverdue(sizeUpDate) ? "Size-up overdue" : "Size-up"} ·{" "}
+                  {formatMonthYear(sizeUpDate)}
                 </span>
               )}
               {replaceDate && (
-                <span className="rounded-full bg-sand/60 px-2.5 py-1 text-foreground/70">
-                  Replace · {formatMonthYear(replaceDate)}
+                <span
+                  className={
+                    isOverdue(replaceDate)
+                      ? "rounded-full bg-destructive/15 px-2.5 py-1 font-semibold text-destructive"
+                      : "rounded-full bg-sand/60 px-2.5 py-1 text-foreground/70"
+                  }
+                >
+                  {isOverdue(replaceDate) ? "Replace overdue" : "Replace"} ·{" "}
+                  {formatMonthYear(replaceDate)}
                 </span>
               )}
               {!sizeUpDate && !replaceDate && (
