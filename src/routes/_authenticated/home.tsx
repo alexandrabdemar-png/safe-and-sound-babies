@@ -670,10 +670,20 @@ function HomePage() {
   // recalls (safety-critical) outrank replacements, which outrank size-ups.
   const HeaderAlertIcon =
     alerts.recalls > 0 ? AlertTriangle : alerts.replace > 0 ? RefreshCw : alerts.sizeUp > 0 ? Ruler : Sparkles;
+  // Every evaluateInsights rule keys off age and/or home_profile answers —
+  // several (babyproof_start, install_baby_gates, babyproof_low_cabinets)
+  // have no product/milestone signal at all, so a brand-new account with
+  // nothing logged yet could still get "Up next" recommendations before
+  // there's any real activity to ground them in. Hold off on generating
+  // any until the family has added at least one product or logged at
+  // least one milestone — see the placeholder card below for the copy
+  // shown in the meantime.
+  const hasAnyTrackedData = products.length > 0 || moments.length > 0;
   const upNext: Insight[] = useMemo(() => {
+    if (!hasAnyTrackedData) return [];
     const all = evaluateInsights(child, products, homeProfile);
     return all.filter((i) => !dismissedIds.has(i.id)).slice(0, 3);
-  }, [child, products, dismissedIds, homeProfile]);
+  }, [child, products, dismissedIds, homeProfile, hasAnyTrackedData]);
 
   // Show measurements reminder if measurements_updated_at is null or > 28 days ago
   const showMeasReminder = useMemo(() => {
@@ -1323,35 +1333,51 @@ function HomePage() {
       </section>
 
       {/* Up next — proactive guidance */}
-      {upNext.length > 0 && (
+      {!hasAnyTrackedData ? (
         <section className="px-5 pt-4 sm:px-6 animate-fade-up stagger-4">
           <div className="mx-auto max-w-md">
-            <div className="rounded-3xl border border-border/60 bg-card p-5">
-              <div className="mb-3 flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sand/60 text-accent">
-                  <Sparkles className="h-3.5 w-3.5" />
-                </span>
-                <p className="font-display text-sm font-semibold tracking-tight">
-                  Up next for {child?.name}
-                </p>
-              </div>
-              <ul className="space-y-2.5">
-                {upNext.map((i) => (
-                  <InsightCard
-                    key={i.id}
-                    insight={i}
-                    onDismiss={() => dismissInsight(i.id)}
-                    onSnooze={() => snoozeInsight(i.id)}
-                  />
-                ))}
-              </ul>
-              <p className="mt-3 font-body text-[10px] leading-relaxed text-muted-foreground/60">
-                Recommendations are informational and may not apply to every child or home. Always
-                use your judgment and review manufacturer instructions.
+            <div className="rounded-3xl border border-dashed border-border bg-card/40 p-5 text-center">
+              <span className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-sand/60 text-accent">
+                <Sparkles className="h-3.5 w-3.5" />
+              </span>
+              <p className="font-body text-sm text-muted-foreground">
+                Personalized recommendations will start showing up here once you add a product or
+                log a milestone for {child?.name || "your child"}.
               </p>
             </div>
           </div>
         </section>
+      ) : (
+        upNext.length > 0 && (
+          <section className="px-5 pt-4 sm:px-6 animate-fade-up stagger-4">
+            <div className="mx-auto max-w-md">
+              <div className="rounded-3xl border border-border/60 bg-card p-5">
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sand/60 text-accent">
+                    <Sparkles className="h-3.5 w-3.5" />
+                  </span>
+                  <p className="font-display text-sm font-semibold tracking-tight">
+                    Up next for {child?.name}
+                  </p>
+                </div>
+                <ul className="space-y-2.5">
+                  {upNext.map((i) => (
+                    <InsightCard
+                      key={i.id}
+                      insight={i}
+                      onDismiss={() => dismissInsight(i.id)}
+                      onSnooze={() => snoozeInsight(i.id)}
+                    />
+                  ))}
+                </ul>
+                <p className="mt-3 font-body text-[10px] leading-relaxed text-muted-foreground/60">
+                  Recommendations are informational and may not apply to every child or home. Always
+                  use your judgment and review manufacturer instructions.
+                </p>
+              </div>
+            </div>
+          </section>
+        )
       )}
 
       {/* Recent moments */}
