@@ -1811,6 +1811,11 @@ function DailySafetyTipCard({
               )}
             </Button>
           </div>
+          <p className="mt-3 font-body text-[11px] leading-relaxed text-muted-foreground">
+            Written in-house from general child-safety guidance and rotated by your child's age —
+            not pulled live from CPSC, FDA, or any other database. Always confirm safety-critical
+            steps against current guidance from your pediatrician or the product manufacturer.
+          </p>
         </div>
       </div>
     </div>

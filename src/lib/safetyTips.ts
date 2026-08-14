@@ -313,7 +313,7 @@ export const SAFETY_TIPS: SafetyTip[] = [
     id: "t055",
     minMonths: 0,
     maxMonths: 48,
-    text: "You might want to keep a US Coast Guard–approved life jacket sized for your child near any body of water — floaties and swim rings are fun but are not safety devices.",
+    text: "You might want to keep a properly fitted life jacket for your child near any body of water — floaties and swim rings are fun but are not safety devices.",
   },
   {
     id: "t056",
