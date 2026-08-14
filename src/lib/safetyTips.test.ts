@@ -155,6 +155,49 @@ describe("pacifier size-appropriateness tip", () => {
   });
 });
 
+// ── Regression: per-tip source citations ───────────────────────────────
+//
+// Only tips that trace to a real, verified AAP/CPSC guideline should carry
+// a `source`; most tips are general in-house phrasing and intentionally
+// have none. These tests guard the citations that do exist against typos
+// (malformed URL, empty label) and against silently losing a citation the
+// content was specifically checked against (see safetyTips.ts's source
+// doc comment) in a future edit.
+describe("per-tip source citations", () => {
+  it("every tip that has a source uses a well-formed https URL and a non-empty label", () => {
+    const sourced = SAFETY_TIPS.filter((t) => t.source);
+    expect(sourced.length).toBeGreaterThan(0);
+    for (const t of sourced) {
+      expect(t.source!.url).toMatch(/^https:\/\/[a-z0-9.-]+\.(gov|org)\//i);
+      expect(t.source!.label.trim().length).toBeGreaterThan(0);
+    }
+  });
+
+  it("the water-safety and safe-sleep tips checked against AAP/CPSC guidance carry a source", () => {
+    const expectedSourced = [
+      "t002",
+      "t005",
+      "t053",
+      "t054",
+      "t055",
+      "t056",
+      "t057",
+      "t058",
+      "t059",
+    ];
+    for (const id of expectedSourced) {
+      const tip = SAFETY_TIPS.find((t) => t.id === id);
+      expect(tip, `expected tip ${id} to exist`).toBeDefined();
+      expect(tip!.source, `expected tip ${id} to have a source`).toBeDefined();
+    }
+  });
+
+  it("most tips still have no source — this is a targeted citation set, not a blanket claim", () => {
+    const unsourced = SAFETY_TIPS.filter((t) => !t.source);
+    expect(unsourced.length).toBeGreaterThan(SAFETY_TIPS.length / 2);
+  });
+});
+
 // ── Answers a direct question: does the tip actually change day to day? ───
 //
 // selectDailyTip is deterministic — basePool[dayIndex % basePool.length] —

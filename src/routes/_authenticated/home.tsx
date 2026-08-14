@@ -1779,7 +1779,7 @@ function DailySafetyTipCard({
   onDone,
   showSuccess,
 }: {
-  tip: { id: string; text: string };
+  tip: { id: string; text: string; source?: { label: string; url: string } };
   onDone: () => void;
   showSuccess: boolean;
 }) {
@@ -1815,6 +1815,21 @@ function DailySafetyTipCard({
             Written in-house from general child-safety guidance and rotated by your child's age —
             not pulled live from CPSC, FDA, or any other database. Always confirm safety-critical
             steps against current guidance from your pediatrician or the product manufacturer.
+            {tip.source && (
+              <>
+                {" "}
+                This one is based on{" "}
+                <a
+                  href={tip.source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 hover:text-foreground"
+                >
+                  {tip.source.label}
+                </a>
+                .
+              </>
+            )}
           </p>
         </div>
       </div>

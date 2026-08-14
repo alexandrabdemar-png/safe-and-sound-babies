@@ -3,6 +3,15 @@ export type SafetyTip = {
   text: string;
   minMonths: number;
   maxMonths: number;
+  /**
+   * Only set when this specific tip traces to a real, citable AAP/CPSC
+   * guideline — not a blanket label on the whole list. Most tips are
+   * general in-house phrasing and intentionally have no source; verified
+   * against the live page's content (via search, since this environment's
+   * network egress can't fetch these domains directly) before being added,
+   * not guessed from a plausible-looking URL.
+   */
+  source?: { label: string; url: string };
 };
 
 // Safety tips shown one per day (see selectDailyTip below) — gentle,
@@ -21,6 +30,10 @@ export const SAFETY_TIPS: SafetyTip[] = [
     minMonths: 0,
     maxMonths: 3,
     text: "Some families find it helpful to press the center of the crib mattress to confirm it springs back quickly — a mattress that holds an indent may be too soft for safe sleep.",
+    source: {
+      label: "AAP — A Parent's Guide to Safe Sleep",
+      url: "https://www.healthychildren.org/English/ages-stages/baby/sleep/Pages/a-parents-guide-to-safe-sleep.aspx",
+    },
   },
   {
     id: "t003",
@@ -39,6 +52,10 @@ export const SAFETY_TIPS: SafetyTip[] = [
     minMonths: 0,
     maxMonths: 3,
     text: "Some families find it reassuring to double-check that the sleep space has no loose items near where their baby rests — blankets, bumpers, and soft objects are worth moving to a separate area.",
+    source: {
+      label: "AAP — A Parent's Guide to Safe Sleep",
+      url: "https://www.healthychildren.org/English/ages-stages/baby/sleep/Pages/a-parents-guide-to-safe-sleep.aspx",
+    },
   },
   {
     id: "t006",
@@ -302,42 +319,55 @@ export const SAFETY_TIPS: SafetyTip[] = [
     minMonths: 0,
     maxMonths: 999,
     text: "It may be worth checking that any home pool or spa has a four-sided fence that meets local code — a barrier that completely surrounds the water and latches at the top is considered the most effective layer of protection.",
+    source: { label: "CPSC — Pool Safely", url: "https://www.poolsafely.gov/" },
   },
   {
     id: "t054",
     minMonths: 0,
     maxMonths: 999,
     text: "Some families find it helpful to confirm that the gate on their pool fence is self-closing and self-latching, with the latch on the pool side — this way it can't accidentally be left open.",
+    source: { label: "CPSC — Pool Safely", url: "https://www.poolsafely.gov/" },
   },
   {
     id: "t055",
     minMonths: 0,
     maxMonths: 48,
     text: "You might want to keep a properly fitted life jacket for your child near any body of water — floaties and swim rings are fun but are not safety devices.",
+    source: { label: "CPSC — Pool Safely", url: "https://www.poolsafely.gov/" },
   },
   {
     id: "t056",
     minMonths: 0,
     maxMonths: 48,
     text: "It may be a good time to make sure that an adult who knows how to swim is within arm's reach whenever your child is in or near the water — designated water watching, with no phone distractions.",
+    source: {
+      label: "AAP — Drowning Prevention and Water Safety",
+      url: "https://www.aap.org/en/patient-care/drowning-prevention-and-water-safety/",
+    },
   },
   {
     id: "t057",
     minMonths: 12,
     maxMonths: 999,
     text: "Some families find it helpful to enroll their child in age-appropriate swim lessons — the AAP notes that lessons can significantly reduce drowning risk for children one year and older.",
+    source: {
+      label: "AAP — Swim Lessons for Children",
+      url: "https://www.healthychildren.org/English/safety-prevention/at-play/Pages/Swim-Lessons.aspx",
+    },
   },
   {
     id: "t058",
     minMonths: 0,
     maxMonths: 999,
     text: "You might consider learning CPR — pool-related emergencies happen very quickly, and hands-only CPR before emergency services arrive can make a meaningful difference.",
+    source: { label: "CPSC — Pool Safely", url: "https://www.poolsafely.gov/" },
   },
   {
     id: "t059",
     minMonths: 0,
     maxMonths: 36,
     text: "It may be worth emptying any portable or inflatable pools completely after each use and storing them upside down — even a few inches of water left standing is a drowning risk for young children.",
+    source: { label: "CPSC — Pool Safely FAQ", url: "https://www.poolsafely.gov/faq/" },
   },
   {
     id: "t060",
