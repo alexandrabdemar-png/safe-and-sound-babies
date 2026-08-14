@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Search, ShieldAlert, Utensils, Loader2, X } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Search, ShieldAlert, Utensils, Loader2, X } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { friendlyError } from "@/lib/errors";
 
@@ -24,6 +24,16 @@ const TOP_ALLERGENS = [
   "Sesame",
 ] as const;
 type Allergen = (typeof TOP_ALLERGENS)[number];
+
+// handleSave() below bakes the selected allergen into food_name as a
+// " (Peanuts)" style suffix rather than storing it as a separate column —
+// this reverses that when opening an existing entry for edit, so re-saving
+// doesn't double up the suffix regardless of what was there before.
+export function parseFoodName(name: string): { base: string; allergen: Allergen | "" } {
+  const match = TOP_ALLERGENS.find((a) => name.endsWith(` (${a})`));
+  if (match) return { base: name.slice(0, -(match.length + 3)), allergen: match };
+  return { base: name, allergen: "" };
+}
 
 type Child = {
   id: string;
@@ -58,15 +68,38 @@ function FirstFoodsPage() {
   const [showForm, setShowForm] = useState(false);
   const [show4DayCard, setShow4DayCard] = useState(false);
 
-  // Form state
+  // Form state — editingId is null while adding a new food, or the id of
+  // an existing first_foods row while editing one (see openEdit/handleSave).
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [foodName, setFoodName] = useState("");
   const [dateIntroduced, setDateIntroduced] = useState(new Date().toISOString().slice(0, 10));
   const [isAllergen, setIsAllergen] = useState(false);
   const [selectedAllergen, setSelectedAllergen] = useState<Allergen | "">("");
   const [reactionNotes, setReactionNotes] = useState("");
 
+  function openAdd() {
+    setEditingId(null);
+    setFoodName("");
+    setDateIntroduced(new Date().toISOString().slice(0, 10));
+    setIsAllergen(false);
+    setSelectedAllergen("");
+    setReactionNotes("");
+    setShowForm(true);
+  }
+
+  function openEdit(f: FoodEntry) {
+    const { base, allergen } = parseFoodName(f.food_name);
+    setEditingId(f.id);
+    setFoodName(base);
+    setDateIntroduced(f.date_introduced);
+    setIsAllergen(f.is_allergen);
+    setSelectedAllergen(f.is_allergen ? allergen : "");
+    setReactionNotes(f.reaction_notes ?? "");
+    setShowForm(true);
+  }
+
   // Guards every setState/toast in loadData() against firing after the user
-  // has already navigated away — e.g. handleAdd() below re-calls loadData()
+  // has already navigated away — e.g. handleSave() below re-calls loadData()
   // as a background refresh after a successful save, unawaited, and if that
   // resolves (with an error) after the user has already tapped "back to
   // Home", an un-guarded toast.error would still fire, appearing on
@@ -116,7 +149,7 @@ function FirstFoodsPage() {
     setChild(c);
 
     const { data, error } = await supabase
-      .from("first_foods" as any)
+      .from("first_foods")
       .select("id, child_id, food_name, date_introduced, is_allergen, reaction_notes, created_at")
       .eq("child_id", c.id)
       .order("date_introduced", { ascending: false })
@@ -128,7 +161,7 @@ function FirstFoodsPage() {
       // Previously silent: a failed read here just left `foods` at its
       // previous value with zero indication anything went wrong — a newly
       // saved food would look like it "didn't save" even though the insert
-      // itself (a few lines up in handleAdd) had already succeeded.
+      // itself (a few lines up in handleSave) had already succeeded.
       console.error("[first-foods] failed to load foods:", error.message);
       toast.error(friendlyError(error.message));
     } else if (data) {
@@ -141,7 +174,7 @@ function FirstFoodsPage() {
     loadData();
   }, []);
 
-  async function handleAdd() {
+  async function handleSave() {
     if (!child) return;
     if (!foodName.trim()) {
       toast.error("Enter a food name.");
@@ -160,13 +193,24 @@ function FirstFoodsPage() {
       return;
     }
 
-    const { error } = await supabase.from("first_foods" as any).insert({
-      child_id: child.id,
-      food_name: finalName,
-      date_introduced: dateIntroduced,
-      is_allergen: isAllergen,
-      reaction_notes: reactionNotes.trim() || null,
-    });
+    const isEditing = editingId !== null;
+    const { error } = isEditing
+      ? await supabase
+          .from("first_foods")
+          .update({
+            food_name: finalName,
+            date_introduced: dateIntroduced,
+            is_allergen: isAllergen,
+            reaction_notes: reactionNotes.trim() || null,
+          })
+          .eq("id", editingId)
+      : await supabase.from("first_foods").insert({
+          child_id: child.id,
+          food_name: finalName,
+          date_introduced: dateIntroduced,
+          is_allergen: isAllergen,
+          reaction_notes: reactionNotes.trim() || null,
+        });
 
     if (error) {
       console.error("[first-foods] failed to save food:", error.message);
@@ -175,14 +219,17 @@ function FirstFoodsPage() {
       return;
     }
 
-    toast.success(`${finalName} added to ${child.name}'s food log.`);
+    toast.success(
+      isEditing ? `${finalName} updated.` : `${finalName} added to ${child.name}'s food log.`,
+    );
+    setEditingId(null);
     setFoodName("");
     setDateIntroduced(new Date().toISOString().slice(0, 10));
     setIsAllergen(false);
     setSelectedAllergen("");
     setReactionNotes("");
     setShowForm(false);
-    setShow4DayCard(true);
+    if (!isEditing) setShow4DayCard(true);
     setSaving(false);
     // Deliberately not awaited/surfaced as an error toast: the save above
     // already succeeded and the user has already moved on by the time this
@@ -237,7 +284,7 @@ function FirstFoodsPage() {
             {!tooYoung && (
               <button
                 type="button"
-                onClick={() => setShowForm((v) => !v)}
+                onClick={() => (showForm ? setShowForm(false) : openAdd())}
                 className="ml-auto flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 font-body text-xs font-semibold text-primary-foreground"
               >
                 <Plus className="h-3.5 w-3.5" /> Add food
@@ -296,7 +343,9 @@ function FirstFoodsPage() {
               {/* Add food form */}
               {showForm && (
                 <div className="rounded-2xl border border-border/60 bg-card p-4 animate-scale-in">
-                  <p className="mb-3 font-display text-sm font-semibold">Add a new food</p>
+                  <p className="mb-3 font-display text-sm font-semibold">
+                    {editingId ? "Edit food" : "Add a new food"}
+                  </p>
 
                   <div className="mb-3">
                     <label className="mb-1 block font-body text-xs text-muted-foreground">
@@ -376,15 +425,18 @@ function FirstFoodsPage() {
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={handleAdd}
+                      onClick={handleSave}
                       disabled={saving}
                       className="flex-1 rounded-full bg-primary py-2 font-body text-sm font-semibold text-primary-foreground disabled:opacity-60"
                     >
-                      {saving ? "Saving…" : "Save food"}
+                      {saving ? "Saving…" : editingId ? "Save changes" : "Save food"}
                     </button>
                     <button
                       type="button"
-                      onClick={() => setShowForm(false)}
+                      onClick={() => {
+                        setShowForm(false);
+                        setEditingId(null);
+                      }}
                       className="rounded-full border border-border/60 px-4 py-2 font-body text-sm text-muted-foreground"
                     >
                       Cancel
@@ -447,6 +499,14 @@ function FirstFoodsPage() {
                           </p>
                         )}
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => openEdit(f)}
+                        aria-label={`Edit ${f.food_name}`}
+                        className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-muted"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   ))}
                 </div>
