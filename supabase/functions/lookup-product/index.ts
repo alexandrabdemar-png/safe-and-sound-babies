@@ -34,7 +34,7 @@ import {
   type LookupResult,
   type ManualEntryInput,
 } from "../_shared/lookupProduct.ts";
-import { computeIsPro } from "../_shared/subscription.ts";
+import { hasAnyProSubscription } from "../_shared/subscription.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -188,14 +188,15 @@ Deno.serve(async (req) => {
   );
   if (!anyPaidSourceConfigured) return json({ found: false });
 
-  const { data: sub } = await supabase
+  // Checks every row for the user, not just the most recent one — see
+  // hasAnyProSubscription's doc comment for why a single most-recent row
+  // (with no environment filter, unlike the client-side check) could
+  // silently disagree with the client about Pro status.
+  const { data: subs } = await supabase
     .from("subscriptions")
     .select("plan,status,current_period_end")
-    .eq("user_id", userData.user.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (!computeIsPro(sub)) return json({ found: false, upgradeAvailable: true });
+    .eq("user_id", userData.user.id);
+  if (!hasAnyProSubscription(subs ?? [])) return json({ found: false, upgradeAvailable: true });
 
   const paidResult = await racePaidSources(barcode, fetch, paidConfig);
   if (!paidResult) return json({ found: false });
