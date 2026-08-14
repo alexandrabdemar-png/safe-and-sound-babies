@@ -118,8 +118,12 @@ const AUTH_FRIENDLY_MAP: [RegExp, string][] = [
   ],
   [/email not confirmed/i, "Please confirm your email first — check your inbox for the confirmation link."],
   [
+    /password.*(?:known to be weak|easy to guess|compromised|pwned)/i,
+    "That password is too easy to guess. Choose a unique password with at least 8 characters that you don't use elsewhere.",
+  ],
+  [
     /password should be at least|password.*at least \d+ characters/i,
-    "Your password needs to be at least 6 characters.",
+    "Your password needs to be at least 8 characters.",
   ],
   [
     /unable to validate email address|invalid email/i,

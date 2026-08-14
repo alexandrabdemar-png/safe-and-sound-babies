@@ -53,6 +53,10 @@ function AuthPage() {
 
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (mode === "signup" && password.length < 8) {
+      toast.error("Choose a password with at least 8 characters.");
+      return;
+    }
     setLoading("email");
     try {
       if (mode === "signup") {
@@ -256,10 +260,14 @@ function AuthPage() {
                 <input
                   type="password"
                   required
-                  minLength={6}
+                  minLength={mode === "signup" || mode === "reset" ? 8 : 6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={mode === "reset" ? "New password (min 6 characters)" : "Your password"}
+                  placeholder={
+                    mode === "signup" || mode === "reset"
+                      ? "Password (8+ unique characters)"
+                      : "Your password"
+                  }
                   autoComplete={mode === "signup" || mode === "reset" ? "new-password" : "current-password"}
                   className="w-full rounded-2xl border border-border/70 bg-background/60 py-3 pl-11 pr-4 font-body text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
