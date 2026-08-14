@@ -13,9 +13,7 @@ import { WelcomeIntroModal } from "@/components/WelcomeIntroModal";
 import { cn } from "@/lib/utils";
 import { computeAdjustedAge } from "@/lib/adjustedAge";
 import { friendlyError, isColumnUnavailableError } from "@/lib/errors";
-import { SketchDefs, MOMENT_ICON_ACCENT } from "@/lib/momentIcons";
-import { CATEGORY_SKETCH_ICONS } from "@/lib/categorySketchIcons";
-import type { CategoryKey } from "@/lib/productCategories";
+import { CATEGORY_BY_KEY, type CategoryKey } from "@/lib/productCategories";
 import {
   PROFILE_TYPES,
   usesAgeRangeFlow,
@@ -562,10 +560,9 @@ function OnboardingPage() {
               title="What are you tracking?"
               subtitle="Pick the categories that apply — we'll watch for recalls and replacements. You can change this anytime."
             >
-              <SketchDefs />
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {CATEGORIES.map((cat) => {
-                  const SketchIcon = CATEGORY_SKETCH_ICONS[cat.key];
+                  const Icon = CATEGORY_BY_KEY[cat.key].icon;
                   const active = selected.has(cat.key);
                   return (
                     <button
@@ -584,11 +581,8 @@ function OnboardingPage() {
                           <Check className="h-3 w-3" />
                         </span>
                       )}
-                      <span
-                        className="flex h-12 w-12 items-center justify-center rounded-full"
-                        style={{ backgroundColor: `${MOMENT_ICON_ACCENT}22` }}
-                      >
-                        {SketchIcon && <SketchIcon px={28} />}
+                      <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-sand/50">
+                        <Icon className="h-5 w-5 text-accent" />
                       </span>
                       <span className="font-body text-xs font-medium text-foreground">
                         {cat.name}
