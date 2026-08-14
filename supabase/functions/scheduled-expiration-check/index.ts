@@ -193,6 +193,8 @@ async function notifyAffectedUsers(
       { title, body, data: { type: "lifecycle" } },
       apnsConfig,
       apnsJwt,
+      null,
+      new Map(),
       resendApiKey,
       fromAddress,
     );
@@ -207,7 +209,8 @@ async function notifyAffectedUsers(
           notification_channel: result.channel,
         });
       }
-    } else if (!result.ok && result.channel === "push") {
+    }
+    if (result.invalidApnsToken) {
       const token = tokenByUser.get(userId);
       if (token) invalidTokens.add(token);
     }

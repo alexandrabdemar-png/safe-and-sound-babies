@@ -1,9 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, Bell, Clock, Package, PauseCircle } from "lucide-react";
+import { ChevronLeft, Bell, Clock, Package, PauseCircle, Globe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import {
+  getWebPushSubscriptionStatus,
+  isWebPushSupported,
+  subscribeToWebPush,
+  unsubscribeFromWebPush,
+} from "@/lib/webPush";
 
 export const Route = createFileRoute(
   "/_authenticated/profile_/notification-settings",
@@ -46,6 +52,8 @@ function NotificationSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [webPushSubscribed, setWebPushSubscribed] = useState(false);
+  const [webPushBusy, setWebPushBusy] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -68,9 +76,37 @@ function NotificationSettingsPage() {
         .maybeSingle();
       if (prefData) setPrefs(prefData as NotifPrefs);
 
+      if (isWebPushSupported()) {
+        setWebPushSubscribed(await getWebPushSubscriptionStatus());
+      }
+
       setLoading(false);
     })();
   }, []);
+
+  async function toggleWebPush() {
+    setWebPushBusy(true);
+    if (webPushSubscribed) {
+      await unsubscribeFromWebPush();
+      setWebPushSubscribed(false);
+    } else {
+      const result = await subscribeToWebPush();
+      if (result.ok) {
+        setWebPushSubscribed(true);
+        toast.success("Browser notifications enabled");
+      } else {
+        const messages: Record<string, string> = {
+          unsupported: "This browser doesn't support push notifications.",
+          not_configured: "Browser notifications aren't set up yet.",
+          not_signed_in: "Please sign in again to enable browser notifications.",
+          permission_denied: "Notification permission was denied — check your browser settings.",
+          save_failed: "Couldn't save your subscription. Please try again.",
+        };
+        toast.error(messages[result.reason] ?? "Couldn't enable browser notifications.");
+      }
+    }
+    setWebPushBusy(false);
+  }
 
   async function toggleAlert(field: keyof AlertSettings) {
     if (!userId) return;
@@ -143,6 +179,33 @@ function NotificationSettingsPage() {
               onToggle={() => toggleAlert("recalls_enabled")}
               disabled={loading}
             />
+            {isWebPushSupported() && (
+              <div className="flex items-center gap-4 px-5 py-4">
+                <Globe className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="font-body text-sm font-medium text-foreground">
+                    Browser notifications
+                  </p>
+                  <p className="font-body text-xs text-muted-foreground mt-0.5">
+                    {webPushSubscribed
+                      ? "Enabled for this browser."
+                      : "Get recall alerts here even when the app tab is closed."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={toggleWebPush}
+                  disabled={loading || webPushBusy}
+                  className={`rounded-full border px-4 py-1.5 font-body text-xs font-medium transition-colors disabled:opacity-50 ${
+                    webPushSubscribed
+                      ? "border-border/60 text-muted-foreground hover:border-destructive/60 hover:text-destructive"
+                      : "border-primary bg-primary text-primary-foreground"
+                  }`}
+                >
+                  {webPushSubscribed ? "Turn off" : "Enable"}
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

@@ -10,6 +10,18 @@
 // main app. Config is passed in explicitly (not read from Deno.env directly
 // in these functions) so the signing/sending logic is unit-testable with a
 // real generated test key instead of requiring real Apple credentials.
+//
+// The browser Web Push channel lives in ./webPush.ts (its own file — the
+// RFC 8291 encryption it needs is a different algorithm from APNs' plain
+// JWT-signed push, not more of the same code) and is imported here since
+// this is the one place that decides, per user, which channel(s) to use.
+
+import {
+  sendWebPush,
+  type VapidConfig,
+  type VapidJwtCache,
+  type WebPushSubscription,
+} from "./webPush.ts";
 
 export type ApnsConfig = {
   keyId: string;
@@ -174,20 +186,30 @@ export type NotifyTarget = {
   userId: string;
   email: string | null;
   apnsDeviceToken: string | null;
+  /** Browser Web Push subscriptions (0 or more — a user can have several devices/browsers). */
+  webPushSubscriptions?: WebPushSubscription[];
 };
 
 export type NotifyResult = {
   userId: string;
-  channel: "push" | "email" | null;
   ok: boolean;
-  invalidToken?: boolean;
+  /** "+"-joined list of channels that actually delivered (e.g. "push+web_push"), or null if none did. */
+  channel: string | null;
+  /** True when the APNs token is dead and profiles.apns_device_token should be cleared. */
+  invalidApnsToken?: boolean;
+  /** Endpoints the push service says are gone — caller should delete these web_push_subscriptions rows. */
+  invalidWebPushEndpoints?: string[];
 };
 
 /**
- * Sends one notification to one user: push if they have a device token,
- * otherwise email if configured, otherwise gives up (recorded as
- * channel: null, ok: false) — the caller should leave that alert
- * un-notified so it's retried next run rather than silently lost.
+ * Sends one notification to one user across every channel they have
+ * registered — native push (APNs) AND every browser Web Push subscription
+ * are attempted independently, since they reach different devices. Email is
+ * a last resort, sent ONLY when nothing else was even attempted or every
+ * attempt failed for a permanent reason (dead token/subscription) — a
+ * transient failure (network blip, 5xx) deliberately does NOT fall back to
+ * email, so the same alert doesn't double-notify once that channel starts
+ * working again next run.
  */
 export async function notifyUser(
   fetchImpl: typeof fetch,
@@ -195,9 +217,16 @@ export async function notifyUser(
   notification: PushNotification,
   apnsConfig: ApnsConfig | null,
   apnsJwt: string | null,
+  vapidConfig: VapidConfig | null,
+  vapidJwtCache: VapidJwtCache,
   resendApiKey: string | undefined,
   fromAddress: string,
 ): Promise<NotifyResult> {
+  const succeeded: string[] = [];
+  let invalidApnsToken = false;
+  const invalidWebPushEndpoints: string[] = [];
+  let hadTransientFailure = false;
+
   if (target.apnsDeviceToken && apnsConfig && apnsJwt) {
     const result = await sendApnsPush(
       fetchImpl,
@@ -206,11 +235,30 @@ export async function notifyUser(
       notification,
       apnsJwt,
     );
-    if (result.ok) return { userId: target.userId, channel: "push", ok: true };
-    if (!result.invalidToken) return { userId: target.userId, channel: "push", ok: false };
-    // Invalid token — fall through to email rather than giving up entirely.
+    if (result.ok) succeeded.push("push");
+    else if (result.invalidToken) invalidApnsToken = true;
+    else hadTransientFailure = true;
   }
-  if (target.email) {
+
+  const webPushSubscriptions = target.webPushSubscriptions ?? [];
+  if (webPushSubscriptions.length && vapidConfig) {
+    let anyWebPushOk = false;
+    for (const subscription of webPushSubscriptions) {
+      const result = await sendWebPush(
+        fetchImpl,
+        subscription,
+        vapidConfig,
+        { title: notification.title, body: notification.body, data: notification.data },
+        vapidJwtCache,
+      );
+      if (result.ok) anyWebPushOk = true;
+      else if (result.invalidSubscription) invalidWebPushEndpoints.push(subscription.endpoint);
+      else hadTransientFailure = true;
+    }
+    if (anyWebPushOk) succeeded.push("web_push");
+  }
+
+  if (succeeded.length === 0 && !hadTransientFailure && target.email) {
     const emailResult = await sendFallbackEmail(
       fetchImpl,
       resendApiKey,
@@ -219,7 +267,14 @@ export async function notifyUser(
       notification.title,
       notification.body,
     );
-    return { userId: target.userId, channel: "email", ok: emailResult.ok };
+    if (emailResult.ok) succeeded.push("email");
   }
-  return { userId: target.userId, channel: null, ok: false };
+
+  return {
+    userId: target.userId,
+    ok: succeeded.length > 0,
+    channel: succeeded.length ? succeeded.join("+") : null,
+    ...(invalidApnsToken ? { invalidApnsToken: true } : {}),
+    ...(invalidWebPushEndpoints.length ? { invalidWebPushEndpoints } : {}),
+  };
 }
