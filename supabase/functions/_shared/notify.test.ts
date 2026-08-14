@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { generateKeyPairSync, verify as nodeVerify } from "node:crypto";
+import { createECDH, generateKeyPairSync, verify as nodeVerify } from "node:crypto";
 import {
   getProviderJwt,
   sendApnsPush,
@@ -7,6 +7,35 @@ import {
   notifyUser,
   type ApnsConfig,
 } from "./notify";
+import type { VapidConfig, VapidJwtCache, WebPushSubscription } from "./webPush";
+
+function makeTestVapidConfig(): VapidConfig {
+  const { publicKey, privateKey } = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
+  const pubJwk = publicKey.export({ format: "jwk" }) as { x: string; y: string };
+  const privJwk = privateKey.export({ format: "jwk" }) as { d: string };
+  const pubBytes = Buffer.concat([
+    Buffer.from([0x04]),
+    Buffer.from(pubJwk.x, "base64url"),
+    Buffer.from(pubJwk.y, "base64url"),
+  ]);
+  return {
+    publicKey: pubBytes.toString("base64url"),
+    privateKey: privJwk.d,
+    subject: "mailto:alerts@test.app",
+  };
+}
+
+function makeTestWebPushSubscription(
+  endpoint = "https://fcm.googleapis.com/fcm/send/abc",
+): WebPushSubscription {
+  const ecdh = createECDH("prime256v1");
+  ecdh.generateKeys();
+  return {
+    endpoint,
+    p256dh: ecdh.getPublicKey().toString("base64url"),
+    auth: Buffer.from(crypto.getRandomValues(new Uint8Array(16))).toString("base64url"),
+  };
+}
 
 function makeTestKeyPair() {
   const { publicKey, privateKey } = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
@@ -187,6 +216,8 @@ describe("notifyUser", () => {
       { title: "x", body: "y" },
       apnsConfig,
       "jwt",
+      null,
+      new Map(),
       "resend-key",
       "alerts@test.app",
     );
@@ -196,17 +227,21 @@ describe("notifyUser", () => {
   it("falls back to email when push reports an invalid token and email is available", async () => {
     const fetchImpl = vi
       .fn()
-      .mockResolvedValue(jsonResponse({ reason: "Unregistered" }, false, 410));
+      .mockResolvedValueOnce(jsonResponse({ reason: "Unregistered" }, false, 410)) // apns
+      .mockResolvedValueOnce(jsonResponse({ id: "abc" }, true, 200)); // resend
     const result = await notifyUser(
       fetchImpl,
       { userId: "u1", email: "u1@example.com", apnsDeviceToken: "dead-tok" },
       { title: "x", body: "y" },
       apnsConfig,
       "jwt",
+      null,
+      new Map(),
       "resend-key",
       "alerts@test.app",
     );
     expect(result.channel).toBe("email");
+    expect(result.invalidApnsToken).toBe(true);
   });
 
   it("does NOT fall back to email on a transient (non-invalid-token) push failure", async () => {
@@ -220,10 +255,13 @@ describe("notifyUser", () => {
       { title: "x", body: "y" },
       apnsConfig,
       "jwt",
+      null,
+      new Map(),
       "resend-key",
       "alerts@test.app",
     );
-    expect(result).toEqual({ userId: "u1", channel: "push", ok: false });
+    expect(result).toEqual({ userId: "u1", channel: null, ok: false });
+    expect(fetchImpl).toHaveBeenCalledTimes(1); // email must not have been attempted too
   });
 
   it("uses email when there is no device token at all", async () => {
@@ -234,13 +272,15 @@ describe("notifyUser", () => {
       { title: "x", body: "y" },
       null,
       null,
+      null,
+      new Map(),
       "resend-key",
       "alerts@test.app",
     );
     expect(result.channel).toBe("email");
   });
 
-  it("gives up cleanly when there's neither a device token nor an email", async () => {
+  it("gives up cleanly when there's neither a device token, web push subscription, nor an email", async () => {
     const fetchImpl = vi.fn();
     const result = await notifyUser(
       fetchImpl,
@@ -248,10 +288,80 @@ describe("notifyUser", () => {
       { title: "x", body: "y" },
       null,
       null,
+      null,
+      new Map(),
       "resend-key",
       "alerts@test.app",
     );
     expect(result).toEqual({ userId: "u1", channel: null, ok: false });
     expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("delivers via web push when a browser subscription is present", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({}, true, 201));
+    const vapidConfig = makeTestVapidConfig();
+    const result = await notifyUser(
+      fetchImpl,
+      {
+        userId: "u1",
+        email: "u1@example.com",
+        apnsDeviceToken: null,
+        webPushSubscriptions: [makeTestWebPushSubscription()],
+      },
+      { title: "x", body: "y" },
+      null,
+      null,
+      vapidConfig,
+      new Map(),
+      "resend-key",
+      "alerts@test.app",
+    );
+    expect(result).toEqual({ userId: "u1", channel: "web_push", ok: true });
+  });
+
+  it("delivers on both push and web push simultaneously when both are registered", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({}, true, 200));
+    const vapidConfig = makeTestVapidConfig();
+    const result = await notifyUser(
+      fetchImpl,
+      {
+        userId: "u1",
+        email: "u1@example.com",
+        apnsDeviceToken: "tok",
+        webPushSubscriptions: [makeTestWebPushSubscription()],
+      },
+      { title: "x", body: "y" },
+      apnsConfig,
+      "jwt",
+      vapidConfig,
+      new Map(),
+      "resend-key",
+      "alerts@test.app",
+    );
+    expect(result).toEqual({ userId: "u1", channel: "push+web_push", ok: true });
+  });
+
+  it("reports a gone (410) web push subscription for cleanup without blocking other subscriptions", async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({}, false, 410))
+      .mockResolvedValueOnce(jsonResponse({}, true, 201));
+    const vapidConfig = makeTestVapidConfig();
+    const dead = makeTestWebPushSubscription("https://fcm.googleapis.com/fcm/send/dead");
+    const alive = makeTestWebPushSubscription("https://fcm.googleapis.com/fcm/send/alive");
+    const result = await notifyUser(
+      fetchImpl,
+      { userId: "u1", email: null, apnsDeviceToken: null, webPushSubscriptions: [dead, alive] },
+      { title: "x", body: "y" },
+      null,
+      null,
+      vapidConfig,
+      new Map(),
+      "resend-key",
+      "alerts@test.app",
+    );
+    expect(result.ok).toBe(true);
+    expect(result.channel).toBe("web_push");
+    expect(result.invalidWebPushEndpoints).toEqual(["https://fcm.googleapis.com/fcm/send/dead"]);
   });
 });

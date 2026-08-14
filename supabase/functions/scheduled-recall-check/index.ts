@@ -16,21 +16,29 @@
 //      — a match already recorded from a previous run is a no-op here too).
 //      Matches that did NOT already exist before this run are the "new"
 //      recalls this feature is about detecting.
-//   5. Notify only the users affected by a genuinely NEW match (push, or
-//      email if push isn't set up) via supabase/functions/_shared/notify.ts,
-//      and stamp notified_at/notification_channel on success.
+//   5. Notify only the users affected by a genuinely NEW match, and only if
+//      they haven't turned recall alerts off (user_notification_settings.
+//      recalls_enabled — defaults to on when the user has no settings row
+//      yet). Delivery tries native push (APNs) and every registered browser
+//      Web Push subscription independently, falling back to email only if
+//      neither push channel is registered/working, via
+//      supabase/functions/_shared/notify.ts — stamps notified_at/
+//      notification_channel on success either way.
 //   6. Flag every matched product's `recalled` column true (unchanged from
 //      the old hooks' behavior — other parts of the app already read it).
 //
 // Requires (as Supabase secrets): SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 // (both provided automatically by the platform), plus optionally
 // APNS_KEY_ID / APNS_TEAM_ID / APNS_KEY_P8 / APNS_BUNDLE_ID /
-// APNS_ENVIRONMENT for push, and RESEND_API_KEY / NOTIFY_FROM_EMAIL for the
-// email fallback. Missing push/email config degrades gracefully — matches
-// are still detected and recorded, just not delivered until configured.
+// APNS_ENVIRONMENT for native push, VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY /
+// VAPID_SUBJECT for browser Web Push, and RESEND_API_KEY / NOTIFY_FROM_EMAIL
+// for the email fallback. Missing config for any one channel degrades
+// gracefully — matches are still detected and recorded, just not delivered
+// on that channel until it's configured.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { runRecallBatch, type BatchProduct } from "../_shared/recallBatch.ts";
 import { notifyUser, getProviderJwt, type ApnsConfig } from "../_shared/notify.ts";
+import type { VapidConfig, VapidJwtCache, WebPushSubscription } from "../_shared/webPush.ts";
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -107,9 +115,7 @@ Deno.serve(async (req) => {
     const canonicalByFingerprint = new Map<string, string>(); // fp -> canonical recall_id
     if (catalogRows.length) {
       const fps = [
-        ...new Set(
-          catalogRows.map((r) => r.hazard_fingerprint).filter((s): s is string => !!s),
-        ),
+        ...new Set(catalogRows.map((r) => r.hazard_fingerprint).filter((s): s is string => !!s)),
       ];
       if (fps.length) {
         const { data: fpRows } = await supabase
@@ -118,7 +124,13 @@ Deno.serve(async (req) => {
           .in("hazard_fingerprint", fps);
         // Preference order: cpsc > nhtsa > fda > health_canada > usda_fsis > eu_safety_gate > critical
         const priority: Record<string, number> = {
-          cpsc: 0, nhtsa: 1, fda: 2, health_canada: 3, usda_fsis: 4, eu_safety_gate: 5, critical: 6,
+          cpsc: 0,
+          nhtsa: 1,
+          fda: 2,
+          health_canada: 3,
+          usda_fsis: 4,
+          eu_safety_gate: 5,
+          critical: 6,
         };
         const byFp = new Map<string, Array<{ id: string; source: string }>>();
         for (const row of fpRows ?? []) {
@@ -169,11 +181,25 @@ Deno.serve(async (req) => {
           .from("product_recalls")
           .select("product_id, recall_id, notified_content_hash")
           .in("product_id", productIds)
-      : { data: [] as Array<{ product_id: string; recall_id: string; notified_content_hash: string | null }> };
+      : {
+          data: [] as Array<{
+            product_id: string;
+            recall_id: string;
+            notified_content_hash: string | null;
+          }>,
+        };
     const existingByKey = new Map(
-      (existingRows ?? []).map((r) => [`${r.product_id}:${r.recall_id}`, r.notified_content_hash ?? null]),
+      (existingRows ?? []).map((r) => [
+        `${r.product_id}:${r.recall_id}`,
+        r.notified_content_hash ?? null,
+      ]),
     );
-    const newMatches: Array<{ user_id: string; product_id: string; recall_id: string; reason: "new" | "updated" }> = [];
+    const newMatches: Array<{
+      user_id: string;
+      product_id: string;
+      recall_id: string;
+      reason: "new" | "updated";
+    }> = [];
     for (const m of dedupedMatches) {
       const key = `${m.product_id}:${m.recall_id}`;
       const currentHash = contentHashByRecallId.get(m.recall_id) ?? "";
@@ -287,7 +313,9 @@ Deno.serve(async (req) => {
         },
         { onConflict: "source" },
       );
-    } catch { /* swallow — we're already in the error path */ }
+    } catch {
+      /* swallow — we're already in the error path */
+    }
     return json({ ok: false, error: err }, 500);
   }
 });
@@ -306,9 +334,12 @@ async function writeSourceStatus(
   // follow-up.
   const sources = ["cpsc", "fda", "usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"];
   for (const source of sources) {
-    const records = source === "cpsc" ? (fetchCounts.cpsc ?? 0)
-      : source === "fda" ? 0 // FDA is per-name; count is not exposed
-      : (fetchCounts.extra ?? 0); // grouped; refine per-source in a follow-up
+    const records =
+      source === "cpsc"
+        ? (fetchCounts.cpsc ?? 0)
+        : source === "fda"
+          ? 0 // FDA is per-name; count is not exposed
+          : (fetchCounts.extra ?? 0); // grouped; refine per-source in a follow-up
     const ok = records > 0 || source === "fda"; // FDA presence-check would need per-source counts
     await supabase.from("recall_source_status").upsert(
       {
@@ -340,7 +371,12 @@ async function writeSourceStatus(
 
 type ProductRow = { id: string; name: string };
 
-type NewMatch = { user_id: string; product_id: string; recall_id: string; reason: "new" | "updated" };
+type NewMatch = {
+  user_id: string;
+  product_id: string;
+  recall_id: string;
+  reason: "new" | "updated";
+};
 
 async function notifyAffectedUsers(
   supabase: ReturnType<typeof createClient>,
@@ -351,7 +387,10 @@ async function notifyAffectedUsers(
   if (newMatches.length === 0) return { notified: 0, notify_skipped_unconfigured: false };
 
   const productNameById = new Map(products.map((p) => [p.id, p.name]));
-  const byUser = new Map<string, Array<{ product_id: string; recall_id: string; name: string; reason: "new" | "updated" }>>();
+  const byUser = new Map<
+    string,
+    Array<{ product_id: string; recall_id: string; name: string; reason: "new" | "updated" }>
+  >();
   for (const m of newMatches) {
     const arr = byUser.get(m.user_id) ?? [];
     arr.push({
@@ -363,14 +402,44 @@ async function notifyAffectedUsers(
     byUser.set(m.user_id, arr);
   }
 
+  // Recall matches are always recorded (products.recalled / product_recalls
+  // were already written by the caller before this function runs) — this
+  // gate only controls whether we go on to actually ping the user, per
+  // their toggle at profile → notification settings. No row for a user
+  // means they've never touched the toggle, so it defaults to "notify"
+  // (matches the column's own DB default).
   const userIds = [...byUser.keys()];
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("user_id, apns_device_token")
+  const { data: settingsRows } = await supabase
+    .from("user_notification_settings")
+    .select("user_id, recalls_enabled")
     .in("user_id", userIds);
+  const recallsEnabledByUser = new Map(
+    (settingsRows ?? []).map((s) => [s.user_id as string, s.recalls_enabled as boolean]),
+  );
+  const notifiableUserIds = userIds.filter((id) => recallsEnabledByUser.get(id) ?? true);
+
+  const { data: profiles } = notifiableUserIds.length
+    ? await supabase
+        .from("profiles")
+        .select("user_id, apns_device_token")
+        .in("user_id", notifiableUserIds)
+    : { data: [] as Array<{ user_id: string; apns_device_token: string | null }> };
   const tokenByUser = new Map(
     (profiles ?? []).map((p) => [p.user_id, p.apns_device_token as string | null]),
   );
+
+  const { data: webPushRows } = notifiableUserIds.length
+    ? await supabase
+        .from("web_push_subscriptions")
+        .select("user_id, endpoint, p256dh, auth")
+        .in("user_id", notifiableUserIds)
+    : { data: [] as Array<{ user_id: string; endpoint: string; p256dh: string; auth: string }> };
+  const webPushByUser = new Map<string, WebPushSubscription[]>();
+  for (const row of webPushRows ?? []) {
+    const arr = webPushByUser.get(row.user_id) ?? [];
+    arr.push({ endpoint: row.endpoint, p256dh: row.p256dh, auth: row.auth });
+    webPushByUser.set(row.user_id, arr);
+  }
 
   const apnsConfig: ApnsConfig | null =
     Deno.env.get("APNS_KEY_ID") && Deno.env.get("APNS_TEAM_ID") && Deno.env.get("APNS_KEY_P8")
@@ -382,9 +451,20 @@ async function notifyAffectedUsers(
           environment: Deno.env.get("APNS_ENVIRONMENT") === "sandbox" ? "sandbox" : "production",
         }
       : null;
+  const vapidConfig: VapidConfig | null =
+    Deno.env.get("VAPID_PUBLIC_KEY") &&
+    Deno.env.get("VAPID_PRIVATE_KEY") &&
+    Deno.env.get("VAPID_SUBJECT")
+      ? {
+          publicKey: Deno.env.get("VAPID_PUBLIC_KEY")!,
+          privateKey: Deno.env.get("VAPID_PRIVATE_KEY")!,
+          subject: Deno.env.get("VAPID_SUBJECT")!,
+        }
+      : null;
+  const vapidJwtCache: VapidJwtCache = new Map();
   const resendApiKey = Deno.env.get("RESEND_API_KEY");
   const fromAddress = Deno.env.get("NOTIFY_FROM_EMAIL") || "alerts@peaceofmine.app";
-  const notifySkippedUnconfigured = !apnsConfig && !resendApiKey;
+  const notifySkippedUnconfigured = !apnsConfig && !vapidConfig && !resendApiKey;
 
   // APNs provider JWTs are valid for ~1h. In a large batch, refresh every
   // 50 minutes so we don't 403 mid-run.
@@ -402,6 +482,7 @@ async function notifyAffectedUsers(
   }
 
   const invalidTokens = new Set<string>();
+  const invalidWebPushEndpoints = new Set<string>();
   const notifiedRows: Array<{
     product_id: string;
     recall_id: string;
@@ -411,11 +492,15 @@ async function notifyAffectedUsers(
   }> = [];
 
   for (const [userId, items] of byUser) {
+    if (!(recallsEnabledByUser.get(userId) ?? true)) continue; // user opted out — match is still recorded, just not delivered
+
     let email: string | null = null;
     try {
       const { data: userResp } = await supabase.auth.admin.getUserById(userId);
       email = userResp?.user?.email ?? null;
-    } catch { /* stale/deleted user; email stays null */ }
+    } catch {
+      /* stale/deleted user; email stays null */
+    }
 
     // Split items into "new" and "updated" so the copy is honest about
     // which is which — an "Updated recall" push is different from a new one.
@@ -430,17 +515,28 @@ async function notifyAffectedUsers(
     const title = titleParts.join(" · ").slice(0, 180) || "⚠️ Safety Recall";
 
     const bodyParts: string[] = [];
-    if (newOnes.length) bodyParts.push(`${newOnes.map((i) => i.name).join(", ")} has an active recall.`);
-    if (updatedOnes.length) bodyParts.push(`Recall info for ${updatedOnes.map((i) => i.name).join(", ")} was updated — please review the changes.`);
+    if (newOnes.length)
+      bodyParts.push(`${newOnes.map((i) => i.name).join(", ")} has an active recall.`);
+    if (updatedOnes.length)
+      bodyParts.push(
+        `Recall info for ${updatedOnes.map((i) => i.name).join(", ")} was updated — please review the changes.`,
+      );
     const body = bodyParts.join(" ").slice(0, 300) + " Tap to review.";
 
     const jwt = await currentApnsJwt();
     const result = await notifyUser(
       fetch,
-      { userId, email, apnsDeviceToken: tokenByUser.get(userId) ?? null },
+      {
+        userId,
+        email,
+        apnsDeviceToken: tokenByUser.get(userId) ?? null,
+        webPushSubscriptions: webPushByUser.get(userId) ?? [],
+      },
       { title, body, data: { type: "recall" } },
       apnsConfig,
       jwt,
+      vapidConfig,
+      vapidJwtCache,
       resendApiKey,
       fromAddress,
     );
@@ -456,9 +552,13 @@ async function notifyAffectedUsers(
           notified_content_hash: contentHashByRecallId.get(item.recall_id) ?? null,
         });
       }
-    } else if (!result.ok && result.channel === "push") {
+    }
+    if (result.invalidApnsToken) {
       const token = tokenByUser.get(userId);
       if (token) invalidTokens.add(token);
+    }
+    for (const endpoint of result.invalidWebPushEndpoints ?? []) {
+      invalidWebPushEndpoints.add(endpoint);
     }
   }
 
@@ -479,6 +579,13 @@ async function notifyAffectedUsers(
       .from("profiles")
       .update({ apns_device_token: null })
       .in("apns_device_token", [...invalidTokens]);
+  }
+
+  if (invalidWebPushEndpoints.size) {
+    await supabase
+      .from("web_push_subscriptions")
+      .delete()
+      .in("endpoint", [...invalidWebPushEndpoints]);
   }
 
   return { notified: notifiedRows.length, notify_skipped_unconfigured: notifySkippedUnconfigured };
