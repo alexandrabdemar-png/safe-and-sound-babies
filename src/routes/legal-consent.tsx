@@ -6,7 +6,7 @@ import { Loader2, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { CURRENT_TERMS_VERSION } from "@/lib/legalConsent";
-import { friendlyError, isSchemaMissingTableError } from "@/lib/errors";
+import { friendlyError, isColumnUnavailableError, isSchemaMissingTableError } from "@/lib/errors";
 import { parseNextParam } from "@/lib/authCallbackRouting";
 
 export const Route = createFileRoute("/legal-consent")({
@@ -58,11 +58,33 @@ function LegalConsentPage() {
     if (!userId || !agreed || !ageConfirmed) return;
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("user_agreements").insert({
+      let { error } = await supabase.from("user_agreements").insert({
         user_id: userId,
         terms_version: CURRENT_TERMS_VERSION,
         is_18_or_older: ageConfirmed,
       } as never);
+
+      // is_18_or_older is a recent addition (20260813000000) — every
+      // existing user gets re-prompted here the moment CURRENT_TERMS_
+      // VERSION bumps, so if that migration hasn't reached this database's
+      // PostgREST schema cache yet, EVERY "Agree and continue" click would
+      // otherwise fail with a raw "column does not exist" error that
+      // friendlyError() doesn't recognize as retryable, showing the
+      // generic "Something went wrong" toast and trapping the user on this
+      // screen. Retry without the column (it defaults to false at the DB
+      // level) rather than blocking the whole consent flow on it — same
+      // resilient pattern as onboarding.tsx's children.due_date retry.
+      if (error && isColumnUnavailableError("is_18_or_older", error)) {
+        console.error(
+          "[legal-consent] is_18_or_older unavailable — retrying without it",
+          error.message,
+        );
+        ({ error } = await supabase.from("user_agreements").insert({
+          user_id: userId,
+          terms_version: CURRENT_TERMS_VERSION,
+        } as never));
+      }
+
       // A duplicate-key error here just means this version was already
       // recorded (e.g. a double-click, or a retry after a network blip) —
       // treat it as success rather than blocking the user. Likewise, if
