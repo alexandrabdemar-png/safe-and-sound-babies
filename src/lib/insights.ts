@@ -117,6 +117,14 @@ export function evaluateInsights(
   // gates" / "secure cabinets" / "lower the crib mattress" every time.
   // Capped each to the actual window it's relevant for, same treatment
   // already applied to the car-seat/bassinet/swing/bouncer rules below.
+  //
+  // crib_mattress_middle/crib_mattress_lowest also require hasCategory(products,
+  // "crib") as of the fix below — reported bug: a 2-year-old (well within the
+  // 12-36mo age window) got "lower the crib mattress" as their very first
+  // "Up next" insight, with no signal about whether the family still has a
+  // crib in active use at all, unlike the analogous bassinet/swing/bouncer
+  // "outgrow" rules further down, which already gate on the product existing.
+  const crib = hasCategory(products, "crib");
   if (months !== null) {
     if (months >= 4 && months < 24) {
       out.push({
@@ -127,7 +135,7 @@ export function evaluateInsights(
         category: "safety",
       });
     }
-    if (months >= 6 && months < 12) {
+    if (crib && months >= 6 && months < 12) {
       out.push({
         id: "crib_mattress_middle",
         title: "Consider lowering the crib mattress",
@@ -154,7 +162,7 @@ export function evaluateInsights(
         category: "safety",
       });
     }
-    if (months >= 12 && months < 36) {
+    if (crib && months >= 12 && months < 36) {
       out.push({
         id: "crib_mattress_lowest",
         title: "Consider lowering the crib mattress to its lowest setting",

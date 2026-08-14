@@ -17,6 +17,10 @@ function bassinet(): ProductInput {
   return { id: "p1", category: "Bassinet" };
 }
 
+function crib(): ProductInput {
+  return { id: "p3", category: "Crib" };
+}
+
 function findInsight(insights: ReturnType<typeof evaluateInsights>, id: string) {
   return insights.find((i) => i.id === id);
 }
@@ -227,10 +231,52 @@ describe("mobility/babyproofing insights are capped to their relevant age window
     expect(findInsight(evaluateInsights(childAtMonths(36), [], { has_stairs: true }), "gate_suggest")).toBeUndefined();
   });
 
-  it("crib_mattress_lowest still fires within its intended 12-35mo window, but not at 36mo+", () => {
-    expect(findInsight(evaluateInsights(childAtMonths(12), []), "crib_mattress_lowest")).toBeDefined();
-    expect(findInsight(evaluateInsights(childAtMonths(35), []), "crib_mattress_lowest")).toBeDefined();
-    expect(findInsight(evaluateInsights(childAtMonths(36), []), "crib_mattress_lowest")).toBeUndefined();
-    expect(findInsight(evaluateInsights(childAtMonths(elevenYearsOld), []), "crib_mattress_lowest")).toBeUndefined();
+  it("crib_mattress_lowest still fires within its intended 12-35mo window (given a crib), but not at 36mo+", () => {
+    expect(findInsight(evaluateInsights(childAtMonths(12), [crib()]), "crib_mattress_lowest")).toBeDefined();
+    expect(findInsight(evaluateInsights(childAtMonths(35), [crib()]), "crib_mattress_lowest")).toBeDefined();
+    expect(findInsight(evaluateInsights(childAtMonths(36), [crib()]), "crib_mattress_lowest")).toBeUndefined();
+    expect(
+      findInsight(evaluateInsights(childAtMonths(elevenYearsOld), [crib()]), "crib_mattress_lowest"),
+    ).toBeUndefined();
+  });
+});
+
+// ── Live feedback: a 2-year-old's first-ever "Up next" insight was "Consider
+//    lowering the crib mattress to its lowest setting" — reasonable advice
+//    in the abstract, but crib_mattress_middle/crib_mattress_lowest were
+//    pure age checks with no signal about whether the family actually has a
+//    crib in active use, unlike the analogous bassinet_transition/
+//    swing_outgrow/bouncer_outgrow rules, which already require the product
+//    to exist before firing.
+describe("crib_mattress rules require an actual crib to be logged (live feedback: fired with no crib signal)", () => {
+  it("crib_mattress_middle never fires without a crib logged, even at an in-window age", () => {
+    expect(
+      findInsight(evaluateInsights(childAtMonths(8), []), "crib_mattress_middle"),
+    ).toBeUndefined();
+  });
+
+  it("crib_mattress_middle fires at an in-window age once a crib is logged", () => {
+    expect(
+      findInsight(evaluateInsights(childAtMonths(8), [crib()]), "crib_mattress_middle"),
+    ).toBeDefined();
+  });
+
+  it("crib_mattress_lowest never fires without a crib logged, even at an in-window age (the reported case: a 2-year-old)", () => {
+    expect(
+      findInsight(evaluateInsights(childAtMonths(24), []), "crib_mattress_lowest"),
+    ).toBeUndefined();
+  });
+
+  it("crib_mattress_lowest fires at an in-window age once a crib is logged", () => {
+    expect(
+      findInsight(evaluateInsights(childAtMonths(24), [crib()]), "crib_mattress_lowest"),
+    ).toBeDefined();
+  });
+
+  it("logging an unrelated product (e.g. a stroller) does not satisfy the crib gate", () => {
+    const stroller: ProductInput = { id: "p4", category: "Stroller" };
+    expect(
+      findInsight(evaluateInsights(childAtMonths(24), [stroller]), "crib_mattress_lowest"),
+    ).toBeUndefined();
   });
 });
