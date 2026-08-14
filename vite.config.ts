@@ -14,10 +14,15 @@ export default defineConfig({
     // without its backend configuration.
     define: {
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(
-        process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "",
+        process.env.VITE_SUPABASE_URL ||
+          process.env.SUPABASE_URL ||
+          // Publishable fallback so a build without env injection still boots.
+          "https://vgafdyiaxzqwkeixcbcj.supabase.co",
       ),
       "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(
-        process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || "",
+        process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+          process.env.SUPABASE_PUBLISHABLE_KEY ||
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnYWZkeWlheHpxd2tlaXhjYmNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NTg3NTQsImV4cCI6MjA5NjQzNDc1NH0.ksUym7vXTtybpmvCnECumCHZQc2mxCIvOLmyKqD8W20",
       ),
     },
   },
