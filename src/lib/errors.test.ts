@@ -160,9 +160,17 @@ describe("friendlyAuthError", () => {
   });
 
   it("maps a weak-password rejection", () => {
-    expect(friendlyAuthError("Password should be at least 6 characters")).toMatch(
-      /at least 6 characters/i,
+    expect(friendlyAuthError("Password should be at least 8 characters")).toMatch(
+      /at least 8 characters/i,
     );
+  });
+
+  it("regression: explains the exact compromised-password rejection from the live signup request", () => {
+    expect(
+      friendlyAuthError(
+        "Password is known to be weak and easy to guess, please choose a different one.",
+      ),
+    ).toMatch(/too easy to guess.*unique password.*at least 8 characters/i);
   });
 
   it("maps a rate-limit response", () => {
