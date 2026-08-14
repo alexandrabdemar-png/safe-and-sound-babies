@@ -795,6 +795,8 @@ function HomePage() {
             ),
             dayIndexFromDate(),
             homeProfile?.has_stairs,
+            homeProfile?.home_type,
+            homeProfile?.has_pool,
           )
         : null;
       // completed_tips.week_key predates the daily cadence and still has
@@ -980,7 +982,13 @@ function HomePage() {
   const ageMonthsForTip = child?.date_of_birth
     ? Math.floor((Date.now() - new Date(child.date_of_birth).getTime()) / (30.44 * 86400000))
     : 0;
-  const dailyTip = selectDailyTip(ageMonthsForTip, dayIndexFromDate(), homeProfile?.has_stairs);
+  const dailyTip = selectDailyTip(
+    ageMonthsForTip,
+    dayIndexFromDate(),
+    homeProfile?.has_stairs,
+    homeProfile?.home_type,
+    homeProfile?.has_pool,
+  );
 
   // Low-urgency, informational nudges — daily tip, bottle-weaning note,
   // measurements reminder, what's-new — get bundled into a single compact

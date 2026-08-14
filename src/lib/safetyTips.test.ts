@@ -133,6 +133,100 @@ describe("selectDailyTip with hasStairs === false", () => {
   });
 });
 
+// ── Regression: house-only tips shown to an apartment-dwelling family ─────
+//
+// Reported bug: a user answered "Apartment" to the home_profile "What type
+// of home do you live in?" question but still got "check the locks and
+// latches on your outdoor gates" (t052) as their daily tip. t038
+// (fireplace/hearth guard) and t040 (driveway gate) assume the same
+// single-family-house features and had the same gap.
+describe("selectDailyTip with homeType === 'apartment'", () => {
+  it("never returns a house-only tip (outdoor gate, driveway, fireplace/hearth) across a full lap of the pool", () => {
+    for (let day = 1; day <= 60; day++) {
+      const tip = selectDailyTip(24, day, undefined, "apartment");
+      expect(tip.text).not.toMatch(/outdoor gate|driveway|fireplace|woodburner|hearth/i);
+    }
+  });
+
+  it("can still return a house-only tip when homeType is 'house' or unset (unchanged default behavior)", () => {
+    const seenWithHouse = new Set<string>();
+    const seenUnset = new Set<string>();
+    for (let day = 1; day <= 60; day++) {
+      seenWithHouse.add(selectDailyTip(24, day, undefined, "house").id);
+      seenUnset.add(selectDailyTip(24, day).id);
+    }
+    const houseOnlyIds = ["t038", "t040", "t052"];
+    expect(houseOnlyIds.some((id) => seenWithHouse.has(id))).toBe(true);
+    expect(houseOnlyIds.some((id) => seenUnset.has(id))).toBe(true);
+  });
+
+  it("doesn't also exclude the pool-fence-gate tip (t054) — that's gated on hasPool, not homeType", () => {
+    const seen = new Set<string>();
+    for (let day = 1; day <= 20; day++) {
+      seen.add(selectDailyTip(24, day, undefined, "apartment").id);
+    }
+    expect(seen.has("t054")).toBe(true);
+  });
+
+  it("doesn't also exclude the stair-gate tips — that's gated on hasStairs, not homeType", () => {
+    const seen = new Set<string>();
+    for (let day = 1; day <= 60; day++) {
+      seen.add(selectDailyTip(12, day, undefined, "apartment").id);
+    }
+    expect(seen.has("t021") || seen.has("t035")).toBe(true);
+  });
+});
+
+// ── Regression: home-pool-only tips shown to a family with no pool ────────
+//
+// Same class of bug as the apartment case above, for the has_pool
+// home_profile answer: t053 ("home pool or spa" fence) and t054 ("pool
+// fence" gate) assume owning a home pool, unlike the general water-safety
+// tips (life jackets, supervision, swim lessons, CPR) that still apply to
+// a family without one.
+describe("selectDailyTip with hasPool === false", () => {
+  it("never returns a home-pool-only tip (t053, t054) across a full lap of the pool", () => {
+    for (let day = 1; day <= 60; day++) {
+      const tip = selectDailyTip(24, day, undefined, undefined, false);
+      expect(tip.text).not.toMatch(/home pool|pool fence/i);
+    }
+  });
+
+  it("can still return a home-pool-only tip when hasPool is true or unset (unchanged default behavior)", () => {
+    const seenWithPool = new Set<string>();
+    const seenUnset = new Set<string>();
+    for (let day = 1; day <= 60; day++) {
+      seenWithPool.add(selectDailyTip(24, day, undefined, undefined, true).id);
+      seenUnset.add(selectDailyTip(24, day).id);
+    }
+    expect(seenWithPool.has("t053") || seenWithPool.has("t054")).toBe(true);
+    expect(seenUnset.has("t053") || seenUnset.has("t054")).toBe(true);
+  });
+
+  it("doesn't also exclude general water-safety tips that apply regardless of home pool ownership", () => {
+    const seen = new Set<string>();
+    for (let day = 1; day <= 20; day++) {
+      seen.add(selectDailyTip(24, day, undefined, undefined, false).id);
+    }
+    // t055 (life jacket), t057 (swim lessons), t058 (CPR) are general water
+    // safety, not home-pool-specific — should still be reachable.
+    expect(seen.has("t055") || seen.has("t057") || seen.has("t058")).toBe(true);
+  });
+});
+
+// ── Filters compose: an apartment, no-pool, no-stairs household excludes
+// all three categories at once, without emptying the pool ────────────────
+describe("selectDailyTip with multiple home_profile answers combined", () => {
+  it("excludes stair-gate, house-only, and home-pool-only tips simultaneously", () => {
+    for (let day = 1; day <= 60; day++) {
+      const tip = selectDailyTip(24, day, false, "apartment", false);
+      expect(tip.text).not.toMatch(/stair/i);
+      expect(tip.text).not.toMatch(/outdoor gate|driveway|fireplace|woodburner|hearth/i);
+      expect(tip.text).not.toMatch(/home pool|pool fence/i);
+    }
+  });
+});
+
 describe("pacifier size-appropriateness tip", () => {
   it("exists in the tip pool and covers the common pacifier-use age range", () => {
     const tip = SAFETY_TIPS.find((t) => t.id === "t061");

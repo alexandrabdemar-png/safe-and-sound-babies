@@ -420,14 +420,43 @@ export const SAFETY_TIPS: SafetyTip[] = [
   },
 ];
 
+// Tips that assume a feature of a single-family house — a private outdoor
+// gate/driveway, or a fireplace/woodburner — rather than something every
+// home has. Reported bug: an apartment-dwelling parent got "check the
+// locks and latches on your outdoor gates" right after answering "Apartment"
+// to the home_profile "What type of home do you live in?" question.
+// Deliberately narrow (not just any mention of "gate") so it doesn't also
+// catch the stair-gate tips (handled separately by hasStairs below) or the
+// pool-fence-gate tips (handled separately by hasPool below).
+const HOUSE_ONLY_PATTERN = /outdoor gate|driveway|fireplace|woodburner|hearth/i;
+
+// Tips that specifically assume owning a home pool/spa — as opposed to the
+// more general water-safety tips (life jackets, supervision, swim lessons,
+// CPR) that still apply to a family who visits a lake, beach, or someone
+// else's pool regardless of what they have at home. Same has_pool answer
+// that gates the "Pool alarm recommended" nudge (shouldShowPoolAlarmNudge).
+const HOME_POOL_ONLY_PATTERN = /home pool|pool fence/i;
+
+// Never lets an exclusion filter empty the pool out from under the
+// rotation — falls back to the pre-exclusion pool rather than throwing or
+// silently returning an irrelevant tip because the pool went empty.
+function excluding(pool: SafetyTip[], matches: (t: SafetyTip) => boolean): SafetyTip[] {
+  const filtered = pool.filter((t) => !matches(t));
+  return filtered.length > 0 ? filtered : pool;
+}
+
 // Select the best tip for a given age and day index (see dayIndexFromDate).
 // Prefers age-appropriate tips; falls back to any tip if none match.
 //
-// hasStairs === false excludes stair-gate tips (a home_profile answer of
-// "no stairs" — see home.tsx's AgeJumpCard and dailyContent.ts's
-// ageSafetyTip, which do the equivalent filtering elsewhere on Home).
-// Unset/unknown (undefined or true) leaves every tip in play, same as
-// before this parameter existed. Never lets the filter empty the pool.
+// hasStairs === false excludes stair-gate tips, homeType === "apartment"
+// excludes house-only tips (HOUSE_ONLY_PATTERN), and hasPool === false
+// excludes home-pool-only tips (HOME_POOL_ONLY_PATTERN) — all three are
+// home_profile answers (see home.tsx's AgeJumpCard and dailyContent.ts's
+// ageSafetyTip, which do the equivalent hasStairs filtering elsewhere on
+// Home). Unset/unknown values leave every tip in play, same as before
+// these parameters existed. Filters compose (e.g. an apartment-dwelling,
+// no-pool, no-stairs household excludes all three categories at once),
+// and never let the pool go empty.
 //
 // Note on cadence: the smallest age-filtered pool across the whole 0–240mo
 // range is 11 tips (see safetyTips.test.ts), so a daily cadence completes a
@@ -439,16 +468,17 @@ export function selectDailyTip(
   ageMonths: number,
   dayIndex: number,
   hasStairs?: boolean | null,
+  homeType?: string | null,
+  hasPool?: boolean | null,
 ): SafetyTip {
   const ageTips = SAFETY_TIPS.filter(
     (t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths,
   );
-  const basePool = ageTips.length > 0 ? ageTips : SAFETY_TIPS;
-  if (hasStairs === false) {
-    const withoutStairs = basePool.filter((t) => !/stair/i.test(t.text));
-    if (withoutStairs.length > 0) return withoutStairs[dayIndex % withoutStairs.length];
-  }
-  return basePool[dayIndex % basePool.length];
+  let pool = ageTips.length > 0 ? ageTips : SAFETY_TIPS;
+  if (hasStairs === false) pool = excluding(pool, (t) => /stair/i.test(t.text));
+  if (homeType === "apartment") pool = excluding(pool, (t) => HOUSE_ONLY_PATTERN.test(t.text));
+  if (hasPool === false) pool = excluding(pool, (t) => HOME_POOL_ONLY_PATTERN.test(t.text));
+  return pool[dayIndex % pool.length];
 }
 
 // A day index that increments by exactly 1 every calendar day, forever —
