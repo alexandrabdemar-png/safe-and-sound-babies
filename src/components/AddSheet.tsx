@@ -4,6 +4,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 
 export const addOptions = [
   {
+    to: "/products/new",
+    icon: Package,
+    title: "A product to watch",
+    blurb: "Track replacements, size-ups, and recalls on baby gear.",
+  },
+  {
     to: "/moments/new",
     icon: Sparkles,
     title: "A new moment",
@@ -26,12 +32,6 @@ export const addOptions = [
     icon: LineChart,
     title: "A measurement",
     blurb: "Height and weight — keeps size-up reminders accurate.",
-  },
-  {
-    to: "/products/new",
-    icon: Package,
-    title: "A product to watch",
-    blurb: "Track replacements, size-ups, and recalls on baby gear.",
   },
 ] as const;
 
@@ -68,7 +68,7 @@ export function AddSheet({
                 }}
                 className="flex w-full items-center gap-4 rounded-3xl border border-border/60 bg-card p-4 text-left transition-all hover:border-primary/40 hover:shadow-md"
               >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sand/60 text-accent">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary">
                   <Icon className="h-5 w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
