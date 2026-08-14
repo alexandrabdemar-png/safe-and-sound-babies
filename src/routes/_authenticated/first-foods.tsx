@@ -292,9 +292,8 @@ function FirstFoodsPage() {
             )}
           </div>
           <p className="font-body text-xs leading-relaxed text-muted-foreground">
-            A quick log of the first time your baby tries each food, and any reactions — lighter
-            weight than a full Moment. Any caregiver with access to {child?.name || "this child"} can
-            add to it too.
+            A quick log of the first time your baby tries each food, and any reactions. Any
+            caregiver with access to {child?.name || "this child"} can add to it too.
           </p>
         </div>
       </header>

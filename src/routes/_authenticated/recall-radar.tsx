@@ -247,7 +247,7 @@ function RecallRadarPage() {
               <p className="mt-1 mx-auto max-w-xs font-body text-sm text-muted-foreground">
                 {recalls.length > 0
                   ? "You've marked every recall from the last 30 days as done."
-                  : "No baby or kids product recalls were issued in the last 30 days, based on the sources we check roughly every hour."}
+                  : "No baby or kids product recalls were issued in the last 30 days, based on the sources we check roughly every 30 minutes."}
               </p>
             </div>
           ) : (
