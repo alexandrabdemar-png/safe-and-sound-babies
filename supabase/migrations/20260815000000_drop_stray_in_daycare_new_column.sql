@@ -1,0 +1,24 @@
+-- Drops a stray in_daycare_new column left behind by
+-- 20260713230404_c7c50442-e0a8-4833-af90-6c2365e12a96.sql, an accidental
+-- exact duplicate of 20260712000000_home_profile_daycare_both_option.sql.
+--
+-- Verified by replaying the full migration chain against a real Postgres:
+-- the duplicate's first statement (ADD COLUMN IF NOT EXISTS in_daycare_new
+-- text) commits on its own (each top-level statement auto-commits), then
+-- its next statement (the boolean->text UPDATE) fails with "argument of
+-- IS TRUE must be type boolean, not type text" because in_daycare was
+-- already converted to text by the first (non-duplicate) migration. The
+-- migration run stops there, leaving in_daycare_new sitting in the table
+-- forever — nothing ever renames or drops it.
+--
+-- 20260730010000_repair_home_profile_migration_chain.sql already repaired
+-- the actual bug this caused (missing dismissed_at column further down the
+-- broken chain), but its own conversion logic is gated on `in_daycare`
+-- still being boolean — which by then it never is — so it never looked at
+-- in_daycare_new and didn't clean it up.
+--
+-- The app only ever reads/writes `in_daycare` (home.tsx's saveHomeProfile
+-- upsert and its SELECT), never in_daycare_new, so this stray column holds
+-- no real data and dropping it is not a data-loss risk — confirmed via
+-- supabase/tests/home_profile_full_upsert.sql, which asserts it's gone.
+ALTER TABLE public.home_profile DROP COLUMN IF EXISTS in_daycare_new;
