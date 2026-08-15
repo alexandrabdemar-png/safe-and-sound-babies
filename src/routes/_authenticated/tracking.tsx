@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Utensils, ClipboardList, Milk, Sparkles, LineChart } from "lucide-react";
+import { ArrowRight, Utensils, ClipboardList, Sparkles, LineChart } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { AddSheet } from "@/components/AddSheet";
+import { BottleIcon } from "@/components/BottleIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import {
@@ -163,7 +164,7 @@ function TrackingPage() {
           />
           <TrackCard
             to="/bottles"
-            icon={Milk}
+            icon={BottleIcon}
             title="Bottles"
             blurb="Prepared bottles and safe-use windows"
             summary={summaries.bottles}

@@ -2,8 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, Loader2, Milk, Plus, Trash2 } from "lucide-react";
+import { Check, Loader2, Plus, Trash2 } from "lucide-react";
 import { BottleIllustration } from "@/components/EmptyIllustration";
+import { BottleIcon } from "@/components/BottleIcon";
 import { hapticSuccess, hapticDismiss } from "@/lib/haptic";
 import { friendlyError } from "@/lib/errors";
 import { BottomNav } from "@/components/BottomNav";
@@ -176,7 +177,7 @@ function BottleCard({ bottle, now, onFinish, onDiscard }: {
             : warning ? "bg-accent/20 text-accent"
             : "bg-sand/60 text-accent",
         )}>
-          <Milk className="h-5 w-5" />
+          <BottleIcon className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-display text-sm font-semibold truncate">

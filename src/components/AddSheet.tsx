@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Package, Sparkles, Milk, Utensils, LineChart, ArrowRight } from "lucide-react";
+import { Package, Sparkles, Utensils, LineChart, ArrowRight } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { BottleIcon } from "@/components/BottleIcon";
 
 export const addOptions = [
   {
@@ -17,7 +18,7 @@ export const addOptions = [
   },
   {
     to: "/bottles/new",
-    icon: Milk,
+    icon: BottleIcon,
     title: "A bottle",
     blurb: "Log formula or breastmilk and get reminded before it expires.",
   },
