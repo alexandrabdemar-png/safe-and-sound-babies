@@ -1136,6 +1136,13 @@ function HomePage() {
                 />
                 {totalAlerts === 0 ? "All quiet" : `${totalAlerts} to look at`}
               </Link>
+              <Link
+                to="/profile"
+                aria-label="Settings and profile"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-card text-muted-foreground shadow-sm transition-colors hover:text-foreground"
+              >
+                <Settings className="h-4 w-4" />
+              </Link>
             </div>
           </div>
 
