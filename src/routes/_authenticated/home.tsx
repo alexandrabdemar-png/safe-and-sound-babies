@@ -15,6 +15,7 @@ import {
   Radio,
   RefreshCw,
   Ruler,
+  Settings,
   Sparkles,
   Sun,
   Zap,
