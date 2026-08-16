@@ -60,6 +60,38 @@ describe("matchProductAgainstCpsc (regression: Pipa RX false positive)", () => {
   });
 });
 
+describe("matchProductAgainstCpsc includes the product's own model field", () => {
+  // Same brand/name, different model — the recall's Products.Model is the
+  // only thing that distinguishes them. Previously this matcher built its
+  // product-side text from name+brand only (unlike matchProductAgainstExtra,
+  // which already included model), so a saved product's own model number
+  // never factored into the match at all.
+  const recall = {
+    RecallID: 3,
+    Title: "Acme Recalls Widget Model X200 Due to Choking Hazard",
+    Products: [{ Name: "Widget", Model: "X200", Type: "Toy" }],
+    Manufacturers: [{ Name: "Acme" }],
+  };
+
+  it("matches when the product's model matches the recalled model", () => {
+    expect(
+      matchProductAgainstCpsc(product({ name: "Widget", brand: "Acme", model: "X200" }), recall),
+    ).toBe(true);
+  });
+
+  it("regression: does not match a same-name-same-brand product with a different model — this used to be a false positive since model was never checked", () => {
+    expect(
+      matchProductAgainstCpsc(product({ name: "Widget", brand: "Acme", model: "Y300" }), recall),
+    ).toBe(false);
+  });
+
+  it("still matches on name+brand alone when the product has no model recorded (unchanged behavior)", () => {
+    expect(
+      matchProductAgainstCpsc(product({ name: "Widget", brand: "Acme", model: null }), recall),
+    ).toBe(true);
+  });
+});
+
 describe("matchProductAgainstFda", () => {
   it("matches against product_description, not reason_for_recall", () => {
     expect(

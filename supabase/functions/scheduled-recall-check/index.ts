@@ -175,23 +175,39 @@ Deno.serve(async (req) => {
     }
 
     // ── Find which matches are genuinely NEW or UPDATED ──────────────────
+    // Keyed on notified_at, not just row existence — a product_recalls row
+    // can already exist with notified_at still NULL for two reasons that
+    // both mean "this user has never actually been notified": (1) the
+    // add-time recall check (recordProductRecall, called from
+    // products_.new.tsx / products_.scan.tsx right when a product is
+    // added) records the match immediately but never calls notifyUser —
+    // the parent only sees it via the live in-app banner at that moment;
+    // (2) a previous run's notifyUser call failed on every channel (dead
+    // token, network error, unconfigured email) and notifiedRows below
+    // never got a row for it. Previously this was only checked via row
+    // existence, so both cases got permanently downgraded to "updated"
+    // (different copy, e.g. "Recall info was updated" instead of "New
+    // recall") on whatever run finally noticed them, instead of getting a
+    // real "new recall" notification and being retried like any other
+    // undelivered match.
     const productIds = [...new Set(dedupedMatches.map((m) => m.product_id))];
     const { data: existingRows } = productIds.length
       ? await supabase
           .from("product_recalls")
-          .select("product_id, recall_id, notified_content_hash")
+          .select("product_id, recall_id, notified_at, notified_content_hash")
           .in("product_id", productIds)
       : {
           data: [] as Array<{
             product_id: string;
             recall_id: string;
+            notified_at: string | null;
             notified_content_hash: string | null;
           }>,
         };
     const existingByKey = new Map(
       (existingRows ?? []).map((r) => [
         `${r.product_id}:${r.recall_id}`,
-        r.notified_content_hash ?? null,
+        { notifiedAt: r.notified_at ?? null, hash: r.notified_content_hash ?? null },
       ]),
     );
     const newMatches: Array<{
@@ -203,9 +219,10 @@ Deno.serve(async (req) => {
     for (const m of dedupedMatches) {
       const key = `${m.product_id}:${m.recall_id}`;
       const currentHash = contentHashByRecallId.get(m.recall_id) ?? "";
-      if (!existingByKey.has(key)) {
+      const existing = existingByKey.get(key);
+      if (!existing || existing.notifiedAt === null) {
         newMatches.push({ ...m, reason: "new" });
-      } else if (currentHash && currentHash !== existingByKey.get(key)) {
+      } else if (currentHash && currentHash !== existing.hash) {
         newMatches.push({ ...m, reason: "updated" });
       }
     }
@@ -552,6 +569,25 @@ async function notifyAffectedUsers(
           notified_content_hash: contentHashByRecallId.get(item.recall_id) ?? null,
         });
       }
+    } else {
+      // Previously silent — a failed delivery here was indistinguishable
+      // from "no matches this run" anywhere in the logs. This user's
+      // notified_at stays NULL, so (per the classification fix above)
+      // they'll be retried as a fresh "new" match on the next run, but
+      // until then there was no way to see, from the logs alone, that
+      // anyone had actually missed a real safety recall notification.
+      console.error(
+        "[scheduled-recall-check] notification delivery failed for user",
+        userId,
+        "— affected recalls:",
+        items.map((i) => `${i.product_id}:${i.recall_id}`).join(", "),
+        "— had apns token:",
+        Boolean(tokenByUser.get(userId)),
+        "— web push subscriptions:",
+        (webPushByUser.get(userId) ?? []).length,
+        "— had email:",
+        Boolean(email),
+      );
     }
     if (result.invalidApnsToken) {
       const token = tokenByUser.get(userId);

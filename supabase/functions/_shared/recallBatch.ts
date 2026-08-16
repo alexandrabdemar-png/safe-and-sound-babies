@@ -203,6 +203,12 @@ export function cpscRecallToCatalogRow(r: CpscRawRecall): RecallCatalogRow {
  * Structured-field-only match (Title/Products.Name+Model+Type/Manufacturers)
  * — deliberately excludes the free-text Description field, since recall
  * notices routinely name sibling products only to say they're NOT affected.
+ *
+ * Includes the product's own model field in the match text, same as
+ * matchProductAgainstExtra already does — this was previously
+ * name+brand-only here, an inconsistency with the extra-sources matcher
+ * that made CPSC (the highest-volume source) slightly less precise than
+ * it could be for products with a distinguishing model number.
  */
 export function matchProductAgainstCpsc(product: BatchProduct, recall: CpscRawRecall): boolean {
   const recallText = [
@@ -210,7 +216,8 @@ export function matchProductAgainstCpsc(product: BatchProduct, recall: CpscRawRe
     ...(recall.Products ?? []).flatMap((p) => [p.Name ?? "", p.Model ?? "", p.Type ?? ""]),
     ...(recall.Manufacturers ?? []).map((m) => m.Name ?? ""),
   ].join(" ");
-  return fuzzyMatchProduct(productDisplayName(product), recallText);
+  const productText = [productDisplayName(product), product.model ?? ""].filter(Boolean).join(" ");
+  return fuzzyMatchProduct(productText, recallText);
 }
 
 // ── FDA (per unique product name, capped) ───────────────────────────────────
