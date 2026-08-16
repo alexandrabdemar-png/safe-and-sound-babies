@@ -1,9 +1,11 @@
 -- Coverage for migration 20260714000000_milestones_icon_reduce_options.sql
 -- (narrows milestones.icon from 7 options down to 4: star/smiley/heart/
 -- target — bear/feet/waving removed per live user feedback, shipped right
--- after the icon column itself). Verifies the now-removed values are
--- rejected, the 4 kept values still work, and NULL (pre-migration /
--- schema-cache-lag rows) is still allowed.
+-- after the icon column itself). `target` was later swapped for `sparkles`
+-- by 20260722000000_milestones_icon_swap_target_for_sparkles.sql, so the
+-- currently-valid set exercised below is star/smiley/heart/sparkles.
+-- Verifies the now-removed values are rejected, the 4 kept values still
+-- work, and NULL (pre-migration / schema-cache-lag rows) is still allowed.
 \set ON_ERROR_STOP on
 
 INSERT INTO auth.users (id) VALUES ('a1111111-1111-1111-1111-111111111111');
@@ -38,11 +40,11 @@ INSERT INTO public.milestones (child_id, title, logged_at, icon, completed) VALU
   ('c1111111-1111-1111-1111-111111111111', 'Star moment', '2026-07-08', 'star', true),
   ('c1111111-1111-1111-1111-111111111111', 'Smiley moment', '2026-07-08', 'smiley', true),
   ('c1111111-1111-1111-1111-111111111111', 'Heart moment', '2026-07-08', 'heart', true),
-  ('c1111111-1111-1111-1111-111111111111', 'Target moment', '2026-07-08', 'target', true);
+  ('c1111111-1111-1111-1111-111111111111', 'Sparkles moment', '2026-07-08', 'sparkles', true);
 SELECT test.assert(
   (SELECT count(*) FROM public.milestones
      WHERE child_id = 'c1111111-1111-1111-1111-111111111111'
-       AND icon IN ('star', 'smiley', 'heart', 'target')) = 4,
+       AND icon IN ('star', 'smiley', 'heart', 'sparkles')) = 4,
   'All 4 kept icon options still insert and read back correctly'
 );
 SELECT test.logout();

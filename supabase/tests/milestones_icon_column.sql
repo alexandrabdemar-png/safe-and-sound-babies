@@ -1,10 +1,12 @@
 -- Coverage for migration 20260713000000_milestones_icon_column.sql (adds a
 -- dedicated `icon` column to milestones for the hand-drawn icon picker).
 -- Written when the icon set was still 7 options; the set was reduced to 4
--- (star/smiley/heart/target) by 20260714000000_milestones_icon_reduce_options.sql
--- right after — see milestones_icon_reduce_options.sql for coverage of the
--- narrowing itself. This file always runs against the FULL current
--- migration chain (both migrations applied), so it only exercises the 4
+-- by 20260714000000_milestones_icon_reduce_options.sql right after — see
+-- milestones_icon_reduce_options.sql for coverage of the narrowing itself.
+-- One of those 4 (`target`) was later swapped for `sparkles` by
+-- 20260722000000_milestones_icon_swap_target_for_sparkles.sql, so the
+-- currently-valid set is star/smiley/heart/sparkles. This file always runs
+-- against the FULL current migration chain, so it only exercises the 4
 -- values still valid today. Verifies the check constraint, that valid
 -- values round-trip, that old-style inserts (no icon) still work with icon
 -- defaulting to NULL, and that RLS on milestones (child_id-scoped via
@@ -47,11 +49,11 @@ INSERT INTO public.milestones (child_id, title, logged_at, icon, completed) VALU
   ('c1111111-1111-1111-1111-111111111111', 'Star moment', '2026-07-08', 'star', true),
   ('c1111111-1111-1111-1111-111111111111', 'Smiley moment', '2026-07-08', 'smiley', true),
   ('c1111111-1111-1111-1111-111111111111', 'Heart moment', '2026-07-08', 'heart', true),
-  ('c1111111-1111-1111-1111-111111111111', 'Target moment', '2026-07-08', 'target', true);
+  ('c1111111-1111-1111-1111-111111111111', 'Sparkles moment', '2026-07-08', 'sparkles', true);
 SELECT test.assert(
   (SELECT count(*) FROM public.milestones
      WHERE child_id = 'c1111111-1111-1111-1111-111111111111'
-       AND icon IN ('star','smiley','heart','target')) = 4,
+       AND icon IN ('star','smiley','heart','sparkles')) = 4,
   'All 4 valid icon keys are accepted and readable back'
 );
 SELECT test.logout();
@@ -70,7 +72,7 @@ SELECT test.logout();
 -- silently affects 0 rows rather than raising — verified via a privileged
 -- read afterward, not assert_raises.
 SELECT test.login('authenticated', 'b2222222-2222-2222-2222-222222222222');
-UPDATE public.milestones SET icon = 'target'
+UPDATE public.milestones SET icon = 'sparkles'
   WHERE child_id = 'c1111111-1111-1111-1111-111111111111' AND title = 'Star moment';
 SELECT test.logout();
 

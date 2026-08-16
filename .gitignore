@@ -20,6 +20,13 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+# Vite mode-specific env files outrank .env for their build mode — a
+# committed one can silently diverge from .env with nobody noticing
+# (see src/lib/envConsistency.ts's MODE_ENV_FILES / the test that caught
+# a committed .env.development in the wild).
+.env.development
+.env.production
+.env.test
 
 # Wrangler / Cloudflare
 .wrangler/

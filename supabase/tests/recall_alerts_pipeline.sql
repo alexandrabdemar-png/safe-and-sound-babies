@@ -3,12 +3,22 @@
 --   2. The unschedule-old-jobs step actually removes pre-existing jobs (not
 --      just "doesn't error when they're absent", which the migration apply
 --      itself already proved).
---   3. The new daily-scheduled-recall-check cron job is registered with the
---      expected schedule/command.
+--   3. The daily-scheduled-recall-check cron job is registered with the
+--      expected schedule/command — the job name is unchanged (see
+--      20260813210000/20260814130000's own comments on why renaming it
+--      would silently break other things keyed off that name), but the
+--      cadence has changed twice since this test was first written (daily
+--      -> hourly -> every 30 minutes, currently
+--      20260814130000_recall_check_every_30_min.sql) and the command
+--      shape changed from a call_edge_function() wrapper to a direct
+--      net.http_post() (20260810185839, because Vault secrets weren't
+--      populated and the wrapper was silently no-op'ing). This checks the
+--      current shape, not the original one.
 --   4. private.call_edge_function no-ops (no HTTP call) when Vault secrets
 --      aren't set, and calls net.http_post with the right URL + Bearer
---      header once they are — this is the actual mechanism pg_cron will use
---      to invoke the new edge function daily.
+--      header once they are — this function still exists and is tested
+--      directly here even though the live cron job no longer calls it
+--      (see #3 above).
 --   5. THE core Feature 1 requirement: matching the same product against the
 --      same recall twice (simulating two runs of the batch job) creates
 --      exactly one product_recalls row, not two — the literal "confirm the
@@ -57,13 +67,14 @@ SELECT test.assert(
   'the old per-hook cron jobs are removed when they exist'
 );
 
--- ── 3. New cron job registered correctly ────────────────────────────────
+-- ── 3. Cron job registered correctly (current cadence: every 30 min) ────
 SELECT test.assert(
   EXISTS (
     SELECT 1 FROM cron.job
     WHERE jobname = 'daily-scheduled-recall-check'
-      AND schedule = '0 3 * * *'
-      AND command LIKE '%call_edge_function(''scheduled-recall-check'')%'
+      AND schedule = '*/30 * * * *'
+      AND command LIKE '%net.http_post(%'
+      AND command LIKE '%scheduled-recall-check%'
   ),
   'daily-scheduled-recall-check is scheduled with the expected cadence and command'
 );
