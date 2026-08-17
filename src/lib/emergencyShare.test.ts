@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generateShareToken, hashShareToken } from "./emergencyShare";
+import { generateShareToken, hashShareToken, computeShareLinkExpiry } from "./emergencyShare";
 
 describe("generateShareToken", () => {
   it("generates a 64-character hex string (256 bits)", () => {
@@ -30,5 +30,24 @@ describe("hashShareToken", () => {
     const h1 = await hashShareToken(token);
     const h2 = await hashShareToken(token);
     expect(h1).toBe(h2);
+  });
+});
+
+describe("computeShareLinkExpiry", () => {
+  it("returns a date exactly 365 days after the given clock", () => {
+    const now = new Date("2026-01-01T00:00:00.000Z");
+    const expiry = computeShareLinkExpiry(now);
+    expect(expiry.toISOString()).toBe("2027-01-01T00:00:00.000Z");
+  });
+
+  it("defaults to the real current time when no clock is given", () => {
+    const before = Date.now();
+    const expiry = computeShareLinkExpiry();
+    const after = Date.now();
+    const days = (expiry.getTime() - before) / (24 * 60 * 60 * 1000);
+    expect(days).toBeGreaterThanOrEqual(364.9);
+    expect(days).toBeLessThanOrEqual(365.1);
+    expect(expiry.getTime()).toBeGreaterThan(before);
+    expect(expiry.getTime()).toBeGreaterThan(after - 1); // sanity: still in the future relative to "after"
   });
 });

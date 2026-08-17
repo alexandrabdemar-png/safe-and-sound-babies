@@ -11,6 +11,22 @@
 
 const TOKEN_BYTES = 32; // 256 bits — infeasible to brute force
 
+// Links used to auto-expire, then migration 20260719000000 removed expiry
+// entirely (expires_at: null forever) — presumably to fix a parent losing
+// access to a link they still needed. That traded away too much: a link
+// leaked once (a group chat, a synced photo library, a chat app's
+// server-side link-preview fetcher hitting the read endpoint) stayed a
+// standing credential to a child's allergies/medications/blood
+// type/emergency contact phone number forever, with nothing prompting the
+// parent to ever revisit it. A generous but bounded default (1 year, easy
+// to regenerate) keeps the "still works months later" convenience while
+// putting a ceiling on how long a forgotten leaked link stays live.
+const LINK_LIFETIME_DAYS = 365;
+
+export function computeShareLinkExpiry(now = new Date()): Date {
+  return new Date(now.getTime() + LINK_LIFETIME_DAYS * 24 * 60 * 60 * 1000);
+}
+
 export function generateShareToken(): string {
   const bytes = new Uint8Array(TOKEN_BYTES);
   crypto.getRandomValues(bytes);

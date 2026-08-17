@@ -170,6 +170,26 @@ export function friendlyAuthError(raw: unknown): string {
   return "We couldn't complete that right now. Please try again in a moment.";
 }
 
+/**
+ * True when Supabase's signUp() rejected because the email is already
+ * registered. Exported separately (rather than left inline in
+ * AUTH_FRIENDLY_MAP) so the signup screen specifically can route around
+ * showing the "you already have an account" message — see auth.tsx's
+ * handleEmailSubmit, which shows a neutral message instead for the signup
+ * path only. Confirming or denying account existence in response to an
+ * unauthenticated signup attempt is a real, if low-severity, account
+ * enumeration issue (an attacker can script a list of emails through
+ * signup and get back a confirmed roster of registered users) — the
+ * message is still shown for OTHER contexts (this same regex stays in
+ * AUTH_FRIENDLY_MAP for any other caller of friendlyAuthError), just not
+ * on the signup form itself, which is the only place an anonymous caller
+ * repeatedly controls the input.
+ */
+export function isAlreadyRegisteredAuthError(raw: unknown): boolean {
+  const { message: msg } = extractMessage(raw);
+  return /user already registered|already.*registered/i.test(msg);
+}
+
 /** Use when saving data fails */
 export function saveError(): string {
   return "We couldn't save that right now. Tap to try again.";

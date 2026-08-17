@@ -5,7 +5,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { HeartPulse, Copy, Check, Link2, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { generateShareToken, hashShareToken } from "@/lib/emergencyShare";
+import { generateShareToken, hashShareToken, computeShareLinkExpiry } from "@/lib/emergencyShare";
 import { diagnosticDetail } from "@/lib/errors";
 
 export const Route = createFileRoute("/_authenticated/emergency-info")({
@@ -166,7 +166,12 @@ function EmergencyInfoPage() {
           user_id: userId,
           child_id: child.id,
           token_hash: tokenHash,
-          expires_at: null,
+          // New links get a generous but bounded 1-year expiry (security
+          // review finding) instead of never expiring — a leaked link
+          // shouldn't be a standing credential to a child's health data
+          // forever. Regenerating is one tap if a parent still needs it
+          // after a year.
+          expires_at: computeShareLinkExpiry().toISOString(),
         })
         .select("id, expires_at")
         .single();

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
-import { friendlyAuthError } from "@/lib/errors";
+import { friendlyAuthError, isAlreadyRegisteredAuthError } from "@/lib/errors";
 import { withTimeout } from "@/lib/promiseTimeout";
 import { Mail, Lock, Sparkles, Loader2, ArrowLeft } from "lucide-react";
 
@@ -78,7 +78,18 @@ function AuthPage() {
         toast.success("Welcome back!");
       }
     } catch (err) {
-      toast.error(friendlyAuthError(err));
+      // Signup specifically avoids confirming "that email already has an
+      // account" — this is the one form where an anonymous caller controls
+      // the input and can repeat it freely, making that distinction a real
+      // (if low-severity) account-enumeration signal. Sign-in still tells
+      // the user their credentials didn't match (see friendlyAuthError's
+      // "invalid login credentials" mapping) since a login form already
+      // requires guessing a password, not just an email.
+      if (mode === "signup" && isAlreadyRegisteredAuthError(err)) {
+        toast.success("Check your inbox to confirm your email ✨");
+      } else {
+        toast.error(friendlyAuthError(err));
+      }
     } finally {
       setLoading(null);
     }

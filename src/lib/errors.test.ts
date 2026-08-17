@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   friendlyAuthError,
   friendlyError,
+  isAlreadyRegisteredAuthError,
   isColumnUnavailableError,
   isSchemaMissingTableError,
 } from "./errors";
@@ -202,5 +203,26 @@ describe("friendlyAuthError", () => {
     expect(friendlyAuthError(new Error("User already registered"))).toMatch(
       /already have an account/i,
     );
+  });
+});
+
+describe("isAlreadyRegisteredAuthError", () => {
+  it("recognizes the real GoTrue 'already registered' message", () => {
+    expect(isAlreadyRegisteredAuthError("User already registered")).toBe(true);
+    expect(isAlreadyRegisteredAuthError(new Error("User already registered"))).toBe(true);
+  });
+
+  it("recognizes a differently-worded 'already registered' variant", () => {
+    expect(isAlreadyRegisteredAuthError("Email address already registered")).toBe(true);
+  });
+
+  it("returns false for unrelated auth errors, including other signup failures", () => {
+    expect(isAlreadyRegisteredAuthError("Invalid login credentials")).toBe(false);
+    expect(isAlreadyRegisteredAuthError("Password should be at least 8 characters")).toBe(false);
+    expect(isAlreadyRegisteredAuthError("Too many requests")).toBe(false);
+  });
+
+  it("returns false for a totally unrelated error", () => {
+    expect(isAlreadyRegisteredAuthError(new Error("Network request failed"))).toBe(false);
   });
 });
