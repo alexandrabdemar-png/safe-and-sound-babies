@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import { WelcomeIntroModal } from "@/components/WelcomeIntroModal";
 import { cn } from "@/lib/utils";
 import { computeAdjustedAge } from "@/lib/adjustedAge";
 import { friendlyError, isColumnUnavailableError } from "@/lib/errors";
+import { checkNeedsLegalConsent } from "@/lib/legalConsent";
 import { CATEGORY_BY_KEY, type CategoryKey } from "@/lib/productCategories";
 import {
   PROFILE_TYPES,
@@ -24,6 +25,26 @@ import {
 } from "@/lib/profileType";
 
 export const Route = createFileRoute("/onboarding")({
+  ssr: false,
+  // Consent-flow audit finding: /onboarding used to only check "is there a
+  // session," so a brand-new user could reach the child's-name-and-DOB
+  // step and have it written to the database before ever seeing the
+  // Terms/Privacy consent screen — /legal-consent was only reached later,
+  // the first time an _authenticated route's own beforeLoad caught them.
+  // Mirrors _authenticated/route.tsx's gate exactly, so onboarding can no
+  // longer be reached (and therefore can't write a child record) ahead of
+  // consent. checkNeedsLegalConsent fails open (lets the user through) if
+  // user_agreements itself is unreachable — same tradeoff already made
+  // for every other authenticated route, not a new one introduced here.
+  beforeLoad: async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) throw redirect({ to: "/auth" });
+    if (await checkNeedsLegalConsent(supabase, session.user.id)) {
+      throw redirect({ to: "/legal-consent", search: { next: "/onboarding" } });
+    }
+  },
   component: OnboardingPage,
   head: () => ({
     meta: [
