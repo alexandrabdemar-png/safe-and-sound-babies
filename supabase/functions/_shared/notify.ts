@@ -182,6 +182,57 @@ export async function sendFallbackEmail(
   }
 }
 
+export type RecallCopyItem = {
+  product_id: string;
+  recall_id: string;
+  name: string;
+  reason: "new" | "updated";
+};
+
+/**
+ * Builds the title/body for one user's batched recall notification.
+ * Extracted from scheduled-recall-check/index.ts's notifyAffectedUsers so
+ * it's independently unit-testable (that file has no exports at all
+ * otherwise).
+ *
+ * Known gap, not yet fixed: items are grouped by (product_id, recall_id),
+ * not by any notion of "the same physical product" — if a user has two
+ * separate `products` rows for what is, to them, the same item (added
+ * twice by mistake, e.g.), both rows independently match the same recall
+ * and both show up here as separate items with the same `name`. That
+ * produces a title like "⚠️ 2 new safety recalls" for what is actually one
+ * recall affecting one duplicated product, and a body that repeats the
+ * product name twice ("Foo, Foo has an active recall."). See
+ * notify.test.ts's "duplicate product entries" tests, which document this
+ * exact behavior against real input rather than asserting it in the
+ * abstract.
+ */
+export function buildRecallNotificationCopy(items: RecallCopyItem[]): {
+  title: string;
+  body: string;
+} {
+  const newOnes = items.filter((i) => i.reason === "new");
+  const updatedOnes = items.filter((i) => i.reason === "updated");
+
+  const titleParts: string[] = [];
+  if (newOnes.length === 1) titleParts.push(`⚠️ Safety Recall — ${newOnes[0].name}`);
+  else if (newOnes.length > 1) titleParts.push(`⚠️ ${newOnes.length} new safety recalls`);
+  if (updatedOnes.length === 1) titleParts.push(`🔄 Updated recall — ${updatedOnes[0].name}`);
+  else if (updatedOnes.length > 1) titleParts.push(`🔄 ${updatedOnes.length} recalls updated`);
+  const title = titleParts.join(" · ").slice(0, 180) || "⚠️ Safety Recall";
+
+  const bodyParts: string[] = [];
+  if (newOnes.length)
+    bodyParts.push(`${newOnes.map((i) => i.name).join(", ")} has an active recall.`);
+  if (updatedOnes.length)
+    bodyParts.push(
+      `Recall info for ${updatedOnes.map((i) => i.name).join(", ")} was updated — please review the changes.`,
+    );
+  const body = bodyParts.join(" ").slice(0, 300) + " Tap to review.";
+
+  return { title, body };
+}
+
 export type NotifyTarget = {
   userId: string;
   email: string | null;

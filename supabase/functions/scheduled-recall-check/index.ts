@@ -37,7 +37,12 @@
 // on that channel until it's configured.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { runRecallBatch, type BatchProduct } from "../_shared/recallBatch.ts";
-import { notifyUser, getProviderJwt, type ApnsConfig } from "../_shared/notify.ts";
+import {
+  notifyUser,
+  getProviderJwt,
+  buildRecallNotificationCopy,
+  type ApnsConfig,
+} from "../_shared/notify.ts";
 import type { VapidConfig, VapidJwtCache, WebPushSubscription } from "../_shared/webPush.ts";
 
 function json(body: unknown, status = 200): Response {
@@ -519,26 +524,7 @@ async function notifyAffectedUsers(
       /* stale/deleted user; email stays null */
     }
 
-    // Split items into "new" and "updated" so the copy is honest about
-    // which is which — an "Updated recall" push is different from a new one.
-    const newOnes = items.filter((i) => i.reason === "new");
-    const updatedOnes = items.filter((i) => i.reason === "updated");
-
-    const titleParts: string[] = [];
-    if (newOnes.length === 1) titleParts.push(`⚠️ Safety Recall — ${newOnes[0].name}`);
-    else if (newOnes.length > 1) titleParts.push(`⚠️ ${newOnes.length} new safety recalls`);
-    if (updatedOnes.length === 1) titleParts.push(`🔄 Updated recall — ${updatedOnes[0].name}`);
-    else if (updatedOnes.length > 1) titleParts.push(`🔄 ${updatedOnes.length} recalls updated`);
-    const title = titleParts.join(" · ").slice(0, 180) || "⚠️ Safety Recall";
-
-    const bodyParts: string[] = [];
-    if (newOnes.length)
-      bodyParts.push(`${newOnes.map((i) => i.name).join(", ")} has an active recall.`);
-    if (updatedOnes.length)
-      bodyParts.push(
-        `Recall info for ${updatedOnes.map((i) => i.name).join(", ")} was updated — please review the changes.`,
-      );
-    const body = bodyParts.join(" ").slice(0, 300) + " Tap to review.";
+    const { title, body } = buildRecallNotificationCopy(items);
 
     const jwt = await currentApnsJwt();
     const result = await notifyUser(

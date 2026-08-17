@@ -5,7 +5,9 @@ import {
   sendApnsPush,
   sendFallbackEmail,
   notifyUser,
+  buildRecallNotificationCopy,
   type ApnsConfig,
+  type RecallCopyItem,
 } from "./notify";
 import type { VapidConfig, VapidJwtCache, WebPushSubscription } from "./webPush";
 
@@ -363,5 +365,90 @@ describe("notifyUser", () => {
     expect(result.ok).toBe(true);
     expect(result.channel).toBe("web_push");
     expect(result.invalidWebPushEndpoints).toEqual(["https://fcm.googleapis.com/fcm/send/dead"]);
+  });
+});
+
+describe("buildRecallNotificationCopy", () => {
+  it("builds a clean single-item title/body for one new recall", () => {
+    const items: RecallCopyItem[] = [
+      { product_id: "p1", recall_id: "r1", name: "Fisher-Price Rock 'n Play", reason: "new" },
+    ];
+    const { title, body } = buildRecallNotificationCopy(items);
+    expect(title).toBe("⚠️ Safety Recall — Fisher-Price Rock 'n Play");
+    expect(body).toBe("Fisher-Price Rock 'n Play has an active recall. Tap to review.");
+  });
+
+  it("builds a combined title/body when a user has distinct new AND updated recalls", () => {
+    const items: RecallCopyItem[] = [
+      { product_id: "p1", recall_id: "r1", name: "Crib A", reason: "new" },
+      { product_id: "p2", recall_id: "r2", name: "Stroller B", reason: "updated" },
+    ];
+    const { title, body } = buildRecallNotificationCopy(items);
+    expect(title).toBe("⚠️ Safety Recall — Crib A · 🔄 Updated recall — Stroller B");
+    expect(body).toBe(
+      "Crib A has an active recall. Recall info for Stroller B was updated — please review the changes. Tap to review.",
+    );
+  });
+
+  it("summarizes with a count when 2+ genuinely distinct products are newly recalled", () => {
+    const items: RecallCopyItem[] = [
+      { product_id: "p1", recall_id: "r1", name: "Crib A", reason: "new" },
+      { product_id: "p2", recall_id: "r2", name: "Swing B", reason: "new" },
+    ];
+    const { title } = buildRecallNotificationCopy(items);
+    expect(title).toBe("⚠️ 2 new safety recalls");
+  });
+
+  // ── Duplicate product entries (audit finding — documents a real bug,
+  // not desired behavior): two separate `products` rows for what a parent
+  // considers the same physical item (added twice by mistake) both
+  // independently match the same recall. buildRecallNotificationCopy has
+  // no way to know they're "the same product" — it only sees two items
+  // with different product_id/recall_id keys — so it treats them exactly
+  // like two different products with two different recalls. ─────────────
+  it("BUG: two duplicate product rows matching the SAME recall are miscounted as '2 new safety recalls'", () => {
+    const items: RecallCopyItem[] = [
+      {
+        product_id: "duplicate-row-1",
+        recall_id: "r1",
+        name: "Fisher-Price Rock 'n Play",
+        reason: "new",
+      },
+      {
+        product_id: "duplicate-row-2",
+        recall_id: "r1",
+        name: "Fisher-Price Rock 'n Play",
+        reason: "new",
+      },
+    ];
+    const { title } = buildRecallNotificationCopy(items);
+    // This is factually wrong: there is exactly ONE recall here (r1),
+    // affecting one duplicated product entry — not "2 new safety recalls".
+    expect(title).toBe("⚠️ 2 new safety recalls");
+  });
+
+  it("BUG: the same duplicate-row case repeats the product name twice in the body instead of saying it once", () => {
+    const items: RecallCopyItem[] = [
+      {
+        product_id: "duplicate-row-1",
+        recall_id: "r1",
+        name: "Fisher-Price Rock 'n Play",
+        reason: "new",
+      },
+      {
+        product_id: "duplicate-row-2",
+        recall_id: "r1",
+        name: "Fisher-Price Rock 'n Play",
+        reason: "new",
+      },
+    ];
+    const { body } = buildRecallNotificationCopy(items);
+    expect(body).toBe(
+      "Fisher-Price Rock 'n Play, Fisher-Price Rock 'n Play has an active recall. Tap to review.",
+    );
+  });
+
+  it("falls back to the generic title when there are no items at all", () => {
+    expect(buildRecallNotificationCopy([]).title).toBe("⚠️ Safety Recall");
   });
 });
