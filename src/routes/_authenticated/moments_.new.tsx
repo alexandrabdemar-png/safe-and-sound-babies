@@ -203,6 +203,15 @@ function NewMomentPage() {
   const [momentIcon, setMomentIcon] = useState<MomentIconKey>(DEFAULT_MOMENT_ICON);
   const [safetyTip, setSafetyTip] = useState<SafetyTip | null>(null);
   const [timingNote, setTimingNote] = useState<string | null>(null);
+  // Which tips on the safety-heads-up screen the parent has checked off.
+  // Previously this screen was a static, unchangeable bulleted list with a
+  // single "Got it" button that dismissed the whole thing at once — a UX
+  // walkthrough flagged that as effectively non-interactive. Session-only
+  // (not persisted): there's no "revisit a past moment's safety tips"
+  // screen anywhere in the app yet, so writing this to the database would
+  // be state nothing ever reads back — an actually-revisitable checklist
+  // is a bigger feature (its own detail route) than this fix.
+  const [completedTips, setCompletedTips] = useState<Set<number>>(new Set());
   const activeChild = children.find((c) => c.id === activeChildId);
   const hasNoChildren = !childrenLoading && children.length === 0;
 
@@ -358,13 +367,42 @@ function NewMomentPage() {
               </div>
             )}
             <ul className="space-y-3">
-              {safetyTip.tips.map((tip, i) => (
-                <li key={i} className="flex gap-3 rounded-2xl border border-border/60 bg-card p-4">
-                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                  <span className="font-body text-sm text-foreground">{tip}</span>
-                </li>
-              ))}
+              {safetyTip.tips.map((tip, i) => {
+                const done = completedTips.has(i);
+                return (
+                  <li key={i}>
+                    <label
+                      className={`flex cursor-pointer gap-3 rounded-2xl border p-4 transition-colors ${done ? "border-primary/30 bg-primary/5" : "border-border/60 bg-card"}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={done}
+                        onChange={() =>
+                          setCompletedTips((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(i)) next.delete(i);
+                            else next.add(i);
+                            return next;
+                          })
+                        }
+                        className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+                        aria-label={`Mark done: ${tip}`}
+                      />
+                      <span
+                        className={`font-body text-sm ${done ? "text-muted-foreground line-through" : "text-foreground"}`}
+                      >
+                        {tip}
+                      </span>
+                    </label>
+                  </li>
+                );
+              })}
             </ul>
+            {completedTips.size > 0 && (
+              <p className="mt-3 font-body text-xs text-muted-foreground">
+                {completedTips.size} of {safetyTip.tips.length} done
+              </p>
+            )}
             <Button
               className="mt-6 h-12 w-full rounded-full bg-primary font-body text-sm font-semibold"
               onClick={() => navigate({ to: "/home" })}

@@ -39,6 +39,7 @@ type RecallMatch = {
     title: string;
     hazard: string | null;
     remedy: string | null;
+    description: string | null;
     url: string | null;
     recall_date: string | null;
     lot_pattern: string | null;
@@ -52,6 +53,40 @@ type InsightAlert = {
   title: string;
   body: string;
 };
+
+/**
+ * A one-line summary for a recall card: prefer the real hazard text, but
+ * fall back to the free-text description (populated by every source, per
+ * recallBatch.ts / allRecallSources.ts) rather than the recall's own
+ * title — which is already shown as its own line right above wherever
+ * this is used, so falling back to title just repeats it with nothing
+ * new. Exported for testing since FDA and the hardcoded "critical" list
+ * never populate hazard, making this fallback path a real, common case,
+ * not a rare edge.
+ */
+export function recallSnippet(recall: {
+  hazard: string | null;
+  description: string | null;
+  title: string;
+}): string {
+  return recall.hazard ?? recall.description ?? recall.title;
+}
+
+/**
+ * The full-detail card (RecallCard) shows hazard and remedy as separate
+ * labeled lines when present. Only when BOTH are missing — the FDA /
+ * "critical" source case — does it need a single combined fallback line,
+ * since showing two empty labeled lines would be worse than one
+ * unlabeled one.
+ */
+export function recallDetailsFallback(recall: {
+  hazard: string | null;
+  remedy: string | null;
+  description: string | null;
+}): string | null {
+  if (recall.hazard || recall.remedy) return null;
+  return recall.description;
+}
 
 function daysFromNow(dateStr: string): number {
   const d = new Date(dateStr + "T00:00:00").getTime();
@@ -78,6 +113,7 @@ type RecallHistoryItem = {
   title: string;
   hazard: string | null;
   remedy: string | null;
+  description: string | null;
   url: string | null;
   recall_date: string | null;
   category: string | null;
@@ -113,7 +149,7 @@ function AlertsPage() {
 
     const { data, error } = await supabase
       .from("recalls")
-      .select("id, title, hazard, remedy, url, recall_date, category")
+      .select("id, title, hazard, remedy, description, url, recall_date, category")
       .gte("recall_date", cutoffStr)
       .order("recall_date", { ascending: false })
       .limit(100);
@@ -150,7 +186,7 @@ function AlertsPage() {
       supabase
         .from("product_recalls")
         .select(
-          "id, acknowledged, product_id, products(name, brand, lot_number), recalls(id, title, hazard, remedy, url, recall_date, lot_pattern)",
+          "id, acknowledged, product_id, products(name, brand, lot_number), recalls(id, title, hazard, remedy, description, url, recall_date, lot_pattern)",
         )
         .eq("acknowledged", false),
       // Previously missing entirely: a "Mark as done" wrote to
@@ -344,11 +380,26 @@ function AlertsPage() {
 
       {activeTab === "alerts" && (
       <>
+      {/* Previously only the "Recall History" tab showed a freshness
+          signal — the actual recall matches on this tab (the screen a
+          user lands on and cares about most) had no way to tell how
+          recent the scan behind them was, a real black-box gap flagged by
+          a UX walkthrough. No `sources` filter here (unlike History's
+          curated subset) since a match on this tab can come from any of
+          the 7 recall sources. */}
+      {!loading && (
+        <div className="px-5 pb-2 sm:px-6">
+          <div className="mx-auto max-w-md">
+            <DataAsOf />
+          </div>
+        </div>
+      )}
+
       {/* Prominent banner: products you own with active recalls */}
       {!loading && ownedRecalls.length > 0 && (
         <div className="px-5 pb-4 sm:px-6">
           <div className="mx-auto max-w-md">
-            <div className="rounded-3xl border-2 border-destructive/40 bg-destructive/8 p-5" style={{ backgroundColor: "rgba(185, 28, 28, 0.06)" }}>
+            <div role="status" aria-live="polite" className="rounded-3xl border-2 border-destructive/40 bg-destructive/8 p-5" style={{ backgroundColor: "rgba(185, 28, 28, 0.06)" }}>
               <div className="mb-3 flex items-center gap-2">
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-destructive/20 text-destructive">
                   <AlertTriangle className="h-4 w-4" />
@@ -441,7 +492,7 @@ function AlertsPage() {
 
 function RecallHistoryCard({ item }: { item: RecallHistoryItem }) {
   const [expanded, setExpanded] = useState(false);
-  const snippet = item.hazard ?? item.title;
+  const snippet = recallSnippet(item);
   const isLong = snippet.length > 80;
   const date = item.recall_date ? new Date(item.recall_date + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "";
   return (
@@ -518,6 +569,17 @@ function RecallCard({ item, onDismiss }: { item: RecallMatch; onDismiss: () => v
       {recall.remedy && (
         <p className="mt-1.5 font-body text-sm text-foreground/80">
           <span className="font-semibold">What to do:</span> {recall.remedy}
+        </p>
+      )}
+      {/* FDA recalls and the hardcoded "critical" list never populate
+          hazard/remedy (see recallBatch.ts's cpscRecallToCatalogRow vs
+          fdaRecallToCatalogRow/criticalRecallToCatalogRow) — without this
+          fallback those recalls showed only a title and a "Read details"
+          link, no inline explanation at all. description is the one field
+          every source populates. */}
+      {recallDetailsFallback(recall) && (
+        <p className="mt-3 font-body text-sm text-foreground/80">
+          <span className="font-semibold">Details:</span> {recallDetailsFallback(recall)}
         </p>
       )}
       {recall.lot_pattern && (
@@ -599,7 +661,7 @@ function BannerRecallItem({ item }: { item: RecallMatch }) {
   const recall = item.recalls;
   const product = item.products;
   if (!recall) return null;
-  const snippet = recall.hazard ?? recall.title;
+  const snippet = recallSnippet(recall);
   const isLong = snippet.length > 80;
   return (
     <li className="rounded-2xl border border-destructive/25 bg-white/70 px-4 py-3 dark:bg-destructive/10">
