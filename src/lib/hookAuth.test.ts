@@ -28,10 +28,6 @@ describe("extractHookCredential", () => {
 });
 
 describe("isAuthorizedHookCredential", () => {
-  it("accepts the anon key that pg_cron sends", () => {
-    expect(isAuthorizedHookCredential("anon-key", [undefined, "anon-key"])).toBe(true);
-  });
-
   it("accepts an explicitly configured HOOK_SECRET", () => {
     expect(isAuthorizedHookCredential("s3cret", ["s3cret", "anon-key"])).toBe(true);
   });
@@ -61,20 +57,30 @@ describe("isAuthorizedHookCredential", () => {
 });
 
 describe("acceptedHookCredentials", () => {
-  it("collects HOOK_SECRET and the publishable/anon keys", () => {
+  it("collects HOOK_SECRET only", () => {
     expect(
       acceptedHookCredentials({
         HOOK_SECRET: "s",
         SUPABASE_PUBLISHABLE_KEY: "p",
         SUPABASE_ANON_KEY: "a",
       }),
-    ).toEqual(["s", "p", "a"]);
+    ).toEqual(["s"]);
   });
 
-  it("skips blank / missing values", () => {
-    expect(acceptedHookCredentials({ HOOK_SECRET: "  ", SUPABASE_PUBLISHABLE_KEY: "p" })).toEqual([
-      "p",
-    ]);
+  it("skips a blank HOOK_SECRET", () => {
+    expect(acceptedHookCredentials({ HOOK_SECRET: "  " })).toEqual([]);
     expect(acceptedHookCredentials({})).toEqual([]);
+  });
+
+  // Security review finding: the anon/publishable key is public by
+  // design (shipped in every client bundle) — it must never be treated
+  // as a valid hook credential, even when present in the environment.
+  it("regression: does NOT accept the anon/publishable key as a credential, even when HOOK_SECRET is unset", () => {
+    const accepted = acceptedHookCredentials({
+      SUPABASE_PUBLISHABLE_KEY: "the-public-anon-key",
+      SUPABASE_ANON_KEY: "the-public-anon-key",
+    });
+    expect(accepted).toEqual([]);
+    expect(isAuthorizedHookCredential("the-public-anon-key", accepted)).toBe(false);
   });
 });

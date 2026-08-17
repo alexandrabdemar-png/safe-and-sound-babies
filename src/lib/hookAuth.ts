@@ -1,16 +1,18 @@
 // Shared auth for the pg_cron-invoked /api/public/hooks/* routes.
 //
-// Background: these hooks were originally gated on a bespoke `HOOK_SECRET`,
-// but the pg_cron jobs that call them send the Supabase anon/publishable key
-// in an `apikey` header (the canonical scheduled-job pattern). HOOK_SECRET was
-// never set, so every scheduled run came back 401 Unauthorized and no product
-// alerts were ever generated.
+// Only HOOK_SECRET is accepted. This used to also accept the Supabase
+// anon/publishable key (the value pg_cron sent before HOOK_SECRET was
+// configured in Vault) as a fallback so the cron jobs wouldn't 401 — but
+// the anon key is, by design, embedded in every client bundle and sent on
+// every browser request. Accepting it here meant anyone who opened
+// devtools once could call these hooks directly (security review
+// finding). private.call_recall_hook (see
+// supabase/migrations/20260702000000_apns_push_and_cron.sql) already
+// sends the real hook_secret from Supabase Vault, so removing the
+// fallback is safe now that that secret is actually configured — verify
+// cron.job_run_details shows successful runs before relying on this.
 //
-// We accept either credential:
-//   • the project's anon/publishable key (what pg_cron sends), or
-//   • HOOK_SECRET, when a project explicitly configures one.
-//
-// Both are compared with a length-safe constant-time comparison so the routes
+// Compared with a length-safe constant-time comparison so the routes
 // don't leak credential material through timing.
 
 function timingSafeEqual(a: string, b: string): boolean {
@@ -50,9 +52,7 @@ export function isAuthorizedHookCredential(
 export function acceptedHookCredentials(
   env: Record<string, string | undefined> = process.env as Record<string, string | undefined>,
 ): string[] {
-  return [env["HOOK_SECRET"], env["SUPABASE_PUBLISHABLE_KEY"], env["SUPABASE_ANON_KEY"]].filter(
-    (v): v is string => Boolean(v?.trim()),
-  );
+  return [env["HOOK_SECRET"]].filter((v): v is string => Boolean(v?.trim()));
 }
 
 /** One-call guard for a hook handler. Returns a 401 Response, or null when OK. */
