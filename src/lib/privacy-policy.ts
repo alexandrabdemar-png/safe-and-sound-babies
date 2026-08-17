@@ -1,6 +1,6 @@
 import { SUPPORT_EMAIL } from "@/lib/constants";
 
-export const PRIVACY_POLICY_UPDATED = "June 11, 2026";
+export const PRIVACY_POLICY_UPDATED = "August 17, 2026";
 
 export const PRIVACY_POLICY = `Peace of Mine — Privacy Policy
 Last updated: ${PRIVACY_POLICY_UPDATED}
@@ -15,6 +15,8 @@ About your child
 • Name and date of birth — used to calculate age-appropriate product safety guidelines and predict clothing/diaper size-ups.
 • Height and weight — used to generate size-up predictions and track growth milestones over time.
 • Milestone notes — optional free-text notes you write about your child's development.
+• Emergency and medical info (optional) — if you fill out the Emergency Info card, we store allergies, medications, blood type, and the name/phone number of your pediatrician and an emergency contact. This is stored only for your own quick reference (and on a shareable link you explicitly choose to create) — we do not use it for any other purpose.
+• Food and allergen notes (optional) — if you use the Starting Solids tracker, we store which foods you've introduced, whether you've flagged one as an allergen, and any reaction notes you write.
 
 About your baby products
 • Product name, brand, category, and barcode — used to match your products against the U.S. Consumer Product Safety Commission (CPSC) recall database and to surface expiration / size-up alerts.
@@ -23,9 +25,11 @@ About your baby products
 About your account
 • Email address — used to identify your account and send safety alert notifications.
 • Subscription status — used to determine which features you have access to.
+• Push notification identifiers (optional) — if you enable notifications, we store a device token (iOS) or browser push subscription (web) so we can deliver safety alerts to that device. Turning notifications off removes this.
+• Home safety profile (optional) — details like whether your home has stairs, pets, a pool, or a car, used only to tailor which safety suggestions we show you.
 
 What we do NOT collect
-• We do not collect your home address, phone number, or payment card details. Payment is processed entirely by Stripe; we never see or store your card number.
+• We do not collect your own home address or payment card details. Payment is processed entirely by Stripe; we never see or store your card number.
 • We do not use advertising trackers or third-party analytics SDKs inside the app.
 
 ──────────────────────────────────────
@@ -53,7 +57,11 @@ Our team — Human team members (admins) can see only aggregate statistics: for 
 Trusted processors — We share limited data with:
   • Supabase (database hosting, EU/US data centres) — stores your encrypted data.
   • Stripe (payment processing) — receives your email and payment details when you subscribe; Stripe's privacy policy applies to that data.
-  • Lovable (app hosting platform) — hosts the application servers; does not have access to your database rows.
+  • Lovable (app hosting platform) — hosts the application servers, and its AI Gateway relays product-search text to an AI model (see below) on our behalf; does not have access to your database rows.
+  • Google — if you search for a product, your search text is sent through Lovable's AI Gateway to Google's Gemini model to help find matching products. If you choose "Sign in with Google," Google shares your account email/profile with us per Google's own privacy policy.
+  • Anthropic — for Pro subscribers, a product's name and category (never your child's data) are sent to Anthropic's Claude model to look up safety guidelines for that product.
+  • Apple — if you choose "Sign in with Apple," or if you use the app on iOS with notifications enabled, Apple shares your account email (Sign in with Apple) or delivers push notifications (Apple Push Notification service) on our behalf.
+  • Your browser's push service (e.g. Google, Mozilla, or Microsoft, depending on your browser) — if you enable notifications on the web, delivers the notification on our behalf; it only ever sees an encrypted payload, not its contents.
 
 We do not sell, rent, or share your personal data with advertisers, data brokers, or any other third parties.
 

@@ -13,6 +13,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RecallsRouteImport } from './routes/recalls'
 import { Route as RecallSearchRouteImport } from './routes/recall-search'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LegalConsentRouteImport } from './routes/legal-consent'
 import { Route as DesignPreviewRouteImport } from './routes/design-preview'
@@ -74,6 +75,11 @@ const RecallsRoute = RecallsRouteImport.update({
 const RecallSearchRoute = RecallSearchRouteImport.update({
   id: '/recall-search',
   path: '/recall-search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -309,6 +315,7 @@ export interface FileRoutesByFullPath {
   '/design-preview': typeof DesignPreviewRoute
   '/legal-consent': typeof LegalConsentRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/recall-search': typeof RecallSearchRoute
   '/recalls': typeof RecallsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -356,6 +363,7 @@ export interface FileRoutesByTo {
   '/design-preview': typeof DesignPreviewRoute
   '/legal-consent': typeof LegalConsentRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/recall-search': typeof RecallSearchRoute
   '/recalls': typeof RecallsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -405,6 +413,7 @@ export interface FileRoutesById {
   '/design-preview': typeof DesignPreviewRoute
   '/legal-consent': typeof LegalConsentRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/recall-search': typeof RecallSearchRoute
   '/recalls': typeof RecallsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -454,6 +463,7 @@ export interface FileRouteTypes {
     | '/design-preview'
     | '/legal-consent'
     | '/onboarding'
+    | '/privacy-policy'
     | '/recall-search'
     | '/recalls'
     | '/sitemap.xml'
@@ -501,6 +511,7 @@ export interface FileRouteTypes {
     | '/design-preview'
     | '/legal-consent'
     | '/onboarding'
+    | '/privacy-policy'
     | '/recall-search'
     | '/recalls'
     | '/sitemap.xml'
@@ -549,6 +560,7 @@ export interface FileRouteTypes {
     | '/design-preview'
     | '/legal-consent'
     | '/onboarding'
+    | '/privacy-policy'
     | '/recall-search'
     | '/recalls'
     | '/sitemap.xml'
@@ -598,6 +610,7 @@ export interface RootRouteChildren {
   DesignPreviewRoute: typeof DesignPreviewRoute
   LegalConsentRoute: typeof LegalConsentRoute
   OnboardingRoute: typeof OnboardingRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RecallSearchRoute: typeof RecallSearchRoute
   RecallsRoute: typeof RecallsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -639,6 +652,13 @@ declare module '@tanstack/react-router' {
       path: '/recall-search'
       fullPath: '/recall-search'
       preLoaderRoute: typeof RecallSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -1023,6 +1043,7 @@ const rootRouteChildren: RootRouteChildren = {
   DesignPreviewRoute: DesignPreviewRoute,
   LegalConsentRoute: LegalConsentRoute,
   OnboardingRoute: OnboardingRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
   RecallSearchRoute: RecallSearchRoute,
   RecallsRoute: RecallsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

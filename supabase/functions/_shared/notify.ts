@@ -195,24 +195,33 @@ export type RecallCopyItem = {
  * it's independently unit-testable (that file has no exports at all
  * otherwise).
  *
- * Known gap, not yet fixed: items are grouped by (product_id, recall_id),
- * not by any notion of "the same physical product" — if a user has two
- * separate `products` rows for what is, to them, the same item (added
- * twice by mistake, e.g.), both rows independently match the same recall
- * and both show up here as separate items with the same `name`. That
- * produces a title like "⚠️ 2 new safety recalls" for what is actually one
- * recall affecting one duplicated product, and a body that repeats the
- * product name twice ("Foo, Foo has an active recall."). See
- * notify.test.ts's "duplicate product entries" tests, which document this
- * exact behavior against real input rather than asserting it in the
- * abstract.
+ * Items are grouped by (product_id, recall_id) upstream, not by any
+ * notion of "the same physical product" — if a user has two separate
+ * `products` rows for what is, to them, the same item (added twice by
+ * mistake, e.g.), both rows independently match the same recall and both
+ * arrive here as separate items with the same `name`. Left as-is, that
+ * would produce a title like "⚠️ 2 new safety recalls" for what is
+ * actually one recall affecting one duplicated product, and a body that
+ * repeats the product name twice. Collapsed here by (name, reason) —
+ * case-insensitively, since display copy is what's being deduplicated —
+ * purely for the purpose of building readable notification text; the
+ * caller still stamps notified_at on every underlying product_recalls
+ * row, duplicates included, so neither one re-triggers next run.
  */
 export function buildRecallNotificationCopy(items: RecallCopyItem[]): {
   title: string;
   body: string;
 } {
-  const newOnes = items.filter((i) => i.reason === "new");
-  const updatedOnes = items.filter((i) => i.reason === "updated");
+  const seen = new Set<string>();
+  const deduped = items.filter((i) => {
+    const key = `${i.reason}:${i.name.trim().toLowerCase()}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  const newOnes = deduped.filter((i) => i.reason === "new");
+  const updatedOnes = deduped.filter((i) => i.reason === "updated");
 
   const titleParts: string[] = [];
   if (newOnes.length === 1) titleParts.push(`⚠️ Safety Recall — ${newOnes[0].name}`);

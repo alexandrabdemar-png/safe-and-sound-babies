@@ -26,6 +26,13 @@ export function Footer() {
               Terms &amp; Conditions
             </Link>
             <span className="text-border">·</span>
+            <Link
+              to="/privacy-policy"
+              className="font-body text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Privacy Policy
+            </Link>
+            <span className="text-border">·</span>
             <p className="font-body text-sm text-muted-foreground">
               For the little things that matter.
             </p>

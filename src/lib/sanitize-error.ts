@@ -5,8 +5,16 @@
 
 const PII_PATTERNS = [
   /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, // email
-  /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g,           // phone (US)
+  /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g, // phone (US)
   /"?(password|token|secret|key|auth|bearer|api_?key)"?\s*[:=]\s*"?[^\s"',}]+/gi,
+  // The rule above only catches "key: value"/"key=value" assignment
+  // shapes. The common HTTP header shape "Authorization: Bearer <token>"
+  // has a colon after "Authorization", but the actual secret sits one
+  // word later after "Bearer " — no ':'/'=' directly follows either
+  // "auth" or "bearer" in that phrasing, so it passed through unredacted
+  // until this pattern was added (see sanitize-error.test.ts's "gap"
+  // test, which caught this while writing coverage for the function).
+  /\bbearer\s+[^\s"',}]+/gi,
 ];
 
 function redactMessage(msg: string): string {

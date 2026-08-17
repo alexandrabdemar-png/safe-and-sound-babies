@@ -31,20 +31,23 @@ describe("sanitizeError", () => {
     expect(sanitizeError(err).message).not.toContain("eyJhbGciOiJIUzI1NiJ9.abc.def");
   });
 
-  it("gap: does NOT redact the common HTTP 'Authorization: Bearer <token>' header format", () => {
-    // PII_PATTERNS' token rule requires a `:`/`=` directly after the
-    // keyword (password|token|secret|key|auth|bearer|api_?key), e.g.
-    // `token: "xyz"` or `token=xyz`. "authorization: Bearer <token>" has a
-    // colon after "authorization" but the actual secret is one word later,
-    // after "Bearer " — so neither the "auth" nor the "bearer" alternative
-    // has a `:`/`=` immediately following it, and the token passes through
-    // unredacted. This is a real gap, not an intentional exclusion: any
-    // error message that echoes back a request's Authorization header
-    // (a common shape for upstream HTTP failures) would leak the bearer
-    // token into logs despite the "tokens are stripped" policy claim.
-    // Documented here rather than silently worked around.
+  it("fix: redacts the common HTTP 'Authorization: Bearer <token>' header format", () => {
+    // The original token rule only caught "key: value"/"key=value"
+    // assignment shapes — "authorization: Bearer <token>" has a colon
+    // after "authorization", but the actual secret is one word later,
+    // after "Bearer ", so neither the "auth" nor "bearer" alternative had
+    // a ':'/'=' immediately following it and the token passed through
+    // unredacted. A dedicated `bearer <token>` pattern (no colon/equals
+    // required) fixes this. Any error message that echoes back a
+    // request's Authorization header (a common shape for upstream HTTP
+    // failures) is now caught.
     const err = new Error("Request failed with authorization: Bearer eyJhbGciOiJIUzI1NiJ9.abc.def");
-    expect(sanitizeError(err).message).toContain("eyJhbGciOiJIUzI1NiJ9.abc.def");
+    expect(sanitizeError(err).message).not.toContain("eyJhbGciOiJIUzI1NiJ9.abc.def");
+  });
+
+  it("fix: redacts a bare 'Bearer <token>' with no leading 'authorization:' at all", () => {
+    const err = new Error("Upstream rejected token Bearer sk-abc123XYZ.def456");
+    expect(sanitizeError(err).message).not.toContain("sk-abc123XYZ.def456");
   });
 
   it("preserves the error name and code, which carry no PII", () => {

@@ -2,6 +2,19 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SUPPORT_EMAIL } from "@/lib/constants";
+import { CURRENT_TERMS_VERSION } from "@/lib/legalConsent";
+
+// Single source of truth for the displayed date is CURRENT_TERMS_VERSION
+// (legalConsent.ts) — previously this rendered new Date() directly, so the
+// page always showed "today" on every visit regardless of whether the
+// content had actually changed, which is misleading in the opposite
+// direction from being stale: it looked freshly updated on every single
+// day. Deriving it from the same version string that gates re-consent
+// means the two can never drift apart.
+const TERMS_LAST_UPDATED = new Date(`${CURRENT_TERMS_VERSION}T00:00:00Z`).toLocaleDateString(
+  "en-US",
+  { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" },
+);
 
 export const Route = createFileRoute("/terms")({
   head: () => ({
@@ -43,7 +56,7 @@ function TermsPage() {
             Terms & Conditions
           </h1>
           <p className="mt-4 font-body text-sm text-muted-foreground">
-            Last updated: {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+            Last updated: {TERMS_LAST_UPDATED}
           </p>
 
           <div className="mt-10 space-y-8 font-body text-base leading-relaxed text-foreground">

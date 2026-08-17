@@ -346,7 +346,11 @@ function AuthPage() {
           <Link to="/terms" className="underline hover:text-foreground">
             Terms & Conditions
           </Link>{" "}
-          and Privacy Policy.
+          and{" "}
+          <Link to="/privacy-policy" className="underline hover:text-foreground">
+            Privacy Policy
+          </Link>
+          .
         </p>
       </div>
     </main>

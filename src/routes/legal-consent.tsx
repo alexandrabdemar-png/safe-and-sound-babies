@@ -148,7 +148,11 @@ function LegalConsentPage() {
             <Link to="/terms" className="underline hover:text-foreground">
               Terms of Service
             </Link>
-            , including the complete Safety Disclaimer, Assumption of Risk, and Limitation of Liability sections.
+            , including the complete Safety Disclaimer, Assumption of Risk, and Limitation of Liability sections, or the{" "}
+            <Link to="/privacy-policy" className="underline hover:text-foreground">
+              Privacy Policy
+            </Link>
+            .
           </p>
 
           <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-2xl border border-border/70 bg-card p-4">

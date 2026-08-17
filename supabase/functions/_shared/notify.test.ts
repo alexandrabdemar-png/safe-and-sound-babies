@@ -399,14 +399,12 @@ describe("buildRecallNotificationCopy", () => {
     expect(title).toBe("⚠️ 2 new safety recalls");
   });
 
-  // ── Duplicate product entries (audit finding — documents a real bug,
-  // not desired behavior): two separate `products` rows for what a parent
-  // considers the same physical item (added twice by mistake) both
-  // independently match the same recall. buildRecallNotificationCopy has
-  // no way to know they're "the same product" — it only sees two items
-  // with different product_id/recall_id keys — so it treats them exactly
-  // like two different products with two different recalls. ─────────────
-  it("BUG: two duplicate product rows matching the SAME recall are miscounted as '2 new safety recalls'", () => {
+  // ── Duplicate product entries (audit finding, fixed): two separate
+  // `products` rows for what a parent considers the same physical item
+  // (added twice by mistake) both independently match the same recall.
+  // buildRecallNotificationCopy dedupes by (reason, name) before building
+  // copy so this collapses to a single mention instead of double-counting. ─
+  it("fix: two duplicate product rows matching the SAME recall collapse to a single-item title, not '2 new safety recalls'", () => {
     const items: RecallCopyItem[] = [
       {
         product_id: "duplicate-row-1",
@@ -422,12 +420,10 @@ describe("buildRecallNotificationCopy", () => {
       },
     ];
     const { title } = buildRecallNotificationCopy(items);
-    // This is factually wrong: there is exactly ONE recall here (r1),
-    // affecting one duplicated product entry — not "2 new safety recalls".
-    expect(title).toBe("⚠️ 2 new safety recalls");
+    expect(title).toBe("⚠️ Safety Recall — Fisher-Price Rock 'n Play");
   });
 
-  it("BUG: the same duplicate-row case repeats the product name twice in the body instead of saying it once", () => {
+  it("fix: the same duplicate-row case mentions the product name once in the body, not twice", () => {
     const items: RecallCopyItem[] = [
       {
         product_id: "duplicate-row-1",
@@ -443,9 +439,34 @@ describe("buildRecallNotificationCopy", () => {
       },
     ];
     const { body } = buildRecallNotificationCopy(items);
-    expect(body).toBe(
-      "Fisher-Price Rock 'n Play, Fisher-Price Rock 'n Play has an active recall. Tap to review.",
-    );
+    expect(body).toBe("Fisher-Price Rock 'n Play has an active recall. Tap to review.");
+  });
+
+  it("dedupes case-insensitively (same product name, different casing, still one mention)", () => {
+    const items: RecallCopyItem[] = [
+      { product_id: "row-1", recall_id: "r1", name: "Fisher-Price Rock 'n Play", reason: "new" },
+      { product_id: "row-2", recall_id: "r1", name: "fisher-price rock 'n play", reason: "new" },
+    ];
+    const { title } = buildRecallNotificationCopy(items);
+    expect(title).toBe("⚠️ Safety Recall — Fisher-Price Rock 'n Play");
+  });
+
+  it("does NOT dedupe two distinct products that legitimately share a recall — only exact-name duplicates collapse", () => {
+    const items: RecallCopyItem[] = [
+      { product_id: "p1", recall_id: "r1", name: "Crib A", reason: "new" },
+      { product_id: "p2", recall_id: "r1", name: "Crib B", reason: "new" },
+    ];
+    const { title } = buildRecallNotificationCopy(items);
+    expect(title).toBe("⚠️ 2 new safety recalls");
+  });
+
+  it("keeps a duplicate 'new' item and a duplicate 'updated' item of the same name as two separate mentions (dedup is per-reason)", () => {
+    const items: RecallCopyItem[] = [
+      { product_id: "p1", recall_id: "r1", name: "Crib A", reason: "new" },
+      { product_id: "p2", recall_id: "r2", name: "Crib A", reason: "updated" },
+    ];
+    const { title } = buildRecallNotificationCopy(items);
+    expect(title).toBe("⚠️ Safety Recall — Crib A · 🔄 Updated recall — Crib A");
   });
 
   it("falls back to the generic title when there are no items at all", () => {
