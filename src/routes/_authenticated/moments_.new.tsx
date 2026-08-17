@@ -85,10 +85,10 @@ export const MOMENT_SAFETY_MAP: {
     safety: {
       title: "Pulling to stand — lower the crib now",
       tips: [
-        "Drop the crib mattress to its lowest setting today — a standing baby can topple over the rail.",
-        "Anchor all furniture that could tip (bookshelves, dressers, TVs) to the wall.",
-        "Babyproof lower cabinets and cover all outlets if you haven't already.",
-        "Check that baby gates are hardware-mounted at the top of stairs.",
+        "Drop the crib mattress to its lowest setting today — a standing baby can topple over the rail from a higher one.",
+        "Clear whatever they're pulling up on most (coffee table, ottoman, low shelf) of tablecloths, cords, and anything grabbable.",
+        "Anchor furniture they use to pull themselves up (dressers, bookshelves, TV stands) — it now has to bear real weight, not just resist a curious push.",
+        "Recheck cabinet and drawer locks near their favorite pull-up spots — standing gives them more leverage to pry doors open.",
       ],
     },
   },
@@ -98,10 +98,11 @@ export const MOMENT_SAFETY_MAP: {
     safety: {
       title: "Standing — full babyproofing check",
       tips: [
-        "Crib mattress should be at the lowest setting now.",
-        "Walk every room at floor level — look for cords, sharp corners, and tip hazards.",
-        "Anchor all tall furniture and TVs to the wall.",
-        "Make sure gates are installed at both top and bottom of stairs.",
+        "Confirm the crib mattress is still at its lowest setting.",
+        "Walk every room at your baby's new eye level — check counters, table edges, and shelves for anything now within reach.",
+        "Install gates at both the top and bottom of stairs — a standing baby can pitch forward onto steps even before walking.",
+        "Shorten or tie up blind and curtain cords — they can now reach higher than before.",
+        "Double-check that tall furniture and TVs are anchored — standing gives more leverage to pull them over than crawling did.",
       ],
     },
   },

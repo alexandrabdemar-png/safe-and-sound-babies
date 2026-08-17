@@ -187,27 +187,38 @@ describe("MOMENT_SAFETY_MAP structural integrity", () => {
     expect(duplicates).toEqual([]);
   });
 
-  it("'Standing' and 'Pulling to stand' cover the same 4 themes with near-identical wording (documents a real near-duplicate, not an exact one)", () => {
-    // Flagged by the audit: these two adjacent milestones repeat the same
-    // four safety themes (crib mattress lowest, anchor furniture, floor
-    // hazard sweep, stair gates) in barely-reworded sentences. Not an
-    // exact-string duplicate (the strict test above wouldn't catch it),
-    // but a parent logging both within the same week sees near-identical
-    // advice twice. This test documents the overlap exists today rather
-    // than asserting it's wrong — a future content pass may want to
-    // differentiate them or intentionally merge them.
+  it("'Standing' and 'Pulling to stand' each have content the other doesn't (no longer a near-duplicate)", () => {
+    // A previous content pass had these two adjacent milestones repeat the
+    // same four safety themes (crib mattress lowest, anchor furniture,
+    // floor hazard sweep, stair gates) in barely-reworded sentences — a
+    // parent logging both within the same week saw near-identical advice
+    // twice. Content was differentiated: pulling-to-stand focuses on the
+    // immediate reach/pull-up hazards at the moment it starts; standing
+    // focuses on the broader eye-level walkthrough, including stair gates
+    // and blind cords, that pulling-to-stand doesn't cover.
     const pullToStand = MOMENT_SAFETY_MAP.find((e) =>
       e.safety.title.startsWith("Pulling to stand"),
     )!;
     const standing = MOMENT_SAFETY_MAP.find(
       (e) => e.safety.title === "Standing — full babyproofing check",
     )!;
-    const themes = ["crib", "anchor", "gate"];
-    for (const theme of themes) {
-      const pullHasIt = pullToStand.safety.tips.some((t) => t.toLowerCase().includes(theme));
-      const standHasIt = standing.safety.tips.some((t) => t.toLowerCase().includes(theme));
-      expect(pullHasIt).toBe(true);
-      expect(standHasIt).toBe(true);
+
+    // No tip line is shared verbatim between the two.
+    const pullLines = new Set(pullToStand.safety.tips.map((t) => t.toLowerCase()));
+    for (const tip of standing.safety.tips) {
+      expect(pullLines.has(tip.toLowerCase())).toBe(false);
+    }
+
+    // Each covers at least one theme the other doesn't.
+    const standingOnlyThemes = ["gate", "blind"];
+    for (const theme of standingOnlyThemes) {
+      expect(standing.safety.tips.some((t) => t.toLowerCase().includes(theme))).toBe(true);
+      expect(pullToStand.safety.tips.some((t) => t.toLowerCase().includes(theme))).toBe(false);
+    }
+    const pullOnlyThemes = ["grabbable"];
+    for (const theme of pullOnlyThemes) {
+      expect(pullToStand.safety.tips.some((t) => t.toLowerCase().includes(theme))).toBe(true);
+      expect(standing.safety.tips.some((t) => t.toLowerCase().includes(theme))).toBe(false);
     }
   });
 });
