@@ -26,9 +26,9 @@ import {
   type MomentIconKey,
 } from "@/lib/momentIcons";
 
-type SafetyTip = { title: string; tips: string[] };
+export type SafetyTip = { title: string; tips: string[] };
 
-const MOMENT_SAFETY_MAP: { pattern: RegExp; safety: SafetyTip }[] = [
+export const MOMENT_SAFETY_MAP: { pattern: RegExp; safety: SafetyTip }[] = [
   {
     pattern: /roll(ed|ing)|tummy time/i,
     safety: {
@@ -136,7 +136,7 @@ const MOMENT_SAFETY_MAP: { pattern: RegExp; safety: SafetyTip }[] = [
   },
 ];
 
-function getSafetyTip(momentTitle: string): SafetyTip | null {
+export function getSafetyTip(momentTitle: string): SafetyTip | null {
   for (const { pattern, safety } of MOMENT_SAFETY_MAP) {
     if (pattern.test(momentTitle)) return safety;
   }
@@ -149,7 +149,7 @@ export const Route = createFileRoute("/_authenticated/moments_/new")({
   head: () => ({ meta: [{ title: "Log a moment — Peace of Mine" }] }),
 });
 
-const PROMPTS = [
+export const PROMPTS = [
   "First smile",
   "Rolled over",
   "First tooth",
