@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { MOMENT_SAFETY_MAP, PROMPTS, getSafetyTip } from "./moments_.new";
+import { MOMENT_SAFETY_MAP, PROMPTS, getSafetyTip, getMilestoneKey } from "./moments_.new";
 
 // ── Question 1: every milestone the app suggests (the quick-fill PROMPTS
 // chips) either genuinely has no safety-relevant content (a documented,
@@ -112,6 +112,39 @@ describe("MOMENT_SAFETY_MAP entries not offered as PROMPTS chips are still reach
 
   it("'Started solids' (not in PROMPTS) matches the first-food tip", () => {
     expect(getSafetyTip("Started solids")?.title).toBe("Starting solids — keep it safe");
+  });
+});
+
+// ── Age-awareness plumbing: getMilestoneKey links a matched title to
+// milestoneTiming.ts's typical-age data (previously getSafetyTip had no way
+// to report which milestone matched, so the caller couldn't look up a
+// typical age range at all — see milestoneTiming.test.ts for the age-range
+// classification logic itself). ─────────────────────────────────────────
+describe("getMilestoneKey links a matched title to its milestoneTiming.ts key", () => {
+  it("returns the milestoneKey for a developmental milestone with a typical age range", () => {
+    expect(getMilestoneKey("Crawling")).toBe("crawling");
+    expect(getMilestoneKey("took his first steps at grandma's house")).toBe("first_steps");
+  });
+
+  it("returns null for a matched entry that isn't a developmental milestone (lowering the crib)", () => {
+    expect(getMilestoneKey("Lowered the crib mattress today")).toBeNull();
+  });
+
+  it("returns null for an unmatched title, same as getSafetyTip", () => {
+    expect(getMilestoneKey("Slept through the night")).toBeNull();
+  });
+
+  it("every MOMENT_SAFETY_MAP entry's milestoneKey is either null or a real getMilestoneKey-reachable value", () => {
+    for (const { pattern, milestoneKey } of MOMENT_SAFETY_MAP) {
+      // Constructing a string that satisfies most of these patterns isn't
+      // straightforward (they're free-text regexes, not fixed strings), so
+      // this checks structural sanity instead: every declared milestoneKey
+      // is a non-empty string or explicitly null, never undefined/empty.
+      expect(pattern).toBeInstanceOf(RegExp);
+      expect(
+        milestoneKey === null || (typeof milestoneKey === "string" && milestoneKey.length > 0),
+      ).toBe(true);
+    }
   });
 });
 

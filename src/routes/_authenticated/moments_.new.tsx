@@ -25,12 +25,26 @@ import {
   saveMomentResilient,
   type MomentIconKey,
 } from "@/lib/momentIcons";
+import {
+  evaluateMilestoneTiming,
+  milestoneTimingNote,
+  type MilestoneKey,
+} from "@/lib/milestoneTiming";
 
 export type SafetyTip = { title: string; tips: string[] };
 
-export const MOMENT_SAFETY_MAP: { pattern: RegExp; safety: SafetyTip }[] = [
+export const MOMENT_SAFETY_MAP: {
+  pattern: RegExp;
+  safety: SafetyTip;
+  // Links this entry to milestoneTiming.ts's typical-age data — null for
+  // entries that aren't a developmental milestone with a typical age of
+  // their own (lowering the crib mattress is a parent action, not
+  // something a baby "reaches").
+  milestoneKey: MilestoneKey | null;
+}[] = [
   {
     pattern: /roll(ed|ing)|tummy time/i,
+    milestoneKey: "rolling",
     safety: {
       title: "Rolling over — time to think ahead",
       tips: [
@@ -42,6 +56,7 @@ export const MOMENT_SAFETY_MAP: { pattern: RegExp; safety: SafetyTip }[] = [
   },
   {
     pattern: /sat up|sitting/i,
+    milestoneKey: "sitting",
     safety: {
       title: "Sitting up — babyproofing starts now",
       tips: [
@@ -53,6 +68,7 @@ export const MOMENT_SAFETY_MAP: { pattern: RegExp; safety: SafetyTip }[] = [
   },
   {
     pattern: /crawl(ing|ed)|crawls/i,
+    milestoneKey: "crawling",
     safety: {
       title: "Crawling — time to gate the stairs",
       tips: [
@@ -65,6 +81,7 @@ export const MOMENT_SAFETY_MAP: { pattern: RegExp; safety: SafetyTip }[] = [
   },
   {
     pattern: /pull(ing|ed|s)? to stand|pulling up|pulls up/i,
+    milestoneKey: "pulling_to_stand",
     safety: {
       title: "Pulling to stand — lower the crib now",
       tips: [
@@ -77,6 +94,7 @@ export const MOMENT_SAFETY_MAP: { pattern: RegExp; safety: SafetyTip }[] = [
   },
   {
     pattern: /stand(ing|s)\b|first stand/i,
+    milestoneKey: "standing",
     safety: {
       title: "Standing — full babyproofing check",
       tips: [
@@ -89,6 +107,7 @@ export const MOMENT_SAFETY_MAP: { pattern: RegExp; safety: SafetyTip }[] = [
   },
   {
     pattern: /first step|walking|took.*step|steps/i,
+    milestoneKey: "first_steps",
     safety: {
       title: "First steps — your home just got smaller",
       tips: [
@@ -102,6 +121,7 @@ export const MOMENT_SAFETY_MAP: { pattern: RegExp; safety: SafetyTip }[] = [
   },
   {
     pattern: /lower(ed|ing)? (the )?crib|crib.*lower|mattress.*lower|lower.*mattress/i,
+    milestoneKey: null,
     safety: {
       title: "Lowering the crib mattress — one more safety step",
       tips: [
@@ -111,6 +131,7 @@ export const MOMENT_SAFETY_MAP: { pattern: RegExp; safety: SafetyTip }[] = [
   },
   {
     pattern: /first tooth|teeth|teething/i,
+    milestoneKey: "first_tooth",
     safety: {
       title: "First tooth — a few things to know",
       tips: [
@@ -123,6 +144,7 @@ export const MOMENT_SAFETY_MAP: { pattern: RegExp; safety: SafetyTip }[] = [
   },
   {
     pattern: /first food|solid|puree|eating/i,
+    milestoneKey: "first_food",
     safety: {
       title: "Starting solids — keep it safe",
       tips: [
@@ -136,11 +158,16 @@ export const MOMENT_SAFETY_MAP: { pattern: RegExp; safety: SafetyTip }[] = [
   },
 ];
 
+function findMatchingEntry(momentTitle: string) {
+  return MOMENT_SAFETY_MAP.find(({ pattern }) => pattern.test(momentTitle)) ?? null;
+}
+
 export function getSafetyTip(momentTitle: string): SafetyTip | null {
-  for (const { pattern, safety } of MOMENT_SAFETY_MAP) {
-    if (pattern.test(momentTitle)) return safety;
-  }
-  return null;
+  return findMatchingEntry(momentTitle)?.safety ?? null;
+}
+
+export function getMilestoneKey(momentTitle: string): MilestoneKey | null {
+  return findMatchingEntry(momentTitle)?.milestoneKey ?? null;
 }
 
 export const Route = createFileRoute("/_authenticated/moments_/new")({
@@ -174,6 +201,7 @@ function NewMomentPage() {
   const [notes, setNotes] = useState("");
   const [momentIcon, setMomentIcon] = useState<MomentIconKey>(DEFAULT_MOMENT_ICON);
   const [safetyTip, setSafetyTip] = useState<SafetyTip | null>(null);
+  const [timingNote, setTimingNote] = useState<string | null>(null);
   const activeChild = children.find((c) => c.id === activeChildId);
   const hasNoChildren = !childrenLoading && children.length === 0;
 
@@ -224,11 +252,28 @@ function NewMomentPage() {
         toast.error(error.message || "Couldn't save that moment");
         return;
       }
-      toast.success("Saved that moment 💛");
       const tip = getSafetyTip(title.trim());
       if (tip) {
+        toast.success("Saved that moment 💛");
+        const milestoneKey = getMilestoneKey(title.trim());
+        const timing = evaluateMilestoneTiming(
+          milestoneKey,
+          activeChild?.date_of_birth,
+          loggedAt,
+          activeChild?.due_date,
+        );
+        setTimingNote(milestoneTimingNote(timing));
         setSafetyTip(tip);
       } else {
+        // No matching entry in MOMENT_SAFETY_MAP — either a milestone with
+        // no physical-safety concern of its own (e.g. "First smile") or a
+        // custom/free-text title. Previously this branch navigated away
+        // with no acknowledgment at all beyond the generic save toast,
+        // which reads the same whether a tip screen is coming or not —
+        // say so explicitly instead of leaving it unexplained.
+        toast.success("Saved that moment 💛", {
+          description: "No extra safety tips for this one.",
+        });
         navigate({ to: "/moments" });
       }
     } finally {
@@ -306,6 +351,11 @@ function NewMomentPage() {
         </header>
         <main className="flex-1 px-5 sm:px-6">
           <div className="mx-auto max-w-md">
+            {timingNote && (
+              <div className="mb-4 space-y-1 rounded-2xl border border-amber-500/40 bg-amber-50 px-4 py-3 font-body text-xs text-amber-900 dark:bg-amber-900/20 dark:text-amber-200">
+                {timingNote}
+              </div>
+            )}
             <ul className="space-y-3">
               {safetyTip.tips.map((tip, i) => (
                 <li key={i} className="flex gap-3 rounded-2xl border border-border/60 bg-card p-4">
