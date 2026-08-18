@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link, redirect } from "@tanstack/react-ro
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Check, Loader2, Shield } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,19 +96,6 @@ const CATEGORY_IMAGE: Partial<Record<CategoryKey, string>> = {
   activity_center: catBlocks,
 };
 
-// Safety first-look content shown right after onboarding. This used to be
-// selected by the child's computed age from their date of birth — since the
-// app no longer collects a child's birthdate, this is now a fixed set of
-// safety basics that apply broadly regardless of age; log a milestone to
-// get milestone-specific guidance instead (see moments_.new.tsx).
-type SafetyAction = { icon: string; title: string; body: string };
-
-const SAFETY_FIRST_LOOK: SafetyAction[] = [
-  { icon: "🛏️", title: "Always back to sleep", body: "Place your baby on their back for every nap and every night, on a firm flat mattress with nothing else in the sleep space." },
-  { icon: "🪑", title: "Anchor tall furniture", body: "Bookshelves, dressers, and TVs tip easily once a baby can pull up on them. Anti-tip straps are worth installing early." },
-  { icon: "🚗", title: "Keep the car seat rear-facing", body: "Keep your child rear-facing as long as possible — until they reach the height or weight limit printed on the seat, not by a target age." },
-];
-
 const STORAGE_KEY = "safesound.onboarding.v1";
 
 function saveProgress(data: object) {
@@ -150,7 +137,6 @@ function OnboardingPage() {
     () => new Set(saved.selected ?? ["car_seat", "crib", "stroller"]),
   );
   const [saving, setSaving] = useState(false);
-  const [safetyFirstLook, setSafetyFirstLook] = useState<SafetyAction[] | null>(null);
   const [showIntro, setShowIntro] = useState(false);
 
   useEffect(() => {
@@ -330,7 +316,15 @@ function OnboardingPage() {
         return;
       }
 
-      setSafetyFirstLook(SAFETY_FIRST_LOOK);
+      // Previously landed on a static "safety first look" screen with 3
+      // fixed tips (always the same regardless of the child) before
+      // reaching the dashboard — redundant with, and inconsistent with,
+      // /home's own "Up next" section, which already shows a proper
+      // "Personalized recommendations will start showing up here once you
+      // add a product or log a milestone" empty state for a brand-new
+      // child with nothing logged yet. Go straight there instead.
+      toast.success("You're all set!");
+      navigate({ to: "/home" });
     } catch (err) {
       // Supabase/PostgREST errors are plain objects, not Error instances,
       // so `err instanceof Error` was always false for them here — every
@@ -348,52 +342,6 @@ function OnboardingPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  // Post-onboarding: safety first look
-  if (safetyFirstLook) {
-    return (
-      <div className="flex min-h-screen flex-col bg-background">
-        <header className="w-full px-4 py-6 sm:px-6">
-          <div className="mx-auto max-w-lg flex items-center gap-2">
-            <Shield className="h-5 w-5 text-primary" />
-            <span className="font-body text-xs font-semibold uppercase tracking-[0.2em] text-primary">Safety first look</span>
-          </div>
-        </header>
-        <main className="flex flex-1 flex-col justify-center px-4 pb-16 pt-2 sm:px-6">
-          <div className="mx-auto w-full max-w-lg">
-            <h1 className="font-display text-3xl font-semibold tracking-tight">
-              {name.trim() ? `Here's what matters most for ${name.trim()} right now.` : "Here's what matters most right now."}
-            </h1>
-            <p className="mt-2 font-body text-sm text-muted-foreground">
-              General safety guidance based on AAP recommendations for your child's age — not a
-              substitute for advice from your pediatrician.
-            </p>
-            <ul className="mt-6 space-y-3">
-              {safetyFirstLook.map((action) => (
-                <li key={action.title} className="flex gap-4 rounded-2xl border border-border/60 bg-card p-4">
-                  <span className="text-2xl leading-none">{action.icon}</span>
-                  <div>
-                    <p className="font-display text-sm font-semibold">{action.title}</p>
-                    <p className="mt-0.5 font-body text-sm text-muted-foreground">{action.body}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-4 text-center font-body text-[11px] text-muted-foreground">
-              Based on AAP recommendations — always confirm anything specific to your child with
-              your pediatrician.
-            </p>
-            <Button
-              className="mt-6 h-12 w-full rounded-full bg-primary font-body text-sm font-semibold"
-              onClick={() => navigate({ to: "/home" })}
-            >
-              Go to my dashboard <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
-          </div>
-        </main>
       </div>
     );
   }
