@@ -14,6 +14,15 @@ import { cn } from "@/lib/utils";
 import { friendlyError } from "@/lib/errors";
 import { checkNeedsLegalConsent } from "@/lib/legalConsent";
 import { CATEGORY_BY_KEY, type CategoryKey } from "@/lib/productCategories";
+import hdCarseat from "@/assets/hd-carseat.png";
+import hdCrib from "@/assets/hd-crib.png";
+import hdBassinet from "@/assets/hd-bassinet.png";
+import hdStroller from "@/assets/hd-stroller.png";
+import hdHighchair from "@/assets/hd-highchair.png";
+import hdBouncer from "@/assets/hd-bouncer.png";
+import hdActivityCenter from "@/assets/hd-activitycenter.png";
+import hdSwaddle from "@/assets/hd-swaddle.png";
+import hdBabygate from "@/assets/hd-babygate.png";
 import {
   PROFILE_TYPES,
   usesAgeRangeFlow,
