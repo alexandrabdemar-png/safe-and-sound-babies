@@ -511,7 +511,6 @@ function OnboardingPage() {
             >
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {CATEGORIES.map((cat) => {
-                  const Icon = CATEGORY_BY_KEY[cat.key].icon;
                   const active = selected.has(cat.key);
                   return (
                     <button
@@ -530,9 +529,17 @@ function OnboardingPage() {
                           <Check className="h-3 w-3" />
                         </span>
                       )}
-                      <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-sand/50">
-                        <Icon className="h-5 w-5 text-accent" />
+                      <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-sand/50 p-1.5">
+                        <img
+                          src={cat.image}
+                          alt=""
+                          width={512}
+                          height={512}
+                          loading="lazy"
+                          className="h-full w-full object-contain"
+                        />
                       </span>
+
                       <span className="font-body text-xs font-medium text-foreground">
                         {cat.name}
                       </span>
