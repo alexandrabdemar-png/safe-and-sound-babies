@@ -13,7 +13,16 @@ import { WelcomeIntroModal } from "@/components/WelcomeIntroModal";
 import { cn } from "@/lib/utils";
 import { friendlyError } from "@/lib/errors";
 import { checkNeedsLegalConsent } from "@/lib/legalConsent";
-import { CATEGORY_BY_KEY, type CategoryKey } from "@/lib/productCategories";
+import { type CategoryKey } from "@/lib/productCategories";
+import hdCarseat from "@/assets/hd-carseat.png";
+import hdCrib from "@/assets/hd-crib.png";
+import hdBassinet from "@/assets/hd-bassinet.png";
+import hdStroller from "@/assets/hd-stroller.png";
+import hdHighchair from "@/assets/hd-highchair.png";
+import hdBouncer from "@/assets/hd-bouncer.png";
+import hdActivityCenter from "@/assets/hd-activitycenter.png";
+import hdSwaddle from "@/assets/hd-swaddle.png";
+import hdBabygate from "@/assets/hd-babygate.png";
 import {
   PROFILE_TYPES,
   usesAgeRangeFlow,
@@ -64,16 +73,16 @@ export const Route = createFileRoute("/onboarding")({
   }),
 });
 
-const CATEGORIES: { key: CategoryKey; name: string }[] = [
-  { key: "car_seat",        name: "Car seats" },
-  { key: "crib",            name: "Cribs" },
-  { key: "bassinet",        name: "Bassinets" },
-  { key: "stroller",        name: "Strollers" },
-  { key: "high_chair",      name: "High chairs" },
-  { key: "bouncer",         name: "Bouncers" },
-  { key: "activity_center", name: "Activity centers" },
-  { key: "sleep_sack",      name: "Sleep sacks" },
-  { key: "baby_gate",       name: "Baby gates" },
+const CATEGORIES: { key: CategoryKey; name: string; image: string }[] = [
+  { key: "car_seat",        name: "Car seats",        image: hdCarseat },
+  { key: "crib",            name: "Cribs",            image: hdCrib },
+  { key: "bassinet",        name: "Bassinets",        image: hdBassinet },
+  { key: "stroller",        name: "Strollers",        image: hdStroller },
+  { key: "high_chair",      name: "High chairs",      image: hdHighchair },
+  { key: "bouncer",         name: "Bouncers",         image: hdBouncer },
+  { key: "activity_center", name: "Activity centers", image: hdActivityCenter },
+  { key: "sleep_sack",      name: "Sleep sacks",      image: hdSwaddle },
+  { key: "baby_gate",       name: "Baby gates",       image: hdBabygate },
 ];
 
 // Safety first-look content shown right after onboarding. This used to be
@@ -502,7 +511,6 @@ function OnboardingPage() {
             >
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {CATEGORIES.map((cat) => {
-                  const Icon = CATEGORY_BY_KEY[cat.key].icon;
                   const active = selected.has(cat.key);
                   return (
                     <button
@@ -521,9 +529,17 @@ function OnboardingPage() {
                           <Check className="h-3 w-3" />
                         </span>
                       )}
-                      <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-sand/50">
-                        <Icon className="h-5 w-5 text-accent" />
+                      <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-sand/50 p-1.5">
+                        <img
+                          src={cat.image}
+                          alt=""
+                          width={512}
+                          height={512}
+                          loading="lazy"
+                          className="h-full w-full object-contain"
+                        />
                       </span>
+
                       <span className="font-body text-xs font-medium text-foreground">
                         {cat.name}
                       </span>
