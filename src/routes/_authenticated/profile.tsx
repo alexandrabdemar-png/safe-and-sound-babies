@@ -20,6 +20,8 @@ import { getStripeEnvironment } from "@/lib/stripe";
 import { openUrl } from "@/lib/browser";
 import { APP_VERSION, SHARE_URL } from "@/lib/constants";
 import { extractFunctionsErrorMessage } from "@/lib/functionsError";
+import { DevRoleSwitcher } from "@/components/DevRoleSwitcher";
+
 
 export const Route = createFileRoute("/_authenticated/profile")({
   ssr: false,
