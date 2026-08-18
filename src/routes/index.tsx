@@ -162,7 +162,7 @@ function Index() {
                     width={512}
                     height={512}
                     loading="lazy"
-                    className="h-full w-full object-contain"
+                    className={`h-full w-full object-contain ${"scale" in cat ? (cat as { scale?: string }).scale : ""}`}
                   />
                 </div>
 
