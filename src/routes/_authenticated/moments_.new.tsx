@@ -53,11 +53,7 @@ export const PROMPTS = [
 function NewMomentPage() {
   const navigate = useNavigate();
   const { activeChildId, children, loading: childrenLoading } = useActiveChild();
-  // TEMP: paywall disabled for testing on 2026-07-04 at user's request — REMOVE
-  // this override (restore `const { isPro, loading: proLoading } = useProGate();`)
-  // before launch.
-  const { loading: proLoading } = useProGate();
-  const isPro = true;
+  const { isPro, loading: proLoading } = useProGate();
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState("");
   const [loggedAt, setLoggedAt] = useState(new Date().toISOString().slice(0, 10));

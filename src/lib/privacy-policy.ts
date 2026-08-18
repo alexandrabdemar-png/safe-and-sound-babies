@@ -27,6 +27,7 @@ About your account
 • Subscription status — used to determine which features you have access to.
 • Push notification identifiers (optional) — if you enable notifications, we store a device token (iOS) or browser push subscription (web) so we can deliver safety alerts to that device. Turning notifications off removes this.
 • Home safety profile (optional) — details like whether your home has stairs, pets, a pool, or a car, used only to tailor which safety suggestions we show you.
+• Caregiver invites (optional, Pro feature) — if you invite a co-parent, grandparent, or nanny to share access to a child's profile, we store the invitee's email address and send them an invite link. The link expires after 7 days if not accepted.
 
 What we do NOT collect
 • We do not collect your own home address or payment card details. Payment is processed entirely by Stripe; we never see or store your card number.
@@ -51,6 +52,8 @@ App improvements — Aggregate, non-identifiable statistics (total number of use
 ──────────────────────────────────────
 
 You — Only you can read your child's profile, milestones, and product list. Every database query is enforced by Supabase Row-Level Security, which means our own server code cannot return your rows to a different user.
+
+Caregivers you invite — If you use the Pro caregiver-sharing feature to invite a co-parent, grandparent, or nanny, that person can view and edit the profile, products, milestones, and alerts for the children you share with them, once they accept the emailed invite. You choose which children to share and can grant either edit or view-only access. Invite links expire after 7 days if unused.
 
 Our team — Human team members (admins) can see only aggregate statistics: for example, "the app has 500 users and 1,200 products." Admins cannot query individual profiles, children's names, milestones, or product lists. This restriction is enforced at the database permission level, not just by policy.
 

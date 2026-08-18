@@ -29,6 +29,9 @@ const FREE_FEATURES = [
 ];
 
 const PRO_FEATURES = [
+  'Milestone & moment tracking',
+  'Custom reminder timing',
+  'Share access with a co-parent or caregiver',
   'Barcode scanner for instant product entry',
   'Multi-child support',
   'Export & backup your data',

@@ -25,6 +25,7 @@ import {
   allChildrenOwned,
   sendInviteEmail,
 } from "../_shared/caregiverInvite.ts";
+import { hasAnyProSubscription } from "../_shared/subscription.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -77,6 +78,22 @@ Deno.serve(async (req) => {
 
   if (callerEmail && email === callerEmail) {
     return json({ error: "You can't invite yourself" }, 400);
+  }
+
+  // Server-side Pro enforcement — the profile page's invite form already
+  // gates this behind useProGate(), but that's a client-side check only;
+  // without this, anyone with a valid session could call this function
+  // directly and bypass the paywall.
+  const { data: subs, error: subsErr } = await supabase
+    .from("subscriptions")
+    .select("plan, status, current_period_end")
+    .eq("user_id", userId);
+  if (subsErr) return json({ error: subsErr.message }, 500);
+  if (!hasAnyProSubscription(subs ?? [])) {
+    return json(
+      { error: "Caregiver sharing is a Pro feature. Upgrade to invite a co-parent or caregiver." },
+      402,
+    );
   }
 
   // Ownership check via explicit user_id filter (service-role client, so

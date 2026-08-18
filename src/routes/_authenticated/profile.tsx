@@ -474,12 +474,21 @@ function CoParentInvite({ children }: { children: { id: string; name: string }[]
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const { requirePro } = useProGate();
 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim()) return;
     if (children.length === 0) {
       toast.error("Add a child before sharing access");
+      return;
+    }
+    if (
+      !requirePro(
+        "Caregiver sharing",
+        "Invite a co-parent, grandparent, or nanny to view and edit your child's profile, products, milestones, and alerts.",
+      )
+    ) {
       return;
     }
     setSending(true);
