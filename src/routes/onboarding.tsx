@@ -73,16 +73,16 @@ export const Route = createFileRoute("/onboarding")({
   }),
 });
 
-const CATEGORIES: { key: CategoryKey; name: string }[] = [
-  { key: "car_seat",        name: "Car seats" },
-  { key: "crib",            name: "Cribs" },
-  { key: "bassinet",        name: "Bassinets" },
-  { key: "stroller",        name: "Strollers" },
-  { key: "high_chair",      name: "High chairs" },
-  { key: "bouncer",         name: "Bouncers" },
-  { key: "activity_center", name: "Activity centers" },
-  { key: "sleep_sack",      name: "Sleep sacks" },
-  { key: "baby_gate",       name: "Baby gates" },
+const CATEGORIES: { key: CategoryKey; name: string; image: string }[] = [
+  { key: "car_seat",        name: "Car seats",        image: hdCarseat },
+  { key: "crib",            name: "Cribs",            image: hdCrib },
+  { key: "bassinet",        name: "Bassinets",        image: hdBassinet },
+  { key: "stroller",        name: "Strollers",        image: hdStroller },
+  { key: "high_chair",      name: "High chairs",      image: hdHighchair },
+  { key: "bouncer",         name: "Bouncers",         image: hdBouncer },
+  { key: "activity_center", name: "Activity centers", image: hdActivityCenter },
+  { key: "sleep_sack",      name: "Sleep sacks",      image: hdSwaddle },
+  { key: "baby_gate",       name: "Baby gates",       image: hdBabygate },
 ];
 
 // Safety first-look content shown right after onboarding. This used to be
