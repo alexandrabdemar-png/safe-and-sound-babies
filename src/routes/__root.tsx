@@ -107,6 +107,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&family=Inter:wght@400;500;600&family=Caveat:wght@600&display=swap" },
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
       { rel: "apple-touch-icon", href: "/app-icons/icon-180x180.png" },
       { rel: "apple-touch-icon", sizes: "180x180", href: "/app-icons/icon-180x180.png" },
       { rel: "apple-touch-icon", sizes: "120x120", href: "/app-icons/icon-120x120.png" },
