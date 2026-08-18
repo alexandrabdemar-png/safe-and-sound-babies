@@ -14,7 +14,6 @@ import {
   Plus,
   Radio,
   RefreshCw,
-  Ruler,
   Settings,
   Sparkles,
   Sun,
@@ -35,6 +34,8 @@ import { recordProductRecall } from "@/lib/recallRecord.functions";
 import { selectDailyTip, dayIndexFromDate, dayKey as getTipDayKey } from "@/lib/safetyTips";
 import { WHATS_NEW, LATEST_VERSION, whatsNewDismissalKey } from "@/lib/whatsNew";
 import { fetchMilestonesResilient } from "@/lib/momentIcons";
+import { getMilestoneKey } from "@/lib/momentSafetyTips";
+import type { MilestoneKey } from "@/lib/milestoneKeys";
 import { computeBlockedRuleIds } from "@/lib/insightDismissals";
 import {
   isLastHomeProfileQuestionStep,
@@ -57,10 +58,6 @@ export const Route = createFileRoute("/_authenticated/home")({
 type Child = {
   id: string;
   name: string;
-  date_of_birth: string | null;
-  height_inches: number | null;
-  weight_lbs: number | null;
-  measurements_updated_at: string | null;
 };
 
 type Moment = {
@@ -73,7 +70,6 @@ type Moment = {
 type AlertSummary = {
   recalls: number;
   replace: number;
-  sizeUp: number;
 };
 
 type ComingUpProduct = {
@@ -81,13 +77,12 @@ type ComingUpProduct = {
   name: string;
   brand: string | null;
   when: string;
-  type: "replace" | "sizeup" | "expiring";
+  type: "replace" | "expiring";
 };
 
 function comingUpLabel(p: ComingUpProduct): string {
   if (p.type === "replace") return `It may be time to replace ${p.name} soon`;
-  if (p.type === "expiring") return `${p.name} is approaching its expiration date`;
-  return `${p.name} might be ready for a size-up`;
+  return `${p.name} is approaching its expiration date`;
 }
 
 // ── Weekly digest helpers ───────────────────────────────────────────────────
@@ -101,29 +96,6 @@ function isoWeekKey(date = new Date()) {
 
 function isSunday() {
   return new Date().getDay() === 0;
-}
-
-function parseDateLocal(dateStr: string): Date {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(y, m - 1, d);
-}
-
-function nextMeasurementReminderLabel(measurementsUpdatedAt: string | null): string {
-  const base = measurementsUpdatedAt ? new Date(measurementsUpdatedAt) : new Date();
-  const next = new Date(base.getTime() + 28 * 24 * 60 * 60 * 1000);
-  return next.toLocaleDateString("en-US", { month: "long", day: "numeric" });
-}
-
-function calcAge(dob: string | null): { label: string } {
-  if (!dob) return { label: "Little one" };
-  const birth = parseDateLocal(dob);
-  const days = Math.max(0, Math.floor((Date.now() - birth.getTime()) / 86400000));
-  const weeks = Math.floor(days / 7);
-  if (weeks < 12) return { label: `${weeks} ${weeks === 1 ? "week" : "weeks"} old` };
-  const months = Math.floor(days / 30.44);
-  if (months < 24) return { label: `${months} ${months === 1 ? "month" : "months"} old` };
-  const years = Math.floor(months / 12);
-  return { label: `${years}y ${months % 12}m old` };
 }
 
 function greeting() {
@@ -141,68 +113,12 @@ function todayKey() {
   return new Date().toISOString().slice(0, 10);
 }
 
-// ── Age jump milestones ──────────────────────────────────────────────────────
-const AGE_MILESTONES: { months: number; actions: string[] }[] = [
-  {
-    months: 3,
-    actions: [
-      "Lower the crib mattress to the middle setting — babies this age can push up on their arms.",
-      "Re-check the car seat harness fit: straps should sit at or below the shoulders, snug enough that you can't pinch any webbing.",
-      "Remove all mobiles and hanging toys within arm's reach of the crib.",
-    ],
-  },
-  {
-    months: 6,
-    actions: [
-      "Install hardware-mounted stair gates at the top and bottom of every staircase before they start crawling.",
-      "Lower the crib mattress to the lowest setting — they'll be pulling to stand soon.",
-      "Add cabinet locks to all lower kitchen and bathroom cabinets.",
-    ],
-  },
-  {
-    months: 9,
-    actions: [
-      "Anchor every bookcase, dresser, and TV stand to the wall — babies this age pull on everything to stand up.",
-      "Check your car seat weight limit — some infant seats max out around 9–12 months.",
-      "Remove any baby walkers — they're linked to thousands of ER visits each year and are banned in Canada.",
-    ],
-  },
-  {
-    months: 12,
-    actions: [
-      "Transition to a rear-facing convertible car seat if your infant seat has reached its weight or height limit.",
-      "Lock all lower cabinets and move cleaning products to high shelves or behind a locked door.",
-      "Do a floor-level sweep for small objects — at this age everything goes in the mouth.",
-    ],
-  },
-  {
-    months: 18,
-    actions: [
-      "Add door knob covers — 18-month-olds figure out round knobs quickly.",
-      "Check your stroller's weight limit if your toddler is on the heavier side.",
-      "Assess whether a toddler bed rail is needed, or if it's time to transition to a floor-level toddler bed.",
-    ],
-  },
-];
-
-function getRecentMilestone(dobStr: string | null): { months: number; actions: string[] } | null {
-  if (!dobStr) return null;
-  const birth = parseDateLocal(dobStr);
-  const ageDays = (Date.now() - birth.getTime()) / 86400000;
-  for (const m of AGE_MILESTONES) {
-    const milestoneDays = m.months * 30.44;
-    const daysAfter = ageDays - milestoneDays;
-    if (daysAfter >= 0 && daysAfter <= 14) return m;
-  }
-  return null;
-}
-
 function HomePage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [child, setChild] = useState<Child | null>(null);
   const [moments, setMoments] = useState<Moment[]>([]);
-  const [alerts, setAlerts] = useState<AlertSummary>({ recalls: 0, replace: 0, sizeUp: 0 });
+  const [alerts, setAlerts] = useState<AlertSummary>({ recalls: 0, replace: 0 });
   const [products, setProducts] = useState<ProductInput[]>([]);
   const [comingUp, setComingUp] = useState<ComingUpProduct[]>([]);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
@@ -241,9 +157,6 @@ function HomePage() {
   });
   const [tipSuccess, setTipSuccess] = useState(false);
 
-  // Age jump alert
-  const [ageJumpDismissed, setAgeJumpDismissed] = useState(false);
-
   // Weekly digest: show on Sundays, dismiss per-week
   const currentWeekKey = isoWeekKey();
   const [digestDismissed, setDigestDismissed] = useState(() => {
@@ -263,17 +176,16 @@ function HomePage() {
     }
   });
 
-  // Measurements reminder dismiss (resets after 7 days)
-  const [measReminderDismissed, setMeasReminderDismissed] = useState(false);
-
   // Whether the bundled "a few more things" digest (see secondaryNudges
   // below) is expanded. Only relevant once 2+ low-urgency cards are active
   // at the same time — a single active one still renders full-size with no
   // extra tap needed.
   const [secondaryExpanded, setSecondaryExpanded] = useState(false);
 
-  // Bottle weaning reminder dismiss
-  const [bottleWeaningDismissed, setBottleWeaningDismissed] = useState(false);
+  // All logged milestone keys for the active child (see milestoneKeys.ts) —
+  // drives insights.ts's "Up next" guidance now that it's milestone-based
+  // instead of age-based.
+  const [loggedMilestoneKeys, setLoggedMilestoneKeys] = useState<Set<MilestoneKey>>(new Set());
 
   // Home profile personalization
   type HomeProfile = {
@@ -311,7 +223,7 @@ function HomePage() {
       } catch {}
       const { data: kids, error } = await supabase
         .from("children")
-        .select("id, name, date_of_birth, height_inches, weight_lbs, measurements_updated_at")
+        .select("id, name")
         .order("created_at", { ascending: true });
       if (cancelled) return;
       if (error) {
@@ -341,37 +253,6 @@ function HomePage() {
       const c = (kids.find((k) => k.id === activeId) ?? kids[0]) as Child;
       setChild(c);
 
-      // Check age-jump dismissal
-      try {
-        const milestone = getRecentMilestone(c.date_of_birth ?? null);
-        if (milestone) {
-          const dismissed = localStorage.getItem(`safesound.ageJump.${c.id}.${milestone.months}`);
-          if (dismissed) setAgeJumpDismissed(true);
-        }
-      } catch {}
-
-      // Check measurement reminder dismissal
-      try {
-        const dimKey = `safesound.measReminderDismissed.${c.id}`;
-        const stored = localStorage.getItem(dimKey);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-          if (parsed.ts && parsed.ts > sevenDaysAgo) {
-            setMeasReminderDismissed(true);
-          }
-        }
-      } catch {}
-
-      // Check bottle weaning dismissal
-      if (c.id) {
-        try {
-          if (localStorage.getItem(`safesound.bottleWeaning.${c.id}`) === "true") {
-            setBottleWeaningDismissed(true);
-          }
-        } catch {}
-      }
-
       const horizon30 = new Date();
       horizon30.setDate(horizon30.getDate() + 30);
       const horizon90 = new Date();
@@ -380,19 +261,24 @@ function HomePage() {
       const horizon90Str = horizon90.toISOString().slice(0, 10);
       const nowIso = new Date().toISOString();
 
-      const [mRes, recallRes, replaceRes, sizeRes, productRes, dismRes, comingUpRes] =
+      const [mRes, allTitlesRes, recallRes, replaceRes, productRes, dismRes, comingUpRes] =
         await Promise.all([
           // Only the single most recent moment is ever shown on Home now
           // (a "Latest moment" highlight, not the full list) — fetch just
           // that one instead of 5.
           fetchMilestonesResilient(c.id, { limit: 1 }),
+          // Lightweight (title only) fetch of every logged moment for this
+          // child — used to derive which developmental milestones (see
+          // milestoneKeys.ts) have been logged, which now drives
+          // insights.ts's "Up next" guidance instead of computed age.
+          supabase.from("milestones").select("title").eq("child_id", c.id),
           supabase
             .from("product_recalls")
             .select("id", { count: "exact", head: true })
             .eq("acknowledged", false),
-          // No lower bound on these two — an overdue replacement/size-up
-          // (past due, not just "coming up") still needs to count and show
-          // here. A .gte(todayStr) lower bound previously excluded anything
+          // No lower bound — an overdue replacement (past due, not just
+          // "coming up") still needs to count and show here. A
+          // .gte(todayStr) lower bound previously excluded anything
           // already overdue entirely, so a product due back in June stayed
           // invisible on Home even in August. Checks both the legacy field
           // and the AI-predicted one, matching the precedence products.tsx
@@ -403,23 +289,17 @@ function HomePage() {
             .or(`replace_at.lte.${horizon30Str},predicted_replacement_date.lte.${horizon30Str}`),
           supabase
             .from("products")
-            .select("id", { count: "exact", head: true })
-            .or(`next_size_at.lte.${horizon30Str},predicted_sizeup_date.lte.${horizon30Str}`),
-          supabase
-            .from("products")
             .select("id, category, purchased_at, size")
             .or(`child_id.eq.${c.id},child_id.is.null`),
           supabase.from("insight_dismissals").select("rule_id, action, until").eq("child_id", c.id),
           supabase
             .from("products")
-            .select(
-              "id, name, brand, replace_at, next_size_at, predicted_replacement_date, predicted_sizeup_date, expiration_date",
-            )
+            .select("id, name, brand, replace_at, predicted_replacement_date, expiration_date")
             // No lower bound here either, for the same reason as the count
             // queries above — an already-overdue item belongs in "coming
             // up" too, not just ones still ahead of today.
             .or(
-              `replace_at.lte.${horizon90Str},next_size_at.lte.${horizon90Str},predicted_replacement_date.lte.${horizon90Str},predicted_sizeup_date.lte.${horizon90Str},expiration_date.lte.${horizon90Str}`,
+              `replace_at.lte.${horizon90Str},predicted_replacement_date.lte.${horizon90Str},expiration_date.lte.${horizon90Str}`,
             ),
         ]);
 
@@ -433,10 +313,20 @@ function HomePage() {
       } else if (mRes.data) {
         setMoments(mRes.data as Moment[]);
       }
+      if (allTitlesRes.error) {
+        console.error("[home] failed to load milestone titles:", allTitlesRes.error.message);
+      } else {
+        const rows = (allTitlesRes.data ?? []) as { title: string }[];
+        const keys = new Set<MilestoneKey>();
+        for (const row of rows) {
+          const key = getMilestoneKey(row.title);
+          if (key) keys.add(key);
+        }
+        setLoggedMilestoneKeys(keys);
+      }
       setAlerts({
         recalls: recallRes.count ?? 0,
         replace: replaceRes.count ?? 0,
-        sizeUp: sizeRes.count ?? 0,
       });
       if (productRes.error) {
         // Previously silent: a failed read here left `products` at its
@@ -456,15 +346,12 @@ function HomePage() {
           name: string;
           brand: string | null;
           replace_at: string | null;
-          next_size_at: string | null;
           predicted_replacement_date: string | null;
-          predicted_sizeup_date: string | null;
           expiration_date: string | null;
         };
         const items: ComingUpProduct[] = [];
         for (const p of comingUpRes.data as Raw[]) {
           const replaceDate = p.predicted_replacement_date ?? p.replace_at;
-          const sizeDate = p.predicted_sizeup_date ?? p.next_size_at;
           if (replaceDate && replaceDate <= horizon90Str) {
             items.push({
               id: `replace:${p.id}`,
@@ -472,15 +359,6 @@ function HomePage() {
               brand: p.brand,
               when: replaceDate,
               type: "replace",
-            });
-          }
-          if (sizeDate && sizeDate <= horizon90Str) {
-            items.push({
-              id: `sizeup:${p.id}`,
-              name: p.name,
-              brand: p.brand,
-              when: sizeDate,
-              type: "sizeup",
             });
           }
           if (p.expiration_date && p.expiration_date <= horizon90Str) {
@@ -602,18 +480,36 @@ function HomePage() {
     };
   }, [navigate]);
 
-  // Re-fetch moments when tab regains visibility (e.g. returning from /moments/new)
+  // Re-fetch moments when tab regains visibility (e.g. returning from
+  // /moments/new) — also refreshes loggedMilestoneKeys so a newly-logged
+  // milestone can immediately affect "Up next" guidance without a full
+  // page reload.
   useEffect(() => {
     function onVisible() {
       if (document.visibilityState !== "visible") return;
+      const childId = child?.id;
+      if (!childId) return;
       supabase
         .from("milestones")
         .select("id, title, logged_at, notes")
-        .eq("child_id", (child as any)?.id)
+        .eq("child_id", childId)
         .order("logged_at", { ascending: false })
         .limit(1)
         .then(({ data }) => {
           if (data) setMoments(data as Moment[]);
+        });
+      supabase
+        .from("milestones")
+        .select("title")
+        .eq("child_id", childId)
+        .then(({ data }) => {
+          if (!data) return;
+          const keys = new Set<MilestoneKey>();
+          for (const row of data as { title: string }[]) {
+            const key = getMilestoneKey(row.title);
+            if (key) keys.add(key);
+          }
+          setLoggedMilestoneKeys(keys);
         });
     }
     document.addEventListener("visibilitychange", onVisible);
@@ -665,35 +561,23 @@ function HomePage() {
     })();
   }, [products.length]);
 
-  const age = useMemo(() => calcAge(child?.date_of_birth ?? null), [child]);
-  const totalAlerts = alerts.recalls + alerts.replace + alerts.sizeUp;
+  const totalAlerts = alerts.recalls + alerts.replace;
   // Matches the icon/priority order the alert tiles below already use —
-  // recalls (safety-critical) outrank replacements, which outrank size-ups.
-  const HeaderAlertIcon =
-    alerts.recalls > 0 ? AlertTriangle : alerts.replace > 0 ? RefreshCw : alerts.sizeUp > 0 ? Ruler : Sparkles;
-  // Every evaluateInsights rule keys off age and/or home_profile answers —
-  // several (babyproof_start, install_baby_gates, babyproof_low_cabinets)
-  // have no product/milestone signal at all, so a brand-new account with
-  // nothing logged yet could still get "Up next" recommendations before
-  // there's any real activity to ground them in. Hold off on generating
-  // any until the family has added at least one product or logged at
-  // least one milestone — see the placeholder card below for the copy
-  // shown in the meantime.
+  // recalls (safety-critical) outrank replacements.
+  const HeaderAlertIcon = alerts.recalls > 0 ? AlertTriangle : alerts.replace > 0 ? RefreshCw : Sparkles;
+  // evaluateInsights is driven by logged milestones and/or home_profile
+  // answers, not age — so a brand-new account with nothing logged yet
+  // could still get "Up next" recommendations before there's any real
+  // activity to ground them in. Hold off on generating any until the
+  // family has added at least one product or logged at least one
+  // milestone — see the placeholder card below for the copy shown in the
+  // meantime.
   const hasAnyTrackedData = products.length > 0 || moments.length > 0;
   const upNext: Insight[] = useMemo(() => {
     if (!hasAnyTrackedData) return [];
-    const all = evaluateInsights(child, products, homeProfile);
+    const all = evaluateInsights(child, products, loggedMilestoneKeys, homeProfile);
     return all.filter((i) => !dismissedIds.has(i.id)).slice(0, 3);
-  }, [child, products, dismissedIds, homeProfile, hasAnyTrackedData]);
-
-  // Show measurements reminder if measurements_updated_at is null or > 28 days ago
-  const showMeasReminder = useMemo(() => {
-    if (!child || measReminderDismissed) return false;
-    if (!child.measurements_updated_at) return true;
-    const updatedAt = new Date(child.measurements_updated_at).getTime();
-    const twentyEightDaysAgo = Date.now() - 28 * 24 * 60 * 60 * 1000;
-    return updatedAt < twentyEightDaysAgo;
-  }, [child, measReminderDismissed]);
+  }, [child, products, loggedMilestoneKeys, dismissedIds, homeProfile, hasAnyTrackedData]);
 
   // Manual select-then-update-or-insert instead of `.upsert(..., { onConflict })`.
   // onConflict requires a real unique constraint matching those exact columns —
@@ -777,14 +661,6 @@ function HomePage() {
     setWhatsNewDismissed(true);
   }
 
-  function dismissAgeJump() {
-    if (!child || !recentMilestone) return;
-    try {
-      localStorage.setItem(`safesound.ageJump.${child.id}.${recentMilestone.months}`, "1");
-    } catch {}
-    setAgeJumpDismissed(true);
-  }
-
   async function markTipDone() {
     const dk = getTipDayKey();
     try {
@@ -800,10 +676,7 @@ function HomePage() {
       if (!sess?.user) return;
       const tip = child
         ? selectDailyTip(
-            Math.floor(
-              (Date.now() - new Date(child.date_of_birth ?? new Date().toISOString()).getTime()) /
-                (30.44 * 86400000),
-            ),
+            null,
             dayIndexFromDate(),
             homeProfile?.has_stairs,
             homeProfile?.home_type,
@@ -824,17 +697,6 @@ function HomePage() {
         { onConflict: "user_id,week_key" },
       );
     } catch {}
-  }
-
-  function dismissMeasReminder() {
-    if (!child) return;
-    try {
-      localStorage.setItem(
-        `safesound.measReminderDismissed.${child.id}`,
-        JSON.stringify({ ts: Date.now() }),
-      );
-    } catch {}
-    setMeasReminderDismissed(true);
   }
 
   // Recall Radar: fetch 30-day CPSC baby recall count, cached daily
@@ -890,22 +752,6 @@ function HomePage() {
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
-  }
-
-  const recentMilestone = getRecentMilestone(child?.date_of_birth ?? null);
-
-  const ageMonthsForBottle = child?.date_of_birth
-    ? Math.floor((Date.now() - new Date(child.date_of_birth).getTime()) / (30.44 * 86400000))
-    : 0;
-  const showBottleWeaning =
-    !bottleWeaningDismissed && ageMonthsForBottle >= 12 && ageMonthsForBottle <= 15;
-
-  function dismissBottleWeaning() {
-    if (!child) return;
-    try {
-      localStorage.setItem(`safesound.bottleWeaning.${child.id}`, "true");
-    } catch {}
-    setBottleWeaningDismissed(true);
   }
 
   async function saveHomeProfile(answers: HomeProfile) {
@@ -990,25 +836,21 @@ function HomePage() {
   // Daily safety tip
   const alertsPaused = notifPrefs.paused_until && new Date(notifPrefs.paused_until) > new Date();
   const showTipCard = !alertsPaused && !tipCompleted;
-  const ageMonthsForTip = child?.date_of_birth
-    ? Math.floor((Date.now() - new Date(child.date_of_birth).getTime()) / (30.44 * 86400000))
-    : 0;
   const dailyTip = selectDailyTip(
-    ageMonthsForTip,
+    null,
     dayIndexFromDate(),
     homeProfile?.has_stairs,
     homeProfile?.home_type,
     homeProfile?.has_pool,
   );
 
-  // Low-urgency, informational nudges — daily tip, bottle-weaning note,
-  // measurements reminder, what's-new — get bundled into a single compact
-  // digest once 2+ are active at the same time, instead of stacking as
-  // separate full-size cards. On a typical day only one of these is ever
-  // active, so it still renders exactly as it did before this grouping
-  // existed; the digest only kicks in on the "several unrelated things
-  // happen to line up" day this was meant to fix. Genuinely urgent items
-  // (recall banner, pool alarm nudge, age-jump safety actions, alert
+  // Low-urgency, informational nudges — daily tip, what's-new — get
+  // bundled into a single compact digest once 2+ are active at the same
+  // time, instead of stacking as separate full-size cards. On a typical
+  // day only one of these is ever active, so it still renders exactly as
+  // it did before this grouping existed; the digest only kicks in on the
+  // "several unrelated things happen to line up" day this was meant to
+  // fix. Genuinely urgent items (recall banner, pool alarm nudge, alert
   // summary, up-next insights) are deliberately NOT part of this group —
   // they stay exactly as prominent as they already were.
   const secondaryNudges: { key: string; summary: string; render: () => React.ReactNode }[] = [];
@@ -1021,98 +863,11 @@ function HomePage() {
       ),
     });
   }
-  if (showBottleWeaning && child) {
-    secondaryNudges.push({
-      key: "bottle",
-      summary: "A note on bottle-weaning timing",
-      render: () => (
-        <div className="flex items-start justify-between gap-3 rounded-2xl border border-[#8FAF8C]/40 bg-[#F2F7F1] px-4 py-3.5">
-          <div className="min-w-0 flex-1">
-            <p className="font-body text-xs font-semibold uppercase tracking-wider text-[#4A7A47] mb-1">
-              A gentle heads-up
-            </p>
-            <p className="font-body text-sm leading-snug text-foreground/80">
-              Many pediatric dentists suggest beginning to transition away from bottle use around 12
-              to 15 months to support healthy tooth development — every child is different so check
-              with your own dentist or pediatrician about what feels right for your family.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={dismissBottleWeaning}
-            className="mt-0.5 shrink-0 rounded-full p-1 text-muted-foreground hover:bg-black/10"
-            aria-label="Dismiss"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      ),
-    });
-  }
-  if (showMeasReminder && child) {
-    secondaryNudges.push({
-      key: "measurements",
-      summary: `Update ${child.name}'s measurements`,
-      render: () => (
-        <div className="flex items-start justify-between gap-3 rounded-2xl border border-[#8FAF8C]/40 bg-[#F2F7F1] px-4 py-3.5">
-          <div className="min-w-0 flex-1">
-            <p className="font-body text-sm leading-snug text-foreground/80">
-              It may be worth updating {child.name}'s measurements — keeping them current helps us
-              estimate size-up timing more accurately.
-            </p>
-            <Link
-              to="/profile"
-              className="mt-2 inline-block font-body text-xs font-semibold text-[#4A7A47] underline underline-offset-2"
-            >
-              Update measurements →
-            </Link>
-          </div>
-          <button
-            type="button"
-            onClick={dismissMeasReminder}
-            className="mt-0.5 shrink-0 rounded-full p-1 text-muted-foreground hover:bg-black/10"
-            aria-label="Dismiss"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      ),
-    });
-  }
   if (!whatsNewDismissed) {
     secondaryNudges.push({
       key: "whatsnew",
       summary: "What's new in Peace of Mine",
       render: () => <WhatsNewCard updates={WHATS_NEW.slice(0, 2)} onDismiss={dismissWhatsNew} />,
-    });
-  }
-  // Missing DOB quietly degrades most of the age-aware parts of this page
-  // (age label, milestone timing, size-up predictions, daily tip
-  // targeting) — onboarding lets it be skipped, so nudge for it here
-  // rather than leaving that degradation invisible. Not dismissible: it's
-  // a data gap, not a one-off notice, so it should keep surfacing (inside
-  // the low-urgency digest, not as its own separate always-on card) until
-  // actually filled in.
-  if (child && !child.date_of_birth) {
-    secondaryNudges.push({
-      key: "missing-dob",
-      summary: `Add ${child.name}'s birth date`,
-      render: () => (
-        <div className="flex items-start justify-between gap-3 rounded-2xl border border-[#8FAF8C]/40 bg-[#F2F7F1] px-4 py-3.5">
-          <div className="min-w-0 flex-1">
-            <p className="font-body text-sm leading-snug text-foreground/80">
-              Adding {child.name}'s birth date helps us tailor safety tips, milestones, and size-up
-              predictions to their actual age instead of general guidance.
-            </p>
-            <Link
-              to="/profile"
-              className="mt-2 inline-block font-body text-xs font-semibold text-[#4A7A47] underline underline-offset-2"
-            >
-              Add birth date →
-            </Link>
-          </div>
-        </div>
-      ),
     });
   }
 
@@ -1153,7 +908,6 @@ function HomePage() {
           <h1 className="mt-2 font-display text-4xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl">
             {child?.name}
           </h1>
-          <p className="mt-2 font-body text-base text-muted-foreground">{age.label}</p>
           <p
             className="mt-4 text-[10px] font-medium tracking-[0.12em] text-muted-foreground/50"
             style={{ fontFamily: '"Inter", system-ui, sans-serif', textTransform: "uppercase" }}
@@ -1256,22 +1010,6 @@ function HomePage() {
         </div>
       )}
 
-      {/* Age jump alert — shown when child recently crossed a milestone */}
-      {recentMilestone && !ageJumpDismissed && child && (
-        <div className="px-5 pt-3 sm:px-6">
-          <div className="mx-auto max-w-md">
-            <AgeJumpCard
-              childName={child.name}
-              months={recentMilestone.months}
-              actions={recentMilestone.actions.filter((a) =>
-                homeProfile?.has_stairs === false ? !/stair|gate/i.test(a) : true,
-              )}
-              onDismiss={dismissAgeJump}
-            />
-          </div>
-        </div>
-      )}
-
       {/* Recall Radar — live 30-day CPSC + FDA count, plus always-relevant critical recalls */}
       {recallRadarCount !== null && recallRadarCount !== -1 && (
         <div className="px-5 pt-3 sm:px-6">
@@ -1326,7 +1064,7 @@ function HomePage() {
               <ArrowRight className="h-4 w-4 text-muted-foreground" />
             </Link>
           ) : (
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-2 gap-2.5">
               <SummaryTile
                 icon={AlertTriangle}
                 count={alerts.recalls}
@@ -1334,7 +1072,6 @@ function HomePage() {
                 tone={alerts.recalls > 0 ? "danger" : "muted"}
               />
               <SummaryTile icon={RefreshCw} count={alerts.replace} label="Replacements" />
-              <SummaryTile icon={Ruler} count={alerts.sizeUp} label="Size up" />
             </div>
           )}
         </div>
@@ -1412,11 +1149,7 @@ function HomePage() {
               <p className="mb-2 font-body text-xs font-semibold uppercase tracking-[0.15em] text-accent">
                 Latest moment
               </p>
-              <MomentTimeline
-                moments={moments.slice(0, 1)}
-                childName={child?.name}
-                childDob={child?.date_of_birth}
-              />
+              <MomentTimeline moments={moments.slice(0, 1)} childName={child?.name} />
             </div>
           )}
         </div>
@@ -1693,55 +1426,6 @@ function WhatsNewCard({
             ))}
         </>
       )}
-    </div>
-  );
-}
-
-function AgeJumpCard({
-  childName,
-  months,
-  actions,
-  onDismiss,
-}: {
-  childName: string;
-  months: number;
-  actions: string[];
-  onDismiss: () => void;
-}) {
-  const label = months < 12 ? `${months} months` : months === 12 ? "1 year" : `${months} months`;
-  return (
-    <div className="rounded-3xl border border-accent/40 bg-card p-5 animate-scale-in">
-      <div className="mb-3 flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent/20 text-accent">
-            <Sparkles className="h-3.5 w-3.5" />
-          </span>
-          <div>
-            <p className="font-display text-sm font-semibold tracking-tight">
-              {childName} just turned {label} 🎉
-            </p>
-            <p className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">
-              General guidance for this age — not personalized medical advice
-            </p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={onDismiss}
-          className="rounded-full p-1 text-muted-foreground hover:bg-muted"
-          aria-label="Dismiss"
-        >
-          <X className="h-3.5 w-3.5" />
-        </button>
-      </div>
-      <ul className="space-y-2 border-t border-border/40 pt-3">
-        {actions.map((action, i) => (
-          <li key={i} className="flex items-start gap-2">
-            <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-            <p className="font-body text-sm text-foreground/80">{action}</p>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }

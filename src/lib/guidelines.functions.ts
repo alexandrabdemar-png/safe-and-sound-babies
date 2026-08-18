@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { predictSizeUpDate, predictReplacementDate } from "@/lib/predictions";
+import { predictReplacementDate } from "@/lib/predictions";
 
 /**
  * Server-side Pro subscription gate. Reads from the subscriptions table via
@@ -78,8 +78,9 @@ function normalize(raw: Record<string, unknown>): GuidelineFields {
 
 /**
  * Look up safety guidelines for a product from Lovable AI and persist them.
- * Also recomputes predicted size-up + replacement dates based on the child's
- * latest measurement and writes them back to the products row.
+ * Also computes the predicted replacement date from the product's own
+ * added_at date and the manufacturer's replacement interval — no child data
+ * involved — and writes it back to the products row.
  */
 export const lookupAndSaveGuidelines = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -124,7 +125,7 @@ export const lookupAndSaveGuidelines = createServerFn({ method: "POST" })
     try {
       parsed = JSON.parse(stripCodeFence(text));
     } catch {
-      return { needsManualEntry: true } as unknown as { guideline: GuidelineFields; predicted_sizeup_date: string | null; predicted_replacement_date: string | null };
+      return { needsManualEntry: true } as unknown as { guideline: GuidelineFields; predicted_replacement_date: string | null };
     }
     const g = normalize(parsed);
 
@@ -151,94 +152,23 @@ export const lookupAndSaveGuidelines = createServerFn({ method: "POST" })
       );
     if (gErr) throw gErr;
 
-    // Compute prediction dates against the linked child
-    let predicted_sizeup_date: string | null = null;
-    let predicted_replacement_date = predictReplacementDate(
+    // Predicted replacement date depends only on the product's own
+    // added_at date and the manufacturer's replacement interval — no child
+    // data involved.
+    const predicted_replacement_date = predictReplacementDate(
       product.added_at ?? new Date(),
       g.replacementIntervalMonths,
     );
-    if (product.child_id) {
-      const { data: child } = await supabase
-        .from("children")
-        .select("date_of_birth, height_inches, weight_lbs, measurements_updated_at")
-        .eq("id", product.child_id)
-        .maybeSingle();
-      if (child) {
-        predicted_sizeup_date = predictSizeUpDate(
-          {
-            date_of_birth: child.date_of_birth,
-            height_inches: child.height_inches,
-            weight_lbs: child.weight_lbs,
-            measurements_recorded_at: child.measurements_updated_at,
-          },
-          { max_weight_lbs: g.maxWeightLbs, max_height_inches: g.maxHeightInches },
-        );
-      }
-    }
 
     await supabase
       .from("products")
-      .update({
-        predicted_sizeup_date,
-        predicted_replacement_date,
-      } as never)
+      .update({ predicted_replacement_date } as never)
       .eq("id", product.id);
 
     return {
       guideline: g,
-      predicted_sizeup_date,
       predicted_replacement_date,
     };
-  });
-
-/**
- * Recompute predictions for a product when the child's measurements change.
- */
-export const recomputePredictions = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: { childId: string }) => {
-    if (!input?.childId) throw new Error("childId required");
-    return input;
-  })
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    if (!(await hasProSubscription(supabase, userId))) return { updated: 0 };
-    const { data: child } = await supabase
-      .from("children")
-      .select("date_of_birth, height_inches, weight_lbs, measurements_updated_at")
-      .eq("id", data.childId)
-      .maybeSingle();
-    if (!child) return { updated: 0 };
-
-    const { data: products } = await supabase
-      .from("products")
-      .select("id, added_at, product_guidelines(max_weight_lbs, max_height_inches, replacement_interval_months)")
-      .eq("user_id", userId)
-      .eq("child_id", data.childId);
-
-    let updated = 0;
-    for (const p of products ?? []) {
-      const g = Array.isArray(p.product_guidelines)
-        ? p.product_guidelines[0]
-        : (p.product_guidelines as { max_weight_lbs: number | null; max_height_inches: number | null; replacement_interval_months: number | null } | null);
-      if (!g) continue;
-      const predicted_sizeup_date = predictSizeUpDate(
-        {
-          date_of_birth: child.date_of_birth,
-          height_inches: child.height_inches,
-          weight_lbs: child.weight_lbs,
-          measurements_recorded_at: child.measurements_updated_at,
-        },
-        { max_weight_lbs: g.max_weight_lbs, max_height_inches: g.max_height_inches },
-      );
-      const predicted_replacement_date = predictReplacementDate(p.added_at ?? new Date(), g.replacement_interval_months);
-      await supabase
-        .from("products")
-        .update({ predicted_sizeup_date, predicted_replacement_date } as never)
-        .eq("id", p.id);
-      updated++;
-    }
-    return { updated };
   });
 
 /**
@@ -283,35 +213,15 @@ export const saveManualGuidelines = createServerFn({ method: "POST" })
       );
     if (gErr) throw gErr;
 
-    let predicted_sizeup_date: string | null = null;
     const predicted_replacement_date = predictReplacementDate(
       product.added_at ?? new Date(),
       data.replacementIntervalMonths,
     );
 
-    if (product.child_id) {
-      const { data: child } = await supabase
-        .from("children")
-        .select("date_of_birth, height_inches, weight_lbs, measurements_updated_at")
-        .eq("id", product.child_id)
-        .maybeSingle();
-      if (child) {
-        predicted_sizeup_date = predictSizeUpDate(
-          {
-            date_of_birth: child.date_of_birth,
-            height_inches: child.height_inches,
-            weight_lbs: child.weight_lbs,
-            measurements_recorded_at: child.measurements_updated_at,
-          },
-          { max_weight_lbs: data.maxWeightLbs, max_height_inches: data.maxHeightInches },
-        );
-      }
-    }
-
     await supabase
       .from("products")
-      .update({ predicted_sizeup_date, predicted_replacement_date } as never)
+      .update({ predicted_replacement_date } as never)
       .eq("id", product.id);
 
-    return { predicted_sizeup_date, predicted_replacement_date };
+    return { predicted_replacement_date };
   });

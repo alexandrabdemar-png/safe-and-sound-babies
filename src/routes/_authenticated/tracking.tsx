@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Utensils, ClipboardList, Sparkles, LineChart } from "lucide-react";
+import { ArrowRight, Utensils, ClipboardList, Sparkles } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { AddSheet } from "@/components/AddSheet";
 import { BottleIcon } from "@/components/BottleIcon";
@@ -10,7 +10,6 @@ import {
   bottlesSummary,
   checklistsSummary,
   firstFoodsSummary,
-  growthSummary,
   momentsSummary,
 } from "@/lib/trackingSummaries";
 
@@ -23,12 +22,12 @@ export const Route = createFileRoute("/_authenticated/tracking")({
       {
         name: "description",
         content:
-          "Everything you've logged for your baby: moments, first foods, bottles, growth, and safety checklists.",
+          "Everything you've logged for your baby: moments, first foods, bottles, and safety checklists.",
       },
       { property: "og:title", content: "Track — Peace of Mine" },
       {
         property: "og:description",
-        content: "Your baby's logged moments, foods, bottles, growth, and checklists in one place.",
+        content: "Your baby's logged moments, foods, bottles, and checklists in one place.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -40,7 +39,6 @@ type Summaries = {
   moments: string | null;
   foods: string | null;
   bottles: string | null;
-  growth: string | null;
   checklists: string | null;
 };
 
@@ -48,7 +46,6 @@ const EMPTY: Summaries = {
   moments: null,
   foods: null,
   bottles: null,
-  growth: null,
   checklists: null,
 };
 
@@ -117,15 +114,10 @@ function TrackingPage() {
         moments: moments.error
           ? null
           : momentsSummary(momentRows.length, momentRows[0]?.logged_at ?? null),
-        growth: growthSummary(
-          activeChild?.weight_lbs ?? null,
-          activeChild?.height_inches ?? null,
-          activeChild?.measurements_updated_at ?? null,
-        ),
         checklists: checklists.error ? null : checklistsSummary(checklists.count ?? 0),
       });
     })().catch((err) => console.error("[tracking] failed to load summaries", err));
-  }, [childLoading, activeChild?.id, activeChild?.measurements_updated_at]);
+  }, [childLoading, activeChild?.id]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28 animate-fade-in">
@@ -171,20 +163,12 @@ function TrackingPage() {
             stagger="stagger-3"
           />
           <TrackCard
-            to="/growth"
-            icon={LineChart}
-            title="Growth"
-            blurb="Height and weight over time"
-            summary={summaries.growth}
-            stagger="stagger-4"
-          />
-          <TrackCard
             to="/checklists"
             icon={ClipboardList}
             title="Safety Checklists"
             blurb="Room-by-room babyproofing and travel guides"
             summary={summaries.checklists}
-            stagger="stagger-5"
+            stagger="stagger-4"
           />
         </div>
 

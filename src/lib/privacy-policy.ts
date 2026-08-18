@@ -1,6 +1,6 @@
 import { SUPPORT_EMAIL } from "@/lib/constants";
 
-export const PRIVACY_POLICY_UPDATED = "August 17, 2026";
+export const PRIVACY_POLICY_UPDATED = "August 18, 2026";
 
 export const PRIVACY_POLICY = `Peace of Mine — Privacy Policy
 Last updated: ${PRIVACY_POLICY_UPDATED}
@@ -12,14 +12,14 @@ We built Peace of Mine for parents who want to keep their children safe. This po
 ──────────────────────────────────────
 
 About your child
-• Name and date of birth — used to calculate age-appropriate product safety guidelines and predict clothing/diaper size-ups.
-• Height and weight — used to generate size-up predictions and track growth milestones over time.
+• Name — used to personalize the app and label the moments and products you log.
+• Milestones you log (e.g. rolling, sitting, crawling, first steps) — used to time safety reminders to the developmental stage your child has actually reached, not a stored birthdate. We do not collect or store your child's date of birth, height, or weight.
 • Milestone notes — optional free-text notes you write about your child's development.
 • Emergency and medical info (optional) — if you fill out the Emergency Info card, we store allergies, medications, blood type, and the name/phone number of your pediatrician and an emergency contact. This is stored only for your own quick reference (and on a shareable link you explicitly choose to create) — we do not use it for any other purpose.
 • Food and allergen notes (optional) — if you use the Starting Solids tracker, we store which foods you've introduced, whether you've flagged one as an allergen, and any reaction notes you write.
 
 About your baby products
-• Product name, brand, category, and barcode — used to match your products against the U.S. Consumer Product Safety Commission (CPSC) recall database and to surface expiration / size-up alerts.
+• Product name, brand, category, and barcode — used to match your products against the U.S. Consumer Product Safety Commission (CPSC) recall database and to surface expiration / replacement alerts.
 • Manufacturer expiration date and purchase date — used to send you timely safety reminders.
 
 About your account
@@ -38,9 +38,9 @@ What we do NOT collect
 
 Safety alerts — When the CPSC issues a recall, we compare it against the products you have added. If there is a match, we send you an alert. This is the core reason the app exists.
 
-Size-up predictions — We use your child's measurements and age to predict when they are likely to outgrow a clothing size or diaper size, and remind you before you run out.
+Milestone-based guidance — We use the milestones you log (not a stored birthdate) to time babyproofing and gear-check reminders to the developmental stage your child has actually reached.
 
-Milestone tracking — We store the growth measurements you record so you can see a history chart over time.
+Replacement reminders — For products like car seats, we use the product's own added date and the manufacturer's stated replacement interval — not any information about your child — to remind you when it may be time to replace it.
 
 Bottle feeding logs — If you use the bottle-tracking feature, we store the times and amounts you record so you can spot feeding patterns.
 
@@ -50,9 +50,9 @@ App improvements — Aggregate, non-identifiable statistics (total number of use
 3. WHO CAN SEE YOUR DATA
 ──────────────────────────────────────
 
-You — Only you can read your child's profile, measurements, and product list. Every database query is enforced by Supabase Row-Level Security, which means our own server code cannot return your rows to a different user.
+You — Only you can read your child's profile, milestones, and product list. Every database query is enforced by Supabase Row-Level Security, which means our own server code cannot return your rows to a different user.
 
-Our team — Human team members (admins) can see only aggregate statistics: for example, "the app has 500 users and 1,200 products." Admins cannot query individual profiles, children's names, dates of birth, measurements, or product lists. This restriction is enforced at the database permission level, not just by policy.
+Our team — Human team members (admins) can see only aggregate statistics: for example, "the app has 500 users and 1,200 products." Admins cannot query individual profiles, children's names, milestones, or product lists. This restriction is enforced at the database permission level, not just by policy.
 
 Trusted processors — We share limited data with:
   • Supabase (database hosting, EU/US data centres) — stores your encrypted data.
@@ -79,7 +79,7 @@ Anonymised aggregate statistics (counts only, no personal data) may be retained 
 
 You have full control over your data:
 
-• Delete a child — Go to Profile → tap the trash icon next to the child's name. This permanently deletes that child's profile, all measurements, milestones, and associated product alerts.
+• Delete a child — Go to Profile → tap the trash icon next to the child's name. This permanently deletes that child's profile, all milestones, and associated product alerts.
 
 • Delete your account and all data — Go to Profile → Our Privacy Promise → Delete my account. This immediately and permanently deletes your account and all associated data — no email required. If you'd rather request deletion by email instead, you can also write to ${SUPPORT_EMAIL} with the subject line "Delete my account".
 

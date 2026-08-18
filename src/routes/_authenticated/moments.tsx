@@ -38,21 +38,6 @@ type ParsedMoment = RawMoment & {
   displayNotes: string;
 };
 
-function calcAgeAt(dob: string, loggedAt: string): string {
-  const birth = new Date(dob + "T00:00:00");
-  const at = new Date(loggedAt + "T00:00:00");
-  const totalDays = Math.max(0, Math.floor((at.getTime() - birth.getTime()) / 86400000));
-  const totalMonths = Math.floor(totalDays / 30.44);
-  const weeks = Math.floor((totalDays % 30.44) / 7);
-  if (totalMonths < 3) {
-    const w = Math.floor(totalDays / 7);
-    return `${w} ${w === 1 ? "week" : "weeks"} old`;
-  }
-  if (weeks > 0)
-    return `${totalMonths} ${totalMonths === 1 ? "month" : "months"} and ${weeks} ${weeks === 1 ? "week" : "weeks"}`;
-  return `${totalMonths} ${totalMonths === 1 ? "month" : "months"} old`;
-}
-
 function formatDateLarge(dateStr: string | null) {
   if (!dateStr) return "";
   const d = new Date(dateStr + "T00:00:00");
@@ -64,7 +49,6 @@ function MomentsPage() {
   const [moments, setMoments] = useState<ParsedMoment[]>([]);
   const [loading, setLoading] = useState(true);
   const [childName, setChildName] = useState("");
-  const [childDob, setChildDob] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [iconFilter, setIconFilter] = useState<MomentIconKey | "all">("all");
 
@@ -82,11 +66,7 @@ function MomentsPage() {
       try {
         const [mRes, cRes] = await Promise.all([
           fetchMilestonesResilient(activeChildId),
-          supabase
-            .from("children")
-            .select("name, date_of_birth")
-            .eq("id", activeChildId)
-            .maybeSingle(),
+          supabase.from("children").select("name").eq("id", activeChildId).maybeSingle(),
         ]);
         if (cancelled) return;
         if (mRes.error) toast.error(mRes.error.message);
@@ -97,7 +77,6 @@ function MomentsPage() {
         });
         setMoments(parsed);
         setChildName(cRes.data?.name ?? "");
-        setChildDob(cRes.data?.date_of_birth ?? null);
       } catch (err) {
         if (cancelled) return;
         // A thrown network/unexpected failure (fetchMilestonesResilient
@@ -267,7 +246,6 @@ function MomentsPage() {
               <ul className="space-y-2">
                 {filtered.map((m, i) => {
                   const Icon = MOMENT_ICONS[m.resolvedIcon];
-                  const age = childDob && m.logged_at ? calcAgeAt(childDob, m.logged_at) : null;
                   const onLeft = i % 2 === 0;
                   const entry = (
                     <div
@@ -282,7 +260,7 @@ function MomentsPage() {
                         <Icon px={24} />
                       </span>
                       <p className="font-body text-[11px] tracking-wide text-muted-foreground">
-                        {age ?? formatDateLarge(m.logged_at)}
+                        {formatDateLarge(m.logged_at)}
                       </p>
                       <p
                         className="mt-0.5 font-body text-xs font-semibold uppercase tracking-[0.14em]"

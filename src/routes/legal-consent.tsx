@@ -44,7 +44,7 @@ const ACKNOWLEDGMENTS = [
 // condensed from privacy-policy.ts's fuller version, which stays the
 // source of truth for the complete list.
 const DATA_PRACTICES = [
-  "Your child's name, birthdate, and any measurements or milestones you log — used to time safety reminders and recall checks to their age.",
+  "Your child's name and any milestones you log — used to time safety reminders to the milestones your child has reached, not a stored birthdate.",
   "Baby products you add (name, brand, barcode) — matched against official recall databases (CPSC, FDA, and others).",
   "Your email — to run your account and send you safety alerts.",
   "If you search for a product or use AI-powered safety guidance, that search text (never your child's name or info) is sent to Google's or Anthropic's AI models.",
@@ -98,7 +98,7 @@ function LegalConsentPage() {
       // generic "Something went wrong" toast and trapping the user on this
       // screen. Retry without the column (it defaults to false at the DB
       // level) rather than blocking the whole consent flow on it — same
-      // resilient pattern as onboarding.tsx's children.due_date retry.
+      // resilient pattern used elsewhere for optional/recently-added columns.
       if (error && isColumnUnavailableError("is_18_or_older", error)) {
         console.error(
           "[legal-consent] is_18_or_older unavailable — retrying without it",

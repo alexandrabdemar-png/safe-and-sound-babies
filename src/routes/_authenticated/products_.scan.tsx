@@ -43,9 +43,8 @@ import { DataAsOf } from "@/components/DataAsOf";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 import { resolveCarSeatReplaceAt } from "@/lib/carSeatExpiration";
-import { evaluateAgeAppropriateness } from "@/lib/ageAppropriateness";
+import { describeAgeRange } from "@/lib/ageAppropriateness";
 import { isPreviewHost } from "@/lib/previewHost";
-import { nextPacifierSizeUpDate } from "@/lib/pacifierSizeUp";
 import { extractFunctionsErrorMessage } from "@/lib/functionsError";
 
 
@@ -108,7 +107,7 @@ function ScanPage() {
   // Paywall re-enabled — the previous TEMP override is removed. Free tier
   // gets the CPSC/NHTSA scan; Pro gets the extended lookup pipeline.
   const { isPro, loading: subLoading } = useSubscription();
-  const { activeChildId, activeChild } = useActiveChild();
+  const { activeChildId } = useActiveChild();
 
   const [step, setStep] = useState<Step>("scanning");
   const [barcode, setBarcode] = useState("");
@@ -138,28 +137,10 @@ function ScanPage() {
     [category, purchasedAt, carSeatExpiry, carSeatManufactureDate],
   );
 
-  // Age-appropriateness check: warn a parent when a scanned product isn't
-  // recommended yet for the active child's *adjusted* age (preemies use
-  // corrected age until ~24 months per AAP). We compute the earliest safe
-  // start date and, if it's in the future, surface a "Wait until X" banner
-  // with the suggested start age — but still let them save it (they may be
-  // buying ahead of the recommended start age).
-  const ageAppropriateness = useMemo(
-    () =>
-      evaluateAgeAppropriateness({
-        category: CATEGORY_BY_KEY[category],
-        dateOfBirth: activeChild?.date_of_birth ?? null,
-        dueDate: activeChild?.due_date ?? null,
-      }),
-    [category, activeChild?.date_of_birth, activeChild?.due_date],
-  );
-
-  // Pacifiers size up by age, not weight/height — computed straight from
-  // the active child's date of birth (see src/lib/pacifierSizeUp.ts).
-  const computedPacifierSizeUp = useMemo(() => {
-    if (category !== "pacifier") return "";
-    return nextPacifierSizeUpDate(activeChild?.date_of_birth ?? null) ?? "";
-  }, [category, activeChild?.date_of_birth]);
+  // Age-range info: states the category's typical recommended age window as
+  // plain, unpersonalized information — not a comparison against the
+  // child's age, since the app no longer stores a child's birthdate.
+  const ageRange = useMemo(() => describeAgeRange(CATEGORY_BY_KEY[category]), [category]);
 
   // Single source of truth for releasing blob URLs: runs whenever the
   // preview changes (picking a new photo, clearing it, rescanning) *and* on
@@ -346,7 +327,6 @@ function ScanPage() {
           // sticker date needs to be stored directly or the daily
           // expiration-alert cron never engages for it.
           expiration_date: category === "car_seat" ? carSeatExpiry || null : null,
-          predicted_sizeup_date: computedPacifierSizeUp || null,
           // Only stamp this if a recall check actually completed — a user
           // can save before/without one finishing, and recallInfo staying
           // null there shouldn't be reported as a synced check.
@@ -644,50 +624,18 @@ function ScanPage() {
                 </div>
               </Field>
 
-              {ageAppropriateness?.kind === "too-early" && (
-                <div className="space-y-1 rounded-2xl border border-amber-500/40 bg-amber-50 px-4 py-3 font-body text-xs text-amber-900 dark:bg-amber-900/20 dark:text-amber-200">
+              {ageRange && (
+                <div className="space-y-1 rounded-2xl border border-border/60 bg-muted/40 px-4 py-3 font-body text-xs text-foreground/80">
                   <div className="flex items-start gap-2">
-                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
-                    <div className="space-y-1">
-                      <p className="font-semibold">
-                        Not age-appropriate yet for {activeChild?.name ?? "your baby"}
-                      </p>
-                      <p>
-                        {ageAppropriateness.label} isn't generally recommended until around{" "}
-                        <span className="font-semibold">
-                          {ageAppropriateness.minAgeMonths} month
-                          {ageAppropriateness.minAgeMonths === 1 ? "" : "s"}
-                        </span>
-                        . Your baby is {ageAppropriateness.currentAgeMonths} month
-                        {ageAppropriateness.currentAgeMonths === 1 ? "" : "s"}
-                        {ageAppropriateness.adjusted ? " (adjusted)" : ""} — wait until about{" "}
-                        <span className="font-semibold">
-                          {ageAppropriateness.startDate.toLocaleDateString(undefined, {
-                            month: "short",
-                            year: "numeric",
-                          })}
-                        </span>{" "}
-                        before use.
-                      </p>
-                      <p className="text-amber-800/80 dark:text-amber-300/80">
-                        You can still save it now — we'll remind you when it's time. General
-                        guidance, not a substitute for your pediatrician.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {ageAppropriateness?.kind === "outgrown" && (
-                <div className="space-y-1 rounded-2xl border border-amber-500/40 bg-amber-50 px-4 py-3 font-body text-xs text-amber-900 dark:bg-amber-900/20 dark:text-amber-200">
-                  <div className="flex items-start gap-2">
-                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                    <ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
                     <p>
-                      {ageAppropriateness.label} is typically outgrown by{" "}
-                      <span className="font-semibold">
-                        {ageAppropriateness.maxAgeMonths} months
-                      </span>
-                      . Check the manufacturer's weight and developmental limits before continuing to use.
+                      {ageRange.label} is generally recommended{" "}
+                      {typeof ageRange.minAgeMonths === "number" &&
+                        `starting around ${ageRange.minAgeMonths} month${ageRange.minAgeMonths === 1 ? "" : "s"}`}
+                      {typeof ageRange.minAgeMonths === "number" && typeof ageRange.maxAgeMonths === "number" && " "}
+                      {typeof ageRange.maxAgeMonths === "number" &&
+                        `${typeof ageRange.minAgeMonths === "number" ? "and " : ""}until around ${ageRange.maxAgeMonths} months`}
+                      . Check the manufacturer's own age, weight, and developmental guidance before use.
                     </p>
                   </div>
                 </div>
@@ -795,27 +743,9 @@ function ScanPage() {
 
               {category === "pacifier" && (
                 <div className="rounded-2xl bg-sand/60 px-4 py-3 font-body text-sm text-foreground/80">
-                  {computedPacifierSizeUp ? (
-                    <>
-                      Estimated size-up{" "}
-                      <span className="font-semibold">
-                        {new Date(computedPacifierSizeUp).toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </span>
-                      <span className="block mt-1 font-body text-xs text-muted-foreground">
-                        Estimated from {activeChild?.name ?? "your child"}'s birth date, based on common
-                        0–6mo / 6–18mo / 18mo+ stage sizing — check your specific brand's packaging for
-                        its exact age ranges.
-                      </span>
-                    </>
-                  ) : (
-                    <span className="font-body text-xs text-muted-foreground">
-                      Add your child's date of birth in Profile to get a pacifier size-up reminder.
-                    </span>
-                  )}
+                  Nipple size typically increases in stages (roughly 0–6mo / 6–18mo / 18mo+) — check
+                  your specific brand's packaging for its exact age ranges and size up as your baby
+                  grows.
                 </div>
               )}
 

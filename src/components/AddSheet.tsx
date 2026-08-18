@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Package, Sparkles, Utensils, LineChart, ArrowRight } from "lucide-react";
+import { Package, Sparkles, Utensils, ArrowRight } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { BottleIcon } from "@/components/BottleIcon";
 
@@ -27,12 +27,6 @@ export const addOptions = [
     icon: Utensils,
     title: "A first food",
     blurb: "Record a new food and note any allergen reactions.",
-  },
-  {
-    to: "/growth",
-    icon: LineChart,
-    title: "A measurement",
-    blurb: "Height and weight — keeps size-up reminders accurate.",
   },
 ] as const;
 

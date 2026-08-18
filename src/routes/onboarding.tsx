@@ -11,8 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { WelcomeIntroModal } from "@/components/WelcomeIntroModal";
 import { cn } from "@/lib/utils";
-import { computeAdjustedAge } from "@/lib/adjustedAge";
-import { friendlyError, isColumnUnavailableError } from "@/lib/errors";
+import { friendlyError } from "@/lib/errors";
 import { checkNeedsLegalConsent } from "@/lib/legalConsent";
 import { CATEGORY_BY_KEY, type CategoryKey } from "@/lib/productCategories";
 import {
@@ -77,40 +76,18 @@ const CATEGORIES: { key: CategoryKey; name: string }[] = [
   { key: "baby_gate",       name: "Baby gates" },
 ];
 
-// Age-appropriate safety first-look content
+// Safety first-look content shown right after onboarding. This used to be
+// selected by the child's computed age from their date of birth — since the
+// app no longer collects a child's birthdate, this is now a fixed set of
+// safety basics that apply broadly regardless of age; log a milestone to
+// get milestone-specific guidance instead (see moments_.new.tsx).
 type SafetyAction = { icon: string; title: string; body: string };
 
-function getSafetyFirstLook(dobStr: string | null, dueDateStr: string | null = null): SafetyAction[] {
-  // Use adjusted age for preemies (per AAP guidance until 24 months chrono).
-  const age = computeAdjustedAge({ dateOfBirth: dobStr, dueDate: dueDateStr });
-  const ageMonths = age?.adjustedMonths ?? 0;
-
-  if (ageMonths < 3) return [
-    { icon: "🛏️", title: "Always back to sleep", body: "Place your baby on their back for every nap and every night — even when they look comfortable on their side." },
-    { icon: "🚫", title: "Empty the crib", body: "Firm, flat mattress + fitted sheet only. No pillows, bumpers, stuffed animals, or loose blankets in the sleep space." },
-    { icon: "🌡️", title: "Room temperature matters", body: "Keep the room between 68–72°F and dress baby in one more layer than you'd wear to prevent overheating." },
-  ];
-  if (ageMonths < 7) return [
-    { icon: "⏰", title: "Time for tummy time", body: "Short supervised sessions on a firm surface several times a day — this builds strength for rolling and crawling." },
-    { icon: "📐", title: "Lower the crib mattress", body: "Do this before they can push up on hands and knees. Lowering it now prevents a dangerous fall later." },
-    { icon: "🛏️", title: "Still back to sleep", body: "The safe sleep rules don't change until 12 months. Back to sleep, every single time." },
-  ];
-  if (ageMonths < 13) return [
-    { icon: "🚪", title: "Gate every staircase", body: "Install hardware-mounted gates at the top of stairs before your baby starts crawling — it happens fast." },
-    { icon: "🔌", title: "Cover all outlets", body: "Sliding outlet covers are safer than plug-in caps. Do a floor-level sweep of every room." },
-    { icon: "🪑", title: "Anchor tall furniture", body: "Bookshelves, dressers, and TVs tip easily. Use anti-tip straps on everything your baby might grab." },
-  ];
-  if (ageMonths < 24) return [
-    { icon: "🪑", title: "Anchor tall furniture now", body: "Walking toddlers grab everything. Secure bookshelves, dressers, and TVs to wall studs today." },
-    { icon: "🔒", title: "Lock cleaning products away", body: "Move laundry pods, cleaning sprays, and medicines to high shelves or locked cabinets immediately." },
-    { icon: "🚿", title: "Toilet lid lock", body: "A toddler can drown in just a few inches of water. Install toilet lid locks on every bathroom." },
-  ];
-  return [
-    { icon: "🚲", title: "Helmet, every ride", body: "Put a properly fitted helmet on your child for every bike, scooter, or balance bike ride — no exceptions." },
-    { icon: "🚗", title: "Rear-facing as long as possible", body: "Keep your child rear-facing until they reach the height or weight limit on the seat — not by age." },
-    { icon: "🏊", title: "Life jacket, not floaties", body: "Floaties are toys, not safety devices. Use a properly fitted life jacket for all open-water activities." },
-  ];
-}
+const SAFETY_FIRST_LOOK: SafetyAction[] = [
+  { icon: "🛏️", title: "Always back to sleep", body: "Place your baby on their back for every nap and every night, on a firm flat mattress with nothing else in the sleep space." },
+  { icon: "🪑", title: "Anchor tall furniture", body: "Bookshelves, dressers, and TVs tip easily once a baby can pull up on them. Anti-tip straps are worth installing early." },
+  { icon: "🚗", title: "Keep the car seat rear-facing", body: "Keep your child rear-facing as long as possible — until they reach the height or weight limit printed on the seat, not by a target age." },
+];
 
 const STORAGE_KEY = "safesound.onboarding.v1";
 
@@ -121,8 +98,6 @@ function saveProgress(data: object) {
 function loadProgress(): {
   step?: number;
   name?: string;
-  dob?: string;
-  dueDate?: string;
   selected?: string[];
   profileType?: string;
   careAgeMin?: string;
@@ -149,8 +124,6 @@ function OnboardingPage() {
   const [step, setStep] = useState(saved.step ?? 0);
   const [profileType, setProfileType] = useState<ProfileType>((saved.profileType as ProfileType) ?? "parent");
   const [name, setName] = useState(saved.name ?? "");
-  const [dob, setDob] = useState(saved.dob ?? "");
-  const [dueDate, setDueDate] = useState(saved.dueDate ?? "");
   const [careAgeMin, setCareAgeMin] = useState(saved.careAgeMin ?? "");
   const [careAgeMax, setCareAgeMax] = useState(saved.careAgeMax ?? "");
   const [selected, setSelected] = useState<Set<string>>(
@@ -199,9 +172,9 @@ function OnboardingPage() {
   // Persist progress whenever state changes
   useEffect(() => {
     if (!checking) {
-      saveProgress({ step, name, dob, dueDate, selected: [...selected], profileType, careAgeMin, careAgeMax });
+      saveProgress({ step, name, selected: [...selected], profileType, careAgeMin, careAgeMax });
     }
-  }, [step, name, dob, dueDate, selected, profileType, careAgeMin, careAgeMax, checking]);
+  }, [step, name, selected, profileType, careAgeMin, careAgeMax, checking]);
 
   const progress = ((step + 1) / TOTAL_STEPS) * 100;
   const isAgeRangeFlow = usesAgeRangeFlow(profileType);
@@ -274,36 +247,14 @@ function OnboardingPage() {
       const childName = isAgeRange ? "" : name.trim();
 
       if (childName) {
-        let { data: childRow, error: childError } = await supabase
+        const { data: childRow, error: childError } = await supabase
           .from("children")
           .insert({
             user_id: userId,
             name: childName,
-            date_of_birth: dob || null,
-            due_date: dueDate || null,
           } as never)
           .select("id")
           .single();
-
-        // due_date is a recent addition — if a migration hasn't reached
-        // this database yet, retry without it rather than blocking the
-        // user's entire onboarding on a field that's optional anyway
-        // ("enables adjusted-age reminders for preemies"). Same resilient
-        // pattern as fetchMilestonesResilient's icon-column retry.
-        if (childError && isColumnUnavailableError("due_date", childError)) {
-          console.error("children.due_date unavailable — retrying without it", childError);
-          const retry = await supabase
-            .from("children")
-            .insert({
-              user_id: userId,
-              name: childName,
-              date_of_birth: dob || null,
-            } as never)
-            .select("id")
-            .single();
-          childRow = retry.data;
-          childError = retry.error;
-        }
 
         if (childError) throw childError;
 
@@ -359,8 +310,7 @@ function OnboardingPage() {
         return;
       }
 
-      const actions = getSafetyFirstLook(dob || null, dueDate || null);
-      setSafetyFirstLook(actions);
+      setSafetyFirstLook(SAFETY_FIRST_LOOK);
     } catch (err) {
       // Supabase/PostgREST errors are plain objects, not Error instances,
       // so `err instanceof Error` was always false for them here — every
@@ -474,7 +424,7 @@ function OnboardingPage() {
             <StepShell
               eyebrow={`Step 2 of ${TOTAL_STEPS} — Your little one`}
               title="Tell us about your baby"
-              subtitle="Just a name and birthday — we'll use these to time safety reminders to the right week."
+              subtitle="Just a name — we'll time safety reminders to the milestones you log, not a stored birthdate."
             >
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -488,37 +438,6 @@ function OnboardingPage() {
                     maxLength={60}
                     className="h-14 rounded-2xl bg-card px-5 font-body text-base"
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dob" className="font-body text-sm">
-                    Date of birth <span className="text-muted-foreground">(optional — add later in Profile)</span>
-                  </Label>
-                  <Input
-                    id="dob"
-                    type="date"
-                    value={dob}
-                    max={new Date().toISOString().slice(0, 10)}
-                    onChange={(e) => setDob(e.target.value)}
-                    className="h-14 rounded-2xl bg-card px-5 font-body text-base"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="due-date" className="font-body text-sm">
-                    Original due date{" "}
-                    <span className="text-muted-foreground">(optional — enables adjusted-age reminders for preemies)</span>
-                  </Label>
-                  <Input
-                    id="due-date"
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                    className="h-14 rounded-2xl bg-card px-5 font-body text-base"
-                  />
-                  <p className="font-body text-[11px] text-muted-foreground">
-                    If your baby was born earlier than expected, we'll time developmental and
-                    safety reminders to their adjusted (corrected) age, as recommended by AAP
-                    guidance until 24 months.
-                  </p>
                 </div>
               </div>
             </StepShell>

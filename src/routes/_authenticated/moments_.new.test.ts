@@ -115,12 +115,12 @@ describe("MOMENT_SAFETY_MAP entries not offered as PROMPTS chips are still reach
   });
 });
 
-// ── Age-awareness plumbing: getMilestoneKey links a matched title to
-// milestoneTiming.ts's typical-age data (previously getSafetyTip had no way
-// to report which milestone matched, so the caller couldn't look up a
-// typical age range at all — see milestoneTiming.test.ts for the age-range
-// classification logic itself). ─────────────────────────────────────────
-describe("getMilestoneKey links a matched title to its milestoneTiming.ts key", () => {
+// ── Milestone-key plumbing: getMilestoneKey links a matched title to the
+// shared MilestoneKey taxonomy (milestoneKeys.ts) — insights.ts uses this to
+// know which developmental milestones a family has actually logged, so
+// getSafetyTip's title matching doubles as the signal for "Up next"
+// guidance. ─────────────────────────────────────────────────────────────
+describe("getMilestoneKey links a matched title to its MilestoneKey", () => {
   it("returns the milestoneKey for a developmental milestone with a typical age range", () => {
     expect(getMilestoneKey("Crawling")).toBe("crawling");
     expect(getMilestoneKey("took his first steps at grandma's house")).toBe("first_steps");

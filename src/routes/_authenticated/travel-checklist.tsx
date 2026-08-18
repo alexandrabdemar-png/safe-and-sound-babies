@@ -1,14 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, CheckCircle2, Circle, Luggage, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/BottomNav";
 import { hapticSuccess, hapticLight } from "@/lib/haptic";
-import { useActiveChild } from "@/hooks/useActiveChild";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
-import { computeAdjustedAge } from "@/lib/adjustedAge";
-import { formatAgeMonths } from "@/lib/profileType";
-import { isItemRelevantForAge } from "@/lib/checklistAgeFilter";
 import { TRAVEL_SECTIONS } from "@/lib/travelChecklistData";
 
 export const Route = createFileRoute("/_authenticated/travel-checklist")({
@@ -21,27 +17,7 @@ const STORAGE_KEY = "safesound.travelChecklist.v1";
 
 function TravelChecklistPage() {
   const [completed, setCompleted] = useState<Set<string>>(new Set());
-  const [showAllAges, setShowAllAges] = useState(false);
-
-  const { activeChild } = useActiveChild();
-  const ageMonths = useMemo(() => {
-    if (!activeChild?.date_of_birth) return null;
-    const age = computeAdjustedAge({
-      dateOfBirth: activeChild.date_of_birth,
-      dueDate: activeChild.due_date,
-    });
-    return age ? age.adjustedMonths : null;
-  }, [activeChild?.date_of_birth, activeChild?.due_date]);
-
-  const filterAge = showAllAges ? null : ageMonths;
-  const visibleSections = useMemo(
-    () =>
-      TRAVEL_SECTIONS.map((section) => ({
-        ...section,
-        items: section.items.filter((item) => isItemRelevantForAge(item, filterAge)),
-      })),
-    [filterAge],
-  );
+  const visibleSections = TRAVEL_SECTIONS;
 
   useEffect(() => {
     try {
@@ -107,27 +83,10 @@ function TravelChecklistPage() {
         <p className="mb-2 font-body text-sm" style={{ color: "#8A8078" }}>
           Pack smart, travel safe. Check off every item before and during your trip.
         </p>
-        <p
-          className={`font-body text-xs leading-relaxed ${ageMonths != null ? "mb-2" : "mb-5"}`}
-          style={{ color: "#A89888" }}
-        >
+        <p className="mb-5 font-body text-xs leading-relaxed" style={{ color: "#A89888" }}>
           A starting point, not an exhaustive list — every trip and destination is different, so use
           your own judgment about what else applies.
         </p>
-        {ageMonths != null && (
-          <p className="mb-5 font-body text-xs" style={{ color: "#A89888" }}>
-            Showing items relevant for {activeChild?.name ?? "your child"} at{" "}
-            {formatAgeMonths(ageMonths)} old.{" "}
-            <button
-              type="button"
-              onClick={() => setShowAllAges((v) => !v)}
-              className="underline underline-offset-2"
-              style={{ color: "#C4785A" }}
-            >
-              {showAllAges ? "Show age-relevant items only" : "Show full checklist"}
-            </button>
-          </p>
-        )}
 
         {/* Progress */}
         <div className="mb-6">

@@ -40,20 +40,6 @@ export function momentsSummary(total: number, lastLoggedAt: string | null, now?:
   return rel ? `${plural(total, "moment")} · latest ${rel}` : plural(total, "moment");
 }
 
-export function growthSummary(
-  weightLbs: number | null,
-  heightInches: number | null,
-  updatedAt: string | null,
-  now?: number,
-): string {
-  const parts: string[] = [];
-  if (weightLbs != null) parts.push(`${weightLbs.toFixed(1)} lb`);
-  if (heightInches != null) parts.push(`${heightInches.toFixed(1)}"`);
-  if (!parts.length) return "No measurements yet";
-  const rel = formatRelativeTime(updatedAt, now);
-  return rel ? `${parts.join(" · ")} · ${rel}` : parts.join(" · ");
-}
-
 export function checklistsSummary(completed: number): string {
   if (completed === 0) return "Room-by-room babyproofing and travel guides";
   return `${plural(completed, "item")} checked off`;

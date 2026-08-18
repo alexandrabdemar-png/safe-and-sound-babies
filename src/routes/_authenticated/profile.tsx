@@ -33,7 +33,6 @@ function ProfilePage() {
   const { requirePro } = useProGate();
   const { children, refresh: refreshChildren } = useActiveChild();
   const [newChildName, setNewChildName] = useState("");
-  const [newChildDob, setNewChildDob] = useState("");
   const [addingChild, setAddingChild] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -76,11 +75,10 @@ function ProfilePage() {
     const { error } = await supabase.from('children').insert({
       user_id: uid,
       name: newChildName.trim(),
-      date_of_birth: newChildDob || null,
     });
     setAddingChild(false);
     if (error) { console.error("children insert error:", error); toast.error(error.message); return; }
-    setNewChildName(""); setNewChildDob("");
+    setNewChildName("");
     await refreshChildren();
     toast.success('Child added');
   }
@@ -206,7 +204,7 @@ function ProfilePage() {
           <h2 className="font-display text-base font-semibold mb-3">Children</h2>
           <ul className="space-y-2 mb-4">
             {children.map((c) => (
-              <ChildRow key={c.id} child={c} onRemove={() => handleDeleteChild(c.id)} disableRemove={children.length <= 1} onUpdated={refreshChildren} />
+              <ChildRow key={c.id} child={c} onRemove={() => handleDeleteChild(c.id)} disableRemove={children.length <= 1} />
             ))}
           </ul>
           <form onSubmit={handleAddChild} className="space-y-2">
@@ -214,12 +212,6 @@ function ProfilePage() {
               placeholder="Name"
               value={newChildName}
               onChange={(e) => setNewChildName(e.target.value)}
-              className="h-10 rounded-xl"
-            />
-            <Input
-              type="date"
-              value={newChildDob}
-              onChange={(e) => setNewChildDob(e.target.value)}
               className="h-10 rounded-xl"
             />
             <Button type="submit" disabled={addingChild || !newChildName.trim()} className="w-full rounded-full">
@@ -365,132 +357,19 @@ function ChildRow({
   child,
   onRemove,
   disableRemove,
-  onUpdated,
 }: {
-  child: { id: string; name: string; date_of_birth: string | null; height_inches: number | null; weight_lbs: number | null; measurements_updated_at: string | null };
+  child: { id: string; name: string };
   onRemove: () => void;
   disableRemove: boolean;
-  onUpdated: () => Promise<void> | void;
 }) {
-  const [editing, setEditing] = useState(false);
-  const [heightStr, setHeightStr] = useState("");
-  const [weightStr, setWeightStr] = useState("");
-  const [dobStr, setDobStr] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  function open() {
-    setHeightStr(child.height_inches != null ? child.height_inches.toFixed(1) : "");
-    setWeightStr(child.weight_lbs != null ? child.weight_lbs.toFixed(1) : "");
-    setDobStr(child.date_of_birth ?? "");
-    setEditing(true);
-  }
-
-  async function save() {
-    setSaving(true);
-    const h = parseFloat(heightStr);
-    const w = parseFloat(weightStr);
-    const height_inches = Number.isFinite(h) && h > 0 ? h : null;
-    const weight_lbs = Number.isFinite(w) && w > 0 ? w : null;
-    const date_of_birth = dobStr || null;
-    const nowIso = new Date().toISOString();
-    const { error } = await supabase
-      .from("children")
-      .update({
-        height_inches,
-        weight_lbs,
-        date_of_birth,
-        measurements_updated_at: (height_inches !== null || weight_lbs !== null) ? nowIso : null,
-      } as never)
-      .eq("id", child.id);
-    if (!error && (height_inches !== null || weight_lbs !== null)) {
-      const { data: u } = await supabase.auth.getUser();
-      if (u.user) {
-        await supabase.from("child_measurements").insert({
-          user_id: u.user.id,
-          child_id: child.id,
-          height_inches,
-          weight_lbs,
-          recorded_at: nowIso,
-        } as never);
-      }
-    }
-    setSaving(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Measurements updated");
-    setEditing(false);
-    await onUpdated();
-  }
-
-  const displayHeight = child.height_inches != null ? `${child.height_inches.toFixed(1)}"` : null;
-  const displayWeight = child.weight_lbs != null ? `${child.weight_lbs.toFixed(1)} lb` : null;
-
   return (
-    <li className="rounded-2xl bg-muted/40 px-3 py-2.5 space-y-2">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="font-body text-sm font-medium">{child.name}</p>
-          {child.date_of_birth && (
-            <p className="font-body text-xs text-muted-foreground">
-              Born {(() => { const [y,m,d] = child.date_of_birth.split('-').map(Number); return new Date(y, (m||1)-1, d||1).toLocaleDateString(); })()}
-            </p>
-          )}
-          <p className="font-body text-xs text-muted-foreground mt-0.5">
-            {displayHeight || "Height —"} · {displayWeight || "Weight —"}
-          </p>
-        </div>
+    <li className="rounded-2xl bg-muted/40 px-3 py-2.5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-body text-sm font-medium">{child.name}</p>
         <Button variant="ghost" size="icon" onClick={onRemove} disabled={disableRemove}>
           <Trash2 className="h-4 w-4 text-muted-foreground" />
         </Button>
       </div>
-
-      {!editing ? (
-        <Button variant="outline" size="sm" onClick={open} className="rounded-full text-xs">
-          {child.date_of_birth
-            ? displayHeight || displayWeight
-              ? "Update measurements"
-              : "Add height & weight"
-            : "Add birth date"}
-        </Button>
-      ) : (
-        <div className="space-y-2 rounded-xl border border-border bg-background p-3">
-          <label className="block">
-            <span className="mb-1 block font-body text-xs text-muted-foreground">Birth date</span>
-            <Input
-              type="date"
-              value={dobStr}
-              max={new Date().toISOString().slice(0, 10)}
-              onChange={(e) => setDobStr(e.target.value)}
-              className="h-10 rounded-xl"
-            />
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            <Input
-              type="number"
-              step="0.1"
-              min="0"
-              placeholder="Height (in)"
-              value={heightStr}
-              onChange={(e) => setHeightStr(e.target.value)}
-              className="h-10 rounded-xl"
-            />
-            <Input
-              type="number"
-              step="0.1"
-              min="0"
-              placeholder="Weight (lb)"
-              value={weightStr}
-              onChange={(e) => setWeightStr(e.target.value)}
-              className="h-10 rounded-xl"
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setEditing(false)} className="flex-1 rounded-full">Cancel</Button>
-            <Button size="sm" onClick={save} disabled={saving} className="flex-1 rounded-full">
-              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Save"}
-            </Button>
-          </div>
-        </div>
-      )}
     </li>
   );
 }

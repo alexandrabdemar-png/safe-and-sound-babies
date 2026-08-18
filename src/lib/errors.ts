@@ -54,7 +54,7 @@ export function isSchemaMissingTableError(error: {
  * picked it up. Generalizes the same detection src/lib/momentIcons.tsx's
  * isIconColumnUnavailableError uses for the `icon` column, parameterized
  * by column name so other resilient-retry call sites (e.g.
- * children.due_date in onboarding.tsx) don't duplicate the regex logic.
+ * user_agreements.is_18_or_older in legal-consent.tsx) don't duplicate the regex logic.
  * Pair with a retry that omits the column — this is what lets a feature
  * work immediately for users even when a migration hasn't reached the
  * live database yet, rather than making them wait on it.

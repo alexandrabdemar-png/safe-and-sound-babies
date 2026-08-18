@@ -39,7 +39,6 @@ import { useActiveChild } from "@/hooks/useActiveChild";
 import { CATEGORIES, type CategoryKey } from "@/lib/productCategories";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 import { resolveCarSeatReplaceAt } from "@/lib/carSeatExpiration";
-import { nextPacifierSizeUpDate } from "@/lib/pacifierSizeUp";
 
 // Server functions are imported dynamically to prevent module-level evaluation
 // crashing the page if the server environment or API keys aren't available.
@@ -112,9 +111,7 @@ function formatDate(iso: string) {
 
 function NewProductPage() {
   const navigate = useNavigate();
-  const { activeChildId, children } = useActiveChild();
-  const activeChild = children.find((c) => c.id === activeChildId);
-  const activeChildDob = activeChild?.date_of_birth ?? null;
+  const { activeChildId } = useActiveChild();
   const [saving, setSaving] = useState(false);
   const [category, setCategory] = useState<CategoryKey | "">("");
   const [name, setName] = useState("");
@@ -142,15 +139,6 @@ function NewProductPage() {
     if (category === "car_seat") return resolveCarSeatReplaceAt(carSeatExpiry, carSeatManufactureDate) ?? "";
     return "";
   }, [category, carSeatExpiry, carSeatManufactureDate]);
-
-  // Pacifiers size up by age, not weight/height, so this is computed
-  // straight from the active child's date of birth rather than going
-  // through the weight/height-based predictions system every other
-  // category uses.
-  const computedPacifierSizeUp = useMemo(() => {
-    if (category !== "pacifier") return "";
-    return nextPacifierSizeUpDate(activeChildDob) ?? "";
-  }, [category, activeChildDob]);
 
   const activeCategory = CATEGORIES.find((c) => c.key === category);
 
@@ -191,7 +179,6 @@ function NewProductPage() {
           // sticker date needs to be stored directly or the daily
           // expiration-alert cron never engages for it.
           expiration_date: category === "car_seat" ? carSeatExpiry || null : null,
-          predicted_sizeup_date: computedPacifierSizeUp || null,
           // Not shown back to the user anywhere yet — collected so we can
           // see what categories people are asking for and consider adding
           // them as real options later.
@@ -453,20 +440,9 @@ function NewProductPage() {
 
             {category === "pacifier" && (
               <div className="rounded-2xl bg-primary/8 px-4 py-3 font-body text-sm text-foreground/80">
-                {computedPacifierSizeUp ? (
-                  <>
-                    Estimated size-up <span className="font-semibold">{formatDate(computedPacifierSizeUp)}</span>
-                    <span className="block mt-1 font-body text-xs text-muted-foreground">
-                      Estimated from {activeChild?.name ?? "your child"}'s birth date, based on common
-                      0–6mo / 6–18mo / 18mo+ stage sizing — check your specific brand's packaging for
-                      its exact age ranges.
-                    </span>
-                  </>
-                ) : (
-                  <span className="font-body text-xs text-muted-foreground">
-                    Add your child's date of birth in Profile to get a pacifier size-up reminder.
-                  </span>
-                )}
+                Nipple size typically increases in stages (roughly 0–6mo / 6–18mo / 18mo+) — check
+                your specific brand's packaging for its exact age ranges and size up as your baby
+                grows.
               </div>
             )}
 

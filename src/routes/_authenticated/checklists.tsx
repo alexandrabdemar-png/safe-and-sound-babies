@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   CheckCircle2,
   Circle,
@@ -16,11 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { hapticSuccess, hapticLight } from "@/lib/haptic";
-import { useActiveChild } from "@/hooks/useActiveChild";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
-import { computeAdjustedAge } from "@/lib/adjustedAge";
-import { formatAgeMonths } from "@/lib/profileType";
-import { isItemRelevantForAge } from "@/lib/checklistAgeFilter";
 import { ROOMS } from "@/lib/checklistsData";
 
 export const ssr = false;
@@ -31,7 +27,6 @@ function ChecklistsPage() {
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
-  const [showAllAges, setShowAllAges] = useState(false);
   // Shown to everyone by default (so people who might need it know it
   // exists), but dismissible for anyone it doesn't apply to — persisted so
   // an X here means gone for good, not just for this session.
@@ -52,25 +47,7 @@ function ChecklistsPage() {
     setHomecomingCardDismissed(true);
   }
 
-  const { activeChild } = useActiveChild();
-  const ageMonths = useMemo(() => {
-    if (!activeChild?.date_of_birth) return null;
-    const age = computeAdjustedAge({
-      dateOfBirth: activeChild.date_of_birth,
-      dueDate: activeChild.due_date,
-    });
-    return age ? age.adjustedMonths : null;
-  }, [activeChild?.date_of_birth, activeChild?.due_date]);
-
-  const filterAge = showAllAges ? null : ageMonths;
-  const visibleRooms = useMemo(
-    () =>
-      ROOMS.map((room) => ({
-        ...room,
-        items: room.items.filter((item) => isItemRelevantForAge(item, filterAge)),
-      })),
-    [filterAge],
-  );
+  const visibleRooms = ROOMS;
 
   useEffect(() => {
     async function init() {
@@ -173,28 +150,11 @@ function ChecklistsPage() {
           </div>
           <ChildSwitcher />
         </div>
-        <p
-          className={`font-body text-xs leading-relaxed ${ageMonths != null ? "mb-2" : "mb-6"}`}
-          style={{ color: "#8A8078" }}
-        >
+        <p className="mb-6 font-body text-xs leading-relaxed" style={{ color: "#8A8078" }}>
           A starting point, not an exhaustive list — general reference checklists, not a certified
           home safety inspection or medical advice. Every home is different, so use your own
           judgment about what else applies.
         </p>
-        {ageMonths != null && (
-          <p className="mb-6 font-body text-xs" style={{ color: "#A89888" }}>
-            Showing items relevant for {activeChild?.name ?? "your child"} at{" "}
-            {formatAgeMonths(ageMonths)} old.{" "}
-            <button
-              type="button"
-              onClick={() => setShowAllAges((v) => !v)}
-              className="underline underline-offset-2"
-              style={{ color: "#C4785A" }}
-            >
-              {showAllAges ? "Show age-relevant items only" : "Show full checklist"}
-            </button>
-          </p>
-        )}
 
         {/* Overall progress */}
         {!loading && (

@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { TRAVEL_SECTIONS } from "./travelChecklistData";
-import { isItemRelevantForAge } from "./checklistAgeFilter";
 
 describe("TRAVEL_SECTIONS", () => {
   const allItems = TRAVEL_SECTIONS.flatMap((s) => s.items);
@@ -51,29 +50,6 @@ describe("TRAVEL_SECTIONS", () => {
       if (item.minAgeMonths !== undefined && item.maxAgeMonths !== undefined) {
         expect(item.minAgeMonths).toBeLessThanOrEqual(item.maxAgeMonths);
       }
-    }
-  });
-
-  it("the forward-facing tether item is hidden for a rear-facing-only infant (under 24 months) and shown at 24+", () => {
-    const tether = allItems.find((i) => i.key === "travel_cs_tether")!;
-    expect(isItemRelevantForAge(tether, 0)).toBe(false);
-    expect(isItemRelevantForAge(tether, 12)).toBe(false);
-    expect(isItemRelevantForAge(tether, 23)).toBe(false);
-    expect(isItemRelevantForAge(tether, 24)).toBe(true);
-    expect(isItemRelevantForAge(tether, 36)).toBe(true);
-  });
-
-  it("before-you-leave essentials (car seat prep, health records, safe sleep surface) are untagged and always shown", () => {
-    const beforeYouLeave = TRAVEL_SECTIONS.find((s) => s.id === "before_you_leave")!;
-    for (const item of beforeYouLeave.items) {
-      expect(item.minAgeMonths).toBeUndefined();
-      expect(item.maxAgeMonths).toBeUndefined();
-    }
-  });
-
-  it("with no active child (ageMonths null) every item is shown, matching the pre-age-filter behavior", () => {
-    for (const item of allItems) {
-      expect(isItemRelevantForAge(item, null)).toBe(true);
     }
   });
 });

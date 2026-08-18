@@ -4,7 +4,6 @@ import {
   checklistsSummary,
   firstFoodsSummary,
   formatRelativeTime,
-  growthSummary,
   momentsSummary,
 } from "./trackingSummaries";
 
@@ -44,12 +43,6 @@ describe("summaries", () => {
     expect(momentsSummary(0, null, NOW)).toMatch(/No moments yet/);
     expect(momentsSummary(3, ago(86400_000 * 3), NOW)).toBe("3 moments · latest 3d ago");
     expect(momentsSummary(1, null, NOW)).toBe("1 moment");
-  });
-
-  it("growth shows the latest measurements", () => {
-    expect(growthSummary(null, null, null, NOW)).toBe("No measurements yet");
-    expect(growthSummary(18.2, 27, ago(86400_000 * 2), NOW)).toBe('18.2 lb · 27.0" · 2d ago');
-    expect(growthSummary(18.2, null, null, NOW)).toBe("18.2 lb");
   });
 
   it("checklists falls back to its blurb when nothing is checked", () => {

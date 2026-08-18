@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 
-import { formatMonthYear, daysBetween, isOverdue } from "@/lib/predictions";
+import { formatMonthYear, isOverdue } from "@/lib/predictions";
 import { CATEGORY_BY_KEY, categoryFromLabel, type CategoryKey } from "@/lib/productCategories";
 import { isOnboardingPlaceholderProduct } from "@/lib/onboardingPlaceholderProduct";
 
@@ -28,8 +28,6 @@ type Product = {
   category: string | null;
   added_at: string | null;
   replace_at: string | null;
-  next_size_at: string | null;
-  predicted_sizeup_date: string | null;
   predicted_replacement_date: string | null;
   recalled: boolean;
   child_id: string | null;
@@ -53,7 +51,7 @@ function ProductsPage() {
       let q: any = supabase
         .from("products")
         .select(
-          "id, name, brand, size, category, added_at, replace_at, next_size_at, predicted_sizeup_date, predicted_replacement_date, recalled, child_id, model, barcode, notes, purchased_at",
+          "id, name, brand, size, category, added_at, replace_at, predicted_replacement_date, recalled, child_id, model, barcode, notes, purchased_at",
         )
         .order("created_at", { ascending: false });
       if (activeChildId) q = q.or(`child_id.eq.${activeChildId},child_id.is.null`);
@@ -138,7 +136,6 @@ function ProductCard({ product }: { product: Product }) {
   const Icon = cat?.icon ?? CATEGORY_BY_KEY.other.icon;
   const meta = [product.brand, product.size, cat?.label ?? product.category].filter(Boolean).join(" · ");
 
-  const sizeUpDate = product.predicted_sizeup_date ?? product.next_size_at;
   const replaceDate = product.predicted_replacement_date ?? product.replace_at;
 
   return (
@@ -160,20 +157,7 @@ function ProductCard({ product }: { product: Product }) {
           <div className="min-w-0 flex-1">
             <p className="truncate font-display text-base font-semibold tracking-tight">{product.name}</p>
             {meta && <p className="mt-0.5 truncate font-body text-xs text-muted-foreground">{meta}</p>}
-            <SizeTimeline addedAt={product.added_at} sizeUpDate={sizeUpDate} />
             <div className="mt-2 flex flex-wrap gap-2 font-body text-[11px]">
-              {sizeUpDate && (
-                <span
-                  className={
-                    isOverdue(sizeUpDate)
-                      ? "rounded-full bg-destructive/15 px-2.5 py-1 font-semibold text-destructive"
-                      : "rounded-full bg-sand/60 px-2.5 py-1 text-foreground/70"
-                  }
-                >
-                  {isOverdue(sizeUpDate) ? "Size-up overdue" : "Size-up"} ·{" "}
-                  {formatMonthYear(sizeUpDate)}
-                </span>
-              )}
               {replaceDate && (
                 <span
                   className={
@@ -186,7 +170,7 @@ function ProductCard({ product }: { product: Product }) {
                   {formatMonthYear(replaceDate)}
                 </span>
               )}
-              {!sizeUpDate && !replaceDate && (
+              {!replaceDate && (
                 <span className="font-body text-[11px] text-muted-foreground/70">Fetching guidelines…</span>
               )}
             </div>
@@ -194,27 +178,6 @@ function ProductCard({ product }: { product: Product }) {
         </div>
       </Link>
     </li>
-  );
-}
-
-function SizeTimeline({ addedAt, sizeUpDate }: { addedAt: string | null; sizeUpDate: string | null }) {
-  if (!addedAt || !sizeUpDate) return null;
-  const start = new Date(addedAt);
-  const end = new Date(sizeUpDate + "T00:00:00");
-  const now = new Date();
-  const total = Math.max(1, daysBetween(start, end));
-  const elapsed = Math.max(0, Math.min(total, daysBetween(start, now)));
-  const pct = Math.round((elapsed / total) * 100);
-  const remaining = daysBetween(now, end);
-  let barClass = "bg-emerald-500";
-  if (remaining <= 14) barClass = "bg-destructive";
-  else if (remaining <= 30) barClass = "bg-amber-500";
-  return (
-    <div className="mt-2.5">
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-        <div className={`h-full ${barClass} transition-all`} style={{ width: `${pct}%` }} />
-      </div>
-    </div>
   );
 }
 

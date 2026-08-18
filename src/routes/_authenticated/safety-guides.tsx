@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
-import { CheckCircle2, ChevronDown, ChevronUp, Clock, Download, Share2, Shield, ShieldCheck, Star, Stethoscope, X } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronUp, Download, Share2, Shield, ShieldCheck, Star, Stethoscope, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PediatricianDisclaimer } from "@/components/PediatricianDisclaimer";
 import { SUPPORT_EMAIL } from "@/lib/constants";
@@ -262,16 +262,8 @@ function dismissReview() {
   try { localStorage.setItem("safesound.reviewPrompt.lastShown", String(Date.now())); } catch {}
 }
 
-function getAgeMonths(dob: string): number {
-  const birth = new Date(dob + "T00:00:00");
-  const now = new Date();
-  const months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
-  return Math.max(0, months);
-}
-
 function SafetyGuidesPage() {
   const [loading, setLoading] = useState(true);
-  const [childDob, setChildDob] = useState<string | null>(null);
   const [childId, setChildId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"milestones" | "visit-prep">("milestones");
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
@@ -289,12 +281,11 @@ function SafetyGuidesPage() {
     async function init() {
       const { data: childData } = await supabase
         .from("children")
-        .select("id, date_of_birth")
+        .select("id")
         .order("created_at", { ascending: true })
         .limit(1)
         .single();
       if (childData) {
-        setChildDob(childData.date_of_birth);
         setChildId(childData.id);
         try {
           const stored = localStorage.getItem(`safesound.visitPrep.${childData.id}`);
@@ -305,11 +296,6 @@ function SafetyGuidesPage() {
     }
     init();
   }, []);
-
-  const ageMonths = useMemo(() => {
-    if (!childDob) return null;
-    return getAgeMonths(childDob);
-  }, [childDob]);
 
   function toggleQuestion(key: string) {
     setCheckedQuestions((prev) => {
@@ -323,32 +309,10 @@ function SafetyGuidesPage() {
     });
   }
 
-  const relevantVisit = useMemo(() => {
-    if (ageMonths === null) return null;
-    return VISIT_PREP.find(({ ageRange }) => ageMonths >= ageRange[0] && ageMonths < ageRange[1]) ?? null;
-  }, [ageMonths]);
-
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    );
-  }
-
-  if (!childDob) {
-    return (
-      <div className="flex min-h-screen flex-col bg-background pb-28">
-        <div className="mx-auto max-w-md px-5 pt-10">
-          <div className="flex items-center gap-3 mb-4">
-            <Shield className="h-7 w-7 text-accent" />
-            <h1 className="font-display text-3xl font-semibold tracking-tight">Safety Guides</h1>
-          </div>
-          <p className="font-body text-sm text-muted-foreground">
-            Add your child's birthday in Profile to see age-appropriate safety milestones.
-          </p>
-        </div>
-        <BottomNav />
       </div>
     );
   }
@@ -399,15 +363,11 @@ function SafetyGuidesPage() {
 
       <main className="flex-1 px-5 pt-4 sm:px-6">
         <div className="mx-auto max-w-md space-y-3">
-          {activeTab === "milestones" && ageMonths !== null && (
-            <MilestonesTab ageMonths={ageMonths} expandedIdx={expandedIdx} setExpandedIdx={handleMilestoneExpand} />
+          {activeTab === "milestones" && (
+            <MilestonesTab expandedIdx={expandedIdx} setExpandedIdx={handleMilestoneExpand} />
           )}
           {activeTab === "visit-prep" && (
-            <VisitPrepTab
-              relevantVisit={relevantVisit}
-              checkedQuestions={checkedQuestions}
-              toggleQuestion={toggleQuestion}
-            />
+            <VisitPrepTab checkedQuestions={checkedQuestions} toggleQuestion={toggleQuestion} />
           )}
         </div>
       </main>
@@ -474,70 +434,39 @@ function SafetyGuidesPage() {
 }
 
 function MilestonesTab({
-  ageMonths,
   expandedIdx,
   setExpandedIdx,
 }: {
-  ageMonths: number;
   expandedIdx: number | null;
   setExpandedIdx: (idx: number | null) => void;
 }) {
-  // Determine status for each milestone
-  // "done" = current or past age; "upcoming" = next 2 after current; "future" = rest
-  const currentIdx = [...SAFETY_MILESTONES]
-    .reverse()
-    .findIndex((m) => m.ageMonths <= ageMonths);
-  const currentMilestoneIdx =
-    currentIdx === -1 ? -1 : SAFETY_MILESTONES.length - 1 - currentIdx;
-
+  // Previously highlighted a "current"/"upcoming" stage computed from the
+  // child's stored age — the app no longer collects a birthdate, so this is
+  // now a flat, browsable reference list ordered by typical developmental
+  // stage. The parent picks whichever stage matches where their own child
+  // actually is.
   return (
     <>
       {SAFETY_MILESTONES.map((m, idx) => {
-        const isDone = idx <= currentMilestoneIdx;
-        const isUpcoming = idx === currentMilestoneIdx + 1 || idx === currentMilestoneIdx + 2;
-        const isFuture = !isDone && !isUpcoming;
         const isExpanded = expandedIdx === idx;
 
         return (
           <button
             key={m.ageMonths}
             onClick={() => setExpandedIdx(isExpanded ? null : idx)}
-            className={`w-full rounded-2xl border p-4 text-left transition-all ${
-              isDone
-                ? "border-primary/30 bg-card"
-                : isUpcoming
-                  ? "border-amber-300/60 bg-amber-50/60 dark:bg-amber-950/20"
-                  : "border-border/40 bg-muted/30 opacity-50"
-            }`}
+            className="w-full rounded-2xl border border-primary/30 bg-card p-4 text-left transition-all"
           >
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <span
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
-                    isDone
-                      ? "bg-primary/15 text-primary"
-                      : isUpcoming
-                        ? "bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400"
-                        : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {isDone ? (
-                    <CheckCircle2 className="h-4 w-4" />
-                  ) : (
-                    <Clock className="h-4 w-4" />
-                  )}
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                  <Shield className="h-4 w-4" />
                 </span>
                 <div className="min-w-0">
                   <p className="font-display text-sm font-semibold tracking-tight truncate">
                     {m.title}
                   </p>
                   <p className="font-body text-xs text-muted-foreground">
-                    {m.stage}
-                    {isUpcoming && (
-                      <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
-                        Up next
-                      </span>
-                    )}
+                    {m.stage} · typically around {m.ageMonths === 0 ? "birth" : `${m.ageMonths} months`}
                   </p>
                 </div>
               </div>
@@ -585,71 +514,89 @@ function MilestonesTab({
   );
 }
 
+// Previously auto-selected the "relevant" visit from the child's stored
+// age — the app no longer collects a birthdate, so every visit's question
+// set is listed and the parent expands whichever checkup is coming up for
+// their own child.
 function VisitPrepTab({
-  relevantVisit,
   checkedQuestions,
   toggleQuestion,
 }: {
-  relevantVisit: { title: string; questions: string[] } | null;
   checkedQuestions: Set<string>;
   toggleQuestion: (key: string) => void;
 }) {
-  if (!relevantVisit) {
-    return (
-      <p className="font-body text-sm text-muted-foreground">
-        No visit prep available for this age range.
-      </p>
-    );
-  }
-
-  const checked = relevantVisit.questions.filter((q) =>
-    checkedQuestions.has(`${relevantVisit.title}::${q}`)
-  ).length;
+  const [expandedTitle, setExpandedTitle] = useState<string | null>(VISIT_PREP[0]?.title ?? null);
 
   return (
-    <div className="rounded-3xl border border-border/60 bg-card p-5">
-      <div className="mb-4 flex items-center gap-3">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-primary">
-          <Stethoscope className="h-4 w-4" />
-        </span>
-        <div>
-          <h2 className="font-display text-lg font-semibold tracking-tight">{relevantVisit.title}</h2>
-          <p className="font-body text-xs text-muted-foreground">
-            {checked}/{relevantVisit.questions.length} questions ready
-          </p>
-        </div>
-      </div>
-      <ul className="space-y-2">
-        {relevantVisit.questions.map((q) => {
-          const key = `${relevantVisit.title}::${q}`;
-          const done = checkedQuestions.has(key);
-          return (
-            <li key={q}>
-              <button
-                onClick={() => toggleQuestion(key)}
-                className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-muted/50"
-              >
-                <span
-                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                    done
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border/60 bg-background"
-                  }`}
-                >
-                  {done && <CheckCircle2 className="h-3.5 w-3.5" />}
+    <>
+      {VISIT_PREP.map((visit) => {
+        const isExpanded = expandedTitle === visit.title;
+        const checked = visit.questions.filter((q) =>
+          checkedQuestions.has(`${visit.title}::${q}`),
+        ).length;
+
+        return (
+          <div key={visit.title} className="rounded-3xl border border-border/60 bg-card p-5">
+            <button
+              type="button"
+              onClick={() => setExpandedTitle(isExpanded ? null : visit.title)}
+              className="flex w-full items-center justify-between gap-3 text-left"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                  <Stethoscope className="h-4 w-4" />
                 </span>
-                <span
-                  className={`font-body text-sm leading-relaxed ${
-                    done ? "text-muted-foreground line-through" : "text-foreground"
-                  }`}
-                >
-                  {q}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+                <div className="min-w-0">
+                  <h2 className="font-display text-sm font-semibold tracking-tight truncate">
+                    {visit.title}
+                  </h2>
+                  <p className="font-body text-xs text-muted-foreground">
+                    {checked}/{visit.questions.length} questions ready
+                  </p>
+                </div>
+              </div>
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+              )}
+            </button>
+            {isExpanded && (
+              <ul className="mt-4 space-y-2 border-t border-border/40 pt-3">
+                {visit.questions.map((q) => {
+                  const key = `${visit.title}::${q}`;
+                  const done = checkedQuestions.has(key);
+                  return (
+                    <li key={q}>
+                      <button
+                        onClick={() => toggleQuestion(key)}
+                        className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-muted/50"
+                      >
+                        <span
+                          className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                            done
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border/60 bg-background"
+                          }`}
+                        >
+                          {done && <CheckCircle2 className="h-3.5 w-3.5" />}
+                        </span>
+                        <span
+                          className={`font-body text-sm leading-relaxed ${
+                            done ? "text-muted-foreground line-through" : "text-foreground"
+                          }`}
+                        >
+                          {q}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        );
+      })}
+    </>
   );
 }

@@ -6,7 +6,6 @@ import {
   ArrowLeft,
   Loader2,
   AlertTriangle,
-  Ruler,
   RefreshCw,
   Trash2,
   ShieldCheck,
@@ -14,12 +13,10 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 import { CATEGORY_BY_KEY, categoryFromLabel } from "@/lib/productCategories";
 import { formatMonthYear, daysBetween } from "@/lib/predictions";
-import { lookupAndSaveGuidelines, recomputePredictions } from "@/lib/guidelines.functions";
+import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 import {
   recallFallbackUrl,
@@ -42,7 +39,6 @@ type Product = {
   category: string | null;
   added_at: string | null;
   purchased_at: string | null;
-  predicted_sizeup_date: string | null;
   predicted_replacement_date: string | null;
   recalled: boolean;
   child_id: string | null;
@@ -61,14 +57,6 @@ type Guideline = {
   source: string | null;
 };
 
-type Child = {
-  id: string;
-  name: string;
-  height_inches: number | null;
-  weight_lbs: number | null;
-  measurements_updated_at: string | null;
-};
-
 type RecallInfo = {
   title: string;
   url: string | null;
@@ -84,7 +72,6 @@ function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState<Product | null>(null);
   const [guideline, setGuideline] = useState<Guideline | null>(null);
-  const [child, setChild] = useState<Child | null>(null);
   const [recalls, setRecalls] = useState<RecallInfo[]>([]);
   const [refreshingAI, setRefreshingAI] = useState(false);
 
@@ -98,8 +85,7 @@ function ProductDetailPage() {
     }
     setProduct(p as unknown as Product);
 
-    const pAny = p as unknown as { child_id: string | null };
-    const [{ data: g }, { data: r }, kidRes] = await Promise.all([
+    const [{ data: g }, { data: r }] = await Promise.all([
       supabase
         .from("product_guidelines")
         .select(
@@ -115,13 +101,6 @@ function ProductDetailPage() {
         .from("product_recalls")
         .select("recalls(title, url, description, recall_date, source, lot_pattern)")
         .eq("product_id", id),
-      pAny.child_id
-        ? supabase
-            .from("children")
-            .select("id, name, height_inches, weight_lbs, measurements_updated_at")
-            .eq("id", pAny.child_id)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
     ]);
     setGuideline((g as Guideline) ?? null);
     type RecallRow = {
@@ -147,7 +126,6 @@ function ProductDetailPage() {
           lotPattern: x.lot_pattern,
         })),
     );
-    setChild((kidRes?.data as Child) ?? null);
     setLoading(false);
   }
 
@@ -319,12 +297,8 @@ function ProductDetailPage() {
           {/* Timeline */}
           <DetailTimeline
             addedAt={product.added_at}
-            sizeUpDate={product.predicted_sizeup_date}
             replacementDate={product.predicted_replacement_date}
           />
-
-          {/* Measurements */}
-          {child && <MeasurementCard child={child} productId={product.id} onUpdated={load} />}
 
           {/* Guidance */}
           <div className="rounded-3xl border border-border bg-card p-5 space-y-3">
@@ -359,6 +333,18 @@ function ProductDetailPage() {
                   label="Max height"
                   value={guideline.max_height_inches ? `${guideline.max_height_inches}"` : "—"}
                 />
+                {(guideline.max_weight_lbs || guideline.max_height_inches) && (
+                  <p className="text-xs text-muted-foreground">
+                    Generally safe to use until your child reaches{" "}
+                    {[
+                      guideline.max_weight_lbs ? `${guideline.max_weight_lbs} lb` : null,
+                      guideline.max_height_inches ? `${guideline.max_height_inches}"` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" or ")}
+                    , whichever comes first.
+                  </p>
+                )}
                 <KV
                   label="Average use"
                   value={
@@ -431,30 +417,16 @@ function KV({ label, value }: { label: string; value: string }) {
 
 function DetailTimeline({
   addedAt,
-  sizeUpDate,
   replacementDate,
 }: {
   addedAt: string | null;
-  sizeUpDate: string | null;
   replacementDate: string | null;
 }) {
-  if (!addedAt) return null;
+  if (!addedAt || !replacementDate) return null;
   return (
     <div className="rounded-3xl border border-border bg-card p-5 space-y-3">
       <h2 className="font-display text-base font-semibold">Timeline</h2>
-      {sizeUpDate ? (
-        <TimelineRow label="Estimated size-up" date={sizeUpDate} addedAt={addedAt} />
-      ) : (
-        <p className="font-body text-sm text-muted-foreground">Size-up prediction pending.</p>
-      )}
-      {replacementDate && (
-        <TimelineRow
-          label="Replace by"
-          date={replacementDate}
-          addedAt={addedAt}
-          variant="replace"
-        />
-      )}
+      <TimelineRow label="Replace by" date={replacementDate} addedAt={addedAt} variant="replace" />
     </div>
   );
 }
@@ -496,157 +468,6 @@ function TimelineRow({
           ? `${remaining} days from today`
           : "Past this estimated date — worth reviewing against the manufacturer's guidance"}
       </p>
-    </div>
-  );
-}
-
-function MeasurementCard({
-  child,
-  productId: _productId,
-  onUpdated,
-}: {
-  child: Child;
-  productId: string;
-  onUpdated: () => Promise<void> | void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [heightStr, setHeightStr] = useState(
-    child.height_inches != null ? child.height_inches.toFixed(1) : "",
-  );
-  const [weightStr, setWeightStr] = useState(
-    child.weight_lbs != null ? child.weight_lbs.toFixed(1) : "",
-  );
-  const [saving, setSaving] = useState(false);
-  const [predictedMsg, setPredictedMsg] = useState<string | null>(null);
-
-  async function save() {
-    setSaving(true);
-    try {
-      const h = parseFloat(heightStr);
-      const w = parseFloat(weightStr);
-      const height_inches = Number.isFinite(h) && h > 0 ? h : null;
-      const weight_lbs = Number.isFinite(w) && w > 0 ? w : null;
-      const nowIso = new Date().toISOString();
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("Not signed in");
-      await supabase
-        .from("children")
-        .update({
-          height_inches,
-          weight_lbs,
-          measurements_updated_at: nowIso,
-        } as never)
-        .eq("id", child.id);
-      await supabase.from("child_measurements").insert({
-        user_id: u.user.id,
-        child_id: child.id,
-        height_inches,
-        weight_lbs,
-        recorded_at: nowIso,
-      } as never);
-      // Recompute all predictions for this child
-      await recomputePredictions({ data: { childId: child.id } });
-      await onUpdated();
-      // Re-fetch predicted_sizeup_date for confirmation message
-      const { data: refreshed } = await supabase
-        .from("products")
-        .select("predicted_sizeup_date")
-        .eq("id", _productId)
-        .maybeSingle();
-      const date = (refreshed as { predicted_sizeup_date: string | null } | null)
-        ?.predicted_sizeup_date;
-      if (date && weight_lbs) {
-        setPredictedMsg(
-          `Based on ${child.name}'s current weight of ${weight_lbs} lbs, they will likely outgrow this product around ${formatMonthYear(date)}.`,
-        );
-      } else {
-        setPredictedMsg("Measurements saved.");
-      }
-      setEditing(false);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Couldn't save");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <div className="rounded-3xl border border-border bg-card p-5 space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Ruler className="h-4 w-4 text-accent" />
-          <h2 className="font-display text-base font-semibold">{child.name}'s measurements</h2>
-        </div>
-        {!editing && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setEditing(true)}
-            className="rounded-full text-xs"
-          >
-            Update
-          </Button>
-        )}
-      </div>
-      {!editing ? (
-        <div className="grid grid-cols-2 gap-3 font-body text-sm">
-          <div className="rounded-2xl bg-muted/40 px-3 py-2">
-            <p className="text-xs text-muted-foreground">Weight</p>
-            <p className="font-semibold">
-              {child.weight_lbs != null ? `${child.weight_lbs.toFixed(1)} lb` : "—"}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-muted/40 px-3 py-2">
-            <p className="text-xs text-muted-foreground">Height</p>
-            <p className="font-semibold">
-              {child.height_inches != null ? `${child.height_inches.toFixed(1)}"` : "—"}
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="font-body text-xs">Weight (lb)</Label>
-              <Input
-                type="number"
-                step="0.1"
-                min="0"
-                value={weightStr}
-                onChange={(e) => setWeightStr(e.target.value)}
-                className="h-10 rounded-xl"
-              />
-            </div>
-            <div>
-              <Label className="font-body text-xs">Height (in)</Label>
-              <Input
-                type="number"
-                step="0.1"
-                min="0"
-                value={heightStr}
-                onChange={(e) => setHeightStr(e.target.value)}
-                className="h-10 rounded-xl"
-              />
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setEditing(false)}
-              className="flex-1 rounded-full"
-            >
-              Cancel
-            </Button>
-            <Button size="sm" onClick={save} disabled={saving} className="flex-1 rounded-full">
-              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Save"}
-            </Button>
-          </div>
-        </div>
-      )}
-      {predictedMsg && (
-        <p className="rounded-2xl bg-sand/60 px-3 py-2.5 font-body text-sm">{predictedMsg}</p>
-      )}
     </div>
   );
 }

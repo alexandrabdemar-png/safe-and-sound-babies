@@ -465,15 +465,20 @@ function excluding(pool: SafetyTip[], matches: (t: SafetyTip) => boolean): Safet
 // here since every tip is evergreen advisory content, not something that
 // goes stale, but worth knowing if the pool ever needs to grow.
 export function selectDailyTip(
-  ageMonths: number,
+  ageMonths: number | null,
   dayIndex: number,
   hasStairs?: boolean | null,
   homeType?: string | null,
   hasPool?: boolean | null,
 ): SafetyTip {
-  const ageTips = SAFETY_TIPS.filter(
-    (t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths,
-  );
+  // ageMonths is null when the child's age isn't known (the app no longer
+  // collects date of birth) — skip age filtering entirely rather than
+  // guessing, same graceful-degradation path already used when age
+  // filtering happens to produce zero matches.
+  const ageTips =
+    ageMonths === null
+      ? []
+      : SAFETY_TIPS.filter((t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths);
   let pool = ageTips.length > 0 ? ageTips : SAFETY_TIPS;
   if (hasStairs === false) pool = excluding(pool, (t) => /stair/i.test(t.text));
   if (homeType === "apartment") pool = excluding(pool, (t) => HOUSE_ONLY_PATTERN.test(t.text));

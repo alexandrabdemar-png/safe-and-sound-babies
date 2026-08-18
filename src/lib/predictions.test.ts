@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { predictSizeUpDate, predictReplacementDate, formatMonthYear, daysBetween, isOverdue } from "./predictions";
+import { predictReplacementDate, formatMonthYear, daysBetween, isOverdue } from "./predictions";
 
 describe("isOverdue", () => {
   it("is false for a null date", () => {
@@ -20,82 +20,6 @@ describe("isOverdue", () => {
 
   it("handles a full timestamp, not just a plain date, by comparing only the date portion", () => {
     expect(isOverdue("2026-06-01T23:59:59.000Z", "2026-08-13")).toBe(true);
-  });
-});
-
-describe("predictSizeUpDate", () => {
-  it("returns null when the child has no date_of_birth", () => {
-    expect(predictSizeUpDate({ date_of_birth: null }, { max_weight_lbs: 20 })).toBeNull();
-  });
-
-  it("returns null when the product has neither a weight nor height limit", () => {
-    expect(predictSizeUpDate({ date_of_birth: "2026-01-01" }, {})).toBeNull();
-  });
-
-  it("returns null for a malformed date_of_birth instead of throwing", () => {
-    expect(() => predictSizeUpDate({ date_of_birth: "not-a-date" }, { max_weight_lbs: 20 })).not.toThrow();
-    expect(predictSizeUpDate({ date_of_birth: "not-a-date" }, { max_weight_lbs: 20 })).toBeNull();
-  });
-
-  it("projects a future date when the child is already below the weight limit", () => {
-    const now = new Date("2026-07-09T00:00:00Z");
-    const result = predictSizeUpDate(
-      { date_of_birth: "2026-01-09", weight_lbs: 10, measurements_recorded_at: "2026-07-09" },
-      { max_weight_lbs: 20 },
-      now,
-    );
-    expect(result).not.toBeNull();
-    expect(new Date(result!).getTime()).toBeGreaterThan(now.getTime());
-  });
-
-  it("returns today (0 months out) when the child has already met/exceeded the limit", () => {
-    const now = new Date("2026-07-09T00:00:00Z");
-    const result = predictSizeUpDate(
-      { date_of_birth: "2026-01-09", weight_lbs: 25, measurements_recorded_at: "2026-07-09" },
-      { max_weight_lbs: 20 },
-      now,
-    );
-    expect(result).toBe("2026-07-09");
-  });
-
-  it("picks the EARLIEST of the weight and height projections, not the latest", () => {
-    const now = new Date("2026-07-09T00:00:00Z");
-    // Weight limit is huge (far off), height limit is tiny (hit almost immediately)
-    const result = predictSizeUpDate(
-      { date_of_birth: "2026-01-09", weight_lbs: 10, height_inches: 20, measurements_recorded_at: "2026-07-09" },
-      { max_weight_lbs: 200, max_height_inches: 20.5 },
-      now,
-    );
-    const weightOnly = predictSizeUpDate(
-      { date_of_birth: "2026-01-09", weight_lbs: 10, measurements_recorded_at: "2026-07-09" },
-      { max_weight_lbs: 200 },
-      now,
-    );
-    expect(result).not.toBeNull();
-    expect(weightOnly).not.toBeNull();
-    // The combined (weight+height) result must be no later than the
-    // weight-only projection, since height is the binding constraint here.
-    expect(new Date(result!).getTime()).toBeLessThanOrEqual(new Date(weightOnly!).getTime());
-  });
-
-  it("falls back to WHO population averages when no measurement has been logged", () => {
-    const now = new Date("2026-07-09T00:00:00Z");
-    // No weight_lbs/height_inches/measurements_recorded_at at all — must
-    // still produce a projection using averageWeightAtMonths, not null/throw.
-    const result = predictSizeUpDate({ date_of_birth: "2026-01-09" }, { max_weight_lbs: 20 }, now);
-    expect(result).not.toBeNull();
-  });
-
-  it("a newborn with a very high weight limit projects years out, not an immediate date", () => {
-    const now = new Date("2026-07-09T00:00:00Z");
-    const result = predictSizeUpDate(
-      { date_of_birth: "2026-07-01", weight_lbs: 8, measurements_recorded_at: "2026-07-09" },
-      { max_weight_lbs: 40 }, // a typical convertible car seat max
-      now,
-    );
-    expect(result).not.toBeNull();
-    const monthsOut = (new Date(result!).getTime() - now.getTime()) / (30.44 * 86400000);
-    expect(monthsOut).toBeGreaterThan(6);
   });
 });
 
