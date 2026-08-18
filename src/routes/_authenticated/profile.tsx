@@ -169,7 +169,10 @@ function ProfilePage() {
       </header>
 
       <div className="mx-auto w-full max-w-md flex-1 px-5 sm:px-6 space-y-4">
+        <DevRoleSwitcher />
+
         {/* Subscription card */}
+
         <section className="rounded-3xl border border-border/60 bg-card p-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
