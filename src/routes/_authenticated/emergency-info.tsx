@@ -327,9 +327,10 @@ function EmergencyInfoPage() {
               <h3 className="font-display text-lg font-semibold">Share with a caregiver</h3>
             </div>
             <p className="mb-4 font-body text-sm text-muted-foreground">
-              Create a link that lets someone view this card without logging in. It stays active
-              until you revoke it.
+              Create a link that lets someone view this card without logging in. It works for one
+              year, or until you revoke it — you can create a fresh one anytime.
             </p>
+
 
             {activeLink && (
               <p className="mb-3 font-body text-sm text-foreground">
@@ -339,16 +340,16 @@ function EmergencyInfoPage() {
                     {new Date(activeLink.expires_at).toLocaleString(undefined, {
                       month: "short",
                       day: "numeric",
-                      hour: "numeric",
-                      minute: "2-digit",
+                      year: "numeric",
                     })}
-                    .
+                    . After that, create a new link to keep caregivers covered.
                   </>
                 ) : (
                   "A link is active and will stay available until you revoke it."
                 )}
               </p>
             )}
+
 
             {freshShareUrl && (
               <div className="mb-3 flex items-center gap-2 rounded-xl border border-border/60 bg-background px-3 py-2">
