@@ -219,13 +219,20 @@ export function evaluateInsights(
     });
   }
 
-  // Missing-gear suggestions
+  // Missing-gear suggestions. Sitting/first-food is the earliest trigger,
+  // but if the child has since moved well past that (crawling or later)
+  // and still has no high chair tracked, "coming up" reads as stale/wrong
+  // — bump it to "now" and phrase it as a present fact rather than a
+  // forward-looking prediction.
   if ((logged("sitting") || logged("first_food")) && !hasCategory(products, "high_chair")) {
+    const wellPastSitting = reached("crawling");
     out.push({
       id: "highchair_suggest",
-      title: "Time to think about a high chair",
-      body: "Once your baby can sit up and shows readiness for solids, it's a good time to add your high chair and track it for recalls and replacement.",
-      urgency: "soon",
+      title: wellPastSitting ? "Add a high chair to your list" : "Time to think about a high chair",
+      body: wellPastSitting
+        ? `${name} is past the sitting-up stage, so a high chair is worth adding now if you don't already have one — we'll track it for recalls and replacement.`
+        : "Once your baby can sit up and shows readiness for solids, it's a good time to add your high chair and track it for recalls and replacement.",
+      urgency: wellPastSitting ? "now" : "soon",
       category: "high_chair",
     });
   }

@@ -68,7 +68,7 @@ export const MOMENT_SAFETY_MAP: {
     },
   },
   {
-    pattern: /stand(ing|s)\b|first stand/i,
+    pattern: /stand(ing|s)\b|first stand|\bstood\b/i,
     milestoneKey: "standing",
     safety: {
       title: "Standing — full babyproofing check",

@@ -314,4 +314,24 @@ describe("babyproofing insights are gated on logged milestones, not age", () => 
       findInsight(evaluateInsights(child(), [], milestones()), "highchair_suggest"),
     ).toBeUndefined();
   });
+
+  // Regression: a child who logged "sitting" and has since progressed to
+  // crawling (or later) with still no high chair tracked was shown "Coming
+  // up" — reading as a stale, forward-looking prediction for a child who's
+  // actually well past that stage. Once crawling+ is reached, this should
+  // read as a present recommendation instead.
+  it("highchair_suggest escalates to 'now' once the child has progressed past sitting to crawling", () => {
+    const stillComingUp = findInsight(
+      evaluateInsights(child(), [], milestones("sitting")),
+      "highchair_suggest",
+    );
+    expect(stillComingUp?.urgency).toBe("soon");
+
+    const overdue = findInsight(
+      evaluateInsights(child(), [], milestones("sitting", "crawling")),
+      "highchair_suggest",
+    );
+    expect(overdue?.urgency).toBe("now");
+    expect(overdue?.body).not.toMatch(/once your baby can sit up/i);
+  });
 });

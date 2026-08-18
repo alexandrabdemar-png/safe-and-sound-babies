@@ -130,6 +130,17 @@ describe("getMilestoneKey links a matched title to its MilestoneKey", () => {
     expect(getMilestoneKey("Lowered the crib mattress today")).toBeNull();
   });
 
+  // Regression: the standing pattern only matched "stand"/"standing"/
+  // "stands"/"first stand" — the natural past-tense phrasing a parent
+  // would actually type ("stood on his own") matched nothing at all, so
+  // the milestone silently failed to register (no safety tip shown, and
+  // insights.ts's "Up next" guidance never learned the child had reached
+  // this stage).
+  it("recognizes the past-tense 'stood' phrasing, not just 'stand'/'standing'", () => {
+    expect(getMilestoneKey("stood on his own")).toBe("standing");
+    expect(getMilestoneKey("She stood today!")).toBe("standing");
+  });
+
   it("returns null for an unmatched title, same as getSafetyTip", () => {
     expect(getMilestoneKey("Slept through the night")).toBeNull();
   });
