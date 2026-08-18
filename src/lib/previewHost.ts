@@ -5,6 +5,7 @@
 // Matches Lovable's preview / local-dev hosts:
 //   • *.lovable.dev
 //   • id-preview--*.lovable.app  (exact preview build subdomain shape)
+//   • *.lovableproject.com       (in-editor preview iframe host)
 //   • localhost / 127.0.0.1
 //
 // Does NOT match:
@@ -12,7 +13,8 @@
 //   • any custom domain
 //   • project--*.lovable.app     (published deployment aliases)
 export const PREVIEW_HOST_REGEX =
-  /(^|\.)lovable\.dev$|(^|\.)id-preview[^.]*\.lovable\.app$|^localhost$|^127\.0\.0\.1$/;
+  /(^|\.)lovable\.dev$|(^|\.)id-preview[^.]*\.lovable\.app$|(^|\.)lovableproject\.com$|^localhost$|^127\.0\.0\.1$/;
+
 
 export function isPreviewHost(hostname: string | null | undefined): boolean {
   if (!hostname) return false;
