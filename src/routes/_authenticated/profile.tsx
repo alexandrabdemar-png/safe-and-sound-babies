@@ -14,6 +14,7 @@ import { useProGate } from "@/hooks/useProGate";
 import { useActiveChild, setActiveChildId } from "@/hooks/useActiveChild";
 import { createPortalSession } from "@/utils/payments.functions";
 import { exportUserData } from "@/utils/export.functions";
+import { addChild } from "@/lib/children.functions";
 import { deleteMyAccount } from "@/utils/deleteAccount.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { openUrl } from "@/lib/browser";
@@ -69,18 +70,20 @@ function ProfilePage() {
       return;
     }
     setAddingChild(true);
-    const { data: userData } = await supabase.auth.getUser();
-    const uid = userData.user?.id;
-    if (!uid) { setAddingChild(false); return; }
-    const { error } = await supabase.from('children').insert({
-      user_id: uid,
-      name: newChildName.trim(),
-    });
-    setAddingChild(false);
-    if (error) { console.error("children insert error:", error); toast.error(error.message); return; }
-    setNewChildName("");
-    await refreshChildren();
-    toast.success('Child added');
+    try {
+      // The requirePro() check above is just a fast client-side UX gate —
+      // addChild() re-checks Pro status server-side (see its own comment)
+      // so this can't be bypassed by calling it directly.
+      await addChild({ data: { name: newChildName.trim() } });
+      setNewChildName("");
+      await refreshChildren();
+      toast.success('Child added');
+    } catch (err) {
+      console.error("children insert error:", err);
+      toast.error(err instanceof Error ? err.message : 'Could not add child');
+    } finally {
+      setAddingChild(false);
+    }
   }
 
   async function handleDeleteChild(id: string) {

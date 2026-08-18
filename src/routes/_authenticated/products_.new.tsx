@@ -111,10 +111,11 @@ function formatDate(iso: string) {
 
 function NewProductPage() {
   const navigate = useNavigate();
-  const { activeChildId } = useActiveChild();
+  const { activeChildId, children: childOptions } = useActiveChild();
   const [saving, setSaving] = useState(false);
   const [category, setCategory] = useState<CategoryKey | "">("");
   const [name, setName] = useState("");
+  const [formChildId, setFormChildId] = useState<string | null>(null);
   const [brand, setBrand] = useState("");
   const [barcode, setBarcode] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -163,7 +164,7 @@ function NewProductPage() {
         .from("products")
         .insert({
           user_id: session.user.id,
-          child_id: activeChildId,
+          child_id: formChildId ?? activeChildId,
           name: name.trim(),
           brand: brand.trim() || null,
           category: activeCategory?.label ?? category,
@@ -270,6 +271,22 @@ function NewProductPage() {
 
           {/* Manual form — fallback */}
           <form onSubmit={handleSubmit} className="space-y-6">
+            {childOptions.length > 1 && (
+              <Field label="For">
+                <select
+                  value={formChildId ?? activeChildId ?? ""}
+                  onChange={(e) => setFormChildId(e.target.value)}
+                  className="h-12 w-full rounded-2xl border border-border bg-card px-4 font-body text-base"
+                >
+                  {childOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
+
             <Field label="Category" required>
               <div className="grid grid-cols-2 gap-2.5">
                 {CATEGORIES.map((c) => {
