@@ -21,7 +21,6 @@ export const Route = createFileRoute(
 
 type AlertSettings = {
   recalls_enabled: boolean;
-  size_up_enabled: boolean;
   replacement_enabled: boolean;
 };
 
@@ -41,7 +40,6 @@ function NotificationSettingsPage() {
   const navigate = useNavigate();
   const [alertSettings, setAlertSettings] = useState<AlertSettings>({
     recalls_enabled: true,
-    size_up_enabled: true,
     replacement_enabled: true,
   });
   const [prefs, setPrefs] = useState<NotifPrefs>({
@@ -64,7 +62,7 @@ function NotificationSettingsPage() {
 
       const { data: alertData } = await (supabase as any)
         .from("user_notification_settings")
-        .select("recalls_enabled, size_up_enabled, replacement_enabled")
+        .select("recalls_enabled, replacement_enabled")
         .eq("user_id", user.id)
         .maybeSingle();
       if (alertData) setAlertSettings(alertData as AlertSettings);
@@ -213,13 +211,6 @@ function NotificationSettingsPage() {
           <SectionLabel>In-app alerts only</SectionLabel>
           <div className="rounded-3xl border border-border/60 bg-card divide-y divide-border/40">
             <SettingRow
-              label="Size-up reminders"
-              description="Shown in the app when your baby is approaching a product's size or weight limit."
-              checked={alertSettings.size_up_enabled}
-              onToggle={() => toggleAlert("size_up_enabled")}
-              disabled={loading}
-            />
-            <SettingRow
               label="Replacement reminders"
               description="Shown in the app when something is approaching the end of its safe use window."
               checked={alertSettings.replacement_enabled}
@@ -257,7 +248,7 @@ function NotificationSettingsPage() {
                 <p className="font-body text-sm font-medium">Product reminders — how far ahead</p>
               </div>
               <p className="font-body text-xs text-muted-foreground mb-3">
-                How many days before a size-up or replacement date to show the reminder.
+                How many days before a replacement date to show the reminder.
               </p>
               <div className="flex gap-2">
                 {ADVANCE_OPTIONS.map((days) => (

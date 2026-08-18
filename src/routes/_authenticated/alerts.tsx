@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
-import { AlertTriangle, ArrowLeft, ArrowUpRight, Bell, Check, ChevronDown, ChevronUp, Clock, Loader2, Plus, RefreshCw, Ruler } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowUpRight, Bell, Check, ChevronDown, ChevronUp, Clock, Loader2, Plus, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { hapticSuccess, hapticDismiss } from "@/lib/haptic";
@@ -24,8 +24,6 @@ type Product = {
   brand: string | null;
   size: string | null;
   replace_at: string | null;
-  next_size_at: string | null;
-  predicted_sizeup_date: string | null;
   predicted_replacement_date: string | null;
 };
 
@@ -181,8 +179,8 @@ function AlertsPage() {
     const [pRes, rRes, dismRes] = await Promise.all([
       supabase
         .from("products")
-        .select("id, name, brand, size, replace_at, next_size_at, predicted_sizeup_date, predicted_replacement_date")
-        .or("replace_at.not.is.null,next_size_at.not.is.null,predicted_sizeup_date.not.is.null,predicted_replacement_date.not.is.null"),
+        .select("id, name, brand, size, replace_at, predicted_replacement_date")
+        .or("replace_at.not.is.null,predicted_replacement_date.not.is.null"),
       supabase
         .from("product_recalls")
         .select(
@@ -191,10 +189,10 @@ function AlertsPage() {
         .eq("acknowledged", false),
       // Previously missing entirely: a "Mark as done" wrote to
       // insight_dismissals correctly, but nothing here ever read it back,
-      // so a dismissed replacement/size-up reappeared on every reload —
-      // it only stayed hidden for the rest of the current in-memory
-      // session. Mirrors home.tsx's dismissedIds load for the exact same
-      // table (see saveInsightResponse there for the write-side twin of
+      // so a dismissed replacement reappeared on every reload — it only
+      // stayed hidden for the rest of the current in-memory session.
+      // Mirrors home.tsx's dismissedIds load for the exact same table (see
+      // saveInsightResponse there for the write-side twin of
       // markInsightDone below).
       childId
         ? supabase
@@ -274,14 +272,6 @@ function AlertsPage() {
         .sort((a, b) => a.when.localeCompare(b.when)),
     [products],
   );
-  const sizeUpDue = useMemo(
-    () =>
-      products
-        .map((p) => ({ ...p, when: p.predicted_sizeup_date ?? p.next_size_at }))
-        .filter((p): p is Product & { when: string } => !!p.when)
-        .sort((a, b) => a.when.localeCompare(b.when)),
-    [products],
-  );
 
   async function dismissRecall(id: string) {
     const prev = recalls;
@@ -303,9 +293,8 @@ function AlertsPage() {
   }
 
   const visibleReplace = useMemo(() => replaceDue.filter((p) => !dismissedRuleIds.has(`replace:${p.id}`)), [replaceDue, dismissedRuleIds]);
-  const visibleSizeUp = useMemo(() => sizeUpDue.filter((p) => !dismissedRuleIds.has(`sizeup:${p.id}`)), [sizeUpDue, dismissedRuleIds]);
 
-  const empty = !loading && recalls.length === 0 && visibleReplace.length === 0 && visibleSizeUp.length === 0;
+  const empty = !loading && recalls.length === 0 && visibleReplace.length === 0;
 
   // Recalls for products you own (already in `recalls` state — these are product_recalls with acknowledged=false)
   const ownedRecalls = recalls;
@@ -322,7 +311,7 @@ function AlertsPage() {
           </p>
           <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight">Alerts</h1>
           <p className="mt-2 font-body text-sm text-muted-foreground">
-            Only the things that matter — recalls, replacements, and size-ups for the gear you've logged.
+            Only the things that matter — recalls and replacements for the gear you've logged.
           </p>
         </div>
       </header>
@@ -461,22 +450,6 @@ function AlertsPage() {
                 </Section>
               )}
 
-              {visibleSizeUp.length > 0 && (
-                <Section title="May be ready for the next size" icon={Ruler}>
-                  <ul className="space-y-2.5">
-                    {visibleSizeUp.map((p) => (
-                      <ProductRow
-                        key={p.id}
-                        name={p.name}
-                        meta={[p.brand, p.size].filter(Boolean).join(" · ")}
-                        when={relative(p.when)}
-                        overdue={daysFromNow(p.when) < 0}
-                        onDone={() => markInsightDone(`sizeup:${p.id}`)}
-                      />
-                    ))}
-                  </ul>
-                </Section>
-              )}
             </>
           )}
         </div>
@@ -706,7 +679,7 @@ function EmptyState() {
       <BellIllustration className="mx-auto mb-2 h-24 w-24" />
       <p className="font-display text-lg font-semibold tracking-tight">Nothing on your radar right now</p>
       <p className="mx-auto mt-1 max-w-xs font-body text-sm text-muted-foreground">
-        When something needs your attention — a recall, a replacement, a size-up — it'll show up here. Add a product to get started.
+        When something needs your attention — a recall or a replacement — it'll show up here. Add a product to get started.
       </p>
       <Link to="/products/new">
         <Button className="mt-5 rounded-full font-body text-xs font-semibold" size="sm">

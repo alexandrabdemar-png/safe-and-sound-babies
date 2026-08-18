@@ -8,8 +8,8 @@ export type InsightDismissalRow = {
  * Which rule_ids should currently be hidden, given the raw insight_dismissals
  * rows for a child. "done"/"dismissed" block forever; "snoozed" blocks only
  * until the stored `until` timestamp passes. Shared by home.tsx's "Up next"
- * insights and alerts.tsx's replacement/size-up "Mark as done" so the two
- * screens can never silently drift out of sync on what counts as dismissed.
+ * insights and alerts.tsx's replacement "Mark as done" so the two screens
+ * can never silently drift out of sync on what counts as dismissed.
  */
 export function computeBlockedRuleIds(
   rows: InsightDismissalRow[],

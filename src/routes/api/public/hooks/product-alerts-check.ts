@@ -5,9 +5,9 @@ import { hookUnauthorizedResponse } from "@/lib/hookAuth";
 /**
  * Daily product alerts job.
  *
- * Finds products with predicted_sizeup_date or predicted_replacement_date
- * within the next 7 days and sends a push digest to each parent directly via
- * Apple Push Notification service (see src/lib/apns.server.ts).
+ * Finds products with a predicted_replacement_date within the next 7 days
+ * and sends a push digest to each parent directly via Apple Push
+ * Notification service (see src/lib/apns.server.ts).
  * Respects per-user notification settings stored in user_notification_settings.
  *
  * Recall notifications are no longer sent from here — the
@@ -34,21 +34,19 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
         const todayStr = today.toISOString().slice(0, 10);
         const horizonStr = horizon.toISOString().slice(0, 10);
 
-        // Products due for size-up or replacement in the next 7 days
+        // Products due for replacement in the next 7 days
         type ProductRow = {
           id: string;
           user_id: string;
           name: string;
           child_id: string | null;
-          predicted_sizeup_date: string | null;
           predicted_replacement_date: string | null;
         };
         const { data: products, error } = await supabaseAdmin
           .from("products")
-          .select("id, user_id, name, child_id, predicted_sizeup_date, predicted_replacement_date")
-          .or(
-            `and(predicted_sizeup_date.gte.${todayStr},predicted_sizeup_date.lte.${horizonStr}),and(predicted_replacement_date.gte.${todayStr},predicted_replacement_date.lte.${horizonStr})`,
-          );
+          .select("id, user_id, name, child_id, predicted_replacement_date")
+          .gte("predicted_replacement_date", todayStr)
+          .lte("predicted_replacement_date", horizonStr);
 
         if (error) {
           return new Response(JSON.stringify({ error: error.message }), {
@@ -70,10 +68,10 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
         const userIds = Array.from(allUserIds);
         const { data: settingsRows } = await (supabaseAdmin as any)
           .from("user_notification_settings")
-          .select("user_id, size_up_enabled, replacement_enabled")
+          .select("user_id, replacement_enabled")
           .in("user_id", userIds);
 
-        type UserSettings = { size_up_enabled: boolean; replacement_enabled: boolean };
+        type UserSettings = { replacement_enabled: boolean };
         const settingsMap = new Map<string, UserSettings>();
         for (const s of (settingsRows ?? []) as unknown as Array<
           { user_id: string } & UserSettings
@@ -81,20 +79,7 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
           settingsMap.set(s.user_id, s);
         }
         const getSetting = (uid: string): UserSettings =>
-          settingsMap.get(uid) ?? { size_up_enabled: true, replacement_enabled: true };
-
-        // Load child names for size-up messages
-        const childIds = [
-          ...new Set(
-            (products ?? [])
-              .map((p) => (p as ProductRow).child_id)
-              .filter((id): id is string => !!id),
-          ),
-        ];
-        const { data: children } = childIds.length
-          ? await supabaseAdmin.from("children").select("id, name").in("id", childIds)
-          : { data: [] };
-        const childNameMap = new Map((children ?? []).map((c) => [c.id, c.name]));
+          settingsMap.get(uid) ?? { replacement_enabled: true };
 
         // Load already-sent alerts to avoid duplicates (last 7 days)
         const since = new Date();
@@ -112,12 +97,11 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
 
         // Group per-user messages
         type Bucket = {
-          sizeUp: Array<{ name: string; child: string; productId: string }>;
           replace: Array<{ name: string; productId: string }>;
         };
         const byUser = new Map<string, Bucket>();
         const ensure = (uid: string): Bucket => {
-          const b = byUser.get(uid) ?? { sizeUp: [], replace: [] };
+          const b = byUser.get(uid) ?? { replace: [] };
           byUser.set(uid, b);
           return b;
         };
@@ -125,19 +109,6 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
         for (const p of (products ?? []) as ProductRow[]) {
           const s = getSetting(p.user_id);
           const b = ensure(p.user_id);
-          if (
-            s.size_up_enabled &&
-            p.predicted_sizeup_date &&
-            p.predicted_sizeup_date >= todayStr &&
-            p.predicted_sizeup_date <= horizonStr &&
-            !sentSet.has(`${p.id}:size_up`)
-          ) {
-            b.sizeUp.push({
-              name: p.name,
-              child: p.child_id ? (childNameMap.get(p.child_id) ?? "your baby") : "your baby",
-              productId: p.id,
-            });
-          }
           if (
             s.replacement_enabled &&
             p.predicted_replacement_date &&
@@ -151,7 +122,7 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
 
         // Remove empty buckets
         for (const [uid, b] of byUser) {
-          if (!b.sizeUp.length && !b.replace.length) byUser.delete(uid);
+          if (!b.replace.length) byUser.delete(uid);
         }
 
         if (byUser.size === 0) {
@@ -184,17 +155,6 @@ export const Route = createFileRoute("/api/public/hooks/product-alerts-check")({
           const b = byUser.get(profile.user_id);
           if (!b) continue;
 
-          for (const item of b.sizeUp) {
-            pending.push({
-              userId: profile.user_id,
-              deviceToken: profile.apns_device_token,
-              title: `📏 Safety check — ${item.name}`,
-              body: `${item.child} may be approaching the size limit for their ${item.name}. A proper fit matters for safety.`,
-              data: { type: "size_up", productId: item.productId },
-              productId: item.productId,
-              alertType: "size_up",
-            });
-          }
           for (const item of b.replace) {
             pending.push({
               userId: profile.user_id,

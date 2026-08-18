@@ -50,7 +50,7 @@ export const CATEGORIES: {
   { key: "swing",           label: "Swing",           icon: Music,       hint: "Outgrown when your baby can sit up independently", minAgeMonths: 0, maxAgeMonths: 6 },
   { key: "bouncer",         label: "Bouncer",         icon: Armchair,    hint: "We'll flag the weight limit", minAgeMonths: 0, maxAgeMonths: 6 },
   { key: "activity_center", label: "Activity center", icon: Grid3x3,     hint: "Best when your baby can hold their head up but isn't yet walking", minAgeMonths: 4, maxAgeMonths: 12 },
-  { key: "sleep_sack",      label: "Sleep sack",      icon: Wind,        hint: "We'll prompt size-ups based on weight", minAgeMonths: 0 },
+  { key: "sleep_sack",      label: "Sleep sack",      icon: Wind,        hint: "We'll prompt a size-up check a few months after you add it", minAgeMonths: 0 },
   { key: "baby_gate",       label: "Baby gate",       icon: DoorClosed,  hint: "Hardware-mount at the top of stairs", minAgeMonths: 6 },
   { key: "play_yard",       label: "Pack 'n Play",    icon: Tent,        hint: "Portable play yard / travel crib", minAgeMonths: 0 },
   { key: "baby_monitor",    label: "Baby monitor",    icon: Radio,       hint: "Tracked for recalls", minAgeMonths: 0 },

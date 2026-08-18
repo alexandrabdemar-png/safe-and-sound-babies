@@ -8,7 +8,7 @@ export const addOptions = [
     to: "/products/new",
     icon: Package,
     title: "A product to watch",
-    blurb: "Track replacements, size-ups, and recalls on baby gear.",
+    blurb: "Track replacements and recalls on baby gear.",
   },
   {
     to: "/moments/new",

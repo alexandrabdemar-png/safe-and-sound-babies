@@ -839,11 +839,9 @@ export type Database = {
           manufacture_date: string | null
           model: string | null
           name: string
-          next_size_at: string | null
           notes: string | null
           photo_url: string | null
           predicted_replacement_date: string | null
-          predicted_sizeup_date: string | null
           product_type: string
           purchased_at: string | null
           recall_checked_at: string | null
@@ -866,11 +864,9 @@ export type Database = {
           manufacture_date?: string | null
           model?: string | null
           name: string
-          next_size_at?: string | null
           notes?: string | null
           photo_url?: string | null
           predicted_replacement_date?: string | null
-          predicted_sizeup_date?: string | null
           product_type?: string
           purchased_at?: string | null
           recall_checked_at?: string | null
@@ -893,11 +889,9 @@ export type Database = {
           manufacture_date?: string | null
           model?: string | null
           name?: string
-          next_size_at?: string | null
           notes?: string | null
           photo_url?: string | null
           predicted_replacement_date?: string | null
-          predicted_sizeup_date?: string | null
           product_type?: string
           purchased_at?: string | null
           recall_checked_at?: string | null

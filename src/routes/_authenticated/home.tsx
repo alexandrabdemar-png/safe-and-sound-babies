@@ -331,8 +331,8 @@ function HomePage() {
       if (productRes.error) {
         // Previously silent: a failed read here left `products` at its
         // previous value (empty on first load) with no indication — every
-        // insight/alert derived from products (recalls, size-up, replace)
-        // would silently look like nothing had ever been added.
+        // insight/alert derived from products (recalls, replace) would
+        // silently look like nothing had ever been added.
         console.error("[home] failed to load products:", productRes.error.message);
         toast.error(friendlyError(productRes.error.message));
       } else {

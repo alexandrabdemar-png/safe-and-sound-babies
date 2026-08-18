@@ -187,7 +187,7 @@ function EmptyProducts({ onAdd }: { onAdd: () => void }) {
       <CribIllustration className="mx-auto mb-2 h-24 w-24" />
       <p className="font-display text-lg font-semibold tracking-tight">Your gear lives here</p>
       <p className="mx-auto mt-1.5 max-w-xs font-body text-sm text-muted-foreground">
-        Add the products you use and we'll quietly watch for recalls, let you know when to replace them, and flag when your little one is ready to size up.
+        Add the products you use and we'll quietly watch for recalls and let you know when to replace them.
       </p>
       <Button
         type="button"

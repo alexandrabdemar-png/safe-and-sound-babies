@@ -554,7 +554,6 @@ type ResilientProductRow = {
   category: string | null;
   added_at: string | null;
   purchased_at: string | null;
-  predicted_sizeup_date: string | null;
   predicted_replacement_date: string | null;
   recalled: boolean;
   child_id: string | null;
@@ -563,7 +562,7 @@ type ResilientProductRow = {
 };
 
 const PRODUCT_DETAIL_BASE_SELECT =
-  "id, name, brand, size, category, added_at, purchased_at, predicted_sizeup_date, predicted_replacement_date, recalled, child_id";
+  "id, name, brand, size, category, added_at, purchased_at, predicted_replacement_date, recalled, child_id";
 
 /**
  * Reads a single product for the detail screen, tolerating the live

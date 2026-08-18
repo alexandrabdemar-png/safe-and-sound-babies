@@ -22,7 +22,7 @@ export const Route = createFileRoute('/_authenticated/pricing')({
 
 const FREE_FEATURES = [
   'Product recall alerts (with push notifications)',
-  'Replacement & size-up reminders',
+  'Replacement reminders',
   'Track unlimited baby products',
   'Manual product entry',
   'All safety notifications',
