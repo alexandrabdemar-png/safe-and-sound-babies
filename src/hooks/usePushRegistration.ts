@@ -48,6 +48,15 @@ export function usePushRegistration(userId: string | null) {
         }),
       );
 
+      // Tapping a recall push should land the user on the alerts screen.
+      listeners.push(
+        await PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
+          const type = (action.notification.data as { type?: string } | undefined)?.type;
+          window.location.assign(type === "recall" ? "/alerts" : "/home");
+        }),
+      );
+
+
       if (!cancelled) await PushNotifications.register();
     })();
 
