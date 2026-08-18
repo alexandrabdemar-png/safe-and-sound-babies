@@ -13,7 +13,7 @@ import { WelcomeIntroModal } from "@/components/WelcomeIntroModal";
 import { cn } from "@/lib/utils";
 import { friendlyError } from "@/lib/errors";
 import { checkNeedsLegalConsent } from "@/lib/legalConsent";
-import { CATEGORY_BY_KEY, type CategoryKey } from "@/lib/productCategories";
+import { type CategoryKey } from "@/lib/productCategories";
 import hdCarseat from "@/assets/hd-carseat.png";
 import hdCrib from "@/assets/hd-crib.png";
 import hdBassinet from "@/assets/hd-bassinet.png";
