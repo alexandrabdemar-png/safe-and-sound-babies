@@ -14,6 +14,12 @@ import { cn } from "@/lib/utils";
 import { friendlyError } from "@/lib/errors";
 import { checkNeedsLegalConsent } from "@/lib/legalConsent";
 import { CATEGORY_BY_KEY, type CategoryKey } from "@/lib/productCategories";
+import catCarseat from "@/assets/hd-carseat.png";
+import catCrib from "@/assets/hd-crib.png";
+import catStroller from "@/assets/hd-stroller.png";
+import catBouncer from "@/assets/hd-bouncer.png";
+import catSwaddle from "@/assets/hd-swaddle.png";
+import catBlocks from "@/assets/hd-blocks.png";
 import {
   PROFILE_TYPES,
   usesAgeRangeFlow,
@@ -75,6 +81,20 @@ const CATEGORIES: { key: CategoryKey; name: string }[] = [
   { key: "sleep_sack",      name: "Sleep sacks" },
   { key: "baby_gate",       name: "Baby gates" },
 ];
+
+// Matches the illustrated category art used on the marketing homepage
+// (src/routes/index.tsx's "Track what matters" section) — reused here so
+// this step visually matches it. Only 6 of the 9 categories above have a
+// matching illustration; the rest (bassinet, high_chair, baby_gate) fall
+// back to their plain lucide icon from productCategories.ts.
+const CATEGORY_IMAGE: Partial<Record<CategoryKey, string>> = {
+  car_seat: catCarseat,
+  crib: catCrib,
+  stroller: catStroller,
+  bouncer: catBouncer,
+  sleep_sack: catSwaddle,
+  activity_center: catBlocks,
+};
 
 // Safety first-look content shown right after onboarding. This used to be
 // selected by the child's computed age from their date of birth — since the
@@ -503,6 +523,7 @@ function OnboardingPage() {
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {CATEGORIES.map((cat) => {
                   const Icon = CATEGORY_BY_KEY[cat.key].icon;
+                  const image = CATEGORY_IMAGE[cat.key];
                   const active = selected.has(cat.key);
                   return (
                     <button
@@ -521,9 +542,15 @@ function OnboardingPage() {
                           <Check className="h-3 w-3" />
                         </span>
                       )}
-                      <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-sand/50">
-                        <Icon className="h-5 w-5 text-accent" />
-                      </span>
+                      {image ? (
+                        <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-[#F5F1E8] p-2">
+                          <img src={image} alt="" width={128} height={128} className="h-full w-full object-contain" />
+                        </span>
+                      ) : (
+                        <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-sand/50">
+                          <Icon className="h-5 w-5 text-accent" />
+                        </span>
+                      )}
                       <span className="font-body text-xs font-medium text-foreground">
                         {cat.name}
                       </span>
