@@ -67,7 +67,7 @@ const categories = [
   { name: "Carriers", image: catCarrier },
   { name: "Pack 'n Plays", image: catPacknplay },
   { name: "Swaddles", image: catSwaddle },
-  { name: "Pacifiers", image: catPacifier },
+  { name: "Pacifiers", image: catPacifier, scale: "scale-[0.78]" },
   { name: "Formula", image: catFormula },
   { name: "Breast Milk", image: catBreastmilk },
   { name: "Baby Food", image: catBabyfood },
@@ -162,7 +162,7 @@ function Index() {
                     width={512}
                     height={512}
                     loading="lazy"
-                    className="h-full w-full object-contain"
+                    className={`h-full w-full object-contain ${"scale" in cat ? (cat as { scale?: string }).scale : ""}`}
                   />
                 </div>
 
