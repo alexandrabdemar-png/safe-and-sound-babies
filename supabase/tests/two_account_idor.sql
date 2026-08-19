@@ -39,7 +39,7 @@ VALUES ('aaaa0001-0000-0000-0000-000000000001', 'avocado', CURRENT_DATE, false);
 -- them from the canonical schema.
 
 INSERT INTO public.bottles (user_id, child_id, bottle_type, storage, started_at, expires_at, alert_minutes_before)
-VALUES (:'A', 'aaaa0001-0000-0000-0000-000000000001', 'formula', 'room_temp',
+VALUES (:'A', 'aaaa0001-0000-0000-0000-000000000001', 'formula_prepared', 'room',
         now(), now() + interval '2 hours', 15);
 
 INSERT INTO public.emergency_contacts (user_id, name, phone, relationship)
