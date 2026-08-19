@@ -22,9 +22,11 @@ import {
   MOMENT_ICONS,
   DEFAULT_MOMENT_ICON,
   SketchDefs,
-  saveMomentResilient,
   type MomentIconKey,
 } from "@/lib/momentIcons";
+import { saveMoment } from "@/lib/moments.functions";
+import { sanitizeError } from "@/lib/sanitize-error";
+
 import {
   type SafetyTip,
   MOMENT_SAFETY_MAP,
