@@ -1,3 +1,4 @@
+import { logError } from "@/lib/sanitize-error";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import {
   Component,
@@ -75,7 +76,7 @@ class SearchErrorBoundary extends Component<{ children: ReactNode }, { failed: b
     return { failed: true };
   }
   componentDidCatch(err: unknown) {
-    console.error("[ProductSearchAI] render error:", err);
+    logError("[ProductSearchAI] render error:", err);
   }
   render() {
     if (this.state.failed) return null; // silently hide — manual form still works
@@ -212,7 +213,7 @@ function NewProductPage() {
       toast.success("Saved — fetching safety guidelines");
       navigate({ to: "/products" });
     } catch (err) {
-      console.error("[products/new] handleSubmit error:", err);
+      logError("[products/new] handleSubmit error:", err);
       toast.error(err instanceof Error ? err.message : "Couldn't save");
     } finally {
       setSaving(false);

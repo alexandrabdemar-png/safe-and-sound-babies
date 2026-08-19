@@ -1,3 +1,4 @@
+import { logError } from "@/lib/sanitize-error";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -83,7 +84,7 @@ function MomentsPage() {
         // already catches its own — this covers the children query, and
         // is the safety net that keeps the page from being stuck on its
         // loading spinner forever with no error shown).
-        console.error("[moments] failed to load", err);
+        logError("[moments] failed to load", err);
         toast.error(err instanceof Error ? err.message : "Couldn't load your moments");
       } finally {
         if (!cancelled) setLoading(false);

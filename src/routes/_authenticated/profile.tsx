@@ -1,3 +1,4 @@
+import { logError } from "@/lib/sanitize-error";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,7 +82,7 @@ function ProfilePage() {
       await refreshChildren();
       toast.success('Child added');
     } catch (err) {
-      console.error("children insert error:", err);
+      logError("children insert error:", err);
       toast.error(err instanceof Error ? err.message : 'Could not add child');
     } finally {
       setAddingChild(false);

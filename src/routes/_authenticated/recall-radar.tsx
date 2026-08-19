@@ -1,3 +1,4 @@
+import { logError } from "@/lib/sanitize-error";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -135,9 +136,9 @@ function RecallRadarPage() {
       if (dismissedSettled.status === "fulfilled" && !dismissedSettled.value.error) {
         setDismissedIds(new Set((dismissedSettled.value.data ?? []).map((d) => d.recall_id)));
       } else if (dismissedSettled.status === "rejected") {
-        console.error("Recall Radar: dismissals fetch rejected", dismissedSettled.reason);
+        logError("Recall Radar: dismissals fetch rejected", dismissedSettled.reason);
       } else if (dismissedSettled.status === "fulfilled" && dismissedSettled.value.error) {
-        console.error("Recall Radar: dismissals fetch failed", dismissedSettled.value.error);
+        logError("Recall Radar: dismissals fetch failed", dismissedSettled.value.error);
       }
 
       let cpscFailed = false;
@@ -145,7 +146,7 @@ function RecallRadarPage() {
       if (cpscSettled.status === "fulfilled") {
         cpscItems = mapCpscResults(cpscSettled.value);
       } else {
-        console.error("Recall Radar: CPSC/FDA fetch failed", cpscSettled.reason);
+        logError("Recall Radar: CPSC/FDA fetch failed", cpscSettled.reason);
         cpscFailed = true;
       }
 
@@ -153,7 +154,7 @@ function RecallRadarPage() {
       let extraItems: RadarRecall[] = [];
       if (extraSettled.status === "fulfilled") {
         if (extraSettled.value.error) {
-          console.error("Recall Radar: extra-sources query failed", extraSettled.value.error);
+          logError("Recall Radar: extra-sources query failed", extraSettled.value.error);
           extraFailed = true;
         } else {
           extraItems = mapExtraResults(
@@ -161,7 +162,7 @@ function RecallRadarPage() {
           );
         }
       } else {
-        console.error("Recall Radar: extra-sources query rejected", extraSettled.reason);
+        logError("Recall Radar: extra-sources query rejected", extraSettled.reason);
         extraFailed = true;
       }
 

@@ -1,3 +1,4 @@
+import { logError } from "@/lib/sanitize-error";
 import { createFileRoute } from '@tanstack/react-router';
 import { createClient } from '@supabase/supabase-js';
 import { type StripeEnv, verifyWebhook } from '@/lib/stripe.server';
@@ -153,7 +154,7 @@ export const Route = createFileRoute('/api/public/payments/webhook')({
       POST: async ({ request }) => {
         const rawEnv = new URL(request.url).searchParams.get('env');
         if (rawEnv !== 'sandbox' && rawEnv !== 'live') {
-          console.error('Webhook received with invalid env:', rawEnv);
+          logError('Webhook received with invalid env:', rawEnv);
           return Response.json({ received: true, ignored: 'invalid env' });
         }
         const env: StripeEnv = rawEnv;
@@ -161,7 +162,7 @@ export const Route = createFileRoute('/api/public/payments/webhook')({
           await handleWebhook(request, env);
           return Response.json({ received: true });
         } catch (e) {
-          console.error('[webhook] error:', sanitizeError(e));
+          logError('[webhook] error:', sanitizeError(e));
           return new Response('Webhook error', { status: 400 });
         }
       },

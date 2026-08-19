@@ -1,3 +1,4 @@
+import { logError } from "@/lib/sanitize-error";
 // Product search — separate from barcode scanning. Searches the shared
 // product_catalog cache by name/brand, plus a live call to UPCitemdb's own
 // search-by-keyword endpoint (the one configured free source whose API
@@ -95,8 +96,7 @@ async function searchUpcItemDbLive(
         // silently returning [] and looking identical to "no matches
         // exist." A 429 here specifically means the shared trial quota is
         // exhausted, not that the product doesn't exist.
-        console.error(
-          `[searchProductCatalog] UPCitemdb live search failed: HTTP ${res.status} for query "${query}"`,
+        logError(`[searchProductCatalog] UPCitemdb live search failed: HTTP ${res.status} for query "${query}"`,
         );
         return [];
       }
@@ -122,7 +122,7 @@ async function searchUpcItemDbLive(
   } catch (err) {
     // Network failure, CORS rejection, or the 5s abort — same silent-[]
     // problem as the !res.ok branch above.
-    console.error(`[searchProductCatalog] UPCitemdb live search threw for query "${query}":`, err);
+    logError(`[searchProductCatalog] UPCitemdb live search threw for query "${query}":`, err);
     return [];
   }
 }

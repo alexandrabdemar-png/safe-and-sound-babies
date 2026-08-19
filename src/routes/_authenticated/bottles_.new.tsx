@@ -1,3 +1,4 @@
+import { logError } from "@/lib/sanitize-error";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -79,7 +80,7 @@ function NewBottlePage() {
     const { error } = await supabase.from("bottles").insert(payload as never);
     setSaving(false);
     if (error) {
-      console.error("[bottles.new] insert failed", error);
+      logError("[bottles.new] insert failed", error);
       toast.error(error.message || "Couldn't save bottle");
       return;
     }

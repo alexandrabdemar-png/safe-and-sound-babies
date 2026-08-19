@@ -1,3 +1,4 @@
+import { logError } from "@/lib/sanitize-error";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -151,7 +152,7 @@ function FirstFoodsPage() {
       // previous value with zero indication anything went wrong — a newly
       // saved food would look like it "didn't save" even though the insert
       // itself (a few lines up in handleSave) had already succeeded.
-      console.error("[first-foods] failed to load foods:", error.message);
+      logError("[first-foods] failed to load foods:", error.message);
       toast.error(friendlyError(error.message));
     } else if (data) {
       setFoods(data as unknown as FoodEntry[]);
@@ -202,7 +203,7 @@ function FirstFoodsPage() {
         });
 
     if (error) {
-      console.error("[first-foods] failed to save food:", error.message);
+      logError("[first-foods] failed to save food:", error.message);
       toast.error(friendlyError(error.message));
       setSaving(false);
       return;
@@ -229,7 +230,7 @@ function FirstFoodsPage() {
     // looking exactly like "hitting back Home broke something" when the
     // save itself was actually fine.
     loadData().catch((err) => {
-      console.error("[first-foods] background refresh after save failed:", err);
+      logError("[first-foods] background refresh after save failed:", err);
     });
   }
 

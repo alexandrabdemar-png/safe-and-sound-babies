@@ -25,7 +25,7 @@ import {
   type MomentIconKey,
 } from "@/lib/momentIcons";
 import { saveMoment } from "@/lib/moments.functions";
-import { sanitizeError } from "@/lib/sanitize-error";
+import { sanitizeError, logError } from "@/lib/sanitize-error";
 
 import {
   type SafetyTip,
@@ -117,7 +117,7 @@ function NewMomentPage() {
           },
         });
       } catch (err) {
-        console.error("[moments.new] insert failed", sanitizeError(err));
+        logError("[moments.new] insert failed", sanitizeError(err));
         toast.error(err instanceof Error ? err.message : "Couldn't save that moment");
         return;
       }

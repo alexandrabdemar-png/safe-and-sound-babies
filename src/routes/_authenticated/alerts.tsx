@@ -1,3 +1,4 @@
+import { logError } from "@/lib/sanitize-error";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -286,7 +287,7 @@ function AlertsPage() {
       .eq("id", id)
       .select("id");
     if (error || !data?.length) {
-      console.error("product_recalls acknowledge failed:", error ?? "0 rows updated (likely blocked by RLS)");
+      logError("product_recalls acknowledge failed:", error ?? "0 rows updated (likely blocked by RLS)");
       setRecalls(prev);
       toast.error(error ? friendlyError(error.message) : friendlyError("row-level security"));
     }
