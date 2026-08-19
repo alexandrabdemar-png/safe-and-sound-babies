@@ -120,7 +120,7 @@ function LegalConsentPage() {
       if (error && !/duplicate key/i.test(error.message) && !isSchemaMissingTableError(error)) {
         throw error;
       }
-      if (error) console.error("[legal-consent] couldn't record acceptance, continuing anyway:", error.message);
+      if (error) logError("[legal-consent] couldn't record acceptance, continuing anyway:", error.message);
       navigate({ to: getNextParam() } as never);
     } catch (err) {
       toast.error(friendlyError(err));

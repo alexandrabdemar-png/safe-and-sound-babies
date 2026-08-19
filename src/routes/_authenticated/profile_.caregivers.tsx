@@ -53,7 +53,7 @@ function CaregiversScreen() {
       setGrants(result.grants);
       setInvites(result.invites);
     } catch (err) {
-      logError("[caregivers] load failed", sanitizeError(err));
+      logError("[caregivers] load failed", err);
       toast.error("Couldn't load caregiver access");
     } finally {
       setLoading(false);
@@ -71,7 +71,7 @@ function CaregiversScreen() {
       setGrants((prev) => prev.filter((g) => g.id !== grant.id));
       toast.success(`Access to ${grant.childName} removed`);
     } catch (err) {
-      logError("[caregivers] revoke failed", sanitizeError(err));
+      logError("[caregivers] revoke failed", err);
       toast.error("Couldn't remove that access");
     } finally {
       setBusyId(null);
@@ -85,7 +85,7 @@ function CaregiversScreen() {
       setInvites((prev) => prev.filter((i) => i.id !== invite.id));
       toast.success("Invite cancelled");
     } catch (err) {
-      logError("[caregivers] invite revoke failed", sanitizeError(err));
+      logError("[caregivers] invite revoke failed", err);
       toast.error("Couldn't cancel that invite");
     } finally {
       setBusyId(null);

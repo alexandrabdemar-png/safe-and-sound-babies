@@ -172,7 +172,7 @@ function OnboardingPage() {
       .update({ intro_seen_at: new Date().toISOString() } as never)
       .eq("user_id", userId)
       .then(({ error }) => {
-        if (error) console.error("[onboarding] couldn't record intro_seen_at:", error.message);
+        if (error) logError("[onboarding] couldn't record intro_seen_at:", error.message);
       });
   }
 
@@ -248,7 +248,7 @@ function OnboardingPage() {
         } as never)
         .eq("user_id", userId);
       if (profileTypeError) {
-        console.error("[onboarding] couldn't save profile type / care age range:", profileTypeError.message);
+        logError("[onboarding] couldn't save profile type / care age range:", profileTypeError.message);
       }
 
       const childName = isAgeRange ? "" : name.trim();

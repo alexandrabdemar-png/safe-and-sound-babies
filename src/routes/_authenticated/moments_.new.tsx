@@ -117,7 +117,7 @@ function NewMomentPage() {
           },
         });
       } catch (err) {
-        logError("[moments.new] insert failed", sanitizeError(err));
+        logError("[moments.new] insert failed", err);
         toast.error(err instanceof Error ? err.message : "Couldn't save that moment");
         return;
       }
