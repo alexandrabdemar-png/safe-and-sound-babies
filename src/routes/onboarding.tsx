@@ -20,9 +20,10 @@ import catStroller from "@/assets/hd-stroller.png";
 import catBouncer from "@/assets/hd-bouncer.png";
 import catSwaddle from "@/assets/hd-swaddle.png";
 import catBlocks from "@/assets/hd-blocks.png";
-import {
 import { logError } from "@/lib/sanitize-error";
+import {
   PROFILE_TYPES,
+
   usesAgeRangeFlow,
   validateAgeRange,
   formatAgeRange,
