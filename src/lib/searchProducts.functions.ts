@@ -1,6 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { generateText } from "ai";
+
+// Caps the text we forward to the AI gateway: long inputs burn credits and are
+// never legitimate product names.
+const MAX_QUERY_LENGTH = 100;
+
 
 export interface ProductSearchResult {
   name: string;
