@@ -117,10 +117,18 @@ export function parseSearchResults(raw: string): ProductSearchResult[] {
 }
 
 export const searchProducts = createServerFn({ method: "POST" })
-  .inputValidator((data: { query: string }) => data)
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { query: string }) => {
+    const query = typeof data?.query === "string" ? data.query.trim() : "";
+    if (query.length > MAX_QUERY_LENGTH) {
+      throw new Error("Search is too long — try a shorter product name.");
+    }
+    return { query };
+  })
   .handler(async ({ data }: { data: { query: string } }): Promise<ProductSearchResult[]> => {
     const { query } = data;
-    if (!query || query.trim().length < 2) return [];
+    if (query.length < 2) return [];
+
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
 
