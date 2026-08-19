@@ -356,8 +356,8 @@ function ScanPage() {
         // the manual/AI-search add flow in recallRecord.functions.ts).
         for (const hit of recallInfo?.recalls ?? []) {
           recordRecallInDb(productId, hit).catch((err) =>
-            logError("[recall-db] failed to persist recall for scanned product",
-              productId,
+            logError(
+              `[recall-db] failed to persist recall for scanned product ${productId}`,
               err,
             ),
           );

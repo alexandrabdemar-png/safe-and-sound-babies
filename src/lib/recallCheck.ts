@@ -516,7 +516,7 @@ export async function recordRecallInDb(
       },
     });
   } catch (err) {
-    logError("[recall-db] failed to persist recall for product", productId, err);
+    logError(`[recall-db] failed to persist recall for product ${productId}`, err);
   }
 }
 
@@ -543,7 +543,7 @@ export async function stampRecallCheckedAt(
       .eq("id", productId);
     if (error) throw error;
   } catch (err) {
-    logError("[recall-db] failed to stamp recall_checked_at for product", productId, err);
+    logError(`[recall-db] failed to stamp recall_checked_at for product ${productId}`, err);
   }
 }
 
