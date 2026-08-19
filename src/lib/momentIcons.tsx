@@ -4,6 +4,7 @@
 // picks directly per moment.
 
 import { supabase } from "@/integrations/supabase/client";
+import { logError } from "@/lib/sanitize-error";
 
 export type MomentIconKey = "star" | "smiley" | "heart" | "sparkles";
 
@@ -205,8 +206,7 @@ export async function fetchMilestonesResilient(
     const first = await (opts.limit ? baseQuery.limit(opts.limit) : baseQuery);
 
     if (first.error && isIconColumnUnavailableError(first.error)) {
-      console.error(
-        "[fetchMilestonesResilient] icon column unavailable — retrying without it",
+      logError("[fetchMilestonesResilient] icon column unavailable — retrying without it",
         first.error,
       );
       const fallbackQuery = supabase
@@ -231,7 +231,7 @@ export async function fetchMilestonesResilient(
     // the server returning an error response. Without this, the caller's
     // loading state can get stuck forever (see saveMomentResilient below
     // for the write-side version of the same bug class).
-    console.error("[fetchMilestonesResilient] network/unexpected failure", err);
+    logError("[fetchMilestonesResilient] network/unexpected failure", err);
     return {
       data: null,
       error: {
@@ -265,13 +265,13 @@ export async function saveMomentResilient(
   try {
     let { error } = await supabase.from("milestones").insert(payload as never);
     if (error && isIconColumnUnavailableError(error)) {
-      console.error("[saveMomentResilient] icon column unavailable — retrying without it", error);
+      logError("[saveMomentResilient] icon column unavailable — retrying without it", error);
       const { icon: _icon, ...basePayload } = payload;
       ({ error } = await supabase.from("milestones").insert(basePayload as never));
     }
     return { error };
   } catch (err) {
-    console.error("[saveMomentResilient] network/unexpected failure", err);
+    logError("[saveMomentResilient] network/unexpected failure", err);
     return {
       error: {
         message: err instanceof Error ? err.message : "Network error — couldn't save that moment",

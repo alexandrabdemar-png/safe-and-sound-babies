@@ -21,6 +21,7 @@ import catBouncer from "@/assets/hd-bouncer.png";
 import catSwaddle from "@/assets/hd-swaddle.png";
 import catBlocks from "@/assets/hd-blocks.png";
 import {
+import { logError } from "@/lib/sanitize-error";
   PROFILE_TYPES,
   usesAgeRangeFlow,
   validateAgeRange,
@@ -281,7 +282,7 @@ function OnboardingPage() {
           const { error: watchlistError } = await supabase
             .from("category_watchlist")
             .insert(rows as never);
-          if (watchlistError) console.error("category_watchlist insert failed:", watchlistError);
+          if (watchlistError) logError("category_watchlist insert failed:", watchlistError);
         }
       } else if (isAgeRange && !skipCategories && selected.size > 0) {
         // Age-range profile types (Pediatrician/Daycare/Babysitter-Nanny/
@@ -296,7 +297,7 @@ function OnboardingPage() {
         const { error: watchlistError } = await supabase
           .from("category_watchlist")
           .insert(rows as never);
-        if (watchlistError) console.error("category_watchlist insert failed:", watchlistError);
+        if (watchlistError) logError("category_watchlist insert failed:", watchlistError);
       }
 
       clearProgress();
@@ -331,7 +332,7 @@ function OnboardingPage() {
       // real failure (a missing column, a constraint violation, anything)
       // silently collapsed to the same unhelpful "Something went wrong"
       // with no diagnostic detail, for the user or in the console.
-      console.error("Onboarding handleFinish failed:", err);
+      logError("Onboarding handleFinish failed:", err);
       toast.error(friendlyError(err));
     } finally {
       setSaving(false);

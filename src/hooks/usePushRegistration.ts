@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logError } from "@/lib/sanitize-error";
 
 /**
  * Registers this device for push notifications (native iOS builds only —
@@ -44,7 +45,7 @@ export function usePushRegistration(userId: string | null) {
       );
       listeners.push(
         await PushNotifications.addListener("registrationError", (err) => {
-          console.error("[push] registration error:", err.error);
+          logError("[push] registration error:", err.error);
         }),
       );
 

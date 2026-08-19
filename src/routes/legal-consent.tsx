@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { CURRENT_TERMS_VERSION } from "@/lib/legalConsent";
 import { friendlyError, isColumnUnavailableError, isSchemaMissingTableError } from "@/lib/errors";
 import { parseNextParam } from "@/lib/authCallbackRouting";
+import { logError } from "@/lib/sanitize-error";
 
 export const Route = createFileRoute("/legal-consent")({
   ssr: false,
@@ -100,8 +101,7 @@ function LegalConsentPage() {
       // level) rather than blocking the whole consent flow on it — same
       // resilient pattern used elsewhere for optional/recently-added columns.
       if (error && isColumnUnavailableError("is_18_or_older", error)) {
-        console.error(
-          "[legal-consent] is_18_or_older unavailable — retrying without it",
+        logError("[legal-consent] is_18_or_older unavailable — retrying without it",
           error.message,
         );
         ({ error } = await supabase.from("user_agreements").insert({

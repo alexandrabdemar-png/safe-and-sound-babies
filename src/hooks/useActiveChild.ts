@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logError } from "@/lib/sanitize-error";
 
 export type ChildOption = {
   id: string;
@@ -38,7 +39,7 @@ export function useActiveChild() {
       // Log it and leave the existing list untouched rather than silently
       // replacing a previously-successful fetch with an empty one, which
       // would make the app think the user's children just disappeared.
-      console.error('[useActiveChild] failed to load children', error);
+      logError('[useActiveChild] failed to load children', error);
       setLoading(false);
       return;
     }
