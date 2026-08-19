@@ -615,17 +615,14 @@ function FeedbackSection() {
     if (!message.trim()) return;
     setSubmitting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      await (supabase as any).from("feedback").insert({
-        user_id: user?.id ?? null,
-        type,
-        message: message.trim(),
-        app_version: APP_VERSION,
+      const { error } = await supabase.functions.invoke("submit-feedback", {
+        body: { type, message: message.trim(), appVersion: APP_VERSION },
       });
+      if (error) throw error;
       setDone(true);
       setMessage("");
-    } catch {
-      toast.error("Could not send feedback — please try again.");
+    } catch (err) {
+      toast.error(await extractFunctionsErrorMessage(err, "Could not send feedback — please try again."));
     } finally {
       setSubmitting(false);
     }
