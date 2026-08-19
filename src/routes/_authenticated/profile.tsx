@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import {
   LogOut, User as UserIcon, Sparkles, Loader2, Plus, Trash2,
   Download, CreditCard, Shield, Bell, Share2, Gift, Copy, Check, HelpCircle, MessageSquare,
+  FileText,
 } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useProGate } from "@/hooks/useProGate";
@@ -278,6 +279,9 @@ function ProfilePage() {
           </Button>
           <Button asChild variant="ghost" className="w-full justify-start rounded-xl">
             <Link to="/profile/privacy-policy"><Shield className="h-4 w-4 mr-2" /> Privacy Policy</Link>
+          </Button>
+          <Button asChild variant="ghost" className="w-full justify-start rounded-xl">
+            <Link to="/terms"><FileText className="h-4 w-4 mr-2" /> Terms of Service</Link>
           </Button>
           <Button asChild variant="ghost" className="w-full justify-start rounded-xl">
             <Link to="/profile/support"><HelpCircle className="h-4 w-4 mr-2" /> Help & Support</Link>
