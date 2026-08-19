@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import {
   LogOut, User as UserIcon, Sparkles, Loader2, Plus, Trash2,
   Download, CreditCard, Shield, Bell, Share2, Gift, Copy, Check, HelpCircle, MessageSquare,
+  FileText,
 } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useProGate } from "@/hooks/useProGate";
