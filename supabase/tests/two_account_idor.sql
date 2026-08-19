@@ -167,13 +167,16 @@ SELECT test.logout();
 
 
 -- ── Adversarial: anon (no session) sees nothing at all ────────────────────
+-- User-data tables don't even carry a SELECT grant for anon, so the attempt
+-- fails at the privilege layer before RLS is consulted. Asserting the raise
+-- (rather than "0 rows") is the stronger guarantee.
 SELECT test.login('anon');
-SELECT test.assert((SELECT count(*) FROM public.children) = 0,
-  'IDOR: anonymous callers cannot read any children');
-SELECT test.assert((SELECT count(*) FROM public.products) = 0,
-  'IDOR: anonymous callers cannot read any products');
-SELECT test.assert((SELECT count(*) FROM public.emergency_info) = 0,
-  'IDOR: anonymous callers cannot read any medical info');
-SELECT test.assert((SELECT count(*) FROM public.milestones) = 0,
-  'IDOR: anonymous callers cannot read any milestones');
+SELECT test.assert_raises($$SELECT count(*) FROM public.children$$,
+  'IDOR: anonymous callers are denied access to children');
+SELECT test.assert_raises($$SELECT count(*) FROM public.products$$,
+  'IDOR: anonymous callers are denied access to products');
+SELECT test.assert_raises($$SELECT count(*) FROM public.emergency_info$$,
+  'IDOR: anonymous callers are denied access to medical info');
+SELECT test.assert_raises($$SELECT count(*) FROM public.milestones$$,
+  'IDOR: anonymous callers are denied access to milestones');
 SELECT test.logout();
