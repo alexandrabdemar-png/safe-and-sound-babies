@@ -84,7 +84,7 @@ Your data is kept for as long as your account is active. If you delete your acco
 Encrypted database backups are retained on a rolling 7-day window by our hosting provider, and server logs on a rolling 7-day window. Deleted data can therefore persist in a backup for up to 7 days after deletion, after which the backup itself expires. Backups are used only for disaster recovery.
 
 What is NOT removed by deleting your account:
-• Feedback and bug reports you sent us — these live as emails in our support inbox. Email ${SUPPORT_EMAIL} and we will delete them on request.
+• Feedback and bug reports you sent us — these are emailed to our support inbox and also stored in our feedback table. Deleting your account unlinks the feedback from you (your user ID is removed), but the message text remains. Email ${SUPPORT_EMAIL} and we will delete the message itself on request.
 • Shared product-catalog entries created by a barcode scan — these hold only a product's name, brand, barcode, and category, contain nothing about you or your child, and are not linked to your account.
 • Anonymised aggregate statistics (counts only, no personal data), which may be retained indefinitely.
 
