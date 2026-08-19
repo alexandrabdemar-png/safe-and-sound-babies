@@ -1,3 +1,4 @@
+import { logError } from "@/lib/sanitize-error";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import {
@@ -89,7 +90,7 @@ function ChecklistsPage() {
         .eq("user_id", userId)
         .eq("item_key", key);
       if (error) {
-        console.error("[checklists] failed to un-check item:", error.message);
+        logError("[checklists] failed to un-check item:", error.message);
         // Roll the optimistic update back so the UI reflects what's
         // actually saved, and let the user know rather than silently
         // showing an unchecked box that's still checked in the database.
@@ -108,7 +109,7 @@ function ChecklistsPage() {
         // idempotent update this is meant to be.
         .upsert({ user_id: userId, item_key: key }, { onConflict: "user_id,item_key" });
       if (error) {
-        console.error("[checklists] failed to check off item:", error.message);
+        logError("[checklists] failed to check off item:", error.message);
         setCompleted((prev) => {
           const next = new Set(prev);
           next.delete(key);

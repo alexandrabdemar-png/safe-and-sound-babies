@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getStripeEnvironment } from '@/lib/stripe';
+import { computeIsPro } from '@/lib/isPro';
 
 export type SubscriptionRow = {
   plan: string | null;
@@ -11,14 +12,6 @@ export type SubscriptionRow = {
   stripe_customer_id: string | null;
 };
 
-function computeIsPro(sub: SubscriptionRow | null): boolean {
-  if (!sub || sub.plan !== 'pro') return false;
-  const stillInPeriod = !sub.current_period_end || new Date(sub.current_period_end) > new Date();
-  const okStatus = sub.status === 'active' || sub.status === 'trialing' || sub.status === 'past_due';
-  // End-of-period access: canceled but period not over yet
-  const inGracePeriod = sub.status === 'canceled' && stillInPeriod;
-  return (okStatus && stillInPeriod) || inGracePeriod;
-}
 
 export function useSubscription() {
   // DEV ONLY — set VITE_FORCE_PRO=true in .env.local to bypass paywalls

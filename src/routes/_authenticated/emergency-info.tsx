@@ -1,3 +1,4 @@
+import { logError } from "@/lib/sanitize-error";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -145,7 +146,7 @@ function EmergencyInfoPage() {
       await upsertEmergencyInfo();
       toast.success("Saved");
     } catch (err) {
-      console.error("emergency_info save failed:", err);
+      logError("emergency_info save failed:", err);
       toast.error(`Could not save: ${diagnosticDetail(err)}`);
     }
     setSaving(false);
@@ -181,7 +182,7 @@ function EmergencyInfoPage() {
       setFreshShareUrl(`${window.location.origin}/emergency-share/${rawToken}`);
       toast.success("Share link created — revoke it anytime from here");
     } catch (err) {
-      console.error("emergency_share_links create failed:", err);
+      logError("emergency_share_links create failed:", err);
       toast.error(`Could not create a share link: ${diagnosticDetail(err)}`);
     }
     setGenerating(false);
@@ -199,7 +200,7 @@ function EmergencyInfoPage() {
       setFreshShareUrl(null);
       toast.success("Link revoked");
     } catch (err) {
-      console.error("emergency_share_links revoke failed:", err);
+      logError("emergency_share_links revoke failed:", err);
       toast.error(`Could not revoke the link: ${diagnosticDetail(err)}`);
     }
   }

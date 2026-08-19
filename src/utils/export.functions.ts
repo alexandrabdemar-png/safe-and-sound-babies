@@ -1,10 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { hasProSubscription } from "@/lib/serverProGate";
 
 export const exportUserData = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+    // Data export is a Pro feature. profile.tsx's requirePro() call is only
+    // a UI gate — without this check a free user could call this server
+    // function directly and pull the full export anyway.
+    if (!(await hasProSubscription(supabase, userId))) {
+      throw new Error("Data export is a Pro feature. Upgrade to download your backup.");
+    }
+
     // Previously only children/products/milestones — the Privacy Policy
     // promises "a complete JSON export of all their data," but bottles,
     // emergency_info, and first_foods (all personal, some of it health

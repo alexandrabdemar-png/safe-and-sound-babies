@@ -433,33 +433,6 @@ export type Database = {
           },
         ]
       }
-      feedback: {
-        Row: {
-          app_version: string | null
-          created_at: string
-          id: string
-          message: string
-          type: string
-          user_id: string | null
-        }
-        Insert: {
-          app_version?: string | null
-          created_at?: string
-          id?: string
-          message: string
-          type: string
-          user_id?: string | null
-        }
-        Update: {
-          app_version?: string | null
-          created_at?: string
-          id?: string
-          message?: string
-          type?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       first_foods: {
         Row: {
           child_id: string

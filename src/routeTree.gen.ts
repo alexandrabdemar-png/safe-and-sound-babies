@@ -47,6 +47,7 @@ import { Route as AuthenticatedProfileSupportRouteImport } from './routes/_authe
 import { Route as AuthenticatedProfilePrivacyPromiseRouteImport } from './routes/_authenticated/profile_/privacy-promise'
 import { Route as AuthenticatedProfilePrivacyPolicyRouteImport } from './routes/_authenticated/profile_.privacy-policy'
 import { Route as AuthenticatedProfileNotificationSettingsRouteImport } from './routes/_authenticated/profile_.notification-settings'
+import { Route as AuthenticatedProfileCaregiversRouteImport } from './routes/_authenticated/profile_.caregivers'
 import { Route as AuthenticatedProductsScanRouteImport } from './routes/_authenticated/products_.scan'
 import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products_.new'
 import { Route as AuthenticatedProductsIdRouteImport } from './routes/_authenticated/products_.$id'
@@ -257,6 +258,12 @@ const AuthenticatedProfileNotificationSettingsRoute =
     path: '/profile/notification-settings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedProfileCaregiversRoute =
+  AuthenticatedProfileCaregiversRouteImport.update({
+    id: '/profile_/caregivers',
+    path: '/profile/caregivers',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProductsScanRoute =
   AuthenticatedProductsScanRouteImport.update({
     id: '/products_/scan',
@@ -340,6 +347,7 @@ export interface FileRoutesByFullPath {
   '/products/$id': typeof AuthenticatedProductsIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/scan': typeof AuthenticatedProductsScanRoute
+  '/profile/caregivers': typeof AuthenticatedProfileCaregiversRoute
   '/profile/notification-settings': typeof AuthenticatedProfileNotificationSettingsRoute
   '/profile/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/profile/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
@@ -387,6 +395,7 @@ export interface FileRoutesByTo {
   '/products/$id': typeof AuthenticatedProductsIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/scan': typeof AuthenticatedProductsScanRoute
+  '/profile/caregivers': typeof AuthenticatedProfileCaregiversRoute
   '/profile/notification-settings': typeof AuthenticatedProfileNotificationSettingsRoute
   '/profile/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/profile/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
@@ -436,6 +445,7 @@ export interface FileRoutesById {
   '/_authenticated/products_/$id': typeof AuthenticatedProductsIdRoute
   '/_authenticated/products_/new': typeof AuthenticatedProductsNewRoute
   '/_authenticated/products_/scan': typeof AuthenticatedProductsScanRoute
+  '/_authenticated/profile_/caregivers': typeof AuthenticatedProfileCaregiversRoute
   '/_authenticated/profile_/notification-settings': typeof AuthenticatedProfileNotificationSettingsRoute
   '/_authenticated/profile_/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/_authenticated/profile_/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
@@ -485,6 +495,7 @@ export interface FileRouteTypes {
     | '/products/$id'
     | '/products/new'
     | '/products/scan'
+    | '/profile/caregivers'
     | '/profile/notification-settings'
     | '/profile/privacy-policy'
     | '/profile/privacy-promise'
@@ -532,6 +543,7 @@ export interface FileRouteTypes {
     | '/products/$id'
     | '/products/new'
     | '/products/scan'
+    | '/profile/caregivers'
     | '/profile/notification-settings'
     | '/profile/privacy-policy'
     | '/profile/privacy-promise'
@@ -580,6 +592,7 @@ export interface FileRouteTypes {
     | '/_authenticated/products_/$id'
     | '/_authenticated/products_/new'
     | '/_authenticated/products_/scan'
+    | '/_authenticated/profile_/caregivers'
     | '/_authenticated/profile_/notification-settings'
     | '/_authenticated/profile_/privacy-policy'
     | '/_authenticated/profile_/privacy-promise'
@@ -880,6 +893,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileNotificationSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile_/caregivers': {
+      id: '/_authenticated/profile_/caregivers'
+      path: '/profile/caregivers'
+      fullPath: '/profile/caregivers'
+      preLoaderRoute: typeof AuthenticatedProfileCaregiversRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/products_/scan': {
       id: '/_authenticated/products_/scan'
       path: '/products/scan'
@@ -963,6 +983,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProductsIdRoute: typeof AuthenticatedProductsIdRoute
   AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
   AuthenticatedProductsScanRoute: typeof AuthenticatedProductsScanRoute
+  AuthenticatedProfileCaregiversRoute: typeof AuthenticatedProfileCaregiversRoute
   AuthenticatedProfileNotificationSettingsRoute: typeof AuthenticatedProfileNotificationSettingsRoute
   AuthenticatedProfilePrivacyPolicyRoute: typeof AuthenticatedProfilePrivacyPolicyRoute
   AuthenticatedProfilePrivacyPromiseRoute: typeof AuthenticatedProfilePrivacyPromiseRoute
@@ -993,6 +1014,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProductsIdRoute: AuthenticatedProductsIdRoute,
   AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
   AuthenticatedProductsScanRoute: AuthenticatedProductsScanRoute,
+  AuthenticatedProfileCaregiversRoute: AuthenticatedProfileCaregiversRoute,
   AuthenticatedProfileNotificationSettingsRoute:
     AuthenticatedProfileNotificationSettingsRoute,
   AuthenticatedProfilePrivacyPolicyRoute:
