@@ -34,15 +34,19 @@ export const saveMoment = createServerFn({ method: "POST" })
   .inputValidator((input: SaveMomentInput) => {
     const title = typeof input?.title === "string" ? input.title.trim() : "";
     if (!title) throw new Error("Give the moment a title");
+    if (title.length > 120) throw new Error("Title is too long (120 characters max)");
     if (!input?.child_id) throw new Error("Pick a child to log this moment for");
+    const notes = input.notes?.trim() ? input.notes.trim() : null;
+    if (notes && notes.length > 2000) throw new Error("Notes are too long (2000 characters max)");
     return {
       child_id: input.child_id,
       title,
       logged_at: input.logged_at,
-      notes: input.notes?.trim() ? input.notes.trim() : null,
-      icon: input.icon,
+      notes,
+      icon: typeof input.icon === "string" ? input.icon.slice(0, 40) : input.icon,
     };
   })
+
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
