@@ -16,8 +16,10 @@ export const addChild = createServerFn({ method: "POST" })
   .inputValidator((input: { name: string }) => {
     const name = typeof input?.name === "string" ? input.name.trim() : "";
     if (!name) throw new Error("Name is required");
+    if (name.length > 80) throw new Error("Name is too long (80 characters max)");
     return { name };
   })
+
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
