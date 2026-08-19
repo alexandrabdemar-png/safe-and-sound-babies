@@ -560,7 +560,14 @@ function CoParentInvite({ children }: { children: { id: string; name: string }[]
           </Button>
         </form>
       )}
+      <Link
+        to="/profile/caregivers"
+        className="mt-3 block font-body text-xs font-semibold text-primary underline underline-offset-2"
+      >
+        Manage who has access
+      </Link>
     </section>
+
   );
 }
 
