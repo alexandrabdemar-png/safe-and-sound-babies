@@ -34,15 +34,13 @@ VALUES (:'A', 'aaaa0001-0000-0000-0000-000000000001', 'peanuts', '555-0100');
 INSERT INTO public.first_foods (child_id, food_name, date_introduced, is_allergen)
 VALUES ('aaaa0001-0000-0000-0000-000000000001', 'avocado', CURRENT_DATE, false);
 
-INSERT INTO public.growth_logs (child_id, weight_lbs, recorded_at)
-VALUES ('aaaa0001-0000-0000-0000-000000000001', 14.2, now());
+-- NOTE: growth_logs and child_measurements are intentionally absent here —
+-- migration 20260818000000_purge_child_birthdate_and_measurements.sql drops
+-- them from the canonical schema.
 
 INSERT INTO public.bottles (user_id, child_id, bottle_type, storage, started_at, expires_at, alert_minutes_before)
 VALUES (:'A', 'aaaa0001-0000-0000-0000-000000000001', 'formula', 'room_temp',
         now(), now() + interval '2 hours', 15);
-
-INSERT INTO public.child_measurements (user_id, child_id, weight_lbs, recorded_at)
-VALUES (:'A', 'aaaa0001-0000-0000-0000-000000000001', 14.2, now());
 
 INSERT INTO public.emergency_contacts (user_id, name, phone, relationship)
 VALUES (:'A', 'Grandma A', '555-0101', 'grandparent');
@@ -72,12 +70,8 @@ SELECT test.assert((SELECT count(*) FROM public.emergency_info) = 0,
   'IDOR: user B cannot read user A''s emergency/medical info');
 SELECT test.assert((SELECT count(*) FROM public.first_foods) = 0,
   'IDOR: user B cannot read user A''s first foods');
-SELECT test.assert((SELECT count(*) FROM public.growth_logs) = 0,
-  'IDOR: user B cannot read user A''s growth logs');
 SELECT test.assert((SELECT count(*) FROM public.bottles) = 0,
   'IDOR: user B cannot read user A''s bottle logs');
-SELECT test.assert((SELECT count(*) FROM public.child_measurements) = 0,
-  'IDOR: user B cannot read user A''s measurements');
 SELECT test.assert((SELECT count(*) FROM public.emergency_contacts) = 0,
   'IDOR: user B cannot read user A''s emergency contacts');
 SELECT test.assert((SELECT count(*) FROM public.home_profile) = 0,
@@ -111,7 +105,6 @@ DELETE FROM public.children WHERE id = 'aaaa0001-0000-0000-0000-000000000001';
 DELETE FROM public.products WHERE id = 'aaaa0002-0000-0000-0000-000000000002';
 DELETE FROM public.milestones WHERE id = 'aaaa0003-0000-0000-0000-000000000003';
 DELETE FROM public.bottles;
-DELETE FROM public.growth_logs;
 DELETE FROM public.first_foods;
 
 -- Adversarial: user B cannot forge a row owned by user A.
@@ -168,8 +161,6 @@ SELECT test.assert(
 );
 SELECT test.assert((SELECT count(*) FROM public.bottles) = 1,
   'Post-attack: user A''s bottle log survives user B''s DELETE');
-SELECT test.assert((SELECT count(*) FROM public.growth_logs) = 1,
-  'Post-attack: user A''s growth log survives user B''s DELETE');
 SELECT test.assert((SELECT count(*) FROM public.first_foods) = 1,
   'Post-attack: user A''s first food survives user B''s DELETE');
 SELECT test.logout();
