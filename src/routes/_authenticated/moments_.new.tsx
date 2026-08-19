@@ -99,25 +99,27 @@ function NewMomentPage() {
         toast.error("Sign in to log moments");
         return;
       }
-      // saveMomentResilient handles both known failure classes: the
-      // `icon` column being unusable on the live database (retries
-      // without it — see 20260713000000_milestones_icon_column.sql), and
-      // a genuine network failure (caught internally, returned as an
-      // error rather than thrown) — see momentIcons.tsx for why both
-      // matter here specifically.
-      const { error } = await saveMomentResilient({
-        child_id: activeChildId,
-        title: title.trim(),
-        logged_at: loggedAt,
-        notes: rawNotes,
-        completed: true,
-        icon: momentIcon,
-      });
-      if (error) {
-        console.error("[moments.new] insert failed", error);
-        toast.error(error.message || "Couldn't save that moment");
+      // Saved through a server function so the Pro paywall on milestone
+      // logging is enforced server-side (the screen-level useProGate()
+      // check below is UI only — the old direct client insert could be
+      // bypassed). The server keeps the `icon` column fallback that
+      // saveMomentResilient had.
+      try {
+        await saveMoment({
+          data: {
+            child_id: activeChildId,
+            title: title.trim(),
+            logged_at: loggedAt,
+            notes: rawNotes,
+            icon: momentIcon,
+          },
+        });
+      } catch (err) {
+        console.error("[moments.new] insert failed", sanitizeError(err));
+        toast.error(err instanceof Error ? err.message : "Couldn't save that moment");
         return;
       }
+
       const tip = getSafetyTip(title.trim());
       if (tip) {
         toast.success("Saved that moment 💛");
