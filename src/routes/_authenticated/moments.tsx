@@ -109,184 +109,185 @@ function MomentsPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28">
-      <header className="px-5 pt-8 pb-4 sm:px-6">
+      <header className="px-6 pt-8 pb-2">
         <div className="mx-auto max-w-md">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-6 flex items-center justify-between">
             <Button
               asChild
               variant="ghost"
               size="sm"
-              className="-ml-2 rounded-full font-body text-xs"
+              className="-ml-2 rounded-none font-body text-[10px] uppercase tracking-[0.18em]"
             >
               <Link to="/home">
                 <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Home
               </Link>
             </Button>
-            <Button asChild size="sm" className="rounded-full font-body text-xs">
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="rounded-none font-body text-[10px] uppercase tracking-[0.18em]"
+            >
               <Link to="/moments/new">
-                <Plus className="mr-1 h-3.5 w-3.5" /> Log
+                <Plus className="mr-1 h-3.5 w-3.5" /> Log entry
               </Link>
             </Button>
           </div>
 
-          {/* Hero card — same treatment as Home's "Today" card, giving
-              Moments real visual weight instead of a plain text header,
-              consistent with how central this feature is to the app. */}
-          <div
-            className="rounded-[20px] p-6"
-            style={{ backgroundColor: "#586C81", border: "1px solid rgba(255,255,255,0.08)" }}
+          {/* Ledger masthead — quiet, archival, no hero card */}
+          <h1
+            className="font-display text-xs uppercase tracking-[0.22em]"
+            style={{ color: "#3D3935" }}
           >
-            <p
-              className="font-body text-[11px] font-medium uppercase tracking-[0.12em]"
-              style={{ color: "rgba(255,255,255,0.55)" }}
-            >
-              <Sparkles className="mr-1 inline h-3 w-3" /> {childName || "Memory book"}
-            </p>
-            <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-white">
-              Moments
-            </h1>
-            <p className="mt-1.5 font-body text-sm" style={{ color: "rgba(255,255,255,0.8)" }}>
-              {moments.length > 0
-                ? `${moments.length} moment${moments.length === 1 ? "" : "s"} captured — every first is worth remembering.`
-                : "Every memory, beautifully kept."}
-            </p>
-          </div>
-        </div>
-      </header>
+            {childName ? `${childName} — Moments Ledger` : "Moments Ledger"}
+          </h1>
+          <p className="mt-2 font-body text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+            {moments.length > 0
+              ? `${moments.length} ${moments.length === 1 ? "entry" : "entries"} recorded`
+              : "No entries recorded"}
+          </p>
 
-      <main className="flex-1 px-5 sm:px-6">
-        <div className="mx-auto max-w-md space-y-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          {/* Search — underline, not a pill */}
+          <div className="relative mt-6">
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search moments…"
-              className="w-full rounded-2xl border border-border bg-card pl-9 pr-4 py-2.5 font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+              placeholder="Search entries…"
+              className="w-full border-b bg-transparent py-1.5 pr-6 font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              style={{ borderColor: "#586C81" }}
             />
-            {search && (
+            {search ? (
               <button
                 type="button"
                 onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
+                aria-label="Clear search"
+                className="absolute right-0 top-1/2 -translate-y-1/2"
               >
                 <X className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
+            ) : (
+              <Search className="pointer-events-none absolute right-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             )}
           </div>
 
-          {/* Icon filter */}
+          {/* Typographic filter row — no icon chips */}
           <SketchDefs />
-          <div className="flex flex-wrap gap-1.5">
+          <div className="mt-4 flex gap-4 overflow-x-auto pb-1">
             <button
               type="button"
               onClick={() => setIconFilter("all")}
-              className={`rounded-full px-3 py-1 font-body text-xs font-medium transition-colors ${iconFilter === "all" ? "bg-foreground text-background" : "bg-card border border-border text-muted-foreground"}`}
+              className={`whitespace-nowrap pb-1 font-display text-[10px] uppercase tracking-[0.18em] ${
+                iconFilter === "all" ? "border-b text-foreground" : "text-muted-foreground"
+              }`}
+              style={iconFilter === "all" ? { borderColor: "#3D3935" } : undefined}
             >
               All
             </button>
             {MOMENT_ICON_KEYS.map((key) => {
-              const Icon = MOMENT_ICONS[key];
               const active = iconFilter === key;
               return (
                 <button
                   key={key}
                   type="button"
                   onClick={() => setIconFilter(active ? "all" : key)}
-                  className={`flex items-center gap-1 rounded-full px-2.5 py-1 font-body text-xs font-medium transition-colors border ${active ? "" : "bg-card text-muted-foreground"}`}
-                  style={
-                    active
-                      ? {
-                          backgroundColor: MOMENT_ICON_ACCENT,
-                          color: "#fff",
-                          borderColor: MOMENT_ICON_ACCENT,
-                        }
-                      : { borderColor: "#e5e5e5" }
-                  }
+                  className={`whitespace-nowrap pb-1 font-display text-[10px] uppercase tracking-[0.18em] ${
+                    active ? "border-b text-foreground" : "text-muted-foreground"
+                  }`}
+                  style={active ? { borderColor: "#3D3935" } : undefined}
                 >
-                  <Icon px={14} />
                   {MOMENT_ICON_LABELS[key]}
                 </button>
               );
             })}
           </div>
+        </div>
+      </header>
 
-          {/* Timeline */}
+      <main className="flex-1 px-4 pt-6 sm:px-6">
+        <div className="mx-auto max-w-md">
           {loading ? (
-            <div className="py-10 text-center font-body text-sm text-muted-foreground">
+            <div className="py-10 text-center font-body text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
               Loading…
             </div>
           ) : filtered.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-border bg-card/40 px-6 py-10 text-center animate-scale-in">
-              <SparkleIllustration className="mx-auto mb-2 h-24 w-24" />
-              <p className="font-display text-lg font-semibold">No moments yet</p>
-              <p className="mx-auto mt-1 max-w-xs font-body text-sm text-muted-foreground">
+            <div className="border border-dashed px-6 py-10 text-center" style={{ borderColor: "#586C81" + "33" }}>
+              <SparkleIllustration className="mx-auto mb-2 h-20 w-20" />
+              <p className="font-display text-xs uppercase tracking-[0.18em]">No entries yet</p>
+              <p className="mx-auto mt-2 max-w-xs font-body text-xs italic text-muted-foreground">
                 {search || iconFilter !== "all"
                   ? "Try a different search or filter."
-                  : "Log your first moment and it'll appear here."}
+                  : "Log your first entry and it'll be recorded here."}
               </p>
               {!search && iconFilter === "all" && (
                 <Button
                   asChild
-                  className="mt-5 rounded-full bg-primary px-5 font-body text-xs font-semibold"
+                  variant="ghost"
+                  className="mt-5 rounded-none border font-display text-[10px] uppercase tracking-[0.18em]"
+                  style={{ borderColor: "#586C81" }}
                 >
                   <Link to="/moments/new">
-                    <Plus className="mr-1 h-3.5 w-3.5" /> Log a moment
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Log entry
                   </Link>
                 </Button>
               )}
             </div>
           ) : (
-            <div className="relative pb-2">
-              {/* Center line */}
+            <div className="relative pb-8">
+              {/* Center spine */}
               <div
-                className="absolute left-1/2 top-1 bottom-1 w-px -translate-x-1/2"
-                style={{ backgroundColor: MOMENT_ICON_ACCENT }}
+                className="absolute left-1/2 top-0 bottom-0 w-[1.5px] -translate-x-1/2 opacity-30"
+                style={{ backgroundColor: "#586C81" }}
               />
-              <ul className="space-y-2">
+              <ul>
                 {filtered.map((m, i) => {
                   const Icon = MOMENT_ICONS[m.resolvedIcon];
                   const onLeft = i % 2 === 0;
-                  const entry = (
-                    <div
-                      className={`flex flex-col ${onLeft ? "items-end text-right" : "items-start text-left"}`}
+                  return (
+                    <li
+                      key={m.id}
+                      className={`relative mb-10 flex ${onLeft ? "justify-start" : "justify-end"}`}
                     >
+                      <div
+                        className="w-[44%] p-3"
+                        style={{
+                          backgroundColor: "rgba(255,255,255,0.6)",
+                          border: "1px solid rgba(88,108,129,0.2)",
+                          boxShadow: "3px 3px 0px rgba(138,128,120,0.2)",
+                        }}
+                      >
+                        <span
+                          className="mb-1 block font-body text-[9px] uppercase tracking-tight"
+                          style={{ color: "#8FA1B5" }}
+                        >
+                          {formatDateLarge(m.logged_at)}
+                        </span>
+                        <h3
+                          className="mb-1 font-display text-[11px] uppercase tracking-[0.12em]"
+                          style={{ color: "#3D3935" }}
+                        >
+                          {m.title}
+                        </h3>
+                        {m.displayNotes && (
+                          <p
+                            className="font-body text-[10px] italic leading-relaxed line-clamp-3"
+                            style={{ color: "#8A8078" }}
+                          >
+                            {m.displayNotes}
+                          </p>
+                        )}
+                      </div>
+                      {/* Boxed spine marker */}
                       <span
-                        className="mb-1.5 flex h-11 w-11 items-center justify-center rounded-full"
-                        style={{ backgroundColor: MOMENT_ICON_ACCENT + "1F" }}
+                        className="absolute left-1/2 top-4 flex h-6 w-6 -translate-x-1/2 items-center justify-center"
+                        style={{
+                          backgroundColor: "#F5F3EE",
+                          border: "1.5px solid #586C81",
+                        }}
                         role="img"
                         aria-label={MOMENT_ICON_LABELS[m.resolvedIcon]}
                       >
-                        <Icon px={24} />
+                        <Icon px={13} />
                       </span>
-                      <p className="font-body text-[11px] tracking-wide text-muted-foreground">
-                        {formatDateLarge(m.logged_at)}
-                      </p>
-                      <p
-                        className="mt-0.5 font-body text-xs font-semibold uppercase tracking-[0.14em]"
-                        style={{ color: "#3D3935" }}
-                      >
-                        {m.title}
-                      </p>
-                      {m.displayNotes && (
-                        <p
-                          className="mt-1 max-w-[26ch] font-body text-xs leading-relaxed line-clamp-3"
-                          style={{ color: "#8A8078" }}
-                        >
-                          {m.displayNotes}
-                        </p>
-                      )}
-                    </div>
-                  );
-                  return (
-                    <li key={m.id} className="relative flex items-start">
-                      <div
-                        className={`flex w-1/2 ${onLeft ? "justify-end pr-6" : "order-2 justify-start pl-6"}`}
-                      >
-                        {entry}
-                      </div>
-                      <div className={onLeft ? "order-2 w-1/2" : "w-1/2"} />
                     </li>
                   );
                 })}
@@ -300,3 +301,4 @@ function MomentsPage() {
     </div>
   );
 }
+
