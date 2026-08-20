@@ -9,8 +9,8 @@ import { useActiveChild } from "@/hooks/useActiveChild";
 import { BottomNav } from "@/components/BottomNav";
 import { SparkleIllustration } from "@/components/EmptyIllustration";
 import {
-  MOMENT_ICON_LABELS,
   MOMENT_ICONS,
+  DEFAULT_MOMENT_ICON,
   SketchDefs,
   parseLegacyNotes,
   resolveMomentIcon,
@@ -209,7 +209,8 @@ function MomentsPage() {
               />
               <ul>
                 {filtered.map((m, i) => {
-                  const Icon = MOMENT_ICONS[m.resolvedIcon];
+                  // Single milestone mark for every entry (categories removed).
+                  const Icon = MOMENT_ICONS[DEFAULT_MOMENT_ICON];
                   const onLeft = i % 2 === 0;
                   return (
                     <li
@@ -253,7 +254,7 @@ function MomentsPage() {
                           border: "1.5px solid #586C81",
                         }}
                         role="img"
-                        aria-label={MOMENT_ICON_LABELS[m.resolvedIcon]}
+                        aria-label="Milestone"
                       >
                         <Icon px={13} />
                       </span>
