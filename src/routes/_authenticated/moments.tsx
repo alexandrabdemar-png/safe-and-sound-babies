@@ -169,36 +169,9 @@ function MomentsPage() {
             )}
           </div>
 
-          {/* Typographic filter row — no icon chips */}
+          {/* Categories removed — every entry is a milestone. */}
           <SketchDefs />
-          <div className="mt-4 flex gap-4 overflow-x-auto pb-1">
-            <button
-              type="button"
-              onClick={() => setIconFilter("all")}
-              className={`whitespace-nowrap pb-1 font-display text-[10px] uppercase tracking-[0.18em] ${
-                iconFilter === "all" ? "border-b text-foreground" : "text-muted-foreground"
-              }`}
-              style={iconFilter === "all" ? { borderColor: "#3D3935" } : undefined}
-            >
-              All
-            </button>
-            {MOMENT_ICON_KEYS.map((key) => {
-              const active = iconFilter === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setIconFilter(active ? "all" : key)}
-                  className={`whitespace-nowrap pb-1 font-display text-[10px] uppercase tracking-[0.18em] ${
-                    active ? "border-b text-foreground" : "text-muted-foreground"
-                  }`}
-                  style={active ? { borderColor: "#3D3935" } : undefined}
-                >
-                  {MOMENT_ICON_LABELS[key]}
-                </button>
-              );
-            })}
-          </div>
+
         </div>
       </header>
 
