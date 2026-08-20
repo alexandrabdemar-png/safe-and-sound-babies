@@ -9,8 +9,6 @@ import { useActiveChild } from "@/hooks/useActiveChild";
 import { BottomNav } from "@/components/BottomNav";
 import { SparkleIllustration } from "@/components/EmptyIllustration";
 import {
-  MOMENT_ICONS,
-  DEFAULT_MOMENT_ICON,
   SketchDefs,
   parseLegacyNotes,
   resolveMomentIcon,
