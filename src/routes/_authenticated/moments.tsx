@@ -9,8 +9,6 @@ import { useActiveChild } from "@/hooks/useActiveChild";
 import { BottomNav } from "@/components/BottomNav";
 import { SparkleIllustration } from "@/components/EmptyIllustration";
 import {
-  MOMENT_ICONS,
-  DEFAULT_MOMENT_ICON,
   SketchDefs,
   parseLegacyNotes,
   resolveMomentIcon,
@@ -209,8 +207,6 @@ function MomentsPage() {
               />
               <ul>
                 {filtered.map((m, i) => {
-                  // Single milestone mark for every entry (categories removed).
-                  const Icon = MOMENT_ICONS[DEFAULT_MOMENT_ICON];
                   const onLeft = i % 2 === 0;
                   return (
                     <li
@@ -246,18 +242,15 @@ function MomentsPage() {
                           </p>
                         )}
                       </div>
-                      {/* Boxed spine marker */}
+                      {/* Empty boxed spine marker */}
                       <span
-                        className="absolute left-1/2 top-4 flex h-6 w-6 -translate-x-1/2 items-center justify-center"
+                        className="absolute left-1/2 top-4 h-6 w-6 -translate-x-1/2"
                         style={{
                           backgroundColor: "#F5F3EE",
                           border: "1.5px solid #586C81",
                         }}
-                        role="img"
-                        aria-label="Milestone"
-                      >
-                        <Icon px={13} />
-                      </span>
+                        aria-hidden="true"
+                      />
                     </li>
                   );
                 })}
