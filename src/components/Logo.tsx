@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
 import "@fontsource/marcellus/400.css";
-import logoHands from "@/assets/logo-hands.png";
 
 interface LogoProps {
   className?: string;
@@ -26,15 +25,7 @@ export function Logo({ className, size = "md", layout = "stacked" }: LogoProps) 
         className,
       )}
     >
-      <img
-        src={logoHands}
-        alt=""
-        aria-hidden="true"
-        loading="lazy"
-        width={ts.mark}
-        height={ts.mark}
-        style={{ width: ts.mark, height: ts.mark, objectFit: "contain" }}
-      />
+
       <span
         style={{
           fontFamily: '"Marcellus", Georgia, serif',
