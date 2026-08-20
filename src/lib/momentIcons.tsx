@@ -14,11 +14,12 @@ export const MOMENT_ICON_KEYS: MomentIconKey[] = ["star", "smiley", "heart", "sp
 // ("star" etc.) so already-saved rows keep resolving, but nothing in the UI
 // reads as a heart/star sticker any more.
 export const MOMENT_ICON_LABELS: Record<MomentIconKey, string> = {
-  star: "Milestone",
-  smiley: "Everyday",
+  star: "Movement",
+  smiley: "Words & Sounds",
   heart: "Keepsake",
-  sparkles: "First",
+  sparkles: "Firsts",
 };
+
 
 
 export const DEFAULT_MOMENT_ICON: MomentIconKey = "star";
