@@ -244,7 +244,7 @@ function MomentsPage() {
                   return (
                     <li
                       key={m.id}
-                      className={`relative mb-10 flex ${onLeft ? "justify-start" : "justify-end"}`}
+                      className={`relative mb-5 flex ${onLeft ? "justify-start" : "justify-end"}`}
                     >
                       <div
                         className="w-[44%] p-3"
