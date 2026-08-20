@@ -9,7 +9,6 @@ import { useActiveChild } from "@/hooks/useActiveChild";
 import { BottomNav } from "@/components/BottomNav";
 import { SparkleIllustration } from "@/components/EmptyIllustration";
 import {
-  MOMENT_ICON_KEYS,
   MOMENT_ICON_LABELS,
   MOMENT_ICONS,
   SketchDefs,
@@ -50,7 +49,6 @@ function MomentsPage() {
   const [loading, setLoading] = useState(true);
   const [childName, setChildName] = useState("");
   const [search, setSearch] = useState("");
-  const [iconFilter, setIconFilter] = useState<MomentIconKey | "all">("all");
 
   useEffect(() => {
     if (!activeChildId) return;
@@ -96,7 +94,6 @@ function MomentsPage() {
 
   const filtered = useMemo(() => {
     let result = moments;
-    if (iconFilter !== "all") result = result.filter((m) => m.resolvedIcon === iconFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
@@ -104,7 +101,7 @@ function MomentsPage() {
       );
     }
     return result;
-  }, [moments, iconFilter, search]);
+  }, [moments, search]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28">
@@ -138,7 +135,7 @@ function MomentsPage() {
             className="font-display text-xs uppercase tracking-[0.22em]"
             style={{ color: "#3D3935" }}
           >
-            {childName ? `${childName} — Moments Ledger` : "Moments Ledger"}
+            {childName ? `${childName} — Milestones` : "Milestones"}
           </h1>
           <p className="mt-2 font-body text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
             {moments.length > 0
@@ -184,13 +181,13 @@ function MomentsPage() {
           ) : filtered.length === 0 ? (
             <div className="border border-dashed px-6 py-10 text-center" style={{ borderColor: "#586C81" + "33" }}>
               <SparkleIllustration className="mx-auto mb-2 h-20 w-20" />
-              <p className="font-display text-xs uppercase tracking-[0.18em]">No entries yet</p>
+              <p className="font-display text-xs uppercase tracking-[0.18em]">No milestones yet</p>
               <p className="mx-auto mt-2 max-w-xs font-body text-xs italic text-muted-foreground">
-                {search || iconFilter !== "all"
-                  ? "Try a different search or filter."
-                  : "Log your first entry and it'll be recorded here."}
+                {search
+                  ? "Try a different search."
+                  : "Log your first milestone and it'll be recorded here."}
               </p>
-              {!search && iconFilter === "all" && (
+              {!search && (
                 <Button
                   asChild
                   variant="ghost"
