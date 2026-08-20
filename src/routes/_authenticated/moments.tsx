@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Search, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { BottomNav } from "@/components/BottomNav";
@@ -12,7 +12,6 @@ import {
   MOMENT_ICON_KEYS,
   MOMENT_ICON_LABELS,
   MOMENT_ICONS,
-  MOMENT_ICON_ACCENT,
   SketchDefs,
   parseLegacyNotes,
   resolveMomentIcon,
