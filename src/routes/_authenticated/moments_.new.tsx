@@ -314,37 +314,8 @@ function NewMomentPage() {
             </div>
           </div>
 
-          {/* Moment icon */}
-          <div className="space-y-2">
-            <SketchDefs />
-            <Label className="font-body text-sm">Icon</Label>
-            <Select value={momentIcon} onValueChange={(v) => setMomentIcon(v as MomentIconKey)}>
-              <SelectTrigger className="h-12 rounded-2xl bg-card px-4 font-body text-base">
-                <SelectValue>
-                  <span className="flex items-center gap-2">
-                    {(() => {
-                      const SelectedIcon = MOMENT_ICONS[momentIcon];
-                      return <SelectedIcon px={20} />;
-                    })()}
-                    {MOMENT_ICON_LABELS[momentIcon]}
-                  </span>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {MOMENT_ICON_KEYS.map((key) => {
-                  const Icon = MOMENT_ICONS[key];
-                  return (
-                    <SelectItem key={key} value={key}>
-                      <span className="flex items-center gap-2">
-                        <Icon px={20} />
-                        {MOMENT_ICON_LABELS[key]}
-                      </span>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Categories removed — every entry is logged as a milestone. */}
+
 
           <div className="space-y-2">
             <Label className="font-body text-sm">When</Label>
