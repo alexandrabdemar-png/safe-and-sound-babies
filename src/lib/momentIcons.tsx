@@ -10,12 +10,16 @@ export type MomentIconKey = "star" | "smiley" | "heart" | "sparkles";
 
 export const MOMENT_ICON_KEYS: MomentIconKey[] = ["star", "smiley", "heart", "sparkles"];
 
+// Neutral, gender-neutral ledger labels. The underlying keys stay the same
+// ("star" etc.) so already-saved rows keep resolving, but nothing in the UI
+// reads as a heart/star sticker any more.
 export const MOMENT_ICON_LABELS: Record<MomentIconKey, string> = {
-  star: "Star",
-  smiley: "Smiley",
-  heart: "Heart",
-  sparkles: "Sparkles",
+  star: "Milestone",
+  smiley: "Everyday",
+  heart: "Keepsake",
+  sparkles: "First",
 };
+
 
 export const DEFAULT_MOMENT_ICON: MomentIconKey = "star";
 
