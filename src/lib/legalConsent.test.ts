@@ -1,5 +1,12 @@
-import { describe, it, expect } from "vitest";
-import { needsLegalConsent, checkNeedsLegalConsent, CURRENT_TERMS_VERSION } from "./legalConsent";
+import { describe, it, expect, afterEach } from "vitest";
+import {
+  needsLegalConsent,
+  checkNeedsLegalConsent,
+  checkNeedsLegalConsentCached,
+  markLegalConsentCleared,
+  resetLegalConsentCache,
+  CURRENT_TERMS_VERSION,
+} from "./legalConsent";
 
 describe("needsLegalConsent", () => {
   it("returns true when the user has never accepted anything", () => {
@@ -30,17 +37,26 @@ type Row = { user_id: string; terms_version: string };
 
 function makeFakeAgreementsClient(initialRows: Row[] = []) {
   const rows: Row[] = [...initialRows];
+  let queryCount = 0;
   const client = {
     from: (_table: "user_agreements") => ({
       select: (_columns: "terms_version") => ({
-        eq: async (_column: "user_id", value: string) => ({
-          data: rows.filter((r) => r.user_id === value).map((r) => ({ terms_version: r.terms_version })),
-          error: null,
-        }),
+        eq: async (_column: "user_id", value: string) => {
+          queryCount += 1;
+          return {
+            data: rows
+              .filter((r) => r.user_id === value)
+              .map((r) => ({ terms_version: r.terms_version })),
+            error: null,
+          };
+        },
       }),
     }),
     insert(row: Row) {
       rows.push(row);
+    },
+    get queryCount() {
+      return queryCount;
     },
   };
   return client;
@@ -97,5 +113,74 @@ describe("checkNeedsLegalConsent", () => {
   it("fails open on any other unexpected query error too", async () => {
     const client = makeErroringAgreementsClient({ message: "connection reset", code: undefined });
     expect(await checkNeedsLegalConsent(client, userId)).toBe(false);
+  });
+});
+
+// Regression: a reported "tapping a link did nothing" bug traced back to
+// _authenticated's beforeLoad re-running this exact query on every single
+// in-app navigation (TanStack Router re-runs an ancestor route's beforeLoad
+// on every navigation, not just first entry), with no loading indicator
+// anywhere in the app for that phase — so any latency on this one query
+// made every tap between authenticated pages look broken. These tests
+// cover the caching wrapper that's supposed to fix that.
+describe("checkNeedsLegalConsentCached", () => {
+  const userId = "user-1";
+
+  afterEach(() => {
+    resetLegalConsentCache();
+  });
+
+  it("queries the database on the first check for a user", async () => {
+    const client = makeFakeAgreementsClient([
+      { user_id: userId, terms_version: CURRENT_TERMS_VERSION },
+    ]);
+    expect(await checkNeedsLegalConsentCached(client, userId)).toBe(false);
+    expect(client.queryCount).toBe(1);
+  });
+
+  it("does NOT query the database again once a user is confirmed cleared this session", async () => {
+    const client = makeFakeAgreementsClient([
+      { user_id: userId, terms_version: CURRENT_TERMS_VERSION },
+    ]);
+    await checkNeedsLegalConsentCached(client, userId);
+    await checkNeedsLegalConsentCached(client, userId);
+    await checkNeedsLegalConsentCached(client, userId);
+    expect(client.queryCount).toBe(1);
+  });
+
+  it("keeps querying every time for a user who still needs to consent — never caches a 'needs consent' result", async () => {
+    const client = makeFakeAgreementsClient();
+    expect(await checkNeedsLegalConsentCached(client, userId)).toBe(true);
+    expect(await checkNeedsLegalConsentCached(client, userId)).toBe(true);
+    expect(client.queryCount).toBe(2);
+  });
+
+  it("markLegalConsentCleared lets the very next check skip the database entirely", async () => {
+    const client = makeFakeAgreementsClient();
+    markLegalConsentCleared(userId);
+    expect(await checkNeedsLegalConsentCached(client, userId)).toBe(false);
+    expect(client.queryCount).toBe(0);
+  });
+
+  it("does not leak one user's cleared status to another (adversarial)", async () => {
+    const client = makeFakeAgreementsClient([
+      { user_id: userId, terms_version: CURRENT_TERMS_VERSION },
+    ]);
+    await checkNeedsLegalConsentCached(client, userId);
+    // A different user, never inserted anywhere, still gets a real query
+    // and a real "needs consent" answer — not the first user's cached "no".
+    expect(await checkNeedsLegalConsentCached(client, "other-user")).toBe(true);
+    expect(client.queryCount).toBe(2);
+  });
+
+  it("resetLegalConsentCache forces a fresh query again", async () => {
+    const client = makeFakeAgreementsClient([
+      { user_id: userId, terms_version: CURRENT_TERMS_VERSION },
+    ]);
+    await checkNeedsLegalConsentCached(client, userId);
+    expect(client.queryCount).toBe(1);
+    resetLegalConsentCache();
+    await checkNeedsLegalConsentCached(client, userId);
+    expect(client.queryCount).toBe(2);
   });
 });

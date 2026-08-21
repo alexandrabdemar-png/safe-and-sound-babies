@@ -1431,7 +1431,7 @@ function WhatsNewCard({
   );
 }
 
-function RecallRadarCard({
+export function RecallRadarCard({
   count,
   matchedCount,
   childName,

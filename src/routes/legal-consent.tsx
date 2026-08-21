@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
-import { CURRENT_TERMS_VERSION } from "@/lib/legalConsent";
+import { CURRENT_TERMS_VERSION, markLegalConsentCleared } from "@/lib/legalConsent";
 import { friendlyError, isColumnUnavailableError, isSchemaMissingTableError } from "@/lib/errors";
 import { parseNextParam } from "@/lib/authCallbackRouting";
 import { logError } from "@/lib/sanitize-error";
@@ -121,6 +121,10 @@ function LegalConsentPage() {
         throw error;
       }
       if (error) logError("[legal-consent] couldn't record acceptance, continuing anyway:", error.message);
+      // So the very next navigation's beforeLoad (see _authenticated/
+      // route.tsx) doesn't have to round-trip user_agreements again just to
+      // learn what this request already just wrote.
+      markLegalConsentCleared(userId);
       navigate({ to: getNextParam() } as never);
     } catch (err) {
       toast.error(friendlyError(err));

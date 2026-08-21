@@ -5,7 +5,7 @@ import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { toast } from "sonner";
 import { AlertTriangle, Users, WifiOff } from "lucide-react";
 import { usePushRegistration } from "@/hooks/usePushRegistration";
-import { checkNeedsLegalConsent } from "@/lib/legalConsent";
+import { checkNeedsLegalConsentCached } from "@/lib/legalConsent";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated")({
     // screen — not just at signup, since existing users need to accept a
     // material terms update too (see src/lib/legalConsent.ts, which also
     // documents the fail-open-on-missing-table behavior).
-    if (await checkNeedsLegalConsent(supabase, session.user.id)) {
+    if (await checkNeedsLegalConsentCached(supabase, session.user.id)) {
       throw redirect({ to: "/legal-consent", search: { next: location.pathname } });
     }
 
