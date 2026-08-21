@@ -196,6 +196,24 @@ function PricingPage() {
         <p className="text-xs text-center text-muted-foreground">
           Your subscription helps keep recall alerts free for every parent.
         </p>
+
+        {/* Apple/App-review requirement: price, billing period, renewal
+            terms, and Terms/Privacy links on or adjacent to the purchase
+            screen. Was previously missing entirely — see COMPLIANCE_REPORT.md §5/§7. */}
+        <p className="text-xs text-center text-muted-foreground">
+          Pro is $3.33/month after a 7-day free trial. Your subscription renews
+          automatically each month until you cancel; cancel anytime from{' '}
+          {isPro ? '"Manage subscription" above' : 'your account settings'} — no charge if you
+          cancel before the trial ends. By subscribing you agree to our{' '}
+          <Link to="/terms" className="underline hover:text-foreground">
+            Terms of Service
+          </Link>{' '}
+          and{' '}
+          <Link to="/privacy-policy" className="underline hover:text-foreground">
+            Privacy Policy
+          </Link>
+          .
+        </p>
       </div>
     </div>
   );
