@@ -10,6 +10,7 @@ export type SubscriptionRow = {
   current_period_end: string | null;
   cancel_at_period_end: boolean | null;
   stripe_customer_id: string | null;
+  payment_provider: string | null;
 };
 
 
@@ -24,6 +25,7 @@ export function useSubscription() {
         current_period_end: null,
         cancel_at_period_end: false,
         stripe_customer_id: null,
+        payment_provider: 'stripe',
       } as SubscriptionRow,
       isPro: true,
       loading: false,
@@ -44,7 +46,9 @@ export function useSubscription() {
       if (!userIdLocal || !env) return;
       const { data } = await supabase
         .from('subscriptions')
-        .select('plan,status,price_id,current_period_end,cancel_at_period_end,stripe_customer_id')
+        .select(
+          'plan,status,price_id,current_period_end,cancel_at_period_end,stripe_customer_id,payment_provider',
+        )
         .eq('user_id', userIdLocal)
         .eq('environment', env)
         .order('created_at', { ascending: false })

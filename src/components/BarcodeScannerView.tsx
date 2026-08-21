@@ -4,6 +4,7 @@ import {
   WebBarcodeScannerView,
   type BarcodeScannerViewProps,
 } from "@/components/WebBarcodeScannerView";
+import { useIsNativeIOS } from "@/hooks/useIsNativeIOS";
 
 // Platform dispatcher: uses Apple VisionKit's native live barcode scanner
 // (DataScannerViewController, iOS 16+) when running as a native iOS build
@@ -19,30 +20,31 @@ import {
 // scanning UI is a separate native screen that dismisses back to the app
 // once a code is found (or the user cancels).
 export function BarcodeScannerView(props: BarcodeScannerViewProps) {
+  const isNativeIOS = useIsNativeIOS();
   const [nativeAvailable, setNativeAvailable] = useState<boolean | null>(null);
 
   useEffect(() => {
+    if (isNativeIOS === null) return;
+    if (!isNativeIOS) {
+      setNativeAvailable(false);
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
-        const { Capacitor } = await import("@capacitor/core");
-        if (Capacitor.getPlatform() !== "ios" || !Capacitor.isNativePlatform()) {
-          if (!cancelled) setNativeAvailable(false);
-          return;
-        }
         const { VisionBarcodeScanner } = await import("vision-barcode-scanner");
         const { supported } = await VisionBarcodeScanner.isSupported();
         if (!cancelled) setNativeAvailable(supported);
       } catch {
-        // Capacitor or the plugin isn't available (e.g. web preview build
-        // that never bundled it) — that's expected on web, fall back.
+        // The plugin isn't available (e.g. a web preview build that never
+        // bundled it) — that's expected on web, fall back.
         if (!cancelled) setNativeAvailable(false);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isNativeIOS]);
 
   // Still checking — render nothing rather than flashing the web camera
   // preview for a frame on a device that's about to use the native one.

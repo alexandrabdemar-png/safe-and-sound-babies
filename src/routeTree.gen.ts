@@ -54,6 +54,7 @@ import { Route as AuthenticatedProductsIdRouteImport } from './routes/_authentic
 import { Route as AuthenticatedMomentsNewRouteImport } from './routes/_authenticated/moments_.new'
 import { Route as AuthenticatedBottlesNewRouteImport } from './routes/_authenticated/bottles_.new'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicPaymentsAppleWebhookRouteImport } from './routes/api/public/payments/apple-webhook'
 import { Route as ApiPublicHooksProductAlertsCheckRouteImport } from './routes/api/public/hooks/product-alerts-check'
 import { Route as ApiPublicHooksCheckProductAlertsRouteImport } from './routes/api/public/hooks/check-product-alerts'
 
@@ -297,6 +298,12 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPaymentsAppleWebhookRoute =
+  ApiPublicPaymentsAppleWebhookRouteImport.update({
+    id: '/api/public/payments/apple-webhook',
+    path: '/api/public/payments/apple-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksProductAlertsCheckRoute =
   ApiPublicHooksProductAlertsCheckRouteImport.update({
     id: '/api/public/hooks/product-alerts-check',
@@ -356,6 +363,7 @@ export interface FileRoutesByFullPath {
   '/api/public/emergency-share': typeof ApiPublicEmergencyShareRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
+  '/api/public/payments/apple-webhook': typeof ApiPublicPaymentsAppleWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -404,6 +412,7 @@ export interface FileRoutesByTo {
   '/api/public/emergency-share': typeof ApiPublicEmergencyShareRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
+  '/api/public/payments/apple-webhook': typeof ApiPublicPaymentsAppleWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -454,6 +463,7 @@ export interface FileRoutesById {
   '/api/public/emergency-share': typeof ApiPublicEmergencyShareRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
+  '/api/public/payments/apple-webhook': typeof ApiPublicPaymentsAppleWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -504,6 +514,7 @@ export interface FileRouteTypes {
     | '/api/public/emergency-share'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/product-alerts-check'
+    | '/api/public/payments/apple-webhook'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -552,6 +563,7 @@ export interface FileRouteTypes {
     | '/api/public/emergency-share'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/product-alerts-check'
+    | '/api/public/payments/apple-webhook'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -601,6 +613,7 @@ export interface FileRouteTypes {
     | '/api/public/emergency-share'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/product-alerts-check'
+    | '/api/public/payments/apple-webhook'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -622,6 +635,7 @@ export interface RootRouteChildren {
   ApiPublicEmergencyShareRoute: typeof ApiPublicEmergencyShareRoute
   ApiPublicHooksCheckProductAlertsRoute: typeof ApiPublicHooksCheckProductAlertsRoute
   ApiPublicHooksProductAlertsCheckRoute: typeof ApiPublicHooksProductAlertsCheckRoute
+  ApiPublicPaymentsAppleWebhookRoute: typeof ApiPublicPaymentsAppleWebhookRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -942,6 +956,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/apple-webhook': {
+      id: '/api/public/payments/apple-webhook'
+      path: '/api/public/payments/apple-webhook'
+      fullPath: '/api/public/payments/apple-webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsAppleWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/product-alerts-check': {
       id: '/api/public/hooks/product-alerts-check'
       path: '/api/public/hooks/product-alerts-check'
@@ -1055,6 +1076,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicEmergencyShareRoute: ApiPublicEmergencyShareRoute,
   ApiPublicHooksCheckProductAlertsRoute: ApiPublicHooksCheckProductAlertsRoute,
   ApiPublicHooksProductAlertsCheckRoute: ApiPublicHooksProductAlertsCheckRoute,
+  ApiPublicPaymentsAppleWebhookRoute: ApiPublicPaymentsAppleWebhookRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport

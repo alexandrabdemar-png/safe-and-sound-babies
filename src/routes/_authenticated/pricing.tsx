@@ -1,15 +1,18 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Check, Loader2, Sparkles } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, RotateCcw, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { PaymentTestModeBanner } from '@/components/PaymentTestModeBanner';
 import { StripeEmbeddedCheckout } from '@/components/StripeEmbeddedCheckout';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useIsNativeIOS } from '@/hooks/useIsNativeIOS';
 import { createPortalSession } from '@/utils/payments.functions';
+import { verifyAppleTransaction } from '@/utils/appleIap.functions';
 import { getStripeEnvironment } from '@/lib/stripe';
 import { openUrl } from '@/lib/browser';
 import { toast } from 'sonner';
+import type { AppleProduct } from 'apple-iap';
 
 export const Route = createFileRoute('/_authenticated/pricing')({
   ssr: false,
@@ -41,10 +44,14 @@ function PricingPage() {
   const navigate = useNavigate();
   const { isPro, subscription, loading } = useSubscription();
   const { checkout } = Route.useSearch();
+  const isNativeIOS = useIsNativeIOS();
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | undefined>();
   const [userId, setUserId] = useState<string | undefined>();
   const [portalLoading, setPortalLoading] = useState(false);
+  const [applePurchasing, setApplePurchasing] = useState(false);
+  const [appleRestoring, setAppleRestoring] = useState(false);
+  const [appleProduct, setAppleProduct] = useState<AppleProduct | null>(null);
 
   useEffect(() => {
     if (checkout === 'success') {
@@ -53,8 +60,91 @@ function PricingPage() {
     }
   }, [checkout]);
 
+  // On iOS, show the actual App Store Connect price/trial instead of the
+  // hardcoded copy below — Apple can localize or adjust the displayed
+  // price by region/tax, so what StoreKit reports is the source of truth
+  // once it's available. Silently keeps the hardcoded fallback if this
+  // fails (e.g. the product isn't fully configured yet) rather than
+  // blocking the whole pricing screen on it.
+  useEffect(() => {
+    if (!isNativeIOS) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { AppleIAP } = await import('apple-iap');
+        const product = await AppleIAP.getProduct();
+        if (!cancelled) setAppleProduct(product);
+      } catch {
+        // Fall back to the hardcoded price/trial copy.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isNativeIOS]);
+
+  const handleAppleUpgrade = async () => {
+    setApplePurchasing(true);
+    try {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) {
+        toast.error('Please sign in to upgrade');
+        return;
+      }
+      const { AppleIAP } = await import('apple-iap');
+      const result = await AppleIAP.purchase({ appAccountToken: data.user.id });
+      const verified = await verifyAppleTransaction({
+        data: { transactionId: result.transactionId, environment: result.environment },
+      });
+      if ('error' in verified) throw new Error(verified.error);
+      if (verified.plan === 'pro') {
+        toast.success('Purchase complete — Pro unlocked!');
+      } else {
+        toast.error("Purchase went through but Pro isn't active yet — try Restore purchases below.");
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Purchase failed';
+      // userCancelled is Apple's own purchase-sheet dismissal, not a real
+      // error — don't show a scary toast for someone just backing out.
+      if (message !== 'Purchase cancelled') toast.error(message);
+    } finally {
+      setApplePurchasing(false);
+    }
+  };
+
+  const handleAppleRestore = async () => {
+    setAppleRestoring(true);
+    try {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) {
+        toast.error('Please sign in first');
+        return;
+      }
+      const { AppleIAP } = await import('apple-iap');
+      const { transactions } = await AppleIAP.restorePurchases();
+      if (transactions.length === 0) {
+        toast('No previous purchases found for this Apple ID.');
+        return;
+      }
+      for (const tx of transactions) {
+        const verified = await verifyAppleTransaction({
+          data: { transactionId: tx.transactionId, environment: tx.environment },
+        });
+        if ('error' in verified) throw new Error(verified.error);
+      }
+      toast.success('Purchases restored.');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not restore purchases');
+    } finally {
+      setAppleRestoring(false);
+    }
+  };
 
   const handleUpgrade = async () => {
+    if (isNativeIOS) {
+      await handleAppleUpgrade();
+      return;
+    }
     const { data } = await supabase.auth.getUser();
     if (!data.user) {
       toast.error('Please sign in to upgrade');
@@ -66,6 +156,12 @@ function PricingPage() {
   };
 
   const handleManage = async () => {
+    // An Apple-originated subscription is managed through the App Store,
+    // not Stripe's billing portal — Stripe has no record of it at all.
+    if (subscription?.payment_provider === 'apple') {
+      await openUrl('https://apps.apple.com/account/subscriptions');
+      return;
+    }
     setPortalLoading(true);
     try {
       const result = await createPortalSession({
@@ -156,7 +252,7 @@ function PricingPage() {
               <p className="text-sm text-muted-foreground">AI-assisted guidance & extended features</p>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold">$3.33</div>
+              <div className="text-2xl font-bold">{appleProduct?.displayPrice ?? '$3.33'}</div>
               <div className="text-xs text-muted-foreground">per month</div>
               <div className="text-xs text-primary font-medium">7-day free trial</div>
             </div>
@@ -187,8 +283,33 @@ function PricingPage() {
             </div>
           ) : (
             <div className="space-y-1.5">
-              <Button onClick={handleUpgrade} className="w-full">Start free trial</Button>
-              <p className="text-xs text-center text-muted-foreground">7 days free, then $3.33/month. Cancel anytime.</p>
+              <Button onClick={handleUpgrade} className="w-full" disabled={applePurchasing}>
+                {applePurchasing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  'Start free trial'
+                )}
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">
+                7 days free, then {appleProduct?.displayPrice ?? '$3.33'}/month. Cancel anytime.
+              </p>
+              {isNativeIOS && (
+                <Button
+                  onClick={handleAppleRestore}
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-xs text-muted-foreground"
+                  disabled={appleRestoring}
+                >
+                  {appleRestoring ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <>
+                      <RotateCcw className="mr-1.5 h-3.5 w-3.5" /> Restore purchases
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -201,10 +322,14 @@ function PricingPage() {
             terms, and Terms/Privacy links on or adjacent to the purchase
             screen. Was previously missing entirely — see COMPLIANCE_REPORT.md §5/§7. */}
         <p className="text-xs text-center text-muted-foreground">
-          Pro is $3.33/month after a 7-day free trial. Your subscription renews
-          automatically each month until you cancel; cancel anytime from{' '}
+          Pro is {appleProduct?.displayPrice ?? '$3.33'}/month after a 7-day free trial. Your
+          subscription renews automatically each month until you cancel; cancel anytime from{' '}
           {isPro ? '"Manage subscription" above' : 'your account settings'} — no charge if you
-          cancel before the trial ends. By subscribing you agree to our{' '}
+          cancel before the trial ends.{' '}
+          {isNativeIOS
+            ? 'Payment is charged to your Apple ID account and managed entirely through the App Store.'
+            : null}{' '}
+          By subscribing you agree to our{' '}
           <Link to="/terms" className="underline hover:text-foreground">
             Terms of Service
           </Link>{' '}
