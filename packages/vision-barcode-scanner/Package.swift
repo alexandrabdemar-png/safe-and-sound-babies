@@ -10,7 +10,12 @@ let package = Package(
             targets: ["VisionBarcodeScannerPlugin"])
     ],
     dependencies: [
-        .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", from: "7.0.0")
+        // Match the app's actual Capacitor version (8.x, per its
+        // @capacitor/* package versions) — an earlier `from: "7.0.0"` here
+        // triggered "built for Capacitor 7, it might cause issues" from
+        // `cap sync`, since SPM's `from:` only auto-updates within the
+        // same major version.
+        .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", from: "8.0.0")
     ],
     targets: [
         .target(
