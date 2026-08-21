@@ -12,7 +12,6 @@ import {
   Gift,
   Loader2,
   Package,
-  Plus,
   Radio,
   RefreshCw,
   Settings,
@@ -21,8 +20,6 @@ import {
   Zap,
   X,
 } from "lucide-react";
-import { MomentTimeline } from "@/components/MomentTimeline";
-import { SparkleIllustration } from "@/components/EmptyIllustration";
 import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Logo } from "@/components/Logo";
@@ -1126,36 +1123,6 @@ function HomePage() {
         )
       )}
 
-      {/* Recent moments */}
-      <section className="px-5 pt-10 sm:px-6 animate-fade-up stagger-4">
-        <div className="mx-auto max-w-md">
-          <div className="mb-4 flex items-baseline justify-between">
-            <h2 className="font-display text-xl font-semibold tracking-tight">Moments</h2>
-            <div className="flex items-center gap-1">
-              <Button asChild size="sm" variant="ghost" className="rounded-full font-body text-xs">
-                <Link to="/moments">View all</Link>
-              </Button>
-              <Button asChild size="sm" variant="ghost" className="rounded-full font-body text-xs">
-                <Link to="/moments/new">
-                  <Plus className="mr-1 h-3.5 w-3.5" /> Log
-                </Link>
-              </Button>
-            </div>
-          </div>
-
-          {moments.length === 0 ? (
-            <EmptyMoments />
-          ) : (
-            <div>
-              <p className="mb-2 font-body text-xs font-semibold uppercase tracking-[0.15em] text-accent">
-                Latest moment
-              </p>
-              <MomentTimeline moments={moments.slice(0, 1)} childName={child?.name} />
-            </div>
-          )}
-        </div>
-      </section>
-
       <BottomNav />
     </div>
   );
@@ -1538,7 +1505,7 @@ function DailySafetyTipCard({
               )}
             </Button>
           </div>
-          <p className="mt-3 font-body text-[11px] leading-relaxed text-muted-foreground">
+          <p className="mt-3 font-body text-[9px] italic leading-relaxed text-muted-foreground">
             Written in-house from general child-safety guidance and rotated by your child's age —
             not pulled live from CPSC, FDA, or any other database. Always confirm safety-critical
             steps against current guidance from your pediatrician or the product manufacturer.
@@ -1560,26 +1527,6 @@ function DailySafetyTipCard({
           </p>
         </div>
       </div>
-    </div>
-  );
-}
-
-function EmptyMoments() {
-  return (
-    <div className="rounded-3xl border border-dashed border-border bg-card/40 px-6 py-10 text-center animate-scale-in">
-      <SparkleIllustration className="mx-auto mb-2 h-24 w-24" />
-      <p className="font-display text-lg font-semibold tracking-tight">
-        Every first is worth remembering
-      </p>
-      <p className="mx-auto mt-1.5 max-w-xs font-body text-sm text-muted-foreground">
-        Log a milestone and we'll surface safety tips that are relevant to where your child is right
-        now.
-      </p>
-      <Button asChild className="mt-5 rounded-full bg-primary px-5 font-body text-xs font-semibold">
-        <Link to="/moments/new">
-          <Plus className="mr-1 h-3.5 w-3.5" /> Log your first moment
-        </Link>
-      </Button>
     </div>
   );
 }
