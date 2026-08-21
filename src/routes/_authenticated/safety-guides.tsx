@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/safety-guides")({
   head: () => ({ meta: [{ title: "Safety Guides — Peace of Mine" }] }),
 });
 
-const SAFETY_MILESTONES = [
+export const SAFETY_MILESTONES = [
   { ageMonths: 0, stage: "Before baby arrives", title: "Safe sleep setup", source: "AAP", sourceUrl: "https://www.aap.org/en/patient-care/safe-sleep/", lastUpdated: "May 2025", items: [
     "Place your baby on their back for every single sleep — naps and nighttime.",
     "Use only a firm, flat crib mattress with a fitted sheet and nothing else in the sleep space.",
@@ -21,17 +21,17 @@ const SAFETY_MILESTONES = [
     "Room-share with your baby in a separate sleep surface for at least the first 6 months.",
     "Dress baby in one more layer than you would wear and keep the room between 68–72°F.",
   ]},
-  { ageMonths: 2, stage: "Newborn", title: "Tummy time safety", source: "AAP", sourceUrl: "https://www.aap.org/en/patient-care/safe-sleep/", lastUpdated: "May 2025", items: [
+  { ageMonths: 2, stage: "Newborn", title: "Tummy time safety", source: "AAP", sourceUrl: "https://www.healthychildren.org/English/ages-stages/baby/sleep/Pages/back-to-sleep-tummy-to-play.aspx", lastUpdated: "May 2025", items: [
     "Do supervised tummy time on a firm surface for short sessions several times each day.",
     "Stay within arm's reach whenever your baby is on their tummy.",
     "If your baby falls asleep during tummy time, immediately move them to their back in the crib.",
   ]},
-  { ageMonths: 4, stage: "Newborn", title: "Starting to move", source: "AAP", sourceUrl: "https://www.aap.org/en/patient-care/safe-sleep/", lastUpdated: "May 2025", items: [
+  { ageMonths: 4, stage: "Newborn", title: "Starting to move", source: "AAP", sourceUrl: "https://www.healthychildren.org/English/ages-stages/baby/Pages/Safety-for-Your-Child-6-to-12-Months.aspx", lastUpdated: "May 2025", items: [
     "Lower the crib mattress to the lowest setting before your baby can push up on hands and knees.",
     "Remove hanging mobiles and any toys clipped to the crib rail before baby can grab them.",
     "Never leave your baby unattended on a changing table, sofa, or any elevated surface — even for a second.",
   ]},
-  { ageMonths: 6, stage: "Starting to move", title: "First foods safety", source: "AAP", sourceUrl: "https://www.aap.org/en/patient-care/safe-sleep/", lastUpdated: "May 2025", items: [
+  { ageMonths: 6, stage: "Starting to move", title: "First foods safety", source: "AAP", sourceUrl: "https://www.healthychildren.org/English/health-issues/injuries-emergencies/Pages/Choking-Prevention.aspx", lastUpdated: "May 2025", items: [
     "Do not give honey in any form until after your baby's first birthday — it can cause infant botulism.",
     "Cut grapes, cherry tomatoes, and hot dogs lengthwise into quarters to eliminate choking hazards.",
     "Introduce one new food at a time and wait 3–5 days before adding another to identify any allergic reactions.",
@@ -51,7 +51,7 @@ const SAFETY_MILESTONES = [
     "Install window stops or guards on all windows above the first floor so they open no more than 4 inches.",
     "Remove large stuffed animals and crib bumpers from the crib — they are now a climbing hazard.",
   ]},
-  { ageMonths: 18, stage: "Exploring everything", title: "Toddler proofing", source: "AAP", sourceUrl: "https://www.aap.org/en/patient-care/safe-sleep/", lastUpdated: "May 2025", items: [
+  { ageMonths: 18, stage: "Exploring everything", title: "Toddler proofing", source: "AAP", sourceUrl: "https://www.healthychildren.org/English/ages-stages/toddler/Pages/Safety-for-Your-Child-1-to-2-Years.aspx", lastUpdated: "May 2025", items: [
     "Keep stair gates in place — toddlers who can climb stairs can still fall down them.",
     "Keep all hot drinks at least 3 feet away from the table edge and never hold a hot drink while holding your toddler.",
     "Hold your toddler's hand in every parking lot — make this a non-negotiable rule from day one.",
@@ -63,7 +63,7 @@ const SAFETY_MILESTONES = [
     "Position harness straps at or just above your child's shoulders when forward-facing.",
     "Remove puffy coats before buckling the car seat harness and place a blanket over the buckled harness instead.",
   ]},
-  { ageMonths: 36, stage: "Big kid basics", title: "Preschool safety", source: "AAP", sourceUrl: "https://www.aap.org/en/patient-care/safe-sleep/", lastUpdated: "May 2025", items: [
+  { ageMonths: 36, stage: "Big kid basics", title: "Preschool safety", source: "AAP", sourceUrl: "https://www.healthychildren.org/English/ages-stages/toddler/Pages/Safety-for-Your-Child-2-to-4-Years.aspx", lastUpdated: "May 2025", items: [
     "Teach your child the difference between safe and unsafe touch, using correct anatomical names for body parts.",
     "Practice your child saying their full name, your phone number, and how to dial 911 until they can do it confidently.",
     "Put a properly fitted helmet on your child for every bike, scooter, or balance bike ride — no exceptions.",
@@ -76,7 +76,7 @@ const SAFETY_MILESTONES = [
     "Apply SPF 30 or higher broad-spectrum sunscreen to all exposed skin whenever your child is outdoors.",
     "Know the names and addresses of your child's closest friends and their parents' phone numbers.",
   ]},
-  { ageMonths: 60, stage: "Big kid basics", title: "School age safety", source: "AAP", sourceUrl: "https://www.aap.org/en/patient-care/safe-sleep/", lastUpdated: "May 2025", items: [
+  { ageMonths: 60, stage: "Big kid basics", title: "School age safety", source: "AAP", sourceUrl: "https://www.healthychildren.org/English/ages-stages/preschool/Pages/Safety-for-Your-Child-5-Years.aspx", lastUpdated: "May 2025", items: [
     "Walk or ride the bus route with your child before the first day of school so they know exactly where to go.",
     "Keep your child's backpack weight under 10–15% of their body weight to protect their back and posture.",
     "Set clear screen time rules and review the content your child is watching or playing regularly.",
