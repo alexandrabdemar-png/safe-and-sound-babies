@@ -29,26 +29,85 @@ export type RecallHit = {
 };
 
 /**
- * Every recall alert must be clickable so a parent can verify it against the
- * official source themselves. Some recall rows (older CPSC records, edge
- * cases in the sync jobs) can end up with no direct article URL — this gives
- * a guaranteed fallback that always resolves to a real, relevant page.
+ * Top-level, always-valid recall pages per agency — used only as a fallback
+ * when a recall row has no direct article URL of its own. Deliberately NOT
+ * a query-string search URL for every agency: CPSC's own search endpoint
+ * happens to accept `?combine=<title>` reliably, but sending a non-CPSC
+ * recall (FDA, USDA, NHTSA, Health Canada, EU) to that same CPSC search
+ * returns nothing, which was the reported "the link doesn't work" bug —
+ * every recall's "verify" link resolved to a CPSC search regardless of its
+ * true source. A plain top-level agency page always resolves, even if it
+ * isn't pre-filtered to the exact recall.
  */
-export function recallFallbackUrl(title: string): string {
+const RECALL_AGENCY_HOME_URL: Record<string, string> = {
+  cpsc: "https://www.cpsc.gov/Recalls",
+  fda: "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts",
+  usda_fsis: "https://www.fsis.usda.gov/recalls",
+  nhtsa: "https://www.nhtsa.gov/recalls",
+  health_canada: "https://recalls-rappels.canada.ca/en",
+  eu_safety_gate: "https://ec.europa.eu/safety-gate-alerts/screen/webReport",
+};
+
+/**
+ * Short, source-aware label for a "verify this" link/button — e.g.
+ * "CPSC.gov", "FDA.gov". Falls back to a generic phrase for a source we
+ * don't recognize (including the hand-curated "critical" list, which isn't
+ * tied to one single agency).
+ */
+const RECALL_AGENCY_SHORT_LABEL: Record<string, string> = {
+  cpsc: "CPSC.gov",
+  fda: "FDA.gov",
+  usda_fsis: "USDA FSIS",
+  nhtsa: "NHTSA.gov",
+  health_canada: "Health Canada",
+  eu_safety_gate: "EU Safety Gate",
+};
+
+/**
+ * Every recall alert must be clickable so a parent can verify it against the
+ * official source themselves. Some recall rows (older records, edge cases in
+ * the sync jobs) can end up with no direct article URL — this gives a
+ * guaranteed fallback that always resolves to a real, relevant page, matched
+ * to the recall's actual source rather than always assuming CPSC.
+ */
+export function recallFallbackUrl(title: string, source?: string | null): string {
+  if (source && source !== "cpsc" && RECALL_AGENCY_HOME_URL[source]) {
+    return RECALL_AGENCY_HOME_URL[source];
+  }
   return `https://www.cpsc.gov/Recalls?combine=${encodeURIComponent(title)}`;
 }
 
 /**
- * Attribute a recall to its actual issuing agency (CPSC/FDA) based on the
- * recall's own URL/source, rather than assuming CPSC for everything — used
- * anywhere a recall's official source is shown to a parent.
+ * Attribute a recall to its actual issuing agency based on the recall's own
+ * URL/source, rather than assuming CPSC for everything — used anywhere a
+ * recall's official source is shown to a parent.
  */
 export function recallSourceLabel(hit: { url?: string | null; source?: string | null }): string {
   if (hit.url?.includes("cpsc.gov")) return "U.S. Consumer Product Safety Commission (CPSC)";
   if (hit.url?.includes("fda.gov")) return "U.S. Food and Drug Administration (FDA)";
   if (hit.source === "cpsc") return "U.S. Consumer Product Safety Commission (CPSC)";
   if (hit.source === "fda") return "U.S. Food and Drug Administration (FDA)";
+  if (hit.source === "usda_fsis") return "USDA Food Safety and Inspection Service (FSIS)";
+  if (hit.source === "nhtsa") return "U.S. National Highway Traffic Safety Administration (NHTSA)";
+  if (hit.source === "health_canada") return "Health Canada";
+  if (hit.source === "eu_safety_gate") return "EU Safety Gate";
   return "the official recall notice linked below";
+}
+
+/**
+ * Short button/link text for a "verify this" link — e.g. "Verify on
+ * FDA.gov" — matched to the recall's real source instead of hardcoding
+ * "Verify on CPSC.gov" for every recall regardless of which agency actually
+ * issued it.
+ */
+export function recallVerifyLinkLabel(hit: {
+  url?: string | null;
+  source?: string | null;
+}): string {
+  if (hit.url?.includes("cpsc.gov")) return "Verify on CPSC.gov";
+  if (hit.url?.includes("fda.gov")) return "Verify on FDA.gov";
+  const short = hit.source ? RECALL_AGENCY_SHORT_LABEL[hit.source] : null;
+  return short ? `Verify on ${short}` : "Verify official recall notice";
 }
 
 /**
@@ -137,13 +196,27 @@ const NOISE_WORDS = new Set([
 ]);
 
 /**
+ * Very small plural normalizer — recall text is almost always plural
+ * ("Pacifiers", "Car Seats", "Pouches") while a user's own product name is
+ * usually singular ("Pacifier", "Pouch"). Not a real stemmer, just enough
+ * that this common, legitimate wording difference doesn't count as a token
+ * "not matching". Checks the "-es" suffix first (pouch→pouches, box→boxes)
+ * since stripping only a trailing "s" from those leaves a stray "e".
+ */
+function stem(word: string): string {
+  if (word.length > 4 && word.endsWith("es")) return word.slice(0, -2);
+  if (word.length > 3 && word.endsWith("s")) return word.slice(0, -1);
+  return word;
+}
+
+/**
  * Fuzzy-match a product name against a block of recall text.
  *
  * Logic (per spec):
  *   1. Split product name into words, remove NOISE_WORDS and short words.
  *   2. Single meaningful token → match if it appears anywhere in recall text.
- *   3. Multiple meaningful tokens → match if enough of them appear in the
- *      recall text (see the `required` comment below for the threshold).
+ *   3. Multiple meaningful tokens → match only if *every* one appears
+ *      (allowing for a trailing-s plural difference — see `stem` above).
  *   All comparisons are whole-word matches against the recall text, not raw
  *   substring checks — see the regression test for why: a raw substring
  *   check let a "Beech-Nut" product falsely match an unrelated "Grizzlies"
@@ -157,13 +230,15 @@ export function fuzzyMatchProduct(productName: string, recallText: string): bool
     text
       .replace(/[^a-z0-9 ]+/g, " ")
       .split(/\s+/)
-      .filter(Boolean),
+      .filter(Boolean)
+      .map(stem),
   );
   const tokens = productName
     .toLowerCase()
     .replace(/[^a-z0-9 ]+/g, " ")
     .split(/\s+/)
-    .filter((w) => w.length >= 3 && !NOISE_WORDS.has(w));
+    .filter((w) => w.length >= 3 && !NOISE_WORDS.has(w))
+    .map(stem);
 
   if (tokens.length === 0) {
     return text.includes(productName.toLowerCase().trim());
@@ -171,18 +246,19 @@ export function fuzzyMatchProduct(productName: string, recallText: string): bool
   if (tokens.length === 1) {
     return textTokens.has(tokens[0]);
   }
-  const matchCount = tokens.filter((t) => textTokens.has(t)).length;
-  // A flat "any 2 tokens" floor let a brand-only match slip through: "Philips
-  // Avent Soothie Pacifier" tokenizes to 4 words, and a completely
-  // unrelated recall for "Philips Avent Digital Video Baby Monitors" shares
-  // only the two brand tokens ("philips", "avent") — zero product-defining
-  // tokens ("soothie", "pacifier") actually matched, yet the flat floor of
-  // 2 still counted it as a hit. Short/specific names (<=3 meaningful
-  // tokens — typically brand + model + variant) now require *every* token
-  // to match; longer, more free-form names get a proportional 75%
-  // threshold so minor wording differences don't block a real match.
-  const required = tokens.length <= 3 ? tokens.length : Math.ceil(tokens.length * 0.75);
-  return matchCount >= required;
+  // Every meaningful token must appear (modulo the plural normalization
+  // above) — not just a majority. A prior "75% of tokens for longer names"
+  // rule let a product name whose non-brand words happen to be common food/
+  // descriptor terms (e.g. a flavor like "Blueberry Apple") pass against a
+  // completely unrelated recall that just happens to mention the same
+  // generic words in its own ingredient list, with the actual distinguishing
+  // token (the brand) never appearing at all — reported bug: "Beech Nut
+  // Blueberry Apple" false-matched an unrelated "Grizzlies" trail mix recall
+  // on "blueberry"/"apple" alone. Requiring every token closes that off
+  // while the plural normalization above still lets real wording
+  // differences (recall text says "Pacifiers", product says "Pacifier")
+  // through.
+  return tokens.every((t) => textTokens.has(t));
 }
 
 /**

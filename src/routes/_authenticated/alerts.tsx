@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { hapticSuccess, hapticDismiss } from "@/lib/haptic";
 import { friendlyError } from "@/lib/errors";
 import { BellIllustration } from "@/components/EmptyIllustration";
-import { recallFallbackUrl, lotMatches } from "@/lib/recallCheck";
+import { recallFallbackUrl, recallVerifyLinkLabel, lotMatches } from "@/lib/recallCheck";
 import { DataAsOf } from "@/components/DataAsOf";
 import { computeBlockedRuleIds } from "@/lib/insightDismissals";
 
@@ -42,6 +42,7 @@ type RecallMatch = {
     url: string | null;
     recall_date: string | null;
     lot_pattern: string | null;
+    source: string | null;
   } | null;
 };
 
@@ -116,6 +117,7 @@ type RecallHistoryItem = {
   url: string | null;
   recall_date: string | null;
   category: string | null;
+  source: string | null;
 };
 
 function AlertsPage() {
@@ -148,7 +150,7 @@ function AlertsPage() {
 
     const { data, error } = await supabase
       .from("recalls")
-      .select("id, title, hazard, remedy, description, url, recall_date, category")
+      .select("id, title, hazard, remedy, description, url, recall_date, category, source")
       .gte("recall_date", cutoffStr)
       .order("recall_date", { ascending: false })
       .limit(100);
@@ -185,7 +187,7 @@ function AlertsPage() {
       supabase
         .from("product_recalls")
         .select(
-          "id, acknowledged, product_id, products(name, brand, lot_number), recalls(id, title, hazard, remedy, description, url, recall_date, lot_pattern)",
+          "id, acknowledged, product_id, products(name, brand, lot_number), recalls(id, title, hazard, remedy, description, url, recall_date, lot_pattern, source)",
         )
         .eq("acknowledged", false),
       // Previously missing entirely: a "Mark as done" wrote to
@@ -485,9 +487,9 @@ function RecallHistoryCard({ item }: { item: RecallHistoryItem }) {
           {expanded ? <><ChevronUp className="h-3 w-3" /> Less</> : <><ChevronDown className="h-3 w-3" /> More</>}
         </button>
       )}
-      <a href={item.url || recallFallbackUrl(item.title)} target="_blank" rel="noopener noreferrer"
+      <a href={item.url || recallFallbackUrl(item.title, item.source)} target="_blank" rel="noopener noreferrer"
         className="mt-2 inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive hover:underline">
-        Verify on CPSC.gov <ArrowUpRight className="h-3 w-3" />
+        {recallVerifyLinkLabel(item)} <ArrowUpRight className="h-3 w-3" />
       </a>
     </li>
   );
@@ -571,7 +573,7 @@ function RecallCard({ item, onDismiss }: { item: RecallMatch; onDismiss: () => v
       )}
       <div className="mt-4 flex items-center gap-2">
         <a
-          href={recall.url || recallFallbackUrl(recall.title)}
+          href={recall.url || recallFallbackUrl(recall.title, recall.source)}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 rounded-full bg-destructive px-3.5 py-1.5 font-body text-xs font-semibold text-destructive-foreground"
@@ -663,12 +665,12 @@ function BannerRecallItem({ item }: { item: RecallMatch }) {
         </p>
       )}
       <a
-        href={recall.url || recallFallbackUrl(recall.title)}
+        href={recall.url || recallFallbackUrl(recall.title, recall.source)}
         target="_blank"
         rel="noopener noreferrer"
         className="mt-2 inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive hover:underline"
       >
-        Verify on CPSC.gov <ArrowUpRight className="h-3 w-3" />
+        {recallVerifyLinkLabel(recall)} <ArrowUpRight className="h-3 w-3" />
       </a>
     </li>
   );

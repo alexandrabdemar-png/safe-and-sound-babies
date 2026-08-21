@@ -76,6 +76,20 @@ function tokenize(s: string): string[] {
     .filter(Boolean);
 }
 
+/**
+ * Very small plural normalizer — recall text is almost always plural
+ * ("Pacifiers", "Car Seats", "Pouches") while a user's own product name is
+ * usually singular ("Pacifier", "Pouch"). Not a real stemmer, just enough
+ * that this common, legitimate wording difference doesn't count as a token
+ * "not matching". Checks the "-es" suffix first (pouch→pouches, box→boxes)
+ * since stripping only a trailing "s" from those leaves a stray "e".
+ */
+function stem(word: string): string {
+  if (word.length > 4 && word.endsWith("es")) return word.slice(0, -2);
+  if (word.length > 3 && word.endsWith("s")) return word.slice(0, -1);
+  return word;
+}
+
 export function fuzzyMatchProduct(productName: string, recallText: string): boolean {
   const text = recallText.toLowerCase();
   // Word-boundary set, not a raw string — checking token membership here
@@ -88,7 +102,7 @@ export function fuzzyMatchProduct(productName: string, recallText: string): bool
   // present — substring matching flagged that recall against Beech-Nut
   // baby food, a false positive with no real connection between the
   // products. Matching on whole tokens instead closes this off.
-  const textTokens = new Set(tokenize(text));
+  const textTokens = new Set(tokenize(text).map(stem));
 
   const tokens = [
     ...new Set(
@@ -98,24 +112,28 @@ export function fuzzyMatchProduct(productName: string, recallText: string): bool
         // exactly this kind of token is what let a sibling-product false
         // positive slip through in an earlier version of this matcher (see
         // the Pipa RX regression test above).
-        .filter((w) => w.length >= 2 && !NOISE_WORDS.has(w)),
+        .filter((w) => w.length >= 2 && !NOISE_WORDS.has(w))
+        .map(stem),
     ),
   ];
 
   if (tokens.length === 0) return text.includes(productName.toLowerCase().trim());
   if (tokens.length === 1) return textTokens.has(tokens[0]);
 
-  const matchCount = tokens.filter((t) => textTokens.has(t)).length;
-  // Short/specific product names (<=3 meaningful tokens, which is the
-  // common case: brand + model + variant) must match *every* token — a
-  // recall for the base model must not flag a variant that's the same
-  // brand and model but a different trim ("Pipa" matching "Pipa RX" on
-  // brand+model alone, while missing "RX", is exactly the bug class this
-  // guards against). Longer, more free-form names get a slightly fuzzier
-  // proportional threshold so minor wording differences don't block a
-  // real match.
-  const required = tokens.length <= 3 ? tokens.length : Math.ceil(tokens.length * 0.75);
-  return matchCount >= required;
+  // Every meaningful token must appear (modulo the plural normalization
+  // above) — not just a majority. A prior "75% of tokens for longer names"
+  // rule let a product name whose non-brand words happen to be common food/
+  // descriptor terms (e.g. a flavor like "Blueberry Apple") pass against a
+  // completely unrelated recall that just happens to mention the same
+  // generic words in its own ingredient list, with the actual distinguishing
+  // token (the brand) never appearing at all — reported bug: "Beech Nut
+  // Blueberry Apple" false-matched an unrelated "Grizzlies" trail mix recall
+  // on "blueberry"/"apple" alone. Requiring every token closes that off
+  // while the plural normalization above still lets real wording
+  // differences (recall text says "Pacifiers", product says "Pacifier")
+  // through. This also still catches the "Pipa" vs "Pipa RX" sibling-
+  // product case — "rx" never appears at all, plural or not.
+  return tokens.every((t) => textTokens.has(t));
 }
 
 export type RecallHit = {

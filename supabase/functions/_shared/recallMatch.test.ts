@@ -65,6 +65,33 @@ describe("fuzzyMatchProduct", () => {
     );
     expect(fuzzyMatchProduct("Cat", "Recall affects the Cat brand of toy trucks")).toBe(true);
   });
+
+  // Regression: "Beech Nut Blueberry Apple" (a real baby-food pouch flavor)
+  // false-matched an unrelated snack-mix recall. Root cause: a prior
+  // 75%-of-tokens threshold for names >3 tokens let 3 of the product's 4
+  // tokens ("beech", "blueberry", "apple" — all plausible, generic
+  // ingredient/descriptor words) pass against a recall whose own text
+  // happened to include them too, while the one token that never appeared
+  // ("nut") went unnoticed because it wasn't required. Live report: matched
+  // against a "Grizzlies" granola/trail-mix recall with zero real
+  // connection to the Beech-Nut baby-food brand.
+  it("regression: does NOT match when one meaningful token is entirely absent, even if the rest are common words that coincide", () => {
+    expect(
+      fuzzyMatchProduct(
+        "Beech Nut Blueberry Apple",
+        "Grizzlies Brand Trail Mix — a beech and blueberry apple blend — recalled for undeclared allergens",
+      ),
+    ).toBe(false);
+  });
+
+  it("still matches when every token is genuinely present (including a same-brand recall)", () => {
+    expect(
+      fuzzyMatchProduct(
+        "Beech Nut Blueberry Apple",
+        "Beech-Nut Recalls Blueberry Apple Pouches Due to Possible Choking Hazard",
+      ),
+    ).toBe(true);
+  });
 });
 
 describe("checkCpscRecalls — structured-field-only matching (regression: Pipa RX false positive)", () => {

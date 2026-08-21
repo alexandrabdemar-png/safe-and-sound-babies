@@ -206,7 +206,7 @@ function RecallRadarPage() {
             <div>
               <h1 className="font-display text-3xl font-semibold tracking-tight">Recall Radar</h1>
               <p className="font-body text-xs text-muted-foreground">
-                Baby &amp; kids product recalls · CPSC, FDA, USDA, NHTSA, Health Canada &amp; EU
+                Baby &amp; kids product recalls
               </p>
             </div>
           </div>
@@ -358,7 +358,7 @@ function RecallCard({ recall, onDone }: { recall: RadarRecall; onDone?: () => vo
       )}
       <div className="pl-10 flex items-center gap-3">
         <a
-          href={recall.url || recallFallbackUrl(recall.title)}
+          href={recall.url || recallFallbackUrl(recall.title, recall.source)}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive underline underline-offset-2"

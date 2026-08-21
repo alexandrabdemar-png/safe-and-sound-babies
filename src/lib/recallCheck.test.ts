@@ -15,6 +15,9 @@ import {
   isLikelyNonFoodProduct,
   checkRecallsForProduct,
   fetchProductDetailResilient,
+  recallFallbackUrl,
+  recallSourceLabel,
+  recallVerifyLinkLabel,
 } from "./recallCheck";
 
 // Minimal thenable chain mimicking Supabase's query builder — every
@@ -80,9 +83,12 @@ describe("fuzzyMatchProduct", () => {
 // only the two brand tokens (philips/avent) appeared in the unrelated
 // monitor recall's text, with zero product-defining tokens (soothie/
 // pacifier) matching — yet the flat floor of 2 still counted it as a hit.
-// Fixed to require *every* token for short names (<=3 tokens) and a
-// proportional 75% for longer ones, matching the edge-function copy of
-// this matcher (supabase/functions/_shared/recallMatch.ts).
+// Originally fixed with an "every token for <=3 tokens, 75% for longer
+// names" rule; that 75% carve-out later caused its own false positive (see
+// the "Beech Nut Blueberry Apple" regression below), so it's since been
+// tightened to require every token unconditionally (with a plural-only
+// exception via `stem`). Matches the edge-function copy of this matcher
+// (supabase/functions/_shared/recallMatch.ts).
 describe("fuzzyMatchProduct — brand-only false positive (live bug report)", () => {
   it("regression: does NOT match on brand-name tokens alone when no product-defining token matches", () => {
     expect(
@@ -111,6 +117,33 @@ describe("fuzzyMatchProduct — brand-only false positive (live bug report)", ()
     ).toBe(false);
     expect(
       fuzzyMatchProduct("Graco SnugRide Comfort", "Graco Recalls SnugRide Comfort Infant Car Seat"),
+    ).toBe(true);
+  });
+
+  // Regression: "Beech Nut Blueberry Apple" (a real baby-food pouch flavor)
+  // false-matched an unrelated snack-mix recall. Root cause: the previous
+  // 75%-of-tokens threshold for names >3 tokens let 3 of the product's 4
+  // tokens ("beech", "blueberry", "apple" — all plausible, generic
+  // ingredient/descriptor words) pass against a recall whose own text
+  // happened to include them too, while the one token that never appeared
+  // ("nut") went unnoticed because it wasn't required. Live report: matched
+  // against a "Grizzlies" granola/trail-mix recall with zero real
+  // connection to the Beech-Nut baby-food brand.
+  it("regression: does NOT match when one meaningful token is entirely absent, even if the rest are common words that coincide", () => {
+    expect(
+      fuzzyMatchProduct(
+        "Beech Nut Blueberry Apple",
+        "Grizzlies Brand Trail Mix — a beech and blueberry apple blend — recalled for undeclared allergens",
+      ),
+    ).toBe(false);
+  });
+
+  it("still matches when every token is genuinely present (including a same-brand recall)", () => {
+    expect(
+      fuzzyMatchProduct(
+        "Beech Nut Blueberry Apple",
+        "Beech-Nut Recalls Blueberry Apple Pouches Due to Possible Choking Hazard",
+      ),
     ).toBe(true);
   });
 });
@@ -660,5 +693,81 @@ describe("fetchProductDetailResilient", () => {
 
     expect(result.data).toBeNull();
     expect(result.error?.message).toBe("Failed to fetch");
+  });
+});
+
+// Regression: a reported "the link doesn't work" bug — every recall's
+// verify link used a CPSC-only fallback (recallFallbackUrl(title) alone)
+// regardless of the recall's true source, so an FDA/USDA/NHTSA/Health
+// Canada/EU recall with no direct url on its own row fell back to a CPSC
+// search that has no reason to find it. These helpers make the fallback
+// URL and the button label both source-aware.
+describe("recallFallbackUrl — source-aware fallback (regression: non-CPSC link fell back to a CPSC-only search)", () => {
+  it("still builds a CPSC title search when the source is cpsc", () => {
+    expect(recallFallbackUrl("Beech-Nut Pouch Recall", "cpsc")).toBe(
+      "https://www.cpsc.gov/Recalls?combine=Beech-Nut%20Pouch%20Recall",
+    );
+  });
+
+  it("still builds a CPSC title search when the source is unknown/absent (prior default behavior)", () => {
+    expect(recallFallbackUrl("Some Recall")).toBe(
+      "https://www.cpsc.gov/Recalls?combine=Some%20Recall",
+    );
+  });
+
+  it("falls back to the FDA's own recall page, not a CPSC search, for an FDA-sourced recall", () => {
+    expect(recallFallbackUrl("Granola Bar Recall", "fda")).toBe(
+      "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts",
+    );
+  });
+
+  it("falls back to each other agency's own recall page rather than CPSC", () => {
+    expect(recallFallbackUrl("x", "usda_fsis")).toBe("https://www.fsis.usda.gov/recalls");
+    expect(recallFallbackUrl("x", "nhtsa")).toBe("https://www.nhtsa.gov/recalls");
+    expect(recallFallbackUrl("x", "health_canada")).toBe("https://recalls-rappels.canada.ca/en");
+    expect(recallFallbackUrl("x", "eu_safety_gate")).toBe(
+      "https://ec.europa.eu/safety-gate-alerts/screen/webReport",
+    );
+  });
+});
+
+describe("recallVerifyLinkLabel — source-aware button text (regression: always said 'Verify on CPSC.gov')", () => {
+  it("says CPSC.gov when the source is cpsc", () => {
+    expect(recallVerifyLinkLabel({ source: "cpsc" })).toBe("Verify on CPSC.gov");
+  });
+
+  it("says FDA.gov when the source is fda, not CPSC.gov", () => {
+    expect(recallVerifyLinkLabel({ source: "fda" })).toBe("Verify on FDA.gov");
+  });
+
+  it("prefers the recall's own url domain over the source field when both are present", () => {
+    expect(recallVerifyLinkLabel({ url: "https://www.fda.gov/example", source: "cpsc" })).toBe(
+      "Verify on FDA.gov",
+    );
+  });
+
+  it("falls back to a generic label, not CPSC.gov, for a source with no dedicated agency page", () => {
+    expect(recallVerifyLinkLabel({ source: "critical" })).toBe("Verify official recall notice");
+    expect(recallVerifyLinkLabel({ source: null })).toBe("Verify official recall notice");
+  });
+
+  it("labels every non-CPSC agency source distinctly", () => {
+    expect(recallVerifyLinkLabel({ source: "usda_fsis" })).toBe("Verify on USDA FSIS");
+    expect(recallVerifyLinkLabel({ source: "nhtsa" })).toBe("Verify on NHTSA.gov");
+    expect(recallVerifyLinkLabel({ source: "health_canada" })).toBe("Verify on Health Canada");
+    expect(recallVerifyLinkLabel({ source: "eu_safety_gate" })).toBe("Verify on EU Safety Gate");
+  });
+});
+
+describe("recallSourceLabel — narrative agency name now covers every source, not just CPSC/FDA", () => {
+  it("names each agency in full", () => {
+    expect(recallSourceLabel({ source: "usda_fsis" })).toBe(
+      "USDA Food Safety and Inspection Service (FSIS)",
+    );
+    expect(recallSourceLabel({ source: "nhtsa" })).toBe(
+      "U.S. National Highway Traffic Safety Administration (NHTSA)",
+    );
+    expect(recallSourceLabel({ source: "health_canada" })).toBe("Health Canada");
+    expect(recallSourceLabel({ source: "eu_safety_gate" })).toBe("EU Safety Gate");
   });
 });
