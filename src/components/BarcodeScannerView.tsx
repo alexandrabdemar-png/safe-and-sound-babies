@@ -1,131 +1,119 @@
-import { useEffect, useId, useRef, useState } from "react";
-import {
-  Html5Qrcode,
-  Html5QrcodeSupportedFormats,
-  Html5QrcodeScannerState,
-  type Html5QrcodeCameraScanConfig,
-} from "html5-qrcode";
+import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
+import {
+  WebBarcodeScannerView,
+  type BarcodeScannerViewProps,
+} from "@/components/WebBarcodeScannerView";
 
-// Reads UPC-A, UPC-E, EAN-13, EAN-8 (retail product barcodes) and QR codes.
-// html5-qrcode's `useBarCodeDetectorIfSupported` makes it use the native
-// BarcodeDetector Web API directly when the browser supports it (fast,
-// hardware-accelerated on most Android/Chrome), and falls back to its own
-// pure-JS decoder automatically everywhere else (Safari, Firefox, etc.) —
-// this is the same "BarcodeDetector primary, JS library fallback" behavior
-// the product spec asks for, without us having to hand-roll the feature
-// detection and dual code paths ourselves.
-const SCAN_FORMATS = [
-  Html5QrcodeSupportedFormats.UPC_A,
-  Html5QrcodeSupportedFormats.UPC_E,
-  Html5QrcodeSupportedFormats.EAN_13,
-  Html5QrcodeSupportedFormats.EAN_8,
-  Html5QrcodeSupportedFormats.QR_CODE,
-];
+// Platform dispatcher: uses Apple VisionKit's native live barcode scanner
+// (DataScannerViewController, iOS 16+) when running as a native iOS build
+// on a device that supports it, falling back to the web-based scanner
+// (html5-qrcode, see WebBarcodeScannerView.tsx) everywhere else — web,
+// Android, and iOS below version 16.
+//
+// Important UX difference from the web path: VisionKit's scanner is a
+// full-screen NATIVE view presented on top of the WebView (like
+// @capacitor/camera's photo picker) — it cannot be embedded inline inside
+// this component's box the way the web scanner's live preview is. While
+// it's active, this component just shows a loading placeholder; the actual
+// scanning UI is a separate native screen that dismisses back to the app
+// once a code is found (or the user cancels).
+export function BarcodeScannerView(props: BarcodeScannerViewProps) {
+  const [nativeAvailable, setNativeAvailable] = useState<boolean | null>(null);
 
-const SCAN_CONFIG: Html5QrcodeCameraScanConfig = {
-  fps: 10,
-  videoConstraints: {
-    facingMode: "environment",
-    // Cap resolution — every extra pixel is decoded on every frame, and
-    // phone cameras default far higher than a barcode needs.
-    width: { ideal: 1280 },
-    height: { ideal: 720 },
-  },
-};
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { Capacitor } = await import("@capacitor/core");
+        if (Capacitor.getPlatform() !== "ios" || !Capacitor.isNativePlatform()) {
+          if (!cancelled) setNativeAvailable(false);
+          return;
+        }
+        const { VisionBarcodeScanner } = await import("vision-barcode-scanner");
+        const { supported } = await VisionBarcodeScanner.isSupported();
+        if (!cancelled) setNativeAvailable(supported);
+      } catch {
+        // Capacitor or the plugin isn't available (e.g. web preview build
+        // that never bundled it) — that's expected on web, fall back.
+        if (!cancelled) setNativeAvailable(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-type Props = {
-  onDetected: (code: string) => void;
-  onError?: (message: string) => void;
-  /** Set false to stop the camera without unmounting the component. */
-  active?: boolean;
-  className?: string;
-};
+  // Still checking — render nothing rather than flashing the web camera
+  // preview for a frame on a device that's about to use the native one.
+  if (nativeAvailable === null) return null;
 
-export function BarcodeScannerView({ onDetected, onError, active = true, className }: Props) {
-  const rawId = useId();
-  const containerId = `barcode-scanner-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
-  const scannerRef = useRef<Html5Qrcode | null>(null);
+  if (nativeAvailable) {
+    return <NativeVisionBarcodeScannerView {...props} />;
+  }
+
+  return <WebBarcodeScannerView {...props} />;
+}
+
+function NativeVisionBarcodeScannerView({
+  onDetected,
+  onError,
+  onCancel,
+  active = true,
+  className,
+}: BarcodeScannerViewProps) {
   const detectedRef = useRef(false);
-  const [starting, setStarting] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!active) return;
-    let cancelled = false;
     detectedRef.current = false;
-    setStarting(true);
-    setError(null);
+    let cancelled = false;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const listenerHandles: any[] = [];
 
-    const scanner = new Html5Qrcode(containerId, {
-      formatsToSupport: SCAN_FORMATS,
-      useBarCodeDetectorIfSupported: true,
-      verbose: false,
-    });
-    scannerRef.current = scanner;
+    (async () => {
+      const { VisionBarcodeScanner } = await import("vision-barcode-scanner");
+      if (cancelled) return;
 
-    scanner
-      .start(
-        { facingMode: "environment" },
-        SCAN_CONFIG,
-        (decodedText) => {
+      listenerHandles.push(
+        await VisionBarcodeScanner.addListener("barcodeDetected", ({ value }) => {
           if (detectedRef.current) return;
           detectedRef.current = true;
-          onDetected(decodedText);
-        },
-        () => {
-          // Per-frame "nothing decoded yet" callback — expected on nearly
-          // every frame while the user lines up the barcode, not an error.
-        },
-      )
-      .then(() => {
-        if (cancelled) {
-          // Unmounted (or `active` flipped off) while start() was still in
-          // flight — the cleanup below already ran and had nothing to stop
-          // at the time, so the camera is still acquired. Release it now,
-          // otherwise the stream leaks until the tab is closed.
-          scanner
-            .stop()
-            .then(() => scanner.clear())
-            .catch(() => {});
-          return;
-        }
-        setStarting(false);
-      })
-      .catch((e) => {
-        if (cancelled) return;
-        const msg = e instanceof Error ? e.message : "Could not start camera";
-        setError(msg);
-        setStarting(false);
-        onError?.(msg);
-      });
+          onDetected(value);
+        }),
+      );
+      listenerHandles.push(
+        await VisionBarcodeScanner.addListener("scanCancelled", () => {
+          onCancel?.();
+        }),
+      );
+      listenerHandles.push(
+        await VisionBarcodeScanner.addListener("scanError", ({ message }) => {
+          onError?.(message);
+        }),
+      );
+
+      try {
+        await VisionBarcodeScanner.startScan();
+      } catch (e) {
+        if (!cancelled) onError?.(e instanceof Error ? e.message : "Could not start scanner");
+      }
+    })();
 
     return () => {
       cancelled = true;
-      scannerRef.current = null;
-      if (scanner.getState() === Html5QrcodeScannerState.NOT_STARTED) return;
-      scanner
-        .stop()
-        .then(() => scanner.clear())
-        .catch(() => {
-          // Camera may already be gone (tab backgrounded, permissions
-          // revoked mid-scan) — nothing actionable to do here.
-        });
+      listenerHandles.forEach((h) => h.remove());
+      import("vision-barcode-scanner").then(({ VisionBarcodeScanner }) => {
+        VisionBarcodeScanner.stopScan().catch(() => {});
+      });
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, containerId]);
+  }, [active, onDetected, onError, onCancel]);
 
   return (
     <div className={className}>
-      <div
-        id={containerId}
-        className="h-full w-full overflow-hidden [&_video]:h-full [&_video]:w-full [&_video]:object-cover"
-      />
-      {starting && !error && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 text-white">
-          <Loader2 className="h-6 w-6 animate-spin" />
-        </div>
-      )}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 text-white">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
     </div>
   );
 }

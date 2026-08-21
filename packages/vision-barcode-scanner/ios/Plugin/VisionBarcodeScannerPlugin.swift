@@ -1,0 +1,82 @@
+import Foundation
+import Capacitor
+import VisionKit
+
+/// Capacitor bridge for BarcodeScannerContainerViewController. Presents a
+/// full-screen native VisionKit scanner over the WebView and reports back
+/// via JS events — this deliberately mirrors how @capacitor/camera works
+/// (present a native screen, resolve/emit once, dismiss) rather than trying
+/// to embed VisionKit's live preview inline inside the web page's DOM the
+/// way the previous html5-qrcode-based scanner did.
+@objc(VisionBarcodeScannerPlugin)
+public class VisionBarcodeScannerPlugin: CAPPlugin {
+    private var presentedScanner: UIViewController?
+
+    @objc func isSupported(_ call: CAPPluginCall) {
+        if #available(iOS 16.0, *) {
+            call.resolve(["supported": DataScannerViewController.isSupported])
+        } else {
+            call.resolve(["supported": false])
+        }
+    }
+
+    @objc func startScan(_ call: CAPPluginCall) {
+        guard #available(iOS 16.0, *) else {
+            call.reject("VisionKit barcode scanning requires iOS 16 or later")
+            return
+        }
+        guard DataScannerViewController.isSupported else {
+            call.reject("This device doesn't support VisionKit barcode scanning")
+            return
+        }
+        guard DataScannerViewController.isAvailable else {
+            call.reject("Barcode scanning isn't available right now (camera may be in use, or permission was denied)")
+            return
+        }
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            guard let presentingVC = self.bridge?.viewController else {
+                call.reject("No view controller available to present the scanner on")
+                return
+            }
+            if self.presentedScanner != nil {
+                call.reject("A scan is already in progress")
+                return
+            }
+
+            let container = BarcodeScannerContainerViewController(
+                onResult: { [weak self] value in
+                    self?.notifyListeners("barcodeDetected", data: ["value": value])
+                    self?.dismissScanner()
+                },
+                onCancel: { [weak self] in
+                    self?.notifyListeners("scanCancelled", data: [:])
+                    self?.dismissScanner()
+                },
+                onError: { [weak self] message in
+                    self?.notifyListeners("scanError", data: ["message": message])
+                    self?.dismissScanner()
+                }
+            )
+            container.modalPresentationStyle = .fullScreen
+            self.presentedScanner = container
+            presentingVC.present(container, animated: true) {
+                call.resolve()
+            }
+        }
+    }
+
+    @objc func stopScan(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { [weak self] in
+            self?.dismissScanner()
+            call.resolve()
+        }
+    }
+
+    private func dismissScanner() {
+        guard let scanner = presentedScanner else { return }
+        presentedScanner = nil
+        scanner.dismiss(animated: true)
+    }
+}

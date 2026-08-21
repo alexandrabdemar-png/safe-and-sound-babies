@@ -36,6 +36,7 @@ export function BarcodeScanner({ open, onClose, onDetected }: Props) {
             <BarcodeScannerView
               onDetected={handleDetected}
               onError={setError}
+              onCancel={onClose}
               className="relative h-full w-full"
             />
           )}
