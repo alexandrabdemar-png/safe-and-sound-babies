@@ -10,13 +10,11 @@ import {
   Camera,
   CheckCircle2,
   ExternalLink,
-  ImagePlus,
   Loader2,
   Lock,
   PackageSearch,
   RefreshCw,
   ShieldCheck,
-  X,
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -130,8 +128,6 @@ function ScanPage() {
   const [carSeatManufactureDate, setCarSeatManufactureDate] = useState("");
   const [saving, setSaving] = useState(false);
   const [savedReplaceAt, setSavedReplaceAt] = useState<string | null>(null);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
 
   const computedReplaceAt = useMemo(
     () => computeReplaceAt(category, purchasedAt, carSeatExpiry, carSeatManufactureDate),
@@ -142,16 +138,6 @@ function ScanPage() {
   // plain, unpersonalized information — not a comparison against the
   // child's age, since the app no longer stores a child's birthdate.
   const ageRange = useMemo(() => describeAgeRange(CATEGORY_BY_KEY[category]), [category]);
-
-  // Single source of truth for releasing blob URLs: runs whenever the
-  // preview changes (picking a new photo, clearing it, rescanning) *and* on
-  // unmount if the parent navigates away mid-form — otherwise each replaced
-  // preview leaks for the rest of the SPA session.
-  useEffect(() => {
-    return () => {
-      if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
-    };
-  }, [photoPreviewUrl]);
 
   // Bumped on every new scan/reset so an in-flight recall check from a
   // *previous* scan can't land late and overwrite the banner for whatever
@@ -266,20 +252,15 @@ function ScanPage() {
     productName: string,
     brandName: string,
     categoryLabel: string,
-    photo: File | null,
   ) {
-    let imageUrl: string | undefined;
-    if (photo) {
-      const { data: userData, error: userErr } = await supabase.auth.getUser();
-      if (userErr || !userData.user) throw userErr ?? new Error("Not authenticated");
-      const ext = photo.name.split(".").pop()?.toLowerCase() || "jpg";
-      const path = `${userData.user.id}/${scannedBarcode}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: uploadErr } = await supabase.storage
-        .from("product-photos")
-        .upload(path, photo, { contentType: photo.type });
-      if (uploadErr) throw uploadErr;
-      imageUrl = supabase.storage.from("product-photos").getPublicUrl(path).data.publicUrl;
-    }
+    // No photo here on purpose — this used to also accept a contributed
+    // photo, uploaded to a *public* bucket so it'd be visible to every
+    // future scanner of the same barcode. That bucket was removed in favor
+    // of keeping all user-uploaded photos private (see PhotoUpload.tsx /
+    // the `attachments` bucket) to match the privacy policy's "private,
+    // no public URL" promise — a private photo can't serve this feature's
+    // original point (helping the *next* person who scans this barcode),
+    // so the option was removed rather than silently uploaded to nowhere.
     const { error } = await supabase.functions.invoke("lookup-product", {
       body: {
         barcode: scannedBarcode,
@@ -287,7 +268,6 @@ function ScanPage() {
           name: productName,
           brand: brandName || undefined,
           category: categoryLabel,
-          imageUrl,
         },
       },
     });
@@ -374,7 +354,6 @@ function ScanPage() {
           name.trim(),
           brand.trim(),
           CATEGORY_BY_KEY[category].label,
-          photoFile,
         ).catch((err) =>
           console.warn(
             "[scan] manual catalog submission failed:",
@@ -406,13 +385,6 @@ function ScanPage() {
     setPurchasedAt(toISODate(new Date()));
     setCarSeatExpiry("");
     setSavedReplaceAt(null);
-    setPhotoFile(null);
-    setPhotoPreviewUrl(null); // the useEffect above revokes the outgoing blob URL
-  }
-
-  function handlePhotoSelect(file: File | null) {
-    setPhotoFile(file);
-    setPhotoPreviewUrl(file ? URL.createObjectURL(file) : null); // the useEffect above revokes the outgoing blob URL
   }
 
   // Gate
@@ -641,45 +613,6 @@ function ScanPage() {
                 </div>
               )}
 
-
-              {!foundProduct && (
-                <Field label="Photo (optional)">
-                  <div className="flex items-center gap-3">
-                    <input
-                      id="product-photo-input"
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      className="hidden"
-                      onChange={(e) => handlePhotoSelect(e.target.files?.[0] ?? null)}
-                    />
-                    {photoPreviewUrl ? (
-                      <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-border">
-                        <img src={photoPreviewUrl} alt="" className="h-full w-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => handlePhotoSelect(null)}
-                          className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => document.getElementById("product-photo-input")?.click()}
-                        className="rounded-2xl font-body text-sm"
-                      >
-                        <ImagePlus className="mr-2 h-4 w-4" /> Add photo
-                      </Button>
-                    )}
-                  </div>
-                  <p className="font-body text-xs text-muted-foreground">
-                    Helps other parents recognize this product next time it's scanned.
-                  </p>
-                </Field>
-              )}
 
               <Field label="Purchase date" required>
                 <Input

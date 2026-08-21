@@ -82,7 +82,6 @@ export type ManualEntryInput = {
   name: string;
   brand?: string;
   category?: string;
-  imageUrl?: string;
 };
 
 const MAX_MANUAL_FIELD_LENGTH = 200;
@@ -94,6 +93,13 @@ const MAX_MANUAL_FIELD_LENGTH = 200;
  * for input that isn't worth caching (no name, or a field absurdly long —
  * real product names/brands are well under this; a much longer string is
  * more likely a bad paste/bug than a real product name).
+ *
+ * Deliberately has no imageUrl field: this used to accept a client-supplied
+ * URL with no validation that it actually pointed at our own storage — any
+ * authenticated caller could plant an arbitrary external image into this
+ * shared, cross-user cache. The manual-entry photo upload feature itself
+ * was removed (see products_.scan.tsx), so there's no legitimate source for
+ * this field anymore either.
  */
 export function buildManualCatalogEntry(
   barcode: string,
@@ -115,7 +121,7 @@ export function buildManualCatalogEntry(
     brand,
     category,
     isBabyProduct: guessIsBaby(name, brand, category),
-    imageUrl: input.imageUrl?.trim() || null,
+    imageUrl: null,
     source: "manual",
     raw: null,
   };

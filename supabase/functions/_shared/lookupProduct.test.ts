@@ -334,7 +334,6 @@ describe("buildManualCatalogEntry", () => {
       name: "Bobbie Gentle Formula",
       brand: "Bobbie",
       category: "Baby Formula",
-      imageUrl: "https://example.com/photo.jpg",
     });
     expect(entry).toMatchObject({
       barcode: "012345678905",
@@ -342,7 +341,22 @@ describe("buildManualCatalogEntry", () => {
       brand: "Bobbie",
       source: "manual",
       isBabyProduct: true,
+      imageUrl: null,
     });
+  });
+
+  // Regression: this used to accept a client-supplied `imageUrl` with no
+  // validation that it pointed at our own storage — any authenticated
+  // caller could plant an arbitrary external image into this shared,
+  // cross-user cache. Confirms the field is ignored even if a caller
+  // (bypassing the type, e.g. from raw unchecked JSON) still sends one.
+  it("never sets imageUrl from caller input, even if the input object smuggles one in", () => {
+    const entry = buildManualCatalogEntry("012345678905", {
+      name: "Bobbie Gentle Formula",
+      // @ts-expect-error — simulating a raw/untyped payload sending a field ManualEntryInput no longer declares
+      imageUrl: "https://attacker.example/whatever.png",
+    });
+    expect(entry?.imageUrl).toBeNull();
   });
 
   it("trims whitespace and drops empty optional fields to null", () => {

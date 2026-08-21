@@ -4,7 +4,7 @@
 //   { found: true, product: {...} }
 //   { found: false, upgradeAvailable?: true }
 //
-// POST { barcode: string, manualEntry: { name, brand?, category?, imageUrl? } } →
+// POST { barcode: string, manualEntry: { name, brand?, category? } } →
 //   registers a parent's manual "we couldn't find it, here's what it is"
 //   submission into the shared cache instead of running the lookup
 //   pipeline, so the *next* scan of this barcode (by anyone) resolves
@@ -103,8 +103,6 @@ Deno.serve(async (req) => {
         brand: typeof body.manualEntry.brand === "string" ? body.manualEntry.brand : undefined,
         category:
           typeof body.manualEntry.category === "string" ? body.manualEntry.category : undefined,
-        imageUrl:
-          typeof body.manualEntry.imageUrl === "string" ? body.manualEntry.imageUrl : undefined,
       };
     }
   } catch {
