@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/sheet";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { CATEGORIES, type CategoryKey } from "@/lib/productCategories";
+import { CategoryBadge } from "@/components/CategoryBadge";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 import { resolveCarSeatReplaceAt } from "@/lib/carSeatExpiration";
 
@@ -299,10 +300,15 @@ function NewProductPage() {
                       onClick={() => setCategory(c.key)}
                       className={
                         active
-                          ? "rounded-2xl border border-primary bg-primary px-3 py-3 text-left font-body text-sm font-semibold text-primary-foreground"
-                          : "rounded-2xl border border-border bg-card px-3 py-3 text-left font-body text-sm text-foreground/80"
+                          ? "flex items-center gap-2.5 rounded-2xl border border-primary bg-primary px-3 py-2.5 text-left font-body text-sm font-semibold text-primary-foreground"
+                          : "flex items-center gap-2.5 rounded-2xl border border-border bg-card px-3 py-2.5 text-left font-body text-sm text-foreground/80"
                       }
                     >
+                      <CategoryBadge
+                        icon={c.icon}
+                        illustration={c.illustration}
+                        className={active ? "h-9 w-9 bg-white/20" : "h-9 w-9"}
+                      />
                       <span className="truncate">{c.label}</span>
                     </button>
                   );

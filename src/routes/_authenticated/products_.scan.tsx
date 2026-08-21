@@ -35,6 +35,7 @@ import {
   guessCategoryFromText,
   type CategoryKey,
 } from "@/lib/productCategories";
+import { CategoryBadge } from "@/components/CategoryBadge";
 import { lookupAndSaveGuidelines } from "@/lib/guidelines.functions";
 import { recordRecallInDb } from "@/lib/recallCheck";
 import { validateBarcode } from "@/lib/barcodeValidation";
@@ -585,10 +586,15 @@ function ScanPage() {
                         onClick={() => setCategory(k)}
                         className={
                           active
-                            ? "rounded-2xl border border-primary bg-primary px-3 py-2.5 text-left font-body text-sm font-semibold text-primary-foreground"
-                            : "rounded-2xl border border-border bg-card px-3 py-2.5 text-left font-body text-sm text-foreground"
+                            ? "flex items-center gap-2.5 rounded-2xl border border-primary bg-primary px-3 py-2 text-left font-body text-sm font-semibold text-primary-foreground"
+                            : "flex items-center gap-2.5 rounded-2xl border border-border bg-card px-3 py-2 text-left font-body text-sm text-foreground"
                         }
                       >
+                        <CategoryBadge
+                          icon={CATEGORY_BY_KEY[k].icon}
+                          illustration={CATEGORY_BY_KEY[k].illustration}
+                          className={active ? "h-8 w-8 bg-white/20" : "h-8 w-8"}
+                        />
                         {CATEGORY_BY_KEY[k].label}
                       </button>
                     );
