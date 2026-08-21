@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseFoodName } from "./first-foods";
+import { parseFoodName, computeAllergenProgress, TOP_ALLERGENS } from "./first-foods";
 
 // Regression: editing an existing first_foods entry re-runs the same
 // "{name} ({Allergen})" suffix logic handleSave() uses when adding — this
@@ -51,5 +51,54 @@ describe("parseFoodName", () => {
       const { base, allergen } = parseFoodName(original);
       expect(`${base} (${allergen})`).toBe(original);
     }
+  });
+});
+
+describe("computeAllergenProgress", () => {
+  it("returns all 9 as remaining and none introduced when no foods are logged", () => {
+    const result = computeAllergenProgress([]);
+    expect(result.introduced).toEqual([]);
+    expect(result.remaining).toEqual([...TOP_ALLERGENS]);
+  });
+
+  it("moves an allergen from remaining to introduced once a tagged food is logged", () => {
+    const result = computeAllergenProgress([{ food_name: "Peanut butter (Peanuts)" }]);
+    expect(result.introduced).toEqual(["Peanuts"]);
+    expect(result.remaining).not.toContain("Peanuts");
+    expect(result.remaining.length).toBe(TOP_ALLERGENS.length - 1);
+  });
+
+  it("does not count a food whose name merely mentions an allergen word without the tagged suffix", () => {
+    // "Peanut butter sandwich" was never tagged as an allergen at save
+    // time (no " (Peanuts)" suffix) — it must not count as "introduced",
+    // the same discipline parseFoodName already enforces for editing.
+    const result = computeAllergenProgress([{ food_name: "Peanut butter sandwich" }]);
+    expect(result.introduced).toEqual([]);
+  });
+
+  it("dedupes multiple logged foods tagged with the same allergen", () => {
+    const result = computeAllergenProgress([
+      { food_name: "Scrambled egg (Eggs)" },
+      { food_name: "Egg noodle (Eggs)" },
+    ]);
+    expect(result.introduced).toEqual(["Eggs"]);
+  });
+
+  it("returns every allergen as introduced, and none remaining, once all 9 are logged", () => {
+    const foods = TOP_ALLERGENS.map((a) => ({ food_name: `Test food (${a})` }));
+    const result = computeAllergenProgress(foods);
+    expect(result.introduced).toEqual([...TOP_ALLERGENS]);
+    expect(result.remaining).toEqual([]);
+  });
+
+  it("preserves TOP_ALLERGENS order in both lists, not insertion order", () => {
+    const result = computeAllergenProgress([
+      { food_name: "x (Sesame)" },
+      { food_name: "y (Milk)" },
+    ]);
+    // Milk comes before Sesame in TOP_ALLERGENS, even though Sesame was
+    // logged first here — the UI should read in a stable, predictable
+    // order rather than shuffling based on when each was logged.
+    expect(result.introduced).toEqual(["Milk", "Sesame"]);
   });
 });

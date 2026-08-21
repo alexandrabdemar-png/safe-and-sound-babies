@@ -3,7 +3,17 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Pencil, Plus, Search, ShieldAlert, Utensils, Loader2, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Pencil,
+  Plus,
+  Search,
+  ShieldAlert,
+  Utensils,
+  Loader2,
+  X,
+} from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { friendlyError } from "@/lib/errors";
 
@@ -13,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/first-foods")({
   head: () => ({ meta: [{ title: "First Foods — Peace of Mine" }] }),
 });
 
-const TOP_ALLERGENS = [
+export const TOP_ALLERGENS = [
   "Milk",
   "Eggs",
   "Fish",
@@ -24,7 +34,7 @@ const TOP_ALLERGENS = [
   "Soy",
   "Sesame",
 ] as const;
-type Allergen = (typeof TOP_ALLERGENS)[number];
+export type Allergen = (typeof TOP_ALLERGENS)[number];
 
 // handleSave() below bakes the selected allergen into food_name as a
 // " (Peanuts)" style suffix rather than storing it as a separate column —
@@ -34,6 +44,30 @@ export function parseFoodName(name: string): { base: string; allergen: Allergen 
   const match = TOP_ALLERGENS.find((a) => name.endsWith(` (${a})`));
   if (match) return { base: name.slice(0, -(match.length + 3)), allergen: match };
   return { base: name, allergen: "" };
+}
+
+/**
+ * Which of the top 9 allergens have been logged at least once for this
+ * child, derived from the same " (Allergen)" suffix parseFoodName already
+ * uses — no new stored field needed. A food only counts if it was actually
+ * tagged as an allergen at save time (isAllergen checked + a specific
+ * allergen chosen); a food that merely happens to share a name fragment
+ * with an allergen doesn't count, since the suffix only exists when the
+ * user deliberately tagged it.
+ */
+export function computeAllergenProgress(foods: { food_name: string }[]): {
+  introduced: Allergen[];
+  remaining: Allergen[];
+} {
+  const introducedSet = new Set<Allergen>();
+  for (const f of foods) {
+    const { allergen } = parseFoodName(f.food_name);
+    if (allergen) introducedSet.add(allergen);
+  }
+  return {
+    introduced: TOP_ALLERGENS.filter((a) => introducedSet.has(a)),
+    remaining: TOP_ALLERGENS.filter((a) => !introducedSet.has(a)),
+  };
 }
 
 type Child = {
@@ -285,6 +319,9 @@ function FirstFoodsPage() {
 
       <main className="px-5 sm:px-6">
         <div className="mx-auto max-w-md space-y-4">
+          {/* Allergen progress */}
+          {foods.length > 0 && <AllergenProgressCard foods={foods} />}
+
           {/* 4-day wait reminder */}
           {show4DayCard && (
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 animate-scale-in">
@@ -532,6 +569,65 @@ function FirstFoodsPage() {
       </main>
 
       <BottomNav />
+    </div>
+  );
+}
+
+/**
+ * "N of 9 top allergens introduced" — turns the free-form food log into an
+ * at-a-glance checklist against the AAP's top 9 allergens (the same list
+ * TOP_ALLERGENS/the add-food form already uses), so a parent can see what's
+ * left without scrolling the whole list and manually checking each name.
+ */
+function AllergenProgressCard({ foods }: { foods: { food_name: string }[] }) {
+  const { introduced, remaining } = computeAllergenProgress(foods);
+  const total = TOP_ALLERGENS.length;
+  const pct = Math.round((introduced.length / total) * 100);
+
+  return (
+    <div className="rounded-2xl border border-border/60 bg-card p-4">
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-body text-sm font-semibold text-foreground">Allergen progress</p>
+        <p className="font-body text-xs font-semibold text-primary">
+          {introduced.length} of {total}
+        </p>
+      </div>
+      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div
+          className="h-full rounded-full bg-primary transition-all"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {introduced.map((a) => (
+          <span
+            key={a}
+            className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 font-body text-[11px] font-medium text-primary"
+          >
+            <Check className="h-2.5 w-2.5" /> {a}
+          </span>
+        ))}
+        {remaining.map((a) => (
+          <span
+            key={a}
+            className="inline-flex items-center rounded-full border border-border/60 px-2 py-0.5 font-body text-[11px] text-muted-foreground"
+          >
+            {a}
+          </span>
+        ))}
+      </div>
+      {remaining.length === 0 ? (
+        <p className="mt-3 font-body text-xs text-muted-foreground">
+          All top 9 allergens have been introduced at least once. Keep offering them regularly to
+          maintain tolerance — check with your pediatrician on how often.
+        </p>
+      ) : (
+        <p className="mt-3 font-body text-xs text-muted-foreground">
+          Tag a food as an allergen when you log it to track it here. Always introduce allergens one
+          at a time and follow your pediatrician's guidance, especially for a child with a family
+          history of allergies.
+        </p>
+      )}
     </div>
   );
 }
