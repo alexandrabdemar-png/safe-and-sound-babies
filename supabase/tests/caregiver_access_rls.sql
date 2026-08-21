@@ -194,17 +194,14 @@ SELECT test.assert(
 );
 SELECT test.logout();
 
--- ── growth_logs / first_foods: the missing-GRANT bug is fixed, and the
---    sharing model applies to them too ──────────────────────────────────
+-- ── first_foods: the missing-GRANT bug is fixed, and the sharing model
+--    applies to it too. (growth_logs was tested here too until it was
+--    dropped entirely — see
+--    20260818000000_purge_child_birthdate_and_measurements.sql — this app
+--    no longer stores a child's height/weight history at all.) ──────────
 SELECT test.login('authenticated', 'a1111111-1111-1111-1111-111111111111');
-INSERT INTO public.growth_logs (id, child_id, weight_lbs) VALUES
-  ('9a000005-0000-0000-0000-000000000005', 'ccccc111-cccc-cccc-cccc-cccccccccccc', 12.5);
 INSERT INTO public.first_foods (id, child_id, food_name) VALUES
   ('9a000006-0000-0000-0000-000000000006', 'ccccc111-cccc-cccc-cccc-cccccccccccc', 'Avocado');
-SELECT test.assert(
-  (SELECT count(*) FROM public.growth_logs WHERE child_id = 'ccccc111-cccc-cccc-cccc-cccccccccccc') = 1,
-  'the owner can now write to growth_logs (previously impossible — no GRANT existed at all)'
-);
 SELECT test.assert(
   (SELECT count(*) FROM public.first_foods WHERE child_id = 'ccccc111-cccc-cccc-cccc-cccccccccccc') = 1,
   'the owner can now write to first_foods (previously impossible — no GRANT existed at all)'
@@ -213,20 +210,20 @@ SELECT test.logout();
 
 SELECT test.login('authenticated', 'e2222222-2222-2222-2222-222222222222');
 SELECT test.assert(
-  (SELECT count(*) FROM public.growth_logs WHERE child_id = 'ccccc111-cccc-cccc-cccc-cccccccccccc') = 1,
-  'an editor caregiver can read growth_logs for the shared child'
+  (SELECT count(*) FROM public.first_foods WHERE child_id = 'ccccc111-cccc-cccc-cccc-cccccccccccc') = 1,
+  'an editor caregiver can read first_foods for the shared child'
 );
-INSERT INTO public.growth_logs (child_id, weight_lbs) VALUES ('ccccc111-cccc-cccc-cccc-cccccccccccc', 13.0);
+INSERT INTO public.first_foods (child_id, food_name) VALUES ('ccccc111-cccc-cccc-cccc-cccccccccccc', 'Banana');
 SELECT test.assert(
-  (SELECT count(*) FROM public.growth_logs WHERE child_id = 'ccccc111-cccc-cccc-cccc-cccccccccccc') = 2,
-  'an editor caregiver can add a growth_logs entry'
+  (SELECT count(*) FROM public.first_foods WHERE child_id = 'ccccc111-cccc-cccc-cccc-cccccccccccc') = 2,
+  'an editor caregiver can add a first_foods entry'
 );
 SELECT test.logout();
 
 SELECT test.login('authenticated', '55555555-5555-5555-5555-555555555555');
 SELECT test.assert(
-  (SELECT count(*) FROM public.growth_logs WHERE child_id = 'ccccc111-cccc-cccc-cccc-cccccccccccc') = 0,
-  'a stranger cannot read growth_logs for a child they have no relationship to'
+  (SELECT count(*) FROM public.first_foods WHERE child_id = 'ccccc111-cccc-cccc-cccc-cccccccccccc') = 0,
+  'a stranger cannot read first_foods for a child they have no relationship to'
 );
 SELECT test.logout();
 
