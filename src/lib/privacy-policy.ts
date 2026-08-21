@@ -20,13 +20,13 @@ About your child
 
 About your baby products
 • Product name, brand, category, and barcode — used to match your products against public recall databases (see Section 3) and to surface expiration / replacement alerts.
-• Product photos (optional) — if you attach a photo to a product, the image file is stored in our private storage bucket. It is not public: only you (the uploader) and any caregiver you have shared that child with can view it. Photos are deleted when you delete your account.
+• Product photos (optional) — if you attach a photo to a product, the image file is stored in our private storage bucket. It is not public, and there is no public URL for it: only you, the account holder who uploaded it, can view it. (Caregivers you've shared a child with can currently see that child's product list but not an attached photo — we plan to extend photo access to caregivers, but it is not built yet.) Photos are deleted when you delete your account.
 • Manufacturer expiration date and purchase date — used to send you timely safety reminders.
 
 About your account
 • Email address — used to identify your account and send safety alert notifications.
 • Subscription status — used to determine which features you have access to.
-• Push notification identifiers (optional) — if you enable notifications, we store a device token (iOS) or browser push subscription (web) so we can deliver safety alerts to that device. Turning notifications off removes this.
+• Push notification identifiers (optional) — if you enable notifications, we store a device token (iOS) or browser push subscription (web) so we can deliver safety alerts to that device. This is removed automatically if delivery ever fails permanently (for example, if you uninstall the app), or immediately when you delete your account. Turning off individual alert categories in the app's notification settings does not delete the stored token — it only stops that category of alert from being sent to it.
 • Home safety profile (optional) — details like whether your home has stairs, pets, a pool, or a car, used only to tailor which safety suggestions we show you.
 • Feedback and bug reports (optional) — if you use the in-app feedback form, the message you write is emailed to our support inbox together with your account email address and the app version. Because it becomes an email in our support inbox, it is not stored in your account record and is not removed by deleting your account (see Section 4).
 • Caregiver invites (optional, Pro feature) — if you invite a co-parent, grandparent, or nanny to share access to a child's profile, we store the invitee's email address and send them an invite link. The link expires after 7 days if not accepted.
@@ -107,7 +107,7 @@ You have full control over your data:
 • All data is transmitted over HTTPS. No unencrypted connections are used.
 • Your database rows are protected by Row-Level Security; only your authenticated session can access them.
 • Service keys that bypass RLS are used only for trusted system operations (recall syncing, alert generation, and Stripe webhook processing) and are never exposed to client code or human operators.
-• Uploaded product photos are held in a private storage bucket. There is no public URL: access is checked per request against the same Row-Level Security rules as the rest of your data, so only you and caregivers you have shared with can retrieve an image.
+• Uploaded product photos are held in a private storage bucket. There is no public URL: access is checked per request against the same Row-Level Security rules as the rest of your data, so only you, the uploader, can retrieve an image (caregiver access to photos is not yet built — see Section 1).
 • Error logs are sanitised before storage; email addresses, tokens, and other identifiers are stripped from log entries.
 
 ──────────────────────────────────────
