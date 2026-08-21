@@ -22,9 +22,11 @@ import {
   MOMENT_ICONS,
   DEFAULT_MOMENT_ICON,
   SketchDefs,
-  saveMomentResilient,
   type MomentIconKey,
 } from "@/lib/momentIcons";
+import { saveMoment } from "@/lib/moments.functions";
+import { sanitizeError, logError } from "@/lib/sanitize-error";
+
 import {
   type SafetyTip,
   MOMENT_SAFETY_MAP,
@@ -99,25 +101,27 @@ function NewMomentPage() {
         toast.error("Sign in to log moments");
         return;
       }
-      // saveMomentResilient handles both known failure classes: the
-      // `icon` column being unusable on the live database (retries
-      // without it — see 20260713000000_milestones_icon_column.sql), and
-      // a genuine network failure (caught internally, returned as an
-      // error rather than thrown) — see momentIcons.tsx for why both
-      // matter here specifically.
-      const { error } = await saveMomentResilient({
-        child_id: activeChildId,
-        title: title.trim(),
-        logged_at: loggedAt,
-        notes: rawNotes,
-        completed: true,
-        icon: momentIcon,
-      });
-      if (error) {
-        console.error("[moments.new] insert failed", error);
-        toast.error(error.message || "Couldn't save that moment");
+      // Saved through a server function so the Pro paywall on milestone
+      // logging is enforced server-side (the screen-level useProGate()
+      // check below is UI only — the old direct client insert could be
+      // bypassed). The server keeps the `icon` column fallback that
+      // saveMomentResilient had.
+      try {
+        await saveMoment({
+          data: {
+            child_id: activeChildId,
+            title: title.trim(),
+            logged_at: loggedAt,
+            notes: rawNotes,
+            icon: momentIcon,
+          },
+        });
+      } catch (err) {
+        logError("[moments.new] insert failed", err);
+        toast.error(err instanceof Error ? err.message : "Couldn't save that moment");
         return;
       }
+
       const tip = getSafetyTip(title.trim());
       if (tip) {
         toast.success("Saved that moment 💛");
@@ -310,37 +314,8 @@ function NewMomentPage() {
             </div>
           </div>
 
-          {/* Moment icon */}
-          <div className="space-y-2">
-            <SketchDefs />
-            <Label className="font-body text-sm">Icon</Label>
-            <Select value={momentIcon} onValueChange={(v) => setMomentIcon(v as MomentIconKey)}>
-              <SelectTrigger className="h-12 rounded-2xl bg-card px-4 font-body text-base">
-                <SelectValue>
-                  <span className="flex items-center gap-2">
-                    {(() => {
-                      const SelectedIcon = MOMENT_ICONS[momentIcon];
-                      return <SelectedIcon px={20} />;
-                    })()}
-                    {MOMENT_ICON_LABELS[momentIcon]}
-                  </span>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {MOMENT_ICON_KEYS.map((key) => {
-                  const Icon = MOMENT_ICONS[key];
-                  return (
-                    <SelectItem key={key} value={key}>
-                      <span className="flex items-center gap-2">
-                        <Icon px={20} />
-                        {MOMENT_ICON_LABELS[key]}
-                      </span>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Categories removed — every entry is logged as a milestone. */}
+
 
           <div className="space-y-2">
             <Label className="font-body text-sm">When</Label>

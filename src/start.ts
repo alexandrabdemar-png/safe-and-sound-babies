@@ -3,6 +3,7 @@ import { createStart, createMiddleware } from "@tanstack/react-start";
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 import { sanitizeError } from "./lib/sanitize-error";
+import { logError } from "@/lib/sanitize-error";
 
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {
@@ -11,7 +12,7 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
     if (error != null && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
-    console.error("[middleware] unhandled error:", sanitizeError(error));
+    logError("[middleware] unhandled error:", sanitizeError(error));
     return new Response(renderErrorPage(), {
       status: 500,
       headers: { "content-type": "text/html; charset=utf-8" },

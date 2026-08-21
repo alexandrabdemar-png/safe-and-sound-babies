@@ -1,3 +1,4 @@
+import { logError } from "@/lib/sanitize-error";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BarcodeScannerView } from "@/components/BarcodeScannerView";
@@ -355,9 +356,8 @@ function ScanPage() {
         // the manual/AI-search add flow in recallRecord.functions.ts).
         for (const hit of recallInfo?.recalls ?? []) {
           recordRecallInDb(productId, hit).catch((err) =>
-            console.error(
-              "[recall-db] failed to persist recall for scanned product",
-              productId,
+            logError(
+              `[recall-db] failed to persist recall for scanned product ${productId}`,
               err,
             ),
           );

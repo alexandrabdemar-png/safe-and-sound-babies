@@ -4,17 +4,23 @@
 // picks directly per moment.
 
 import { supabase } from "@/integrations/supabase/client";
+import { logError } from "@/lib/sanitize-error";
 
 export type MomentIconKey = "star" | "smiley" | "heart" | "sparkles";
 
 export const MOMENT_ICON_KEYS: MomentIconKey[] = ["star", "smiley", "heart", "sparkles"];
 
+// Neutral, gender-neutral ledger labels. The underlying keys stay the same
+// ("star" etc.) so already-saved rows keep resolving, but nothing in the UI
+// reads as a heart/star sticker any more.
 export const MOMENT_ICON_LABELS: Record<MomentIconKey, string> = {
-  star: "Star",
-  smiley: "Smiley",
-  heart: "Heart",
-  sparkles: "Sparkles",
+  star: "Movement",
+  smiley: "Words & Sounds",
+  heart: "Keepsake",
+  sparkles: "Firsts",
 };
+
+
 
 export const DEFAULT_MOMENT_ICON: MomentIconKey = "star";
 
@@ -62,11 +68,18 @@ const g = (children: React.ReactNode, strokeWidth = 5.5) => (
   </g>
 );
 
+// Neutral thin-line ledger marks (chosen "Boxed Spine Markers" direction):
+// a growth notch, a note bubble, a bookmark tag and a flag. No hearts,
+// stars, sparkles or smileys — reads as a record, not a sticker sheet.
 const StarIcon = ({ px }: { px: number }) =>
   wrap(
     px,
     g(
-      <path d="M50,10 L59.4,37.1 L88,37.6 L65.2,54.9 L73.5,82.4 L50,66 L26.5,82.4 L34.8,54.9 L12,37.6 L40.6,37.1 Z" />,
+      <>
+        <path d="M50 12 V88" />
+        <path d="M36 26 H64 M36 44 H64 M36 62 H64 M36 80 H64" />
+      </>,
+      4,
     ),
   );
 
@@ -75,11 +88,10 @@ const SmileyIcon = ({ px }: { px: number }) =>
     px,
     g(
       <>
-        <circle cx="50" cy="50" r="36" />
-        <circle cx="37" cy="44" r="3" fill={INK} stroke="none" />
-        <circle cx="63" cy="44" r="3" fill={INK} stroke="none" />
-        <path d="M32 58 C38 70 62 70 68 58" />
+        <path d="M84 62 a8 8 0 0 1 -8 8 H36 L18 88 V24 a8 8 0 0 1 8 -8 h50 a8 8 0 0 1 8 8 Z" />
+        <path d="M34 38 H66 M34 52 H56" />
       </>,
+      4,
     ),
   );
 
@@ -87,21 +99,26 @@ const HeartIcon = ({ px }: { px: number }) =>
   wrap(
     px,
     g(
-      <path d="M50,32 C50,16 28,14 28,33 C28,48 50,66 50,78 C50,66 72,48 72,33 C72,14 50,16 50,32 Z" />,
+      <>
+        <path d="M28 14 H72 V86 L50 66 L28 86 Z" />
+        <path d="M40 36 H60" />
+      </>,
+      4,
     ),
   );
 
 const SparklesIcon = ({ px }: { px: number }) =>
   wrap(
     px,
-    <>
-      {g(
-        <path d="M50,10 C52,32 55,45 78,50 C55,55 52,68 50,90 C48,68 45,55 22,50 C45,45 48,32 50,10 Z" />,
-      )}
-      {g(<path d="M78,14 L84,14 M81,11 L81,17" />, 3.2)}
-      <circle cx="18" cy="76" r="3.4" fill={INK} stroke="none" />
-    </>,
+    g(
+      <>
+        <path d="M28 12 V90" />
+        <path d="M28 16 H80 L68 36 L80 56 H28" />
+      </>,
+      4,
+    ),
   );
+
 
 export const MOMENT_ICONS: Record<MomentIconKey, (props: { px: number }) => React.ReactElement> = {
   star: StarIcon,
@@ -205,8 +222,7 @@ export async function fetchMilestonesResilient(
     const first = await (opts.limit ? baseQuery.limit(opts.limit) : baseQuery);
 
     if (first.error && isIconColumnUnavailableError(first.error)) {
-      console.error(
-        "[fetchMilestonesResilient] icon column unavailable — retrying without it",
+      logError("[fetchMilestonesResilient] icon column unavailable — retrying without it",
         first.error,
       );
       const fallbackQuery = supabase
@@ -231,7 +247,7 @@ export async function fetchMilestonesResilient(
     // the server returning an error response. Without this, the caller's
     // loading state can get stuck forever (see saveMomentResilient below
     // for the write-side version of the same bug class).
-    console.error("[fetchMilestonesResilient] network/unexpected failure", err);
+    logError("[fetchMilestonesResilient] network/unexpected failure", err);
     return {
       data: null,
       error: {
@@ -265,13 +281,13 @@ export async function saveMomentResilient(
   try {
     let { error } = await supabase.from("milestones").insert(payload as never);
     if (error && isIconColumnUnavailableError(error)) {
-      console.error("[saveMomentResilient] icon column unavailable — retrying without it", error);
+      logError("[saveMomentResilient] icon column unavailable — retrying without it", error);
       const { icon: _icon, ...basePayload } = payload;
       ({ error } = await supabase.from("milestones").insert(basePayload as never));
     }
     return { error };
   } catch (err) {
-    console.error("[saveMomentResilient] network/unexpected failure", err);
+    logError("[saveMomentResilient] network/unexpected failure", err);
     return {
       error: {
         message: err instanceof Error ? err.message : "Network error — couldn't save that moment",

@@ -1,3 +1,4 @@
+import { logError } from "@/lib/sanitize-error";
 import { isSchemaMissingTableError } from "@/lib/errors";
 
 // Single source of truth for which Terms of Service version is currently
@@ -59,7 +60,7 @@ export async function checkNeedsLegalConsent(
   const { data, error } = await client.from("user_agreements").select("terms_version").eq("user_id", userId);
   if (error) {
     if (!isSchemaMissingTableError(error)) {
-      console.error("[legal-consent] couldn't check agreements — letting the user through:", error.message);
+      logError("[legal-consent] couldn't check agreements — letting the user through:", error.message);
     }
     return false;
   }

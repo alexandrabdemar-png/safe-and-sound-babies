@@ -39,5 +39,38 @@ export function sanitizeError(err: unknown): SafeError {
     };
   }
   if (typeof err === "string") return { name: "Error", message: redactMessage(err) };
+  // Supabase's PostgrestError is a plain object, not an Error instance — the
+  // single most common error shape in this codebase. Returning the generic
+  // "unexpected error" for it threw away every useful detail (message, code)
+  // while sanitizing nothing, so unwrap it explicitly instead.
+  if (err && typeof err === "object") {
+    const obj = err as { message?: unknown; code?: unknown; name?: unknown };
+    if (typeof obj.message === "string") {
+      return {
+        name: typeof obj.name === "string" ? obj.name : "Error",
+        message: redactMessage(obj.message),
+        code:
+          typeof obj.code === "string" || typeof obj.code === "number"
+            ? obj.code
+            : undefined,
+      };
+    }
+  }
   return { name: "UnknownError", message: "An unexpected error occurred" };
 }
+
+/**
+ * Standard way to log an error in this app: always PII-redacted, never a
+ * raw error object. Scattered `console.error("[x] failed", err)` calls
+ * leaked whatever the underlying error happened to contain (emails in
+ * auth/invite errors, tokens in request URLs) straight into the browser
+ * console and any attached log collector.
+ */
+export function logError(label: string, err?: unknown): void {
+  if (err === undefined) {
+    console.error(label);
+    return;
+  }
+  console.error(label, sanitizeError(err));
+}
+

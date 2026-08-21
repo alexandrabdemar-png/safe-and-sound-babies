@@ -1,3 +1,4 @@
+import { logError } from "@/lib/sanitize-error";
 import { supabase } from "@/integrations/supabase/client";
 import { guessCategoryFromText } from "@/lib/productCategories";
 import { isColumnUnavailableError } from "@/lib/errors";
@@ -515,7 +516,7 @@ export async function recordRecallInDb(
       },
     });
   } catch (err) {
-    console.error("[recall-db] failed to persist recall for product", productId, err);
+    logError(`[recall-db] failed to persist recall for product ${productId}`, err);
   }
 }
 
@@ -542,7 +543,7 @@ export async function stampRecallCheckedAt(
       .eq("id", productId);
     if (error) throw error;
   } catch (err) {
-    console.error("[recall-db] failed to stamp recall_checked_at for product", productId, err);
+    logError(`[recall-db] failed to stamp recall_checked_at for product ${productId}`, err);
   }
 }
 
@@ -591,8 +592,7 @@ export async function fetchProductDetailResilient(productId: string): Promise<{
       (isColumnUnavailableError("recall_checked_at", first.error) ||
         isColumnUnavailableError("lot_number", first.error))
     ) {
-      console.error(
-        "[fetchProductDetailResilient] recall_checked_at/lot_number unavailable — retrying without them",
+      logError("[fetchProductDetailResilient] recall_checked_at/lot_number unavailable — retrying without them",
         first.error,
       );
       const retry = await supabase
@@ -612,7 +612,7 @@ export async function fetchProductDetailResilient(productId: string): Promise<{
       error: { message: string; code?: string | null } | null;
     };
   } catch (err) {
-    console.error("[fetchProductDetailResilient] network/unexpected failure", err);
+    logError("[fetchProductDetailResilient] network/unexpected failure", err);
     return {
       data: null,
       error: {

@@ -3,6 +3,7 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { sanitizeError } from "./lib/sanitize-error";
+import { logError } from "@/lib/sanitize-error";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -31,7 +32,7 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
     return response;
   }
 
-  console.error("[SSR] h3 swallowed error:", sanitizeError(consumeLastCapturedError() ?? new Error("h3 unhandled")));
+  logError("[SSR] h3 swallowed error:", sanitizeError(consumeLastCapturedError() ?? new Error("h3 unhandled")));
   return new Response(renderErrorPage(), {
     status: 500,
     headers: { "content-type": "text/html; charset=utf-8" },
@@ -45,7 +46,7 @@ export default {
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
-      console.error("[server] fetch error:", sanitizeError(error));
+      logError("[server] fetch error:", sanitizeError(error));
       return new Response(renderErrorPage(), {
         status: 500,
         headers: { "content-type": "text/html; charset=utf-8" },

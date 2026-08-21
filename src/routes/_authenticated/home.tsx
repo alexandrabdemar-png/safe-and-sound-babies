@@ -1,3 +1,4 @@
+import { logError } from "@/lib/sanitize-error";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -308,13 +309,13 @@ function HomePage() {
         // Previously silent: mRes.data is null on error, so setMoments simply
         // never ran — a newly-logged moment would just never appear here,
         // with zero indication anything failed.
-        console.error("[home] failed to load recent moments:", mRes.error.message);
+        logError("[home] failed to load recent moments:", mRes.error.message);
         toast.error(friendlyError(mRes.error.message));
       } else if (mRes.data) {
         setMoments(mRes.data as Moment[]);
       }
       if (allTitlesRes.error) {
-        console.error("[home] failed to load milestone titles:", allTitlesRes.error.message);
+        logError("[home] failed to load milestone titles:", allTitlesRes.error.message);
       } else {
         const rows = (allTitlesRes.data ?? []) as { title: string }[];
         const keys = new Set<MilestoneKey>();
@@ -333,7 +334,7 @@ function HomePage() {
         // previous value (empty on first load) with no indication — every
         // insight/alert derived from products (recalls, replace) would
         // silently look like nothing had ever been added.
-        console.error("[home] failed to load products:", productRes.error.message);
+        logError("[home] failed to load products:", productRes.error.message);
         toast.error(friendlyError(productRes.error.message));
       } else {
         setProducts((productRes.data ?? []) as ProductInput[]);
@@ -380,7 +381,7 @@ function HomePage() {
         // silently reappear as if it had never been recorded — exactly the
         // "done and snooze not saving" symptom, even though the write
         // itself (saveInsightResponse above) had actually succeeded.
-        console.error("[home] failed to load insight_dismissals:", dismRes.error.message);
+        logError("[home] failed to load insight_dismissals:", dismRes.error.message);
         toast.error(friendlyError(dismRes.error.message));
       } else {
         const rows = (dismRes.data ?? []) as {
@@ -408,7 +409,7 @@ function HomePage() {
             // so the setup card would keep reappearing even for someone
             // who'd already answered every question, looking exactly like
             // "not remembering my answers".
-            console.error("[home] failed to load home_profile:", hpError.message);
+            logError("[home] failed to load home_profile:", hpError.message);
             toast.error(friendlyError(hpError.message));
             // Don't flip loaded=true here — leaving it false keeps the card
             // hidden so we don't prompt for answers we couldn't verify are
@@ -444,7 +445,7 @@ function HomePage() {
 
         }
       } catch (err) {
-        console.error("[home] failed to load home_profile (network):", err);
+        logError("[home] failed to load home_profile (network):", err);
       }
 
 
@@ -621,7 +622,7 @@ function HomePage() {
         if (error) throw error;
       }
     } catch (err) {
-      console.error(`insight_dismissals ${action} failed:`, err);
+      logError(`insight_dismissals ${action} failed:`, err);
       setDismissedIds((prev) => {
         const next = new Set(prev);
         next.delete(insightId);
@@ -782,7 +783,7 @@ function HomePage() {
       );
       if (error) throw error;
     } catch (err) {
-      console.error("[home] failed to save home_profile:", err);
+      logError("[home] failed to save home_profile:", err);
       toast.error(
         err instanceof Error
           ? friendlyError(err.message)
@@ -827,10 +828,10 @@ function HomePage() {
         { onConflict: "user_id" },
       );
       if (error) {
-        console.error("[home] failed to persist home_profile skip:", error);
+        logError("[home] failed to persist home_profile skip:", error);
       }
     } catch (err) {
-      console.error("[home] failed to persist home_profile skip (network):", err);
+      logError("[home] failed to persist home_profile skip (network):", err);
     }
   }
   // Daily safety tip

@@ -20,8 +20,10 @@ import catStroller from "@/assets/hd-stroller.png";
 import catBouncer from "@/assets/hd-bouncer.png";
 import catSwaddle from "@/assets/hd-swaddle.png";
 import catBlocks from "@/assets/hd-blocks.png";
+import { logError } from "@/lib/sanitize-error";
 import {
   PROFILE_TYPES,
+
   usesAgeRangeFlow,
   validateAgeRange,
   formatAgeRange,
@@ -171,7 +173,7 @@ function OnboardingPage() {
       .update({ intro_seen_at: new Date().toISOString() } as never)
       .eq("user_id", userId)
       .then(({ error }) => {
-        if (error) console.error("[onboarding] couldn't record intro_seen_at:", error.message);
+        if (error) logError("[onboarding] couldn't record intro_seen_at:", error.message);
       });
   }
 
@@ -247,7 +249,7 @@ function OnboardingPage() {
         } as never)
         .eq("user_id", userId);
       if (profileTypeError) {
-        console.error("[onboarding] couldn't save profile type / care age range:", profileTypeError.message);
+        logError("[onboarding] couldn't save profile type / care age range:", profileTypeError.message);
       }
 
       const childName = isAgeRange ? "" : name.trim();
@@ -281,7 +283,7 @@ function OnboardingPage() {
           const { error: watchlistError } = await supabase
             .from("category_watchlist")
             .insert(rows as never);
-          if (watchlistError) console.error("category_watchlist insert failed:", watchlistError);
+          if (watchlistError) logError("category_watchlist insert failed:", watchlistError);
         }
       } else if (isAgeRange && !skipCategories && selected.size > 0) {
         // Age-range profile types (Pediatrician/Daycare/Babysitter-Nanny/
@@ -296,7 +298,7 @@ function OnboardingPage() {
         const { error: watchlistError } = await supabase
           .from("category_watchlist")
           .insert(rows as never);
-        if (watchlistError) console.error("category_watchlist insert failed:", watchlistError);
+        if (watchlistError) logError("category_watchlist insert failed:", watchlistError);
       }
 
       clearProgress();
@@ -331,7 +333,7 @@ function OnboardingPage() {
       // real failure (a missing column, a constraint violation, anything)
       // silently collapsed to the same unhelpful "Something went wrong"
       // with no diagnostic detail, for the user or in the console.
-      console.error("Onboarding handleFinish failed:", err);
+      logError("Onboarding handleFinish failed:", err);
       toast.error(friendlyError(err));
     } finally {
       setSaving(false);

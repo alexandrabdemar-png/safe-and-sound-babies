@@ -1,3 +1,4 @@
+import { logError } from "@/lib/sanitize-error";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Utensils, ClipboardList, Sparkles } from "lucide-react";
@@ -116,7 +117,7 @@ function TrackingPage() {
           : momentsSummary(momentRows.length, momentRows[0]?.logged_at ?? null),
         checklists: checklists.error ? null : checklistsSummary(checklists.count ?? 0),
       });
-    })().catch((err) => console.error("[tracking] failed to load summaries", err));
+    })().catch((err) => logError("[tracking] failed to load summaries", err));
   }, [childLoading, activeChild?.id]);
 
   return (
