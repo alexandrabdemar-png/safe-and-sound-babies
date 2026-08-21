@@ -22,13 +22,21 @@ This assumes you've already done the base iOS setup from `IOS_TESTFLIGHT.md`
 1. From the repo root:
    ```bash
    npm install        # links this local plugin, already done if you pulled the latest commit
-   npx cap sync ios    # picks up the new plugin's native source via its podspec
+   npx cap sync ios    # picks up the new plugin's native source
    ```
-2. Open `ios/App/App.xcworkspace` in Xcode.
+2. **Which file to open depends on whether your `ios/` project uses
+   CocoaPods or Swift Package Manager** — `cap sync`'s own output tells you:
+   if you see `Writing Package.swift` and no CocoaPods/`pod install`
+   activity, it's SPM-based and there is no `.xcworkspace` file at all —
+   open `ios/App/App.xcodeproj` instead. If you do have CocoaPods set up
+   (a `Podfile` exists and `pod install` ran), open `ios/App/App.xcworkspace`
+   as usual — CocoaPods generates that file to combine your app with its
+   dependencies, so it only exists once CocoaPods has actually run.
 3. **Raise the deployment target to iOS 16.0** — `DataScannerViewController`
    doesn't exist before that. In Xcode: select the `App` project → `App`
-   target → General → Minimum Deployments → set to `16.0`. You'll also want
-   to check `ios/App/Podfile`'s `platform :ios, 'XX.X'` line matches.
+   target → General → Minimum Deployments → set to `16.0`. If you're on the
+   CocoaPods path, also check `ios/App/Podfile`'s `platform :ios, 'XX.X'`
+   line matches.
 4. Confirm `NSCameraUsageDescription` is present in `Info.plist` — it should
    already be there from the base setup (the existing web-based scanner
    already needs camera access), but VisionKit uses the same key, so nothing
@@ -62,6 +70,7 @@ This assumes you've already done the base iOS setup from `IOS_TESTFLIGHT.md`
 - `src/definitions.ts` — the plugin's TypeScript interface.
 - `src/web.ts` — web fallback (always reports unsupported).
 - `src/index.ts` — plugin registration.
-- `ios/Plugin/VisionBarcodeScannerPlugin.swift` — Capacitor bridge (`isSupported`, `startScan`, `stopScan`).
-- `ios/Plugin/VisionBarcodeScannerPlugin.m` — Objective-C registration glue Capacitor's bridge requires.
-- `ios/Plugin/BarcodeScannerContainerViewController.swift` — the actual native scanner screen (VisionKit `DataScannerViewController` + a Cancel button).
+- `Package.swift` — Swift Package Manager manifest, used when `ios/`'s Capacitor project is SPM-based (no `Podfile`).
+- `VisionBarcodeScanner.podspec` — CocoaPods fallback manifest, used when `ios/`'s Capacitor project has a `Podfile`.
+- `ios/Sources/VisionBarcodeScannerPlugin/VisionBarcodeScannerPlugin.swift` — Capacitor bridge (`isSupported`, `startScan`, `stopScan`), registered via the `CAPBridgedPlugin` protocol (works for both SPM and CocoaPods — no separate Objective-C `.m` registration file needed).
+- `ios/Sources/VisionBarcodeScannerPlugin/BarcodeScannerContainerViewController.swift` — the actual native scanner screen (VisionKit `DataScannerViewController` + a Cancel button).

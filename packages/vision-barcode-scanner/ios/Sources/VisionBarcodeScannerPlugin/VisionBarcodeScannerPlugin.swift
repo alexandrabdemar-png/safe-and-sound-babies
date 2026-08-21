@@ -8,8 +8,21 @@ import VisionKit
 /// (present a native screen, resolve/emit once, dismiss) rather than trying
 /// to embed VisionKit's live preview inline inside the web page's DOM the
 /// way the previous html5-qrcode-based scanner did.
+///
+/// Registered via the CAPBridgedPlugin protocol (rather than a separate
+/// Objective-C .m file + CAP_PLUGIN macro) — this is the modern
+/// registration style and, unlike the .m-file approach, works whether this
+/// package is pulled in via CocoaPods or Swift Package Manager.
 @objc(VisionBarcodeScannerPlugin)
-public class VisionBarcodeScannerPlugin: CAPPlugin {
+public class VisionBarcodeScannerPlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "VisionBarcodeScannerPlugin"
+    public let jsName = "VisionBarcodeScanner"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "isSupported", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "startScan", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "stopScan", returnType: CAPPluginReturnPromise),
+    ]
+
     private var presentedScanner: UIViewController?
 
     @objc func isSupported(_ call: CAPPluginCall) {

@@ -10,7 +10,10 @@ Pod::Spec.new do |s|
   s.homepage = 'https://peace-of-mine.lovable.app'
   s.author = 'Peace of Mine'
   s.source = { :git => '.', :tag => s.version.to_s }
-  s.source_files = 'ios/Plugin/**/*.{swift,h,m}'
+  # Kept as a CocoaPods fallback for any project not using Swift Package
+  # Manager (see Package.swift for the SPM path, which cap sync prefers
+  # when it's present at the package root).
+  s.source_files = 'ios/Sources/VisionBarcodeScannerPlugin/**/*.swift'
   # DataScannerViewController (the API this plugin wraps) is iOS 16+ only.
   # The main app's Podfile / Xcode deployment target must be raised to 16.0
   # for this to build — see the plugin's README for the exact steps.

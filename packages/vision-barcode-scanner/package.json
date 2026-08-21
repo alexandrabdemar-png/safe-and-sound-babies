@@ -9,6 +9,7 @@
   "files": [
     "src/",
     "ios/",
+    "Package.swift",
     "VisionBarcodeScanner.podspec"
   ],
   "author": "",
