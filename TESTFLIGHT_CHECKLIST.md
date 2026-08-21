@@ -10,6 +10,9 @@ paths are exercised from zero.
 - [ ] Backend secrets present: `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_KEY_P8`, `APNS_BUNDLE_ID`, `APNS_ENVIRONMENT=sandbox`. **Currently the three key secrets are NOT set — iOS push will silently no-op until they are.**
 - [ ] Apple + Google auth providers enabled in the backend auth config (otherwise "Unsupported provider").
 - [ ] Xcode: Push Notifications + Background Modes → Remote notifications capabilities added.
+- [ ] Xcode: In-App Purchase capability added (App target → Signing & Capabilities).
+- [ ] App Store Connect: Pro subscription product created and backend secrets set (`APPLE_IAP_KEY_ID`, `APPLE_IAP_ISSUER_ID`, `APPLE_IAP_PRIVATE_KEY`, `APPLE_IAP_BUNDLE_ID`, `APPLE_IAP_APP_APPLE_ID`) — see `packages/apple-iap/README.md`. **Purchasing Pro on iOS will fail with none of this done yet.**
+- [ ] Verify `20260818000000_purge_child_birthdate_and_measurements.sql` and `20260818010000_drop_dead_sizeup_prediction_columns.sql` have actually been applied to the live database, not just committed as migration files — see COMPLIANCE_REPORT.md §"Prioritized pre-launch checklist" item 5 for how to check and the exact SQL to run if not.
 
 ## 1. Account creation & auth
 - [ ] Email + password signup (8+ chars); weak password shows friendly error.
@@ -60,8 +63,10 @@ paths are exercised from zero.
 
 ## 7. Subscription
 - [ ] Pricing screen shows price, billing period, trial length, and renewal wording.
-- [ ] Purchase path completes (see COMPLIANCE_REPORT.md §7 — the current Stripe web flow is the main App Store risk).
-- [ ] Manage/cancel path reachable; cancelled-but-in-period user keeps Pro until period end.
+- [ ] On the web build: Stripe purchase path completes.
+- [ ] On a native iOS build: native StoreKit purchase sheet appears (not Stripe checkout) and completes with a sandbox tester account — see `packages/apple-iap/README.md` for the full checklist (getProduct, purchase, cancel, restore, renewal, refund).
+- [ ] Restore purchases (iOS) recovers a purchase after a force-quit before it reported to the server.
+- [ ] Manage/cancel path reachable; cancelled-but-in-period user keeps Pro until period end. On iOS this opens the App Store subscription management page, not Stripe's billing portal.
 - [ ] Pro features lock again after the period ends.
 - [ ] Sandbox/test-mode banner is NOT visible in a build intended for testers.
 

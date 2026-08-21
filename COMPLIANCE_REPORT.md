@@ -109,27 +109,59 @@ Gaps:
 - "Possible recall match" states should always name the source and link out, so a
   parent can verify with the government notice.
 
-## 7. Subscriptions — highest-risk item
-Current implementation is **Stripe web checkout** (embedded checkout + Stripe billing
-portal) for a $3.33/month Pro plan with a 7-day trial, inside a Capacitor shell that
-loads the hosted site.
+## 7. Subscriptions — updated 2026-08-21
+Implementation is now **dual-path**: Stripe embedded checkout + billing portal on the
+web, and native Apple In-App Purchase (StoreKit 2) on iOS, for the same $3.33/month
+Pro plan with a 7-day trial. `src/routes/_authenticated/pricing.tsx` picks between
+them based on platform (`useIsNativeIOS`) — the web build's Stripe flow is unchanged.
 
-Gaps:
-- **Blocker for public App Store release, and a likely problem for external TestFlight
-  beta review:** unlocking in-app digital features must go through Apple In-App
-  Purchase on iOS. There is no StoreKit integration, no "Restore purchases", and no
-  App Store Connect subscription product. Options to review: implement StoreKit IAP
-  for iOS (keeping Stripe for web), or ship iOS as free-only with no purchase surface
-  and no links out to a web paywall. **[counsel]** on the reader/multiplatform-app
-  exception if you believe one applies.
-- Pricing screen lacks Terms/EULA + Privacy links (see §5).
-- Entitlement logic is centralized and consistent (`src/lib/isPro.ts` used by both the
-  client hook and the server gate) — good.
+What was added for iOS:
+- `packages/apple-iap/` — a local Capacitor plugin wrapping StoreKit 2 (`getProduct`,
+  `purchase`, `restorePurchases`, plus a `transactionUpdate` listener for renewals).
+  See its own README.md for full setup.
+- `src/lib/appleIap.server.ts` / `src/utils/appleIap.functions.ts` — every purchase and
+  restored transaction is re-verified server-side against Apple's App Store Server API
+  (`@apple/app-store-server-library`, Apple's own official library) before Pro is
+  granted; a client-reported "purchase succeeded" is never trusted on its own.
+- `src/routes/api/public/payments/apple-webhook.ts` — receives App Store Server
+  Notifications V2 (renewals, refunds, cancellations) and keeps `subscriptions` in
+  sync, mirroring the existing Stripe webhook's role.
+- `subscriptions` gained `payment_provider`, `apple_original_transaction_id`,
+  `apple_transaction_id` columns (migration `20260821204030_...sql`) — `computeIsPro`/
+  `useSubscription` needed no changes, since Apple-originated rows are written in the
+  exact same shape Stripe rows already used.
+- A "Restore purchases" control is present (Apple requires this for any IAP app).
+
+Gaps still open:
+- **Requires your own App Store Connect setup before this can be tested at all** — an
+  actual subscription product, an In-App Purchase API key, the App Store Server
+  Notifications webhook URL, and 5 new backend secrets
+  (`APPLE_IAP_KEY_ID`/`APPLE_IAP_ISSUER_ID`/`APPLE_IAP_PRIVATE_KEY`/
+  `APPLE_IAP_BUNDLE_ID`/`APPLE_IAP_APP_APPLE_ID`). None of this can be done from a dev
+  environment — see `packages/apple-iap/README.md`'s "App Store Connect setup" section
+  for the exact steps.
+- **Untested end-to-end** — StoreKit purchases cannot be verified without a real (or
+  sandbox) App Store Connect product actually configured; only the pure data-mapping
+  logic (`transactionToSubscriptionRow`) has automated test coverage. Run
+  `packages/apple-iap/README.md`'s testing checklist on a real device before trusting
+  this in front of testers.
+- Pricing screen now has Terms/EULA + Privacy links and renewal disclosure (was
+  missing, see §5) — done.
+- Terms of Service gained a Subscriptions & Billing section (was entirely absent) —
+  see §5's note on whether this warrants forcing existing users to re-consent.
+  **[counsel]**
+- **[counsel]** Whether this custom subscriptions section is preferred over adopting
+  Apple's Standard EULA wholesale (Apple explicitly allows the Standard EULA for an
+  app with only auto-renewable subscriptions, which would replace needing custom
+  auto-renewal wording at all).
+- Entitlement logic is still centralized and consistent (`src/lib/isPro.ts` used by
+  the client hook and the server gate) — good, and unaffected by this change.
 - Product-facing concern: **data export is Pro-gated.** If a user's ability to get their
   own data out sits behind a paywall, that is worth reviewing both as a review-risk and
   a data-rights question **[counsel]**. Account deletion is correctly free.
-- Internal TestFlight (up to 100 team testers) needs no review, so the IAP gap does not
-  block getting a build to testers now.
+- Internal TestFlight (up to 100 team testers) needs no review, so an incomplete Apple
+  IAP setup does not block getting a build to testers now — but purchasing Pro on that
+  build will fail until App Store Connect is actually configured.
 
 ## 8. Notifications
 APNs push for recalls, expirations, and bottle alerts; web push via VAPID; in-app
@@ -175,18 +207,40 @@ token attempts and on AI search cost abuse.
 **Before external TestFlight**
 1. Set the three APNs secrets; verify a real push on device.
 2. Enable Apple + Google auth providers; verify both sign-in buttons on device.
-3. Add Terms/EULA + Privacy links and full renewal terms to the pricing screen.
-4. Decide the iOS purchase posture (§7) — at minimum, hide the paywall in the iOS build
-   until StoreKit exists, so reviewers do not see a non-IAP purchase flow.
-5. Run TESTFLIGHT_CHECKLIST.md end to end on a device.
+3. ~~Add Terms/EULA + Privacy links and full renewal terms to the pricing screen.~~ Done 2026-08-21.
+4. ~~Decide the iOS purchase posture (§7)~~ Done 2026-08-21 — StoreKit IAP implemented
+   for iOS (Stripe unchanged on web). **Still needed: the App Store Connect setup
+   itself (subscription product, IAP key, webhook URL, 5 backend secrets) — see
+   `packages/apple-iap/README.md`. Purchasing will fail on iOS until that's done.**
+5. **New:** verify the `20260818000000_purge_child_birthdate_and_measurements.sql`
+   migration has actually been applied to the live database — `src/integrations/
+   supabase/types.ts` (regenerated 2026-08-19, after that migration was already
+   committed) still lists the columns it's supposed to have dropped
+   (`date_of_birth`, `due_date`, `birth_week`, `height_inches`, `weight_lbs`,
+   `measurements_updated_at`), which is a strong sign the migration file exists but
+   was never actually run. Run it via `supabase db push` or the SQL editor if so, then
+   regenerate `types.ts`. The same applies to `20260818010000_drop_dead_sizeup_
+   prediction_columns.sql` (`next_size_at`/`predicted_sizeup_date` also still appear).
+   Until this is confirmed, "we don't store your child's birthdate" in the privacy
+   policy may not yet be true for existing users' already-collected data, even though
+   no app code writes to these columns anymore.
+6. Run TESTFLIGHT_CHECKLIST.md end to end on a device.
 
 **Before public App Store submission**
-6. Implement StoreKit IAP + Restore Purchases for iOS, or ship iOS free-only. **[counsel]**
-7. Complete the App Privacy questionnaire to match the policy; confirm age rating and the
-   not-child-directed answer. **[counsel]**
-8. Extend the safety/medical disclaimer to every advisory surface; label AI results.
-9. Ungate data export, or document why it is Pro-only. **[counsel]**
-10. Decide whether Terms re-consent on material changes is required, and adjust the
-    one-time gate accordingly. **[counsel]**
-11. Drop the unused `children.due_date` column.
-12. Add rate limiting to emergency-share token lookups and AI search.
+7. ~~Implement StoreKit IAP + Restore Purchases for iOS~~ Done 2026-08-21 (see §7) —
+   remaining: the App Store Connect setup above, and end-to-end testing with a real
+   sandbox purchase (untestable without it).
+8. Complete the App Privacy questionnaire to match the policy; confirm age rating and the
+   not-child-directed answer. Note the policy now also names Apple as a payment
+   processor for iOS purchases — include purchase history in the data-types answer.
+   **[counsel]**
+9. Extend the safety/medical disclaimer to every advisory surface; label AI results.
+10. Ungate data export, or document why it is Pro-only. **[counsel]**
+11. Decide whether Terms re-consent on material changes is required, and adjust the
+    one-time gate accordingly — directly relevant now that a real Subscriptions &
+    Billing section was just added to Terms and existing users won't automatically
+    see it (see `legalConsent.ts`'s `CURRENT_TERMS_VERSION` comment). **[counsel]**
+12. Decide whether to keep the custom Subscriptions & Billing Terms section or adopt
+    Apple's Standard EULA instead (Apple allows the Standard EULA for an app with only
+    auto-renewable subscriptions). **[counsel]**
+13. Add rate limiting to emergency-share token lookups and AI search.

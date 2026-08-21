@@ -19,6 +19,17 @@ In Xcode, on the **App** target → *Signing & Capabilities*:
 1. Pick your Apple Developer **Team** (bundle id `com.peaceofmine.app`).
 2. **+ Capability → Push Notifications**.
 3. **+ Capability → Background Modes** → check *Remote notifications*.
+4. **+ Capability → In-App Purchase**.
+
+## Pro subscription (Apple In-App Purchase)
+
+Pro is purchased through native StoreKit on iOS (Stripe stays the checkout for the
+web build) — see `packages/apple-iap/README.md` for the full setup: creating the
+subscription product in App Store Connect, the In-App Purchase API key, the App
+Store Server Notifications webhook URL, and the 5 backend secrets it needs
+(`APPLE_IAP_KEY_ID`, `APPLE_IAP_ISSUER_ID`, `APPLE_IAP_PRIVATE_KEY`,
+`APPLE_IAP_BUNDLE_ID`, `APPLE_IAP_APP_APPLE_ID`). None of this is optional — without
+it, tapping "Start free trial" on iOS will fail.
 
 ## Push notifications (APNs)
 

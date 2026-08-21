@@ -1,6 +1,6 @@
 import { SUPPORT_EMAIL } from "@/lib/constants";
 
-export const PRIVACY_POLICY_UPDATED = "August 20, 2026";
+export const PRIVACY_POLICY_UPDATED = "August 21, 2026";
 
 export const PRIVACY_POLICY = `Peace of Mine — Privacy Policy
 Last updated: ${PRIVACY_POLICY_UPDATED}
@@ -32,7 +32,7 @@ About your account
 • Caregiver invites (optional, Pro feature) — if you invite a co-parent, grandparent, or nanny to share access to a child's profile, we store the invitee's email address and send them an invite link. The link expires after 7 days if not accepted.
 
 What we do NOT collect
-• We do not collect your own home address or payment card details. Payment is processed entirely by Stripe; we never see or store your card number.
+• We do not collect your own home address or payment card details. Payment is processed entirely by Stripe (web) or Apple (Pro purchased from the iOS app); we never see or store your card number.
 • We do not use advertising trackers or third-party analytics SDKs inside the app.
 
 ──────────────────────────────────────
@@ -66,11 +66,11 @@ Where barcode lookups go — When you scan a barcode, the barcode number alone (
 Trusted processors — We share limited data with:
   • Resend (transactional email) — delivers caregiver invites, feedback emails, and safety-alert emails on our behalf; receives the recipient email address and message contents.
   • Supabase (database hosting, EU/US data centres) — stores your encrypted data.
-  • Stripe (payment processing) — receives your email and payment details when you subscribe; Stripe's privacy policy applies to that data.
+  • Stripe (payment processing for purchases made on the web) — receives your email and payment details when you subscribe outside the iOS app; Stripe's privacy policy applies to that data.
   • Lovable (app hosting platform) — hosts the application servers, and its AI Gateway relays product-search text to an AI model (see below) on our behalf; does not have access to your database rows.
   • Google — if you search for a product, your search text is sent through Lovable's AI Gateway to Google's Gemini model to help find matching products. If you choose "Sign in with Google," Google shares your account email/profile with us per Google's own privacy policy.
   • Anthropic — for Pro subscribers, a product's name and category (never your child's data) are sent to Anthropic's Claude model to look up safety guidelines for that product.
-  • Apple — if you choose "Sign in with Apple," or if you use the app on iOS with notifications enabled, Apple shares your account email (Sign in with Apple) or delivers push notifications (Apple Push Notification service) on our behalf.
+  • Apple — if you choose "Sign in with Apple," or if you use the app on iOS with notifications enabled, Apple shares your account email (Sign in with Apple) or delivers push notifications (Apple Push Notification service) on our behalf. If you subscribe to Pro from the iOS app, Apple also processes that payment as the merchant of record: Apple, not us, collects your payment details, and Apple's own privacy policy applies to that transaction. We receive only your subscription status and an Apple-assigned transaction identifier — never your card details.
   • Your browser's push service (e.g. Google, Mozilla, or Microsoft, depending on your browser) — if you enable notifications on the web, delivers the notification on our behalf; it only ever sees an encrypted payload, not its contents.
 
 We do not sell, rent, or share your personal data with advertisers, data brokers, or any other third parties.

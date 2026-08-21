@@ -143,14 +143,30 @@ function TermsPage() {
             </section>
 
             <section>
-              <h2 className="font-display text-xl font-semibold text-foreground">11. Changes to These Terms</h2>
+              <h2 className="font-display text-xl font-semibold text-foreground">11. Subscriptions &amp; Billing</h2>
+              <p className="mt-2 text-muted-foreground">
+                Core safety features — recall alerts, replacement reminders, and all safety notifications — are free and always will be. Pro is an optional paid subscription that unlocks additional convenience features (currently $3.33/month, with a 7-day free trial for new subscribers). Pricing, trial length, and included features are shown on the subscription screen before you purchase and may change over time; we will show you current terms before any purchase.
+              </p>
+              <p className="mt-2 text-muted-foreground">
+                On the web, Pro is billed through Stripe. On iOS, Pro is billed through Apple's In-App Purchase system, and Apple is the merchant of record for that purchase — Apple's own terms and refund policies apply to purchases made through the App Store, in addition to these Terms.
+              </p>
+              <p className="mt-2 text-muted-foreground">
+                Pro renews automatically at the end of each billing period unless you cancel before it renews. On the web, you can cancel anytime from the subscription management page linked in the app. On iOS, subscriptions are managed and cancelled through your Apple ID account settings, not through us — we cannot cancel or refund an App Store purchase on your behalf; Apple handles all billing, cancellation, and refund requests for purchases made that way.
+              </p>
+              <p className="mt-2 text-muted-foreground">
+                If you cancel, you keep Pro access through the end of the period you already paid for. We do not prorate partial-period refunds ourselves; on iOS, any refund request goes through Apple.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="font-display text-xl font-semibold text-foreground">12. Changes to These Terms</h2>
               <p className="mt-2 text-muted-foreground">
                 We may update these Terms from time to time. When we make a material change, you will be asked to explicitly accept the updated Terms again before continuing to use the app. Continued use of Peace of Mine after a non-material change means you accept the revised Terms.
               </p>
             </section>
 
             <section>
-              <h2 className="font-display text-xl font-semibold text-foreground">12. Contact</h2>
+              <h2 className="font-display text-xl font-semibold text-foreground">13. Contact</h2>
               <p className="mt-2 text-muted-foreground">
                 If you have questions about these Terms, reach out to us at {SUPPORT_EMAIL}.
               </p>

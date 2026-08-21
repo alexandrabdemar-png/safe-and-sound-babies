@@ -2,19 +2,30 @@ import { logError } from "@/lib/sanitize-error";
 import { isSchemaMissingTableError } from "@/lib/errors";
 
 // Single source of truth for which Terms of Service version is currently
-// in force. Bump this (to today's date) whenever terms.tsx changes in a
-// way that needs a fresh explicit acceptance — every user, new or
-// returning, gets routed to /legal-consent again until they accept the
-// new version. Old acceptances are never overwritten (see
-// supabase/migrations/20260716000000_legal_consent_wall.sql), so this is
-// also what /legal-consent writes to user_agreements.terms_version.
+// in force — this is what /legal-consent writes to
+// user_agreements.terms_version, and what the "Last updated" date on
+// /terms is derived from.
 //
-// Bumped 2026-08-13 to add the 18+ eligibility clause and the
-// is_18_or_older checkbox (supabase/migrations/20260813000000_...sql) —
-// this re-prompts every existing user, not just new signups, so the age
-// attestation actually covers the whole user base rather than only
-// accounts created after this change shipped.
-export const CURRENT_TERMS_VERSION = "2026-08-13";
+// IMPORTANT — this does NOT by itself re-prompt existing users. Despite
+// what an earlier version of this comment claimed, needsLegalConsent()
+// below is a one-time gate (true only when a user has zero recorded
+// acceptances, regardless of version) — bumping this constant changes the
+// version a brand-new acceptance is recorded under and the displayed
+// date, but an existing user who already has any row in user_agreements
+// is never routed back to /legal-consent just because this changed. If a
+// future Terms change is significant enough that existing users need to
+// see and accept it again (e.g. the 2026-08-21 subscriptions/billing
+// section, added when Apple In-App Purchase was introduced), that
+// requires an actual code change to needsLegalConsent/checkNeedsLegalConsent
+// — bumping this string alone will not do it. See COMPLIANCE_REPORT.md
+// §5's re-consent item, which flags this as a decision to make
+// deliberately rather than assume.
+//
+// Bumped 2026-08-21 to add the Subscriptions & Billing section (Apple
+// In-App Purchase on iOS, alongside the existing Stripe web billing) —
+// existing users will NOT be automatically re-prompted per the note
+// above.
+export const CURRENT_TERMS_VERSION = "2026-08-21";
 
 /**
  * True when the user has NEVER accepted the terms. Once a user has any
