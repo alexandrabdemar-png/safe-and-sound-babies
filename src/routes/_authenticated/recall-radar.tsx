@@ -213,6 +213,7 @@ function RecallRadarPage() {
           <DataAsOf
             sources={["cpsc", "fda", "usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"]}
             className="mt-2"
+            showSources={false}
           />
         </div>
       </header>

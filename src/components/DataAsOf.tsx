@@ -28,10 +28,13 @@ type SourceRow = {
 export function DataAsOf({
   sources,
   className = "",
+  showSources = true,
 }: {
   /** Restrict to specific sources; omit for all. */
   sources?: string[];
   className?: string;
+  /** Set false when the sources are already listed elsewhere on the same screen. */
+  showSources?: boolean;
 }) {
   const [rows, setRows] = useState<SourceRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,7 +96,7 @@ export function DataAsOf({
     <p className={`inline-flex flex-wrap items-center gap-1.5 font-body text-[11px] text-muted-foreground ${className}`}>
       <Clock className="h-3 w-3" aria-hidden />
       <span>{formatDataAsOf(mostRecent)}</span>
-      {sourceNames.length > 0 && (
+      {showSources && sourceNames.length > 0 && (
         <span>
           · Sources: {sourceNames.join(", ")}
         </span>
