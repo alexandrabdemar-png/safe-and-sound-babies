@@ -179,11 +179,8 @@ Deno.serve(async (req) => {
   const paidConfig = {
     goUpcApiKey: Deno.env.get("GO_UPC_API_KEY") || undefined,
     barcodeLookupApiKey: Deno.env.get("BARCODE_LOOKUP_API_KEY") || undefined,
-    barcodeSpiderApiKey: Deno.env.get("BARCODE_SPIDER_API_KEY") || undefined,
   };
-  const anyPaidSourceConfigured = Boolean(
-    paidConfig.goUpcApiKey || paidConfig.barcodeLookupApiKey || paidConfig.barcodeSpiderApiKey,
-  );
+  const anyPaidSourceConfigured = Boolean(paidConfig.goUpcApiKey || paidConfig.barcodeLookupApiKey);
   if (!anyPaidSourceConfigured) return json({ found: false });
 
   // Checks every row for the user, not just the most recent one — see

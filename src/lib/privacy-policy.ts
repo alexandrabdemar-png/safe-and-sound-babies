@@ -1,6 +1,6 @@
 import { SUPPORT_EMAIL } from "@/lib/constants";
 
-export const PRIVACY_POLICY_UPDATED = "August 21, 2026";
+export const PRIVACY_POLICY_UPDATED = "August 23, 2026";
 
 export const PRIVACY_POLICY = `Peace of Mine — Privacy Policy
 Last updated: ${PRIVACY_POLICY_UPDATED}
@@ -61,7 +61,7 @@ Our team — Human team members (admins) can see only aggregate statistics: for 
 
 Where recall data comes from — We read recall notices from public government sources: the U.S. Consumer Product Safety Commission (CPSC), the U.S. National Highway Traffic Safety Administration (NHTSA) and its recall dataset on data.transportation.gov, the USDA Food Safety and Inspection Service, Health Canada (recalls-rappels.canada.ca), and the EU Safety Gate (ec.europa.eu). We only read from these sources — nothing about you or your child is ever sent to them.
 
-Where barcode lookups go — When you scan a barcode, the barcode number alone (never your name, your child's data, or your account email) is sent to third-party product-identification services to find the product's name and brand: Barcode Lookup, Barcode Spider, UPCitemdb, Go-UPC, Open Food Facts, and Open Beauty Facts. If a lookup succeeds, the resulting product name/brand/barcode is cached in our shared product catalog so future scans of the same item are faster. That cache entry contains no information about you and is not tied to your account.
+Where barcode lookups go — On iOS, scanning a barcode itself happens entirely on your device using Apple's built-in VisionKit scanner: the camera image and decoded barcode never leave your phone at that step, and nothing is sent to Apple. Once a barcode is decoded (on iOS, or typed/scanned on the web), the barcode number alone (never your name, your child's data, or your account email) is sent to third-party product-identification services to find the product's name and brand: Barcode Lookup, UPCitemdb, Go-UPC, Open Food Facts, and Open Beauty Facts. If a lookup succeeds, the resulting product name/brand/barcode is cached in our shared product catalog so future scans of the same item are faster. That cache entry contains no information about you and is not tied to your account.
 
 Trusted processors — We share limited data with:
   • Resend (transactional email) — delivers caregiver invites, feedback emails, and safety-alert emails on our behalf; receives the recipient email address and message contents.

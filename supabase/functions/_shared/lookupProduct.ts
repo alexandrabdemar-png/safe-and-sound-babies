@@ -21,7 +21,6 @@ export type CatalogSource =
   | "upcitemdb"
   | "go-upc"
   | "barcode-lookup"
-  | "barcode-spider"
   | "manual";
 
 export type LookupResult = {
@@ -38,7 +37,6 @@ export type LookupResult = {
 export type PaidSourceConfig = {
   goUpcApiKey?: string;
   barcodeLookupApiKey?: string;
-  barcodeSpiderApiKey?: string;
 };
 
 type SourceFn = () => Promise<LookupResult | null>;
@@ -317,32 +315,6 @@ export function fetchBarcodeLookup(
   };
 }
 
-export function fetchBarcodeSpider(
-  barcode: string,
-  fetchImpl: typeof fetch,
-  apiKey: string,
-): SourceFn {
-  return async () => {
-    const json = (await fetchJson(
-      fetchImpl,
-      `https://api.barcodespider.com/v1/lookup?token=${encodeURIComponent(apiKey)}&upc=${encodeURIComponent(barcode)}`,
-    )) as { item_attributes?: Record<string, unknown> } | null;
-    const a = json?.item_attributes;
-    if (!a || !a.title) return null;
-    const category = (a.category as string) || null;
-    return {
-      barcode,
-      name: (a.title as string) || null,
-      brand: (a.brand as string) || null,
-      category,
-      isBabyProduct: guessIsBaby(a.title as string, category),
-      imageUrl: (a.image as string) || null,
-      source: "barcode-spider",
-      raw: a,
-    };
-  };
-}
-
 export function raceFreeSources(
   barcode: string,
   fetchImpl: typeof fetch,
@@ -365,8 +337,6 @@ export function racePaidSources(
     paidSources.push(fetchGoUpc(barcode, fetchImpl, paidConfig.goUpcApiKey));
   if (paidConfig.barcodeLookupApiKey)
     paidSources.push(fetchBarcodeLookup(barcode, fetchImpl, paidConfig.barcodeLookupApiKey));
-  if (paidConfig.barcodeSpiderApiKey)
-    paidSources.push(fetchBarcodeSpider(barcode, fetchImpl, paidConfig.barcodeSpiderApiKey));
   if (paidSources.length === 0) return Promise.resolve(null);
   return firstValid(paidSources.map((fn) => fn()));
 }

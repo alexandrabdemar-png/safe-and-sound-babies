@@ -56,7 +56,6 @@ const SOURCE_LABEL: Record<string, string> = {
   upcitemdb: "UPCitemdb",
   "go-upc": "Go-UPC",
   "barcode-lookup": "Barcode Lookup",
-  "barcode-spider": "Barcode Spider",
   manual: "Community submission",
 };
 

@@ -7,7 +7,6 @@ import {
   fetchUpcItemDb,
   fetchGoUpc,
   fetchBarcodeLookup,
-  fetchBarcodeSpider,
   buildManualCatalogEntry,
 } from "./lookupProduct";
 
@@ -231,25 +230,6 @@ describe("individual source parsers", () => {
     const result = await fetchBarcodeLookup("777777777777", fetchImpl, "bl-key")();
     expect(result?.isBabyProduct).toBe(false);
   });
-
-  it("fetchBarcodeSpider parses a valid match from item_attributes", async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(
-      jsonResponse({
-        item_attributes: {
-          title: "Baby Bjorn Bouncer",
-          brand: "BabyBjorn",
-          category: "Baby Gear",
-          image: "https://example.com/bjorn.jpg",
-        },
-      }),
-    );
-    const result = await fetchBarcodeSpider("888888888888", fetchImpl, "bs-key")();
-    expect(result).toMatchObject({
-      name: "Baby Bjorn Bouncer",
-      source: "barcode-spider",
-      isBabyProduct: true,
-    });
-  });
 });
 
 describe("lookupProduct orchestration", () => {
@@ -287,11 +267,10 @@ describe("lookupProduct orchestration", () => {
     });
     const result = await lookupProduct("999999999999", fetchImpl as unknown as typeof fetch, {
       goUpcApiKey: "key-1",
-      // barcodeLookupApiKey / barcodeSpiderApiKey intentionally omitted
+      // barcodeLookupApiKey intentionally omitted
     });
     expect(result).toMatchObject({ name: "Found via Go-UPC", source: "go-upc" });
     expect(calledUrls.some((u) => u.includes("barcodelookup.com"))).toBe(false);
-    expect(calledUrls.some((u) => u.includes("barcodespider.com"))).toBe(false);
   });
 
   it("does not call any paid source when none are configured", async () => {
@@ -311,7 +290,6 @@ describe("lookupProduct orchestration", () => {
     const result = await lookupProduct("000000000002", fetchImpl as unknown as typeof fetch, {
       goUpcApiKey: "k1",
       barcodeLookupApiKey: "k2",
-      barcodeSpiderApiKey: "k3",
     });
     expect(result).toBeNull();
   });
@@ -322,7 +300,6 @@ describe("lookupProduct orchestration", () => {
       lookupProduct("000000000003", fetchImpl as unknown as typeof fetch, {
         goUpcApiKey: "k1",
         barcodeLookupApiKey: "k2",
-        barcodeSpiderApiKey: "k3",
       }),
     ).resolves.toBeNull();
   });
