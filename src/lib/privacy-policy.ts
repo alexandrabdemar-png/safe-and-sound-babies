@@ -81,7 +81,7 @@ We do not sell, rent, or share your personal data with advertisers, data brokers
 
 Your data is kept for as long as your account is active. If you delete your account (see Section 5), your account, all of your children's profiles, milestones, products, medical/emergency info, food and bottle logs, caregiver grants and invites, subscription record, notification tokens, and uploaded product photos are permanently deleted immediately.
 
-Encrypted database backups are retained on a rolling 7-day window by our hosting provider, and server logs on a rolling 7-day window. Deleted data can therefore persist in a backup for up to 7 days after deletion, after which the backup itself expires. Backups are used only for disaster recovery.
+Database backups and server logs are retained by our hosting provider according to the retention settings of the current hosting plan. Those settings may not include a fixed 7-day window (for example, automated backups may be shorter or not available on some plans). If deleted data still exists in a backup or log at the time of deletion, it is kept only until that backup or log expires as part of the provider's normal cycle and is used only for disaster recovery. If you need the exact retention window for your account, email ${SUPPORT_EMAIL} and we will confirm the current plan settings.
 
 What is NOT removed by deleting your account:
 • Feedback and bug reports you sent us — these are emailed to our support inbox and also stored in our feedback table. Deleting your account unlinks the feedback from you (your user ID is removed), but the message text remains. Email ${SUPPORT_EMAIL} and we will delete the message itself on request.
