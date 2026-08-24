@@ -132,8 +132,7 @@ function ProductsPage() {
 }
 
 function ProductCard({ product }: { product: Product }) {
-  const cat = categoryFromLabel(product.category);
-  const Icon = cat?.icon ?? CATEGORY_BY_KEY.other.icon;
+  const cat = categoryFromLabel(product.category) ?? CATEGORY_BY_KEY.other;
   const meta = [product.brand, product.size, cat?.label ?? product.category].filter(Boolean).join(" · ");
 
   const replaceDate = product.predicted_replacement_date ?? product.replace_at;
