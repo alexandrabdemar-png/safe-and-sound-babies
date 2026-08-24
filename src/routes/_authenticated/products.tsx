@@ -9,6 +9,7 @@ import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Button } from "@/components/ui/button";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
+import { CategoryBadge } from "@/components/CategoryBadge";
 
 import { formatMonthYear, isOverdue } from "@/lib/predictions";
 import { CATEGORY_BY_KEY, categoryFromLabel, type CategoryKey } from "@/lib/productCategories";
