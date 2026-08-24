@@ -150,9 +150,11 @@ function ProductCard({ product }: { product: Product }) {
           </div>
         )}
         <div className="flex items-start gap-3">
-          <div className="h-14 w-14 rounded-xl bg-sand/50 flex items-center justify-center shrink-0">
-            <Icon className="h-5 w-5 text-accent" />
-          </div>
+          <CategoryBadge
+            icon={cat.icon}
+            illustration={cat.illustration}
+            className="h-14 w-14"
+          />
           <div className="min-w-0 flex-1">
             <p className="truncate font-display text-base font-semibold tracking-tight">{product.name}</p>
             {meta && <p className="mt-0.5 truncate font-body text-xs text-muted-foreground">{meta}</p>}
