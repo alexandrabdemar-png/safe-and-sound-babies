@@ -81,14 +81,20 @@ function tokenize(s: string): string[] {
  * ("Pacifiers", "Car Seats", "Pouches") while a user's own product name is
  * usually singular ("Pacifier", "Pouch"). Not a real stemmer, just enough
  * that this common, legitimate wording difference doesn't count as a token
- * "not matching". Checks the "-es" suffix first (pouch→pouches, box→boxes)
- * since stripping only a trailing "s" from those leaves a stray "e".
+ * "not matching".
+ *
+ * Strips a trailing "s" and then a trailing "e" so both spellings collapse to
+ * the same stem: bottles→bottle→bottl and bottle→bottl; pouches→pouche→pouch
+ * and pouch→pouch. (An earlier "-es" one-step strip mapped bottles→bottl but
+ * left bottle→bottle, so a recalled "Bottles" never matched a "Bottle".)
  */
 function stem(word: string): string {
-  if (word.length > 4 && word.endsWith("es")) return word.slice(0, -2);
-  if (word.length > 3 && word.endsWith("s")) return word.slice(0, -1);
-  return word;
+  let w = word;
+  if (w.length > 3 && w.endsWith("s")) w = w.slice(0, -1);
+  if (w.length > 3 && w.endsWith("e")) w = w.slice(0, -1);
+  return w;
 }
+
 
 export function fuzzyMatchProduct(productName: string, recallText: string): boolean {
   const text = recallText.toLowerCase();
