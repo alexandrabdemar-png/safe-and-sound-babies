@@ -10,7 +10,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 const HOSTED_URL = process.env.CAP_SERVER_URL || "https://peace-of-mine.lovable.app";
 
 const config: CapacitorConfig = {
-  appId: "com.peaceofmine.app",
+  appId: "com.peaceofmine.baby",
   appName: "Peace of Mine",
   // Static fallback shown only when the hosted app can't be reached.
   webDir: "ios-shell",

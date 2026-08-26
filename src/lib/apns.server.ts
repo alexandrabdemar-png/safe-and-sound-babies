@@ -12,7 +12,7 @@
 //   APNS_TEAM_ID    — Apple Developer Team ID
 //   APNS_KEY_P8     — contents of the .p8 key file (PEM text, including
 //                     "-----BEGIN PRIVATE KEY-----" / "-----END PRIVATE KEY-----")
-//   APNS_BUNDLE_ID  — defaults to "com.peaceofmine.app" (see capacitor.config.ts)
+//   APNS_BUNDLE_ID  — defaults to "com.peaceofmine.baby" (see capacitor.config.ts)
 //   APNS_ENVIRONMENT — "production" (default) or "sandbox" (TestFlight/dev builds)
 
 type ApnsPushResult = {
@@ -93,7 +93,7 @@ export async function sendApnsPush(
   deviceToken: string,
   notification: { title: string; body: string; data?: Record<string, string> },
 ): Promise<ApnsPushResult> {
-  const bundleId = process.env.APNS_BUNDLE_ID || "com.peaceofmine.app";
+  const bundleId = process.env.APNS_BUNDLE_ID || "com.peaceofmine.baby";
   const environment = process.env.APNS_ENVIRONMENT === "sandbox" ? "sandbox" : "production";
   const host = environment === "sandbox" ? "api.sandbox.push.apple.com" : "api.push.apple.com";
 

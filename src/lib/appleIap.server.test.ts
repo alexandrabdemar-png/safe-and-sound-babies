@@ -10,7 +10,7 @@ function makeTx(
   return {
     originalTransactionId: "1000000000000001",
     transactionId: "1000000000000001",
-    productId: "com.peaceofmine.app.pro.monthly",
+    productId: "com.peaceofmine.baby.pro.monthly",
     expiresDate: Date.now() + 30 * 24 * 60 * 60 * 1000,
     environment: Environment.PRODUCTION,
     ...overrides,
@@ -25,7 +25,7 @@ describe("transactionToSubscriptionRow", () => {
     expect(row.cancel_at_period_end).toBe(false);
     expect(row.payment_provider).toBe("apple");
     expect(row.apple_original_transaction_id).toBe("1000000000000001");
-    expect(row.product_id).toBe("com.peaceofmine.app.pro.monthly");
+    expect(row.product_id).toBe("com.peaceofmine.baby.pro.monthly");
   });
 
   it("maps an expired transaction (expiresDate in the past) to plan=free, status=expired", () => {

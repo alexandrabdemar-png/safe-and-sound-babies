@@ -145,7 +145,7 @@ async function notifyAffectedUsers(
           keyId: Deno.env.get("APNS_KEY_ID")!,
           teamId: Deno.env.get("APNS_TEAM_ID")!,
           keyP8: Deno.env.get("APNS_KEY_P8")!,
-          bundleId: Deno.env.get("APNS_BUNDLE_ID") || "com.peaceofmine.app",
+          bundleId: Deno.env.get("APNS_BUNDLE_ID") || "com.peaceofmine.baby",
           environment: Deno.env.get("APNS_ENVIRONMENT") === "sandbox" ? "sandbox" : "production",
         }
       : null;

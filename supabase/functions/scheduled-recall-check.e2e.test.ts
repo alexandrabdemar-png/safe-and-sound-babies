@@ -68,7 +68,7 @@ describe("end-to-end: newly-added product matches a known recall fixture, notifi
       keyId: "k",
       teamId: "t",
       keyP8: "x",
-      bundleId: "com.peaceofmine.app",
+      bundleId: "com.peaceofmine.baby",
       environment: "production",
     };
     const pushFetch = vi.fn().mockResolvedValue(jsonResponse({}, true, 200));

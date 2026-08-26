@@ -16,7 +16,7 @@ open ios/App/App.xcworkspace
 
 In Xcode, on the **App** target → *Signing & Capabilities*:
 
-1. Pick your Apple Developer **Team** (bundle id `com.peaceofmine.app`).
+1. Pick your Apple Developer **Team** (bundle id `com.peaceofmine.baby`).
 2. **+ Capability → Push Notifications**.
 3. **+ Capability → Background Modes** → check *Remote notifications*.
 4. **+ Capability → In-App Purchase**.
@@ -46,7 +46,7 @@ these backend secrets:
 | `APNS_KEY_ID`      | Key ID of the .p8                                     |
 | `APNS_TEAM_ID`     | Apple Developer Team ID                               |
 | `APNS_KEY_P8`      | full PEM contents of the .p8 file                     |
-| `APNS_BUNDLE_ID`   | `com.peaceofmine.app` (default)                       |
+| `APNS_BUNDLE_ID`   | `com.peaceofmine.baby` (default)                       |
 | `APNS_ENVIRONMENT` | `sandbox` for TestFlight/dev builds, else `production` |
 
 TestFlight builds use the **sandbox** APNs environment unless the build is

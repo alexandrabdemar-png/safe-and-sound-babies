@@ -8,7 +8,7 @@ Store Connect subscription product and a sandbox tester Apple ID.
 
 ## What this does
 
-- Purchases and restores the `com.peaceofmine.app.pro.monthly` subscription
+- Purchases and restores the `com.peaceofmine.baby.pro.monthly` subscription
   through Apple's own purchase sheet, instead of Stripe checkout — required
   by App Store review for unlocking a digital feature (Pro) inside an iOS app.
 - The web app is unaffected: `StripeEmbeddedCheckout` keeps handling web
@@ -47,7 +47,7 @@ This assumes you've already done the base iOS setup from `IOS_TESTFLIGHT.md`.
 2. **My Apps → Peace of Mine → Monetization → Subscriptions** — create a
    subscription group (any internal name, e.g. "Pro"), then inside it create
    one auto-renewable subscription:
-   - Product ID: `com.peaceofmine.app.pro.monthly` (must match exactly —
+   - Product ID: `com.peaceofmine.baby.pro.monthly` (must match exactly —
      this is hardcoded in both `src/definitions.ts` and the native plugin).
    - Price: $3.33/month (or your chosen tier).
    - Add a 7-day free trial as an introductory offer, matching the existing
@@ -69,7 +69,7 @@ This assumes you've already done the base iOS setup from `IOS_TESTFLIGHT.md`.
    | `APPLE_IAP_KEY_ID` | Key ID from step 1 |
    | `APPLE_IAP_ISSUER_ID` | Issuer ID from step 1 |
    | `APPLE_IAP_PRIVATE_KEY` | Full contents of the downloaded `.p8` file |
-   | `APPLE_IAP_BUNDLE_ID` | `com.peaceofmine.app` |
+   | `APPLE_IAP_BUNDLE_ID` | `com.peaceofmine.baby` |
    | `APPLE_IAP_APP_APPLE_ID` | Numeric Apple ID from step 3 |
 
 6. **Sandbox tester** — Users and Access → Sandbox → Testers → create one

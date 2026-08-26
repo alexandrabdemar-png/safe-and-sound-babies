@@ -7,7 +7,7 @@ import type { PluginListenerHandle } from "@capacitor/core";
  * so this plugin's API is deliberately built around a single, known
  * product rather than taking a product id as a parameter everywhere.
  */
-export const APPLE_PRO_MONTHLY_PRODUCT_ID = "com.peaceofmine.app.pro.monthly";
+export const APPLE_PRO_MONTHLY_PRODUCT_ID = "com.peaceofmine.baby.pro.monthly";
 
 export type AppleIAPEnvironment = "sandbox" | "live";
 

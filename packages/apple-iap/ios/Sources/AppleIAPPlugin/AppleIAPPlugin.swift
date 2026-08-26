@@ -7,7 +7,7 @@ import StoreKit
 /// APPLE_PRO_MONTHLY_PRODUCT_ID in src/definitions.ts. Only one paid tier
 /// exists in this app, so this is a constant rather than a parameter
 /// threaded through every method.
-private let proMonthlyProductId = "com.peaceofmine.app.pro.monthly"
+private let proMonthlyProductId = "com.peaceofmine.baby.pro.monthly"
 
 enum AppleIAPError: LocalizedError {
     case failedVerification
