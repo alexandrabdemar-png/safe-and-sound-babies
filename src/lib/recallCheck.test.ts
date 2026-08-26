@@ -89,6 +89,24 @@ describe("fuzzyMatchProduct", () => {
 // tightened to require every token unconditionally (with a plural-only
 // exception via `stem`). Matches the edge-function copy of this matcher
 // (supabase/functions/_shared/recallMatch.ts).
+describe("fuzzyMatchProduct — plural normalization", () => {
+  it("matches a singular product name against a plural recall for -e words", () => {
+    expect(
+      fuzzyMatchProduct(
+        "Dr Browns Natural Flow Bottle",
+        "Dr Brown's Recalls Natural Flow Bottles Due to Choking Hazard",
+      ),
+    ).toBe(true);
+  });
+
+  it("matches cradle/cradles and pouch/pouches either direction", () => {
+    expect(fuzzyMatchProduct("Fisher Price Rock Cradle", "Fisher-Price Recalls Rock Cradles")).toBe(
+      true,
+    );
+    expect(fuzzyMatchProduct("Beech Nut Apple Pouches", "Beech-Nut Apple Pouch Recall")).toBe(true);
+  });
+});
+
 describe("fuzzyMatchProduct — brand-only false positive (live bug report)", () => {
   it("regression: does NOT match on brand-name tokens alone when no product-defining token matches", () => {
     expect(
