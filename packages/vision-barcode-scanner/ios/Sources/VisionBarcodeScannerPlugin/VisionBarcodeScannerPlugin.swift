@@ -27,7 +27,14 @@ public class VisionBarcodeScannerPlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func isSupported(_ call: CAPPluginCall) {
         if #available(iOS 16.0, *) {
-            call.resolve(["supported": DataScannerViewController.isSupported])
+            // DataScannerViewController's class properties are main-actor
+            // isolated (VisionKit is a UI framework); Capacitor's plugin
+            // bridge invokes @objc methods like this one via WKWebView's
+            // script message handler, which WebKit guarantees runs on the
+            // main thread — assumeIsolated asserts that known-true fact to
+            // the compiler rather than actually hopping threads.
+            let supported = MainActor.assumeIsolated { DataScannerViewController.isSupported }
+            call.resolve(["supported": supported])
         } else {
             call.resolve(["supported": false])
         }
@@ -38,11 +45,11 @@ public class VisionBarcodeScannerPlugin: CAPPlugin, CAPBridgedPlugin {
             call.reject("VisionKit barcode scanning requires iOS 16 or later")
             return
         }
-        guard DataScannerViewController.isSupported else {
+        guard MainActor.assumeIsolated({ DataScannerViewController.isSupported }) else {
             call.reject("This device doesn't support VisionKit barcode scanning")
             return
         }
-        guard DataScannerViewController.isAvailable else {
+        guard MainActor.assumeIsolated({ DataScannerViewController.isAvailable }) else {
             call.reject("Barcode scanning isn't available right now (camera may be in use, or permission was denied)")
             return
         }
