@@ -2,11 +2,17 @@
 import PackageDescription
 
 let package = Package(
-    name: "AppleIAP",
+    // Capacitor derives the expected SPM product name from the npm package
+    // name by naive PascalCasing ("apple-iap" -> "AppleIap", not "AppleIAP")
+    // — this must match exactly (SPM product names are case-sensitive) or
+    // CapApp-SPM's generated Package.swift can't resolve this dependency,
+    // breaking the whole package graph. Compare vision-barcode-scanner,
+    // whose product name is the same naive PascalCase of its npm name.
+    name: "AppleIap",
     platforms: [.iOS(.v16)],
     products: [
         .library(
-            name: "AppleIAP",
+            name: "AppleIap",
             targets: ["AppleIAPPlugin"])
     ],
     dependencies: [
