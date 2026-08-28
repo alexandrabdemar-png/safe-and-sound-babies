@@ -37,6 +37,15 @@ describe("capacitor.config allowNavigation", () => {
     expect(isAllowed("notgoogle.com")).toBe(false);
   });
 
+  it("allows Apple's Sign in with Apple consent domain, for the same reason as Google", () => {
+    expect(isAllowed("appleid.apple.com")).toBe(true);
+  });
+
+  it("does not accidentally allow an unrelated lookalike domain via the Apple wildcard", () => {
+    expect(isAllowed("apple.com.attacker.example")).toBe(false);
+    expect(isAllowed("notapple.com")).toBe(false);
+  });
+
   it("still allows Stripe and Supabase, so this change didn't drop any existing trusted origin", () => {
     expect(isAllowed("checkout.stripe.com")).toBe(true);
     expect(isAllowed("xyzcompany.supabase.co")).toBe(true);

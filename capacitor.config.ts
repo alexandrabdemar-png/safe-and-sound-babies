@@ -36,6 +36,11 @@ const config: CapacitorConfig = {
       // subdomains (account chooser, 2FA/"verify it's you" challenges),
       // not just accounts.google.com.
       "*.google.com",
+      // Same reasoning, same fix, for "Sign in with Apple" — that flow
+      // redirects out to appleid.apple.com for the actual consent/
+      // authentication step, and can also touch other apple.com
+      // subdomains for two-factor verification.
+      "*.apple.com",
     ],
   },
   plugins: {
