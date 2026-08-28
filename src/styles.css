@@ -245,6 +245,14 @@
     line-height: 1.65;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Defensive: without this, a single flex/grid child that Safari
+       refuses to shrink below its natural content width (a well-known
+       WebKit-vs-Chromium difference — Safari is stricter about
+       min-width: auto on flex items than Chromium) drags the whole
+       page wider than the viewport, and every unrelated section on the
+       page ends up visibly cut off at the screen edge, not just the
+       one overflowing element. */
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
