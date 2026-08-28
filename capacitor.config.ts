@@ -25,6 +25,17 @@ const config: CapacitorConfig = {
       "*.stripe.com",
       "*.saferproducts.gov",
       "api.fda.gov",
+      // Google Sign-In's OAuth flow (@lovable.dev/cloud-auth-js's
+      // signInWithOAuth) does a full-page redirect from this app's own
+      // origin (via Lovable's same-origin /~oauth/initiate route) out to
+      // Google's consent screen and back — without Google's domain
+      // allowlisted here, Capacitor's WKWebView silently blocks that
+      // cross-origin navigation and the sign-in flow just stalls with no
+      // visible error. Wildcarded like the other trusted third parties
+      // above since Google's OAuth handshake can bounce through several
+      // subdomains (account chooser, 2FA/"verify it's you" challenges),
+      // not just accounts.google.com.
+      "*.google.com",
     ],
   },
   plugins: {
