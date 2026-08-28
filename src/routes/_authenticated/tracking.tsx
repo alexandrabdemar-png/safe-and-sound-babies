@@ -5,6 +5,7 @@ import { ArrowRight, Utensils, ClipboardList, Sparkles } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { AddSheet } from "@/components/AddSheet";
 import { BottleIcon } from "@/components/BottleIcon";
+import { CategoryBadge } from "@/components/CategoryBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import {
@@ -13,6 +14,13 @@ import {
   firstFoodsSummary,
   momentsSummary,
 } from "@/lib/trackingSummaries";
+// Same illustrated artwork used on the marketing home page and the product
+// category picker — reused here so these two cards feel consistent with
+// the rest of the app instead of using a plain outline icon. Moments and
+// Safety Checklists don't have a matching illustration yet, so they keep
+// their lucide icons for now.
+import illoBreastmilk from "@/assets/hd-breastmilk.png";
+import illoBabyFood from "@/assets/hd-babyfood.png";
 
 export const Route = createFileRoute("/_authenticated/tracking")({
   ssr: false,
@@ -150,6 +158,7 @@ function TrackingPage() {
           <TrackCard
             to="/first-foods"
             icon={Utensils}
+            illustration={illoBabyFood}
             title="First Foods"
             blurb="Foods introduced and any allergen reactions"
             summary={summaries.foods}
@@ -158,6 +167,7 @@ function TrackingPage() {
           <TrackCard
             to="/bottles"
             icon={BottleIcon}
+            illustration={illoBreastmilk}
             title="Bottles"
             blurb="Prepared bottles and safe-use windows"
             summary={summaries.bottles}
@@ -195,6 +205,7 @@ function TrackingPage() {
 function TrackCard({
   to,
   icon: Icon,
+  illustration,
   title,
   blurb,
   summary,
@@ -202,6 +213,7 @@ function TrackCard({
 }: {
   to: string;
   icon: React.ComponentType<{ className?: string }>;
+  illustration?: string;
   title: string;
   blurb: string;
   summary: string | null;
@@ -213,9 +225,13 @@ function TrackCard({
       className={`flex items-center justify-between rounded-3xl border border-border/60 bg-card p-5 transition-all hover:border-primary/40 animate-fade-up ${stagger}`}
     >
       <div className="flex items-center gap-4">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-          <Icon className="h-5 w-5" />
-        </span>
+        {illustration ? (
+          <CategoryBadge icon={Icon} illustration={illustration} className="h-12 w-12" />
+        ) : (
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary">
+            <Icon className="h-5 w-5" />
+          </span>
+        )}
         <div className="min-w-0">
           <p className="font-display text-base font-semibold tracking-tight">{title}</p>
           <p className="mt-0.5 font-body text-sm text-muted-foreground">{summary ?? blurb}</p>
