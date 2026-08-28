@@ -6,12 +6,19 @@ import {
   transactionToSubscriptionRow,
   type AppleEnv,
 } from "@/lib/appleIap.server";
-import {
+import type {
   NotificationTypeV2,
   VerificationException,
   VerificationStatus,
-  type ResponseBodyV2DecodedPayload,
+  ResponseBodyV2DecodedPayload,
 } from "@apple/app-store-server-library";
+
+// See loadAppleLibrary's comment in appleIap.server.ts — a static top-level
+// import of this library crashes the entire worker on Cloudflare, not just
+// this route, so every runtime reference below is loaded lazily instead.
+function loadAppleLibrary() {
+  return import("@apple/app-store-server-library");
+}
 
 /**
  * App Store Server Notifications V2 all land on this one URL regardless of
@@ -25,6 +32,7 @@ import {
 async function verifyNotificationEitherEnvironment(
   signedPayload: string,
 ): Promise<{ notification: ResponseBodyV2DecodedPayload; env: AppleEnv }> {
+  const { VerificationException, VerificationStatus } = await loadAppleLibrary();
   const order: AppleEnv[] = ["live", "sandbox"];
   let lastErr: unknown;
   for (const env of order) {
@@ -68,6 +76,7 @@ async function handleAppleNotification(signedPayload: string): Promise<void> {
     return;
   }
 
+  const { NotificationTypeV2 } = await loadAppleLibrary();
   const revoked =
     notification.notificationType === NotificationTypeV2.REFUND ||
     notification.notificationType === NotificationTypeV2.REVOKE ||

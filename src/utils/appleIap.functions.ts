@@ -33,7 +33,7 @@ export const verifyAppleTransaction = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<VerifyResult> => {
     const { userId } = context;
     try {
-      const client = createAppleClient(data.environment);
+      const client = await createAppleClient(data.environment);
       const response = await client.getTransactionInfo(data.transactionId);
       if (!response.signedTransactionInfo) {
         throw new Error("Apple returned no transaction info for this id");

@@ -1,10 +1,22 @@
 import { createClient } from "@supabase/supabase-js";
-import {
+import type {
   AppStoreServerAPIClient,
   SignedDataVerifier,
-  Environment,
-  type JWSTransactionDecodedPayload,
+  JWSTransactionDecodedPayload,
 } from "@apple/app-store-server-library";
+
+// @apple/app-store-server-library (via jsrsasign) runs disallowed I/O at
+// module-load time, which Cloudflare Workers evaluates once for the whole
+// worker at cold start — a static top-level import here crashed every
+// route in the app, not just Apple-IAP ones, with "Disallowed operation
+// called within global scope." Importing it dynamically, only from inside
+// the functions below (all of which only ever run within an actual
+// request handler, where that restriction doesn't apply), avoids it
+// entirely. Root-caused 2026-08-28 by reproducing this exact crash with
+// `wrangler dev` against the built worker output.
+function loadAppleLibrary() {
+  return import("@apple/app-store-server-library");
+}
 
 // subscriptions' RLS only grants `authenticated` a SELECT policy (writes
 // are service_role-only, see 20260610120000_rls_audit_and_fixes.sql) —
@@ -36,11 +48,8 @@ const getEnv = (key: string): string => {
 // for the same build.
 export type AppleEnv = "sandbox" | "live";
 
-function toAppleEnvironment(env: AppleEnv): Environment {
-  return env === "sandbox" ? Environment.SANDBOX : Environment.PRODUCTION;
-}
-
-export function createAppleClient(env: AppleEnv): AppStoreServerAPIClient {
+export async function createAppleClient(env: AppleEnv): Promise<AppStoreServerAPIClient> {
+  const { AppStoreServerAPIClient, Environment } = await loadAppleLibrary();
   const encodedKey = getEnv("APPLE_IAP_PRIVATE_KEY");
   const keyId = getEnv("APPLE_IAP_KEY_ID");
   const issuerId = getEnv("APPLE_IAP_ISSUER_ID");
@@ -50,7 +59,7 @@ export function createAppleClient(env: AppleEnv): AppStoreServerAPIClient {
     keyId,
     issuerId,
     bundleId,
-    toAppleEnvironment(env),
+    env === "sandbox" ? Environment.SANDBOX : Environment.PRODUCTION,
   );
 }
 
@@ -71,6 +80,7 @@ async function getAppleRootCertificates(): Promise<Buffer[]> {
 }
 
 export async function createAppleVerifier(env: AppleEnv): Promise<SignedDataVerifier> {
+  const { SignedDataVerifier, Environment } = await loadAppleLibrary();
   const bundleId = getEnv("APPLE_IAP_BUNDLE_ID");
   const rootCerts = await getAppleRootCertificates();
   // Apple's own library requires the numeric App Store app id (distinct
@@ -84,7 +94,8 @@ export async function createAppleVerifier(env: AppleEnv): Promise<SignedDataVeri
   // either way; this only opts out of an extra network round trip (and a
   // hard dependency on Apple's OCSP endpoint being reachable) on every
   // webhook delivery.
-  return new SignedDataVerifier(rootCerts, false, toAppleEnvironment(env), bundleId, appAppleId);
+  const appleEnv = env === "sandbox" ? Environment.SANDBOX : Environment.PRODUCTION;
+  return new SignedDataVerifier(rootCerts, false, appleEnv, bundleId, appAppleId);
 }
 
 export type AppleSubscriptionRow = {
@@ -126,7 +137,11 @@ export function transactionToSubscriptionRow(
   const stillInPeriod = !!expiresAt && expiresAt.getTime() > Date.now();
   const revoked = !!opts.revoked || !!tx.revocationDate;
   const plan: "pro" | "free" = !revoked && stillInPeriod ? "pro" : "free";
-  const environment: AppleEnv = tx.environment === Environment.SANDBOX ? "sandbox" : "live";
+  // Compared against the literal string rather than the library's
+  // Environment enum so this pure function stays free of any dependency
+  // on @apple/app-store-server-library (see loadAppleLibrary's comment
+  // above) — "Sandbox" is Environment.SANDBOX's actual runtime value.
+  const environment: AppleEnv = tx.environment === "Sandbox" ? "sandbox" : "live";
 
   return {
     user_id: userId,
