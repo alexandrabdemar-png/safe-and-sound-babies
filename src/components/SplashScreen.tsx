@@ -1,8 +1,8 @@
 /**
  * SplashScreen — shown during app load / auth transitions.
  *
- * Parchment background (#F5F0E8), centered Concept B petal mark,
- * "Peace of Mine" wordmark below in DM Serif Display charcoal.
+ * Parchment background, centered Concept B petal mark, "Peace of Mine"
+ * wordmark below in the app's display serif (Playfair Display).
  */
 import { LogoConceptBMark } from "@/components/logos/LogoConceptB";
 
@@ -16,7 +16,7 @@ export function SplashScreen({ className }: SplashScreenProps) {
       className={className}
       style={{
         minHeight: "100dvh",
-        backgroundColor: "#F5F0E8",
+        backgroundColor: "var(--cream)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -24,12 +24,8 @@ export function SplashScreen({ className }: SplashScreenProps) {
         gap: "16px",
       }}
     >
-      {/* Petal mark — Concept B */}
-      <LogoConceptBMark
-        sageColor="#A3B899"
-        blushColor="#DBBFB5"
-        size={80}
-      />
+      {/* Petal mark — Concept B (sage/blush colors from the brand palette) */}
+      <LogoConceptBMark size={80} />
 
       {/* Wordmark */}
       <svg
@@ -43,12 +39,12 @@ export function SplashScreen({ className }: SplashScreenProps) {
         <text
           x="100"
           y="26"
-          fontFamily="'DM Serif Display', 'Playfair Display', Georgia, serif"
+          fontFamily="'Playfair Display', Georgia, serif"
           fontSize="22"
           fontWeight="400"
           letterSpacing="0.06em"
           textAnchor="middle"
-          fill="#3A3530"
+          fill="var(--foreground)"
         >
           Peace of Mine
         </text>

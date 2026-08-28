@@ -236,7 +236,7 @@ function MomentsPage() {
                         {m.displayNotes && (
                           <p
                             className="font-body text-[10px] italic leading-relaxed line-clamp-3"
-                            style={{ color: "#8A8078" }}
+                            style={{ color: "var(--muted-foreground)" }}
                           >
                             {m.displayNotes}
                           </p>

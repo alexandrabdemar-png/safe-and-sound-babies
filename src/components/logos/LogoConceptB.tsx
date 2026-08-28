@@ -2,12 +2,11 @@
  * Logo Concept B — Petal monogram mark
  *
  * A soft rounded "S" formed from two overlapping petal/leaf shapes:
- *   - Upper petal: dusty sage (#A3B899)
- *   - Lower petal: soft blush (#DBBFB5)
+ *   - Upper petal: sage (--sage, #6F7864)
+ *   - Lower petal: blush (--blush, #E7D2C7)
  * They overlap to create a letter-S implied form.
- * Wordmark "Peace of Mine" in DM Sans light sits below the mark.
  *
- * This is the primary brand mark. Used on the splash screen and app icon.
+ * Used as the mark on the splash screen (see SplashScreen.tsx).
  */
 
 interface LogoConceptBProps {
@@ -24,8 +23,8 @@ interface LogoConceptBProps {
 }
 
 export function LogoConceptB({
-  sageColor = "#A3B899",
-  blushColor = "#DBBFB5",
+  sageColor = "#6F7864",
+  blushColor = "#E7D2C7",
   color = "#3A3530",
   size = 64,
   showWordmark = true,
@@ -90,8 +89,8 @@ export function LogoConceptB({
 
 /** Just the petal mark (no wordmark), useful for app icon and small spaces */
 export function LogoConceptBMark({
-  sageColor = "#A3B899",
-  blushColor = "#DBBFB5",
+  sageColor = "#6F7864",
+  blushColor = "#E7D2C7",
   size = 40,
   className,
 }: Omit<LogoConceptBProps, "color" | "showWordmark">) {

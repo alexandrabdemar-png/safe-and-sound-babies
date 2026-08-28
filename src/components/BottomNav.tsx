@@ -55,10 +55,7 @@ export function BottomNav() {
           >
             <Plus className="h-6 w-6" strokeWidth={2.5} />
           </div>
-          <span
-            style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
-            className="text-[10px] font-medium tracking-[0.04em] text-muted-foreground"
-          >
+          <span className="font-body text-[10px] font-medium tracking-[0.04em] text-muted-foreground">
             Add
           </span>
         </button>
@@ -110,9 +107,8 @@ function TabItem({
         )}
       </div>
       <span
-        style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
         className={cn(
-          "text-[10px] font-medium tracking-[0.04em]",
+          "font-body text-[10px] font-medium tracking-[0.04em]",
           active ? "text-primary" : "text-muted-foreground",
         )}
       >

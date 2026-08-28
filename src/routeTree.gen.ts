@@ -16,7 +16,6 @@ import { Route as RecallSearchRouteImport } from './routes/recall-search'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LegalConsentRouteImport } from './routes/legal-consent'
-import { Route as DesignPreviewRouteImport } from './routes/design-preview'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -91,11 +90,6 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const LegalConsentRoute = LegalConsentRouteImport.update({
   id: '/legal-consent',
   path: '/legal-consent',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DesignPreviewRoute = DesignPreviewRouteImport.update({
-  id: '/design-preview',
-  path: '/design-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -320,7 +314,6 @@ const ApiPublicHooksCheckProductAlertsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
-  '/design-preview': typeof DesignPreviewRoute
   '/legal-consent': typeof LegalConsentRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -369,7 +362,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
-  '/design-preview': typeof DesignPreviewRoute
   '/legal-consent': typeof LegalConsentRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -420,7 +412,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
-  '/design-preview': typeof DesignPreviewRoute
   '/legal-consent': typeof LegalConsentRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -471,7 +462,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/design-preview'
     | '/legal-consent'
     | '/onboarding'
     | '/privacy-policy'
@@ -520,7 +510,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/design-preview'
     | '/legal-consent'
     | '/onboarding'
     | '/privacy-policy'
@@ -570,7 +559,6 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/design-preview'
     | '/legal-consent'
     | '/onboarding'
     | '/privacy-policy'
@@ -621,7 +609,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
-  DesignPreviewRoute: typeof DesignPreviewRoute
   LegalConsentRoute: typeof LegalConsentRoute
   OnboardingRoute: typeof OnboardingRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
@@ -688,13 +675,6 @@ declare module '@tanstack/react-router' {
       path: '/legal-consent'
       fullPath: '/legal-consent'
       preLoaderRoute: typeof LegalConsentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/design-preview': {
-      id: '/design-preview'
-      path: '/design-preview'
-      fullPath: '/design-preview'
-      preLoaderRoute: typeof DesignPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -1062,7 +1042,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
-  DesignPreviewRoute: DesignPreviewRoute,
   LegalConsentRoute: LegalConsentRoute,
   OnboardingRoute: OnboardingRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,

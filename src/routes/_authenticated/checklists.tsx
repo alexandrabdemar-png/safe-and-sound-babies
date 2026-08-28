@@ -128,7 +128,7 @@ function ChecklistsPage() {
   const overallPct = totalItems > 0 ? Math.round((totalCompleted / totalItems) * 100) : 0;
 
   return (
-    <div className="min-h-screen pb-28" style={{ backgroundColor: "#FAF7F2" }}>
+    <div className="min-h-screen pb-28" style={{ backgroundColor: "var(--background)" }}>
       <div className="mx-auto max-w-md px-4 pt-8">
         {/* Back to Home */}
         <Button
@@ -144,14 +144,14 @@ function ChecklistsPage() {
         {/* Header */}
         <div className="mb-2 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <ClipboardList className="h-7 w-7" style={{ color: "#C4785A" }} />
-            <h1 className="font-display text-3xl font-semibold" style={{ color: "#3D2B1F" }}>
+            <ClipboardList className="h-7 w-7" style={{ color: "var(--accent)" }} />
+            <h1 className="font-display text-3xl font-semibold" style={{ color: "var(--foreground)" }}>
               Safety Checklists
             </h1>
           </div>
           <ChildSwitcher />
         </div>
-        <p className="mb-6 font-body text-xs leading-relaxed" style={{ color: "#8A8078" }}>
+        <p className="mb-6 font-body text-xs leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
           A starting point, not an exhaustive list — general reference checklists, not a certified
           home safety inspection or medical advice. Every home is different, so use your own
           judgment about what else applies.
@@ -162,7 +162,7 @@ function ChecklistsPage() {
           <div className="mb-8">
             <div
               className="mb-2 flex justify-between font-body text-sm"
-              style={{ color: "#8A8078" }}
+              style={{ color: "var(--muted-foreground)" }}
             >
               <span>
                 {totalCompleted} of {totalItems} items complete
@@ -171,11 +171,11 @@ function ChecklistsPage() {
             </div>
             <div
               className="h-2 w-full overflow-hidden rounded-full"
-              style={{ backgroundColor: "#E8E2DA" }}
+              style={{ backgroundColor: "var(--border)" }}
             >
               <div
                 className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${overallPct}%`, backgroundColor: "#C4785A" }}
+                style={{ width: `${overallPct}%`, backgroundColor: "var(--accent)" }}
               />
             </div>
           </div>
@@ -186,8 +186,8 @@ function ChecklistsPage() {
           {!homecomingCardDismissed && (
             <Link
               to="/homecoming-checklist"
-              className="relative flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[#C4785A]/50"
-              style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}
+              className="relative flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[var(--accent)]/50"
+              style={{ borderColor: "var(--border)", backgroundColor: "var(--card)" }}
             >
               <button
                 type="button"
@@ -199,15 +199,15 @@ function ChecklistsPage() {
               </button>
               <span
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-                style={{ backgroundColor: "#F5F0E8" }}
+                style={{ backgroundColor: "var(--sand)" }}
               >
-                <Home className="h-5 w-5" style={{ color: "#C4785A" }} />
+                <Home className="h-5 w-5" style={{ color: "var(--accent)" }} />
               </span>
               <div>
-                <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>
+                <p className="font-display text-sm font-semibold" style={{ color: "var(--foreground)" }}>
                   Bringing Baby Home
                 </p>
-                <p className="font-body text-xs" style={{ color: "#8A8078" }}>
+                <p className="font-body text-xs" style={{ color: "var(--muted-foreground)" }}>
                   For expecting parents
                 </p>
               </div>
@@ -215,60 +215,60 @@ function ChecklistsPage() {
           )}
           <Link
             to="/travel-checklist"
-            className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[#C4785A]/50"
-            style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}
+            className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[var(--accent)]/50"
+            style={{ borderColor: "var(--border)", backgroundColor: "var(--card)" }}
           >
             <span
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-              style={{ backgroundColor: "#F5F0E8" }}
+              style={{ backgroundColor: "var(--sand)" }}
             >
-              <Luggage className="h-5 w-5" style={{ color: "#C4785A" }} />
+              <Luggage className="h-5 w-5" style={{ color: "var(--accent)" }} />
             </span>
             <div>
-              <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>
+              <p className="font-display text-sm font-semibold" style={{ color: "var(--foreground)" }}>
                 Travel Mode
               </p>
-              <p className="font-body text-xs" style={{ color: "#8A8078" }}>
+              <p className="font-body text-xs" style={{ color: "var(--muted-foreground)" }}>
                 Packing + hotel safety
               </p>
             </div>
           </Link>
           <Link
             to="/registry-check"
-            className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[#C4785A]/50"
-            style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}
+            className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[var(--accent)]/50"
+            style={{ borderColor: "var(--border)", backgroundColor: "var(--card)" }}
           >
             <span
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-              style={{ backgroundColor: "#F5F0E8" }}
+              style={{ backgroundColor: "var(--sand)" }}
             >
-              <ShieldCheck className="h-5 w-5" style={{ color: "#C4785A" }} />
+              <ShieldCheck className="h-5 w-5" style={{ color: "var(--accent)" }} />
             </span>
             <div>
-              <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>
+              <p className="font-display text-sm font-semibold" style={{ color: "var(--foreground)" }}>
                 Recall Check
               </p>
-              <p className="font-body text-xs" style={{ color: "#8A8078" }}>
+              <p className="font-body text-xs" style={{ color: "var(--muted-foreground)" }}>
                 Check before you add to your registry or use a hand-me-down
               </p>
             </div>
           </Link>
           <Link
             to="/emergency-info"
-            className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[#C4785A]/50"
-            style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}
+            className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[var(--accent)]/50"
+            style={{ borderColor: "var(--border)", backgroundColor: "var(--card)" }}
           >
             <span
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-              style={{ backgroundColor: "#F5F0E8" }}
+              style={{ backgroundColor: "var(--sand)" }}
             >
-              <HeartPulse className="h-5 w-5" style={{ color: "#C4785A" }} />
+              <HeartPulse className="h-5 w-5" style={{ color: "var(--accent)" }} />
             </span>
             <div>
-              <p className="font-display text-sm font-semibold" style={{ color: "#3D2B1F" }}>
+              <p className="font-display text-sm font-semibold" style={{ color: "var(--foreground)" }}>
                 Emergency Info
               </p>
-              <p className="font-body text-xs" style={{ color: "#8A8078" }}>
+              <p className="font-body text-xs" style={{ color: "var(--muted-foreground)" }}>
                 Card for a babysitter or sitter
               </p>
             </div>
@@ -276,7 +276,7 @@ function ChecklistsPage() {
         </div>
 
         {loading ? (
-          <p className="font-body text-sm" style={{ color: "#8A8078" }}>
+          <p className="font-body text-sm" style={{ color: "var(--muted-foreground)" }}>
             Loading checklists...
           </p>
         ) : (
@@ -289,32 +289,32 @@ function ChecklistsPage() {
                 <div
                   key={room.id}
                   className="rounded-2xl border"
-                  style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}
+                  style={{ borderColor: "var(--border)", backgroundColor: "var(--card)" }}
                 >
                   <div
                     className="flex items-center justify-between border-b px-5 py-4"
-                    style={{ borderColor: "#E8E2DA" }}
+                    style={{ borderColor: "var(--border)" }}
                   >
-                    <h2 className="font-display text-lg font-semibold" style={{ color: "#3D2B1F" }}>
+                    <h2 className="font-display text-lg font-semibold" style={{ color: "var(--foreground)" }}>
                       {room.label}
                     </h2>
                     <div className="flex items-center gap-2">
-                      <span className="font-body text-xs" style={{ color: "#8A8078" }}>
+                      <span className="font-body text-xs" style={{ color: "var(--muted-foreground)" }}>
                         {roomCompleted}/{room.items.length}
                       </span>
                       <div
                         className="h-1.5 w-16 overflow-hidden rounded-full"
-                        style={{ backgroundColor: "#E8E2DA" }}
+                        style={{ backgroundColor: "var(--border)" }}
                       >
                         <div
                           className="h-full rounded-full transition-all duration-300"
-                          style={{ width: `${roomPct}%`, backgroundColor: "#C4785A" }}
+                          style={{ width: `${roomPct}%`, backgroundColor: "var(--accent)" }}
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="divide-y" style={{ borderColor: "#F5F0E8" }}>
+                  <div className="divide-y" style={{ borderColor: "var(--sand)" }}>
                     {room.items.map((item, idx) => {
                       const done = completed.has(item.key);
                       return (
@@ -329,18 +329,18 @@ function ChecklistsPage() {
                           {done ? (
                             <CheckCircle2
                               className="mt-0.5 h-5 w-5 shrink-0"
-                              style={{ color: "#C4785A" }}
+                              style={{ color: "var(--accent)" }}
                             />
                           ) : (
                             <Circle
                               className="mt-0.5 h-5 w-5 shrink-0"
-                              style={{ color: "#C8B8A2" }}
+                              style={{ color: "var(--border)" }}
                             />
                           )}
                           <span
                             className="font-body text-sm leading-relaxed"
                             style={{
-                              color: done ? "#8A8078" : "#3D2B1F",
+                              color: done ? "var(--muted-foreground)" : "var(--foreground)",
                               textDecoration: done ? "line-through" : "none",
                             }}
                           >

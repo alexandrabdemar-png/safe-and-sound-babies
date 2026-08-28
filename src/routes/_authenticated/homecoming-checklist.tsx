@@ -140,7 +140,7 @@ function HomecomingChecklistPage() {
   const pct = totalItems > 0 ? Math.round((totalCompleted / totalItems) * 100) : 0;
 
   return (
-    <div className="min-h-screen pb-28" style={{ backgroundColor: "#FAF7F2" }}>
+    <div className="min-h-screen pb-28" style={{ backgroundColor: "var(--background)" }}>
       <div className="mx-auto max-w-md px-4 pt-8">
         <Button
           asChild
@@ -154,23 +154,23 @@ function HomecomingChecklistPage() {
         </Button>
 
         <div className="mb-2 flex items-center gap-3">
-          <Home className="h-7 w-7" style={{ color: "#C4785A" }} />
-          <h1 className="font-display text-3xl font-semibold" style={{ color: "#3D2B1F" }}>
+          <Home className="h-7 w-7" style={{ color: "var(--accent)" }} />
+          <h1 className="font-display text-3xl font-semibold" style={{ color: "var(--foreground)" }}>
             Bringing Baby Home
           </h1>
         </div>
-        <p className="mb-2 font-body text-sm" style={{ color: "#8A8078" }}>
+        <p className="mb-2 font-body text-sm" style={{ color: "var(--muted-foreground)" }}>
           For expecting parents: what to sort out before discharge, around the house, and in the
           first days home.
         </p>
-        <p className="mb-5 font-body text-xs leading-relaxed" style={{ color: "#8A8078" }}>
+        <p className="mb-5 font-body text-xs leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
           A starting point, not an exhaustive list or medical advice — every hospital, family, and
           home is different, so use your own judgment about what else applies.
         </p>
 
         {/* Progress */}
         <div className="mb-6">
-          <div className="mb-2 flex justify-between font-body text-sm" style={{ color: "#8A8078" }}>
+          <div className="mb-2 flex justify-between font-body text-sm" style={{ color: "var(--muted-foreground)" }}>
             <span>
               {totalCompleted} of {totalItems} items checked
             </span>
@@ -178,11 +178,11 @@ function HomecomingChecklistPage() {
           </div>
           <div
             className="h-2 w-full overflow-hidden rounded-full"
-            style={{ backgroundColor: "#E8E2DA" }}
+            style={{ backgroundColor: "var(--border)" }}
           >
             <div
               className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${pct}%`, backgroundColor: "#C4785A" }}
+              style={{ width: `${pct}%`, backgroundColor: "var(--accent)" }}
             />
           </div>
         </div>
@@ -195,34 +195,34 @@ function HomecomingChecklistPage() {
               <div
                 key={section.id}
                 className="rounded-2xl border"
-                style={{ borderColor: "#C8B8A2", backgroundColor: "white" }}
+                style={{ borderColor: "var(--border)", backgroundColor: "var(--card)" }}
               >
                 <div
                   className="flex items-center justify-between border-b px-5 py-4"
-                  style={{ borderColor: "#E8E2DA" }}
+                  style={{ borderColor: "var(--border)" }}
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{section.emoji}</span>
-                    <h2 className="font-display text-lg font-semibold" style={{ color: "#3D2B1F" }}>
+                    <h2 className="font-display text-lg font-semibold" style={{ color: "var(--foreground)" }}>
                       {section.label}
                     </h2>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-body text-xs" style={{ color: "#8A8078" }}>
+                    <span className="font-body text-xs" style={{ color: "var(--muted-foreground)" }}>
                       {secCompleted}/{section.items.length}
                     </span>
                     <div
                       className="h-1.5 w-16 overflow-hidden rounded-full"
-                      style={{ backgroundColor: "#E8E2DA" }}
+                      style={{ backgroundColor: "var(--border)" }}
                     >
                       <div
                         className="h-full rounded-full transition-all duration-300"
-                        style={{ width: `${secPct}%`, backgroundColor: "#C4785A" }}
+                        style={{ width: `${secPct}%`, backgroundColor: "var(--accent)" }}
                       />
                     </div>
                   </div>
                 </div>
-                <div className="divide-y" style={{ borderColor: "#F5F0E8" }}>
+                <div className="divide-y" style={{ borderColor: "var(--sand)" }}>
                   {section.items.map((item, idx) => {
                     const done = completed.has(item.key);
                     return (
@@ -237,19 +237,19 @@ function HomecomingChecklistPage() {
                         {done ? (
                           <CheckCircle2
                             className="mt-0.5 h-5 w-5 shrink-0"
-                            style={{ color: "#C4785A" }}
+                            style={{ color: "var(--accent)" }}
                           />
                         ) : (
                           <Circle
                             className="mt-0.5 h-5 w-5 shrink-0"
-                            style={{ color: "#C8B8A2" }}
+                            style={{ color: "var(--border)" }}
                           />
                         )}
                         <div className="min-w-0">
                           <span
                             className="font-body text-sm leading-relaxed"
                             style={{
-                              color: done ? "#8A8078" : "#3D2B1F",
+                              color: done ? "var(--muted-foreground)" : "var(--foreground)",
                               textDecoration: done ? "line-through" : "none",
                             }}
                           >
@@ -258,7 +258,7 @@ function HomecomingChecklistPage() {
                           {item.note && !done && (
                             <p
                               className="mt-0.5 font-body text-xs leading-relaxed"
-                              style={{ color: "#A89888" }}
+                              style={{ color: "var(--muted-foreground)" }}
                             >
                               {item.note}
                             </p>

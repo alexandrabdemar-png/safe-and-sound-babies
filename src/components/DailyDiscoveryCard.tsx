@@ -28,7 +28,7 @@ export function DailyDiscoveryCard({ dob }: { dob: string | null }) {
         <div className="min-w-0">
           <p
             className="font-body text-[10px] font-semibold uppercase tracking-[0.12em]"
-            style={{ color: "#8A8078" }}
+            style={{ color: "var(--muted-foreground)" }}
           >
             {card.category}
           </p>

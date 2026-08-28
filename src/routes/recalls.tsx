@@ -59,30 +59,23 @@ function PublicRecallsPage() {
   const dateStr = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#FAF7F2", fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header style={{ borderBottom: "1px solid #E8E2DA" }}>
-        <div className="mx-auto max-w-2xl px-5 py-6 flex items-center justify-between">
+      <header className="border-b border-border">
+        <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-6">
           <div className="flex items-center gap-3">
-            <span style={{
-              display: "flex", alignItems: "center", justifyContent: "center",
-              width: 36, height: 36, borderRadius: "50%", backgroundColor: "#EBF0EA", color: "#4A7A47",
-            }}>
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-primary">
               <Radio size={18} />
             </span>
             <div>
-              <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, fontWeight: 600, color: "#3D2B1F", margin: 0 }}>
-                Peace of Mine
-              </p>
-              <p style={{ fontSize: 11, color: "#8A8078", margin: 0, textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                Recall Radar
-              </p>
+              <p className="font-display text-lg font-semibold text-foreground">Peace of Mine</p>
+              <p className="font-caption text-muted-foreground">Recall Radar</p>
             </div>
           </div>
-          <Link to="/auth" style={{
-            padding: "8px 18px", borderRadius: 999, backgroundColor: "#A3B899", color: "white",
-            fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, textDecoration: "none",
-          }}>
+          <Link
+            to="/auth"
+            className="rounded-full bg-primary px-[18px] py-2 font-body text-[13px] font-semibold text-primary-foreground no-underline transition-colors hover:bg-primary/90"
+          >
             Get the free app →
           </Link>
         </div>
@@ -91,39 +84,32 @@ function PublicRecallsPage() {
       <main className="mx-auto max-w-2xl px-5 py-10">
         {/* Page intro */}
         <div className="mb-8">
-          <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, fontWeight: 600, color: "#3D2B1F", marginBottom: 8 }}>
-            Baby &amp; Kids Product Recalls
-          </h1>
-          <p style={{ fontSize: 15, color: "#6B5B50", lineHeight: 1.6, maxWidth: 520 }}>
+          <h1 className="text-display mb-2 text-foreground">Baby &amp; Kids Product Recalls</h1>
+          <p className="max-w-[520px] text-[15px] leading-relaxed text-muted-foreground">
             All CPSC recalls involving baby and children's products in the last 30 days. Updated daily. No account needed.
           </p>
-          <p style={{ fontSize: 12, color: "#8A8078", marginTop: 6 }}>Last checked: {dateStr}</p>
+          <p className="mt-1.5 text-xs text-muted-foreground">Last checked: {dateStr}</p>
         </div>
 
         {loading && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "40px 0", color: "#8A8078", fontSize: 14 }}>
+          <div className="flex items-center gap-2 py-10 text-sm text-muted-foreground">
             <Loader2 size={16} className="animate-spin" /> Loading recall data from CPSC…
           </div>
         )}
 
         {error && (
-          <div style={{ borderRadius: 12, border: "1px solid rgba(185,28,28,0.3)", backgroundColor: "rgba(185,28,28,0.06)", padding: "12px 16px", color: "#b91c1c", fontSize: 14 }}>
+          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
             {error}
           </div>
         )}
 
         {!loading && !error && recalls.length === 0 && (
-          <div style={{ borderRadius: 16, border: "1px solid #E8E2DA", backgroundColor: "white", padding: "48px 32px", textAlign: "center" }}>
-            <span style={{
-              display: "inline-flex", alignItems: "center", justifyContent: "center",
-              width: 48, height: 48, borderRadius: "50%", backgroundColor: "#EBF0EA", color: "#4A7A47", marginBottom: 12,
-            }}>
+          <div className="rounded-3xl border border-border bg-card px-8 py-12 text-center">
+            <span className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
               <ShieldCheck size={22} />
             </span>
-            <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#3D2B1F", margin: "0 0 6px" }}>
-              No recalls found this month
-            </p>
-            <p style={{ fontSize: 14, color: "#8A8078" }}>
+            <p className="font-display mb-1.5 text-lg text-foreground">No recalls found this month</p>
+            <p className="text-sm text-muted-foreground">
               No baby or kids product recalls were issued by CPSC in the last 30 days, based on
               the databases we check.
             </p>
@@ -132,39 +118,39 @@ function PublicRecallsPage() {
 
         {!loading && recalls.length > 0 && (
           <>
-            <p style={{ fontSize: 13, fontWeight: 600, color: "#b91c1c", marginBottom: 16 }}>
+            <p className="mb-4 text-[13px] font-semibold text-destructive">
               {recalls.length} recall{recalls.length !== 1 ? "s" : ""} in the last 30 days
             </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div className="flex flex-col gap-3">
               {recalls.map((r) => <RecallCard key={r.RecallID} recall={r} />)}
             </div>
           </>
         )}
 
         {/* Footer CTA */}
-        <div style={{ marginTop: 48, borderRadius: 16, backgroundColor: "#EBF0EA", padding: "24px 20px", textAlign: "center" }}>
-          <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 18, color: "#3D2B1F", marginBottom: 6 }}>
+        <div className="mt-12 rounded-3xl bg-sand/50 px-5 py-6 text-center">
+          <p className="font-display mb-1.5 text-lg text-foreground">
             Get alerts for products <em>you own</em>
           </p>
-          <p style={{ fontSize: 13, color: "#6B5B50", marginBottom: 16 }}>
+          <p className="mb-4 text-[13px] text-muted-foreground">
             Peace of Mine tracks your specific products and checks them against official recall databases regularly, so you can hear about a recall sooner than you might otherwise — even for things you bought second-hand. Because official sources update on their own schedule, there's always some gap between a recall being issued and it reaching you here.
           </p>
-          <Link to="/auth" style={{
-            display: "inline-block", padding: "10px 24px", borderRadius: 999, backgroundColor: "#A3B899", color: "white",
-            fontWeight: 600, fontSize: 13, textDecoration: "none",
-          }}>
+          <Link
+            to="/auth"
+            className="inline-block rounded-full bg-primary px-6 py-2.5 font-body text-[13px] font-semibold text-primary-foreground no-underline transition-colors hover:bg-primary/90"
+          >
             Try it free — no credit card needed
           </Link>
         </div>
 
-        <p style={{ marginTop: 24, fontSize: 11, color: "#A89888", textAlign: "center" }}>
+        <p className="mt-6 text-center text-[11px] text-muted-foreground/70">
           Data sourced from the U.S. Consumer Product Safety Commission ·{" "}
-          <a href="https://cpsc.gov/Recalls" target="_blank" rel="noopener noreferrer" style={{ color: "#8A8078" }}>
+          <a href="https://cpsc.gov/Recalls" target="_blank" rel="noopener noreferrer" className="text-muted-foreground">
             cpsc.gov/Recalls
           </a>
         </p>
-        <p style={{ marginTop: 8, fontSize: 11, color: "#A89888", textAlign: "center" }}>
-          <Link to="/terms" style={{ color: "#8A8078" }}>
+        <p className="mt-2 text-center text-[11px] text-muted-foreground/70">
+          <Link to="/terms" className="text-muted-foreground">
             Terms &amp; disclaimers
           </Link>
         </p>
@@ -179,28 +165,24 @@ function RecallCard({ recall }: { recall: CpscRecall }) {
     ? new Date(recall.RecallDate).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
     : null;
   return (
-    <div style={{ borderRadius: 14, border: "1px solid rgba(185,28,28,0.2)", backgroundColor: "rgba(185,28,28,0.04)", padding: "16px" }}>
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-        <span style={{
-          flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-          width: 28, height: 28, borderRadius: "50%", backgroundColor: "rgba(185,28,28,0.15)", color: "#b91c1c",
-          marginTop: 2,
-        }}>
+    <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4">
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-destructive/15 text-destructive">
           <ShieldAlert size={14} />
         </span>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <p style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.4, color: "#1a1a1a", margin: "0 0 4px" }}>
-            {recall.RecallHeading}
-          </p>
-          {dateLabel && <p style={{ fontSize: 12, color: "#8A8078", margin: "0 0 6px" }}>{dateLabel}</p>}
+        <div className="min-w-0 flex-1">
+          <p className="mb-1 text-sm font-semibold leading-snug text-foreground">{recall.RecallHeading}</p>
+          {dateLabel && <p className="mb-1.5 text-xs text-muted-foreground">{dateLabel}</p>}
           {description && (
-            <p style={{ fontSize: 12, color: "#6B5B50", lineHeight: 1.5, margin: "0 0 8px", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as any }}>
-              {description}
-            </p>
+            <p className="mb-2 line-clamp-3 text-xs leading-relaxed text-muted-foreground">{description}</p>
           )}
           {recall.URL && (
-            <a href={recall.URL} target="_blank" rel="noopener noreferrer"
-              style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600, color: "#b91c1c", textDecoration: "underline" }}>
+            <a
+              href={recall.URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-destructive underline"
+            >
               Full recall details <ArrowUpRight size={12} />
             </a>
           )}

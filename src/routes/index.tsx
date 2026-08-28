@@ -1,11 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import "@fontsource/cormorant-garamond/400.css";
-import "@fontsource/cormorant-garamond/400-italic.css";
-import "@fontsource/cormorant-garamond/500.css";
-import "@fontsource/cormorant/300.css";
-import "@fontsource/cormorant/300-italic.css";
 import catCarseat from "@/assets/hd-carseat.png";
 import catPacifier from "@/assets/hd-pacifier.png";
 import catFormula from "@/assets/hd-formula.png";
@@ -88,11 +83,7 @@ function Index() {
             {/* Left: Copy */}
             <div className="flex flex-col items-start">
               <h1
-                style={{
-                  fontFamily: "'Cormorant', Georgia, serif",
-                  fontWeight: 300,
-                  color: "#2B2927",
-                }}
+                style={{ color: "#2B2927" }}
                 className="text-5xl leading-[1.08] sm:text-6xl lg:text-7xl"
               >
                 Stay on top of every{" "}
@@ -123,11 +114,8 @@ function Index() {
                 Get started free
               </Link>
               <p
-                className="mt-5 text-[11px] font-medium tracking-[0.1em] text-muted-foreground/60"
-                style={{
-                  fontFamily: '"DM Sans", system-ui, sans-serif',
-                  textTransform: "uppercase",
-                }}
+                className="mt-5 font-body text-[11px] font-medium tracking-[0.1em] text-muted-foreground/60"
+                style={{ textTransform: "uppercase" }}
               >
                 Recommendations informed by AAP, CPSC, and other trusted safety guidance
               </p>
@@ -141,11 +129,7 @@ function Index() {
         <div className="mx-auto max-w-5xl">
           <div className="mb-14 text-center">
             <h2
-              style={{
-                fontFamily: "'Cormorant', Georgia, serif",
-                fontWeight: 300,
-                color: "#2B2927",
-              }}
+              style={{ color: "#2B2927" }}
               className="text-4xl leading-[1.08] tracking-tight sm:text-5xl"
             >
               Track what matters
@@ -178,12 +162,8 @@ function Index() {
       {/* Closing line */}
       <section className="w-full px-4 pb-16 sm:px-6 lg:px-8">
         <p
-          style={{
-            fontFamily: "'Cormorant', Georgia, serif",
-            fontWeight: 300,
-            color: "#605C58",
-          }}
-          className="mx-auto max-w-2xl text-center text-lg leading-[1.25] sm:text-xl"
+          style={{ color: "#605C58" }}
+          className="font-display-italic mx-auto max-w-2xl text-center text-lg leading-[1.25] sm:text-xl"
         >
           Peace of Mine helps you remember the little things that are easy to forget and the
           things you haven't thought of yet.

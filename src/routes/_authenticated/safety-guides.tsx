@@ -171,51 +171,51 @@ async function generateShareImage(title: string, items: string[], source: string
     if (!ctx) return null;
 
     // Background
-    ctx.fillStyle = "#FAF7F2";
+    ctx.fillStyle = "#F7F4EF";
     ctx.fillRect(0, 0, SIZE, SIZE);
 
     // Top accent bar
-    ctx.fillStyle = "#A3B899";
+    ctx.fillStyle = "#586C81";
     ctx.fillRect(0, 0, SIZE, 18);
 
     // Border
-    ctx.strokeStyle = "#E8E2DA";
+    ctx.strokeStyle = "#DDD3C4";
     ctx.lineWidth = 4;
     ctx.strokeRect(40, 40, SIZE - 80, SIZE - 80);
 
     // Title
-    ctx.fillStyle = "#3D2B1F";
+    ctx.fillStyle = "#2B2622";
     ctx.font = "bold 56px 'Georgia', serif";
     ctx.fillText(title, 80, 148);
 
     // Divider
-    ctx.fillStyle = "#E8E2DA";
+    ctx.fillStyle = "#DDD3C4";
     ctx.fillRect(80, 175, 920, 3);
 
     // Items
     const BULLET = "•";
     let y = 230;
     ctx.font = "38px 'Arial', sans-serif";
-    ctx.fillStyle = "#4A3728";
+    ctx.fillStyle = "#2B2622";
     for (const item of items) {
-      ctx.fillStyle = "#A3B899";
+      ctx.fillStyle = "#586C81";
       ctx.fillText(BULLET, 80, y);
-      ctx.fillStyle = "#4A3728";
+      ctx.fillStyle = "#2B2622";
       y = wrapText(ctx, item, 124, y, 830, 52);
       y += 16;
       if (y > 880) break;
     }
 
     // Bottom divider
-    ctx.fillStyle = "#E8E2DA";
+    ctx.fillStyle = "#DDD3C4";
     ctx.fillRect(80, SIZE - 140, 920, 2);
 
     // Branding
-    ctx.fillStyle = "#A3B899";
+    ctx.fillStyle = "#586C81";
     ctx.font = "bold 34px 'Georgia', serif";
     ctx.fillText("Peace of Mine", 80, SIZE - 88);
 
-    ctx.fillStyle = "#8A8078";
+    ctx.fillStyle = "#5F675C";
     ctx.font = "28px 'Arial', sans-serif";
     ctx.fillText(`Source: ${source}  ·  safeandsound.app`, 80, SIZE - 44);
 
