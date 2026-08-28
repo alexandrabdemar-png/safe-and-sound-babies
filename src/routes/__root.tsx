@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
+import { useDeepLinks } from "@/hooks/useDeepLinks";
 
 function NotFoundComponent() {
   return (
@@ -138,6 +139,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useDeepLinks();
 
   return (
     <QueryClientProvider client={queryClient}>

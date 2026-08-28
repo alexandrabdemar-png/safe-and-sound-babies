@@ -67,5 +67,9 @@ Remaining manual steps in Xcode (one time):
   3. Set your Team, then click "+ Capability" and add:
        • Push Notifications
        • Background Modes → check "Remote notifications"
+       • Associated Domains → add an entry: applinks:peace-of-mine.lovable.app
+         (this makes links like password reset / magic link emails open
+         inside the app instead of Safari — the site already serves the
+         required apple-app-site-association file)
   4. Product → Archive → Distribute App → TestFlight
 `);
