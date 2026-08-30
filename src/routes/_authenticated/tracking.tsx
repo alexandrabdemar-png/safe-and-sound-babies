@@ -21,6 +21,8 @@ import {
 // their lucide icons for now.
 import illoBreastmilk from "@/assets/hd-breastmilk.png";
 import illoBabyFood from "@/assets/hd-babyfood.png";
+import illoMoments from "@/assets/hd-moments.png";
+import illoChecklist from "@/assets/hd-checklist.png";
 
 export const Route = createFileRoute("/_authenticated/tracking")({
   ssr: false,
