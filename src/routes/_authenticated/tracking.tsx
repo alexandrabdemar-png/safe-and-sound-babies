@@ -179,6 +179,7 @@ function TrackingPage() {
           <TrackCard
             to="/checklists"
             icon={ClipboardList}
+            illustration={illoChecklist}
             title="Safety Checklists"
             blurb="Room-by-room babyproofing and travel guides"
             summary={summaries.checklists}
