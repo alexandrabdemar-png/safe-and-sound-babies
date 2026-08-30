@@ -1,8 +1,10 @@
 import {
   ShieldCheck, Bed, Moon, Utensils, Music, Armchair, Grid3x3, Wind, DoorClosed,
   Baby, Milk, Cookie, Brush, Radio, Tent, Package, Backpack, ToyBrick,
+  Bath, Layers, Circle,
 } from "lucide-react";
 import { StrollerIcon } from "@/components/StrollerIcon";
+import { BottleIcon } from "@/components/BottleIcon";
 // Same illustrated set shown on the public marketing home page (src/routes/
 // index.tsx) — used here too so a category picked while adding a product
 // looks like the same category a parent saw on the home page, instead of a
