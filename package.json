@@ -20,6 +20,7 @@
     "@ai-sdk/anthropic": "^3.0.82",
     "@ai-sdk/openai-compatible": "^2.0.48",
     "@apple/app-store-server-library": "3.1.0",
+    "@capacitor-mlkit/barcode-scanning": "^8.1.0",
     "@capacitor/app": "^8.1.1",
     "@capacitor/browser": "^8.0.3",
     "@capacitor/cli": "^8.4.1",
@@ -88,7 +89,6 @@
     "tailwindcss": "^4.2.1",
     "tw-animate-css": "^1.3.4",
     "vaul": "^1.1.2",
-    "vision-barcode-scanner": "file:./packages/vision-barcode-scanner",
     "vite-tsconfig-paths": "^6.0.2",
     "zod": "^3.24.2"
   },
