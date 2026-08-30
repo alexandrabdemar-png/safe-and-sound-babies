@@ -199,58 +199,72 @@ function MomentsPage() {
               )}
             </div>
           ) : (
-            <div className="relative pb-8">
-              {/* Center spine */}
-              <div
-                className="absolute left-1/2 top-0 bottom-0 w-[1.5px] -translate-x-1/2 opacity-30"
-                style={{ backgroundColor: "#586C81" }}
-              />
+          <div className="relative pb-8">
+              {/* Hand-drawn wavy spine */}
+              <svg
+                className="absolute left-1/2 top-0 bottom-0 h-full w-3 -translate-x-1/2 opacity-50"
+                viewBox="0 0 12 800"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M6 0 Q 9 50 6 100 T 6 200 T 6 300 T 6 400 T 6 500 T 6 600 T 6 700 T 6 800"
+                  fill="none"
+                  stroke="#96A5BE"
+                  strokeWidth="1.5"
+                  strokeDasharray="4 3"
+                  strokeLinecap="round"
+                />
+              </svg>
               <ul>
                 {filtered.map((m, i) => {
                   const onLeft = i % 2 === 0;
+                  const Icon = MOMENT_ICONS[m.resolvedIcon];
                   return (
                     <li
                       key={m.id}
-                      className={`relative mb-5 flex ${onLeft ? "justify-start" : "justify-end"}`}
+                      className={`relative mb-6 flex items-center ${onLeft ? "justify-start" : "justify-end"}`}
                     >
                       <div
-                        className="w-[44%] p-3"
+                        className={`w-[44%] rounded-2xl p-3 ${onLeft ? "text-right" : ""}`}
                         style={{
-                          backgroundColor: "rgba(255,255,255,0.6)",
-                          border: "1px solid rgba(88,108,129,0.2)",
-                          boxShadow: "3px 3px 0px rgba(138,128,120,0.2)",
+                          backgroundColor: "#FFFFFF",
+                          border: "1.5px solid rgba(169,183,201,0.55)",
+                          boxShadow: "0 1px 3px rgba(150,165,190,0.18)",
                         }}
                       >
                         <span
-                          className="mb-1 block font-body text-[9px] uppercase tracking-tight"
-                          style={{ color: "#8FA1B5" }}
+                          className="mb-0.5 block font-body text-[10px] font-semibold uppercase tracking-wider"
+                          style={{ color: "#96A5BE" }}
                         >
                           {formatDateLarge(m.logged_at)}
                         </span>
                         <h3
-                          className="mb-1 font-display text-[11px] uppercase tracking-[0.12em]"
-                          style={{ color: "#3D3935" }}
+                          className="mb-0.5 font-display text-sm font-medium leading-tight"
+                          style={{ color: "#5A677A" }}
                         >
                           {m.title}
                         </h3>
                         {m.displayNotes && (
                           <p
-                            className="font-body text-[10px] italic leading-relaxed line-clamp-3"
-                            style={{ color: "var(--muted-foreground)" }}
+                            className="font-body text-[11px] italic leading-relaxed line-clamp-3"
+                            style={{ color: "#96A5BE" }}
                           >
                             {m.displayNotes}
                           </p>
                         )}
                       </div>
-                      {/* Empty boxed spine marker */}
+                      {/* Round sketch marker on the spine */}
                       <span
-                        className="absolute left-1/2 top-4 h-6 w-6 -translate-x-1/2"
+                        className="absolute left-1/2 top-1/2 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full shadow-sm"
                         style={{
-                          backgroundColor: "#F5F3EE",
-                          border: "1.5px solid #586C81",
+                          backgroundColor: "#FFFDF9",
+                          border: "2px solid #A9B7C9",
                         }}
-                        aria-hidden="true"
-                      />
+                        aria-label={MOMENT_ICON_LABELS[m.resolvedIcon]}
+                      >
+                        <Icon px={22} />
+                      </span>
                     </li>
                   );
                 })}
