@@ -152,6 +152,7 @@ function TrackingPage() {
           <TrackCard
             to="/moments"
             icon={Sparkles}
+            illustration={illoMoments}
             title="Moments"
             blurb="Milestones and firsts, on a timeline"
             summary={summaries.moments}
