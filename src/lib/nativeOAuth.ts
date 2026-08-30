@@ -38,11 +38,11 @@ export type NativeHandoff =
 
 export function buildNativeHandoffUrl(payload: NativeHandoff): string {
   const params = new URLSearchParams();
-  if (payload.error) {
+  if (payload.error !== undefined) {
     params.set("error", payload.error);
   } else {
-    params.set("access_token", payload.access_token);
-    params.set("refresh_token", payload.refresh_token);
+    params.set("access_token", payload.access_token ?? "");
+    params.set("refresh_token", payload.refresh_token ?? "");
   }
   return `${NATIVE_SCHEME}://${NATIVE_HANDOFF_HOST}?${params.toString()}`;
 }
