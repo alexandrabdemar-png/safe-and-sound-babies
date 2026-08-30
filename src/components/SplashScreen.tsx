@@ -44,7 +44,7 @@ export function SplashScreen({ className }: SplashScreenProps) {
           fontWeight="400"
           letterSpacing="0.06em"
           textAnchor="middle"
-          fill="var(--foreground)"
+          style={{ fill: "var(--foreground)" }}
         >
           Peace of Mine
         </text>
