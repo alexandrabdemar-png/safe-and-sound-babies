@@ -18,6 +18,7 @@
 export type CatalogSource =
   | "openfoodfacts"
   | "openbeautyfacts"
+  | "openproductsfacts"
   | "upcitemdb"
   | "go-upc"
   | "barcode-lookup"
@@ -235,6 +236,38 @@ export function fetchOpenBeautyFacts(barcode: string, fetchImpl: typeof fetch): 
   };
 }
 
+// Third sibling in the Open Food/Beauty Facts family, covering everything
+// outside food and cosmetics (the gap most baby-gear barcodes fall into —
+// bottles, pacifiers, toys, feeding gear). Same API shape as the other two.
+export function fetchOpenProductsFacts(barcode: string, fetchImpl: typeof fetch): SourceFn {
+  return async () => {
+    const json = (await fetchJson(
+      fetchImpl,
+      `https://world.openproductsfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json`,
+    )) as { status?: number; product?: Record<string, unknown> } | null;
+    if (!json || json.status !== 1 || !json.product) return null;
+    const p = json.product;
+    const name = (p.product_name as string) || (p.generic_name as string) || null;
+    const brand = (p.brands as string)?.split(",")[0]?.trim() || null;
+    if (!name && !brand) return null;
+    const category = (p.categories as string) || null;
+    return {
+      barcode,
+      name,
+      brand,
+      category,
+      isBabyProduct: guessIsBaby(
+        name,
+        category,
+        ...(Array.isArray(p.categories_tags) ? (p.categories_tags as string[]) : []),
+      ),
+      imageUrl: (p.image_front_small_url as string) || null,
+      source: "openproductsfacts",
+      raw: p,
+    };
+  };
+}
+
 export function fetchUpcItemDb(barcode: string, fetchImpl: typeof fetch): SourceFn {
   return async () => {
     const json = (await fetchJson(
@@ -322,6 +355,7 @@ export function raceFreeSources(
   return firstValid([
     fetchOpenFoodFacts(barcode, fetchImpl)(),
     fetchOpenBeautyFacts(barcode, fetchImpl)(),
+    fetchOpenProductsFacts(barcode, fetchImpl)(),
     fetchUpcItemDb(barcode, fetchImpl)(),
   ]);
 }

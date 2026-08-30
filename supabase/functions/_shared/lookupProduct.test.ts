@@ -4,6 +4,7 @@ import {
   lookupProduct,
   fetchOpenFoodFacts,
   fetchOpenBeautyFacts,
+  fetchOpenProductsFacts,
   fetchUpcItemDb,
   fetchGoUpc,
   fetchBarcodeLookup,
@@ -150,6 +151,31 @@ describe("individual source parsers", () => {
     expect(result?.isBabyProduct).toBe(true);
   });
 
+  it("fetchOpenProductsFacts parses a valid match outside food/beauty (e.g. a pacifier)", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      jsonResponse({
+        status: 1,
+        product: {
+          product_name: "Tommee Tippee Pacifier",
+          brands: "Tommee Tippee",
+          categories: "Baby care, Pacifiers",
+        },
+      }),
+    );
+    const result = await fetchOpenProductsFacts("888888888888", fetchImpl)();
+    expect(result).toMatchObject({
+      name: "Tommee Tippee Pacifier",
+      brand: "Tommee Tippee",
+      source: "openproductsfacts",
+      isBabyProduct: true,
+    });
+  });
+
+  it("fetchOpenProductsFacts returns null on status 0 (barcode not found)", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ status: 0 }));
+    expect(await fetchOpenProductsFacts("000000000000", fetchImpl)()).toBeNull();
+  });
+
   it("fetchUpcItemDb parses a valid match", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(
       jsonResponse({
@@ -237,6 +263,7 @@ describe("lookupProduct orchestration", () => {
     const fetchImpl = vi.fn(async (url: string) => {
       if (url.includes("openfoodfacts")) return delayed(jsonResponse({ status: 0 }), 5);
       if (url.includes("openbeautyfacts")) return delayed(jsonResponse({ status: 0 }), 5);
+      if (url.includes("openproductsfacts")) return delayed(jsonResponse({ status: 0 }), 5);
       if (url.includes("upcitemdb")) {
         return delayed(
           jsonResponse({ items: [{ title: "Bobbie Gentle Formula", brand: "Bobbie" }] }),
@@ -256,6 +283,7 @@ describe("lookupProduct orchestration", () => {
       if (
         url.includes("openfoodfacts") ||
         url.includes("openbeautyfacts") ||
+        url.includes("openproductsfacts") ||
         url.includes("upcitemdb")
       ) {
         return jsonResponse({ status: 0, items: [] });
@@ -277,8 +305,8 @@ describe("lookupProduct orchestration", () => {
     const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ status: 0, items: [] }));
     const result = await lookupProduct("000000000001", fetchImpl as unknown as typeof fetch, {});
     expect(result).toBeNull();
-    // Only the 3 free sources should have been called.
-    expect(fetchImpl).toHaveBeenCalledTimes(3);
+    // Only the 4 free sources should have been called.
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
   });
 
   it("returns null when every free and paid source misses", async () => {

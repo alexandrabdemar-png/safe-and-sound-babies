@@ -53,6 +53,7 @@ const CATEGORY_ORDER: CategoryKey[] = CATEGORIES.map((c) => c.key);
 const SOURCE_LABEL: Record<string, string> = {
   openfoodfacts: "Open Food Facts",
   openbeautyfacts: "Open Beauty Facts",
+  openproductsfacts: "Open Products Facts",
   upcitemdb: "UPCitemdb",
   "go-upc": "Go-UPC",
   "barcode-lookup": "Barcode Lookup",
