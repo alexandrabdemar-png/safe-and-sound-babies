@@ -1,6 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { supabase } from "@/integrations/supabase/client";
 import catCarseat from "@/assets/hd-carseat.png";
 import catPacifier from "@/assets/hd-pacifier.png";
 import catFormula from "@/assets/hd-formula.png";
@@ -72,6 +74,25 @@ const categories = [
 
 
 function Index() {
+  const navigate = useNavigate();
+
+  // Google/Apple sign-in redirects back to this bare origin once Google or
+  // Apple's own auth server has finished (the OAuth broker doesn't route
+  // through /auth/callback the way email/magic-link sign-in does) — without
+  // this, a successful sign-in just silently lands here with no visible
+  // change, since this marketing page has no other reason to check auth
+  // state. /home re-routes on to /onboarding itself for a brand-new user,
+  // so sending everyone here to /home first is safe either way.
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate({ to: "/home" });
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) navigate({ to: "/home" });
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [navigate]);
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
