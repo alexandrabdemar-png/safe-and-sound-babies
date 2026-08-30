@@ -38,12 +38,11 @@ describe("CATEGORIES / CATEGORY_BY_KEY integrity", () => {
 
   it("activity_center and toys use distinct illustrations — they must not share the blocks image", () => {
     // Regression: an earlier version of this file reused the "Toys" blocks
-    // illustration for the *Activity center* category (a leftover from
-    // onboarding.tsx's own separately-maintained mapping), so two different
-    // categories showed the identical picture. Adding a real "toys"
-    // category is the point of the blocks illustration — activity_center
-    // should fall back to its plain icon instead.
-    expect(CATEGORY_BY_KEY.activity_center.illustration).toBeUndefined();
+    // illustration for the *Activity center* category, so two different
+    // categories showed the identical picture. Both now have their own
+    // dedicated hand-drawn illustration, and they must stay distinct.
+    expect(CATEGORY_BY_KEY.activity_center.illustration).toBeDefined();
+    expect(CATEGORY_BY_KEY.activity_center.illustration).not.toBe(CATEGORY_BY_KEY.toys.illustration);
     expect(CATEGORY_BY_KEY.toys.illustration).not.toBe(CATEGORY_BY_KEY.bouncer.illustration);
   });
 
@@ -82,7 +81,9 @@ describe("guessCategoryFromText — new carrier/toys matching", () => {
 
   it("matches common toy phrasing", () => {
     expect(guessCategoryFromText("Melissa & Doug Wooden Blocks")).toBe("toys");
-    expect(guessCategoryFromText("Sophie the Giraffe Teether Toy")).toBe("toys");
+    // A teether toy is more precisely a teether now that the dedicated
+    // category exists — the specific match should win over the generic one.
+    expect(guessCategoryFromText("Sophie the Giraffe Teether Toy")).toBe("teether");
     expect(guessCategoryFromText("Baby Rattle Set")).toBe("toys");
   });
 
