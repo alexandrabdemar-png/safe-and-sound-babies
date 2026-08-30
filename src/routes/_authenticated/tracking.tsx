@@ -150,6 +150,7 @@ function TrackingPage() {
           <TrackCard
             to="/moments"
             icon={Sparkles}
+            illustration={illoMoment}
             title="Moments"
             blurb="Milestones and firsts, on a timeline"
             summary={summaries.moments}
@@ -176,6 +177,7 @@ function TrackingPage() {
           <TrackCard
             to="/checklists"
             icon={ClipboardList}
+            illustration={illoChecklist}
             title="Safety Checklists"
             blurb="Room-by-room babyproofing and travel guides"
             summary={summaries.checklists}
