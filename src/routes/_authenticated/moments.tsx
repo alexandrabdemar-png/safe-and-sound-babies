@@ -10,6 +10,8 @@ import { BottomNav } from "@/components/BottomNav";
 import { SparkleIllustration } from "@/components/EmptyIllustration";
 import {
   SketchDefs,
+  MOMENT_ICONS,
+  MOMENT_ICON_LABELS,
   parseLegacyNotes,
   resolveMomentIcon,
   fetchMilestonesResilient,
