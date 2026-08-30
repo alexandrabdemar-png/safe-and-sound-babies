@@ -1,8 +1,10 @@
 import {
   ShieldCheck, Bed, Moon, Utensils, Music, Armchair, Grid3x3, Wind, DoorClosed,
   Baby, Milk, Cookie, Brush, Radio, Tent, Package, Backpack, ToyBrick,
+  Bath, Layers, Circle,
 } from "lucide-react";
 import { StrollerIcon } from "@/components/StrollerIcon";
+import { BottleIcon } from "@/components/BottleIcon";
 // Same illustrated set shown on the public marketing home page (src/routes/
 // index.tsx) — used here too so a category picked while adding a product
 // looks like the same category a parent saw on the home page, instead of a
@@ -28,6 +30,10 @@ import illoBabyGate from "@/assets/hd-babygate.png";
 import illoMonitor from "@/assets/hd-monitor.png";
 import illoToothbrush from "@/assets/hd-toothbrush.png";
 import illoOther from "@/assets/hd-other.png";
+import illoBottle from "@/assets/hd-bottle.png";
+import illoBath from "@/assets/hd-bath.png";
+import illoDiaper from "@/assets/hd-diaper.png";
+import illoTeether from "@/assets/hd-teether.png";
 
 export type CategoryKey =
   | "car_seat"
@@ -49,6 +55,10 @@ export type CategoryKey =
   | "baby_monitor"
   | "play_yard"
   | "toys"
+  | "bottle"
+  | "bath"
+  | "diaper"
+  | "teether"
   | "other";
 
 // Age-appropriateness guidance per category, in months of ADJUSTED age.
@@ -91,6 +101,10 @@ export const CATEGORIES: {
   { key: "baby_food",       label: "Baby Food",       icon: Cookie,      illustration: illoBabyFood,  hint: "Track expiration dates", minAgeMonths: 6 },
   { key: "toothbrush",      label: "Toothbrush",      icon: Brush,       illustration: illoToothbrush, hint: "Replace every ~3 months", minAgeMonths: 6 },
   { key: "toys",            label: "Toys",            icon: ToyBrick,    illustration: illoBlocks,    hint: "We'll flag choking-hazard recalls, especially for small parts and batteries", minAgeMonths: 0 },
+  { key: "bottle",          label: "Baby bottle",     icon: BottleIcon,  illustration: illoBottle,  hint: "We'll remind you to replace nipples and check for recalls", minAgeMonths: 0 },
+  { key: "bath",            label: "Bath",            icon: Bath,        illustration: illoBath,    hint: "Tubs, soaps & lotions — tracked for recalls and expiration dates", minAgeMonths: 0 },
+  { key: "diaper",          label: "Diapers & wipes", icon: Layers,      illustration: illoDiaper,  hint: "We'll remind you when it's time to size up", minAgeMonths: 0 },
+  { key: "teether",         label: "Teether",         icon: Circle,      illustration: illoTeether, hint: "Tracked for recalls — check regularly for wear and small parts", minAgeMonths: 3 },
   { key: "other",           label: "Other",           icon: Package,     illustration: illoOther, hint: "Anything else you want to track" },
 ];
 
@@ -123,6 +137,10 @@ export function guessCategoryFromText(text: string): CategoryKey | "" {
   if (/breast ?milk/.test(hay)) return "breast_milk";
   if (/baby food|puree|stage [1-4]/.test(hay)) return "baby_food";
   if (/toothbrush|tooth ?brush/.test(hay)) return "toothbrush";
-  if (/\btoys?\b|\bblocks?\b|\brattle\b|teether/.test(hay)) return "toys";
+  if (/baby ?bottle|bottle ?(warmer|brush)|\bbottles?\b|sippy ?cup/.test(hay)) return "bottle";
+  if (/\bbath\b|bathtub|bath ?(tub|seat|toy)|baby ?(soap|shampoo|wash|lotion)|shampoo/.test(hay)) return "bath";
+  if (/\bdiapers?\b|\bwipes?\b|diaper ?(bag|pail|cream|rash)/.test(hay)) return "diaper";
+  if (/teether|teething/.test(hay)) return "teether";
+  if (/\btoys?\b|\bblocks?\b|\brattle\b/.test(hay)) return "toys";
   return "";
 }
