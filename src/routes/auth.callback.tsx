@@ -32,6 +32,51 @@ function getIsRecovery(): boolean {
   return new URLSearchParams(window.location.search).get("type") === "recovery";
 }
 
+/**
+ * When the native app started this OAuth flow, this page is running in a
+ * system browser tab whose storage the app can't see. Hand the tokens back
+ * over the app's custom URL scheme instead of trying to route here.
+ * Returns true when it took over (the browser is navigating away).
+ */
+async function handleNativeHandoff(): Promise<boolean> {
+  const { isNativeHandoffRequest, buildNativeHandoffUrl } = await import("@/lib/nativeOAuth");
+  if (!isNativeHandoffRequest(window.location.search)) return false;
+  try {
+    const { Capacitor } = await import("@capacitor/core");
+    // Already inside the app's webview — normal routing applies.
+    if (Capacitor.isNativePlatform()) return false;
+  } catch {
+    // Capacitor absent: we're definitely in the system browser.
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const brokerError = params.get("error_description") ?? params.get("error");
+  if (brokerError) {
+    window.location.replace(buildNativeHandoffUrl({ error: brokerError }));
+    return true;
+  }
+
+  // getSession() performs the PKCE code exchange when a ?code= is present;
+  // retry briefly because the exchange can land just after the first read.
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      window.location.replace(
+        buildNativeHandoffUrl({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        }),
+      );
+      return true;
+    }
+    await new Promise((r) => setTimeout(r, 400));
+  }
+  window.location.replace(
+    buildNativeHandoffUrl({ error: "Sign-in didn't complete. Please try again." }),
+  );
+  return true;
+}
+
 function AuthCallbackPage() {
   const navigate = useNavigate();
 
