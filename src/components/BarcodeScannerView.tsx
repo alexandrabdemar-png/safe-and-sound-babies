@@ -6,19 +6,23 @@ import {
 } from "@/components/WebBarcodeScannerView";
 import { useIsNativeIOS } from "@/hooks/useIsNativeIOS";
 
-// Platform dispatcher: uses Apple VisionKit's native live barcode scanner
-// (DataScannerViewController, iOS 16+) when running as a native iOS build
-// on a device that supports it, falling back to the web-based scanner
-// (html5-qrcode, see WebBarcodeScannerView.tsx) everywhere else — web,
-// Android, and iOS below version 16.
+// Platform dispatcher: uses the native ML Kit barcode scanner
+// (@capacitor-mlkit/barcode-scanning — Google's ML Kit on-device detector,
+// presented as a full-screen native view) when running as a native iOS
+// build, falling back to the web-based scanner (html5-qrcode, see
+// WebBarcodeScannerView.tsx) everywhere else — web, Android, and any
+// device where the native module reports itself unsupported.
 //
-// Important UX difference from the web path: VisionKit's scanner is a
-// full-screen NATIVE view presented on top of the WebView (like
-// @capacitor/camera's photo picker) — it cannot be embedded inline inside
-// this component's box the way the web scanner's live preview is. While
-// it's active, this component just shows a loading placeholder; the actual
-// scanning UI is a separate native screen that dismisses back to the app
-// once a code is found (or the user cancels).
+// Why ML Kit over the raw camera/web path: much faster lock-on, tolerant
+// of angled and glossy packaging, and works in low light. All detection
+// happens on-device — no camera frames leave the phone.
+//
+// Important UX difference from the web path: the native scanner is a
+// full-screen NATIVE view presented on top of the WebView — it cannot be
+// embedded inline inside this component's box the way the web scanner's
+// live preview is. While it's active, this component just shows a loading
+// placeholder; the actual scanning UI is a separate native screen that
+// dismisses back to the app once a code is found (or the user cancels).
 export function BarcodeScannerView(props: BarcodeScannerViewProps) {
   const isNativeIOS = useIsNativeIOS();
   const [nativeAvailable, setNativeAvailable] = useState<boolean | null>(null);
@@ -32,8 +36,10 @@ export function BarcodeScannerView(props: BarcodeScannerViewProps) {
     let cancelled = false;
     (async () => {
       try {
-        const { VisionBarcodeScanner } = await import("vision-barcode-scanner");
-        const { supported } = await VisionBarcodeScanner.isSupported();
+        const { BarcodeScanner } = await import(
+          "@capacitor-mlkit/barcode-scanning"
+        );
+        const { supported } = await BarcodeScanner.isSupported();
         if (!cancelled) setNativeAvailable(supported);
       } catch {
         // The plugin isn't available (e.g. a web preview build that never
@@ -51,13 +57,22 @@ export function BarcodeScannerView(props: BarcodeScannerViewProps) {
   if (nativeAvailable === null) return null;
 
   if (nativeAvailable) {
-    return <NativeVisionBarcodeScannerView {...props} />;
+    return <NativeMlKitBarcodeScannerView {...props} />;
   }
 
   return <WebBarcodeScannerView {...props} />;
 }
 
-function NativeVisionBarcodeScannerView({
+/**
+ * iOS sometimes reports UPC-A barcodes as EAN-13 with a leading "0" (13
+ * digits). Most baby-product lookup databases index the 12-digit UPC-A
+ * form, so strip a single leading zero from 13-digit numeric codes.
+ */
+function normalizeBarcode(value: string): string {
+  return /^0\d{12}$/.test(value) ? value.slice(1) : value;
+}
+
+function NativeMlKitBarcodeScannerView({
   onDetected,
   onError,
   onCancel,
@@ -70,44 +85,62 @@ function NativeVisionBarcodeScannerView({
     if (!active) return;
     detectedRef.current = false;
     let cancelled = false;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const listenerHandles: any[] = [];
 
     (async () => {
-      const { VisionBarcodeScanner } = await import("vision-barcode-scanner");
+      const { BarcodeScanner, BarcodeFormat } = await import(
+        "@capacitor-mlkit/barcode-scanning"
+      );
       if (cancelled) return;
 
-      listenerHandles.push(
-        await VisionBarcodeScanner.addListener("barcodeDetected", ({ value }) => {
-          if (detectedRef.current) return;
-          detectedRef.current = true;
-          onDetected(value);
-        }),
-      );
-      listenerHandles.push(
-        await VisionBarcodeScanner.addListener("scanCancelled", () => {
-          onCancel?.();
-        }),
-      );
-      listenerHandles.push(
-        await VisionBarcodeScanner.addListener("scanError", ({ message }) => {
-          onError?.(message);
-        }),
-      );
-
       try {
-        await VisionBarcodeScanner.startScan();
+        // Camera permission — check first, then request. On denial the
+        // web fallback needs the same permission anyway, so surface the
+        // error rather than silently swapping scanners mid-flow.
+        let { camera } = await BarcodeScanner.checkPermissions();
+        if (camera !== "granted") {
+          ({ camera } = await BarcodeScanner.requestPermissions());
+        }
+        if (camera !== "granted") {
+          onError?.("Camera access is needed to scan barcodes");
+          return;
+        }
+        if (cancelled) return;
+
+        const { barcodes } = await BarcodeScanner.scan({
+          formats: [
+            BarcodeFormat.UpcA,
+            BarcodeFormat.UpcE,
+            BarcodeFormat.Ean13,
+            BarcodeFormat.Ean8,
+            BarcodeFormat.Code128,
+            BarcodeFormat.Code39,
+            BarcodeFormat.QrCode,
+          ],
+        });
+        if (cancelled || detectedRef.current) return;
+
+        const raw = barcodes[0]?.rawValue;
+        if (!raw) {
+          // User closed the scanner without detecting anything.
+          onCancel?.();
+          return;
+        }
+        detectedRef.current = true;
+        onDetected(normalizeBarcode(raw));
       } catch (e) {
-        if (!cancelled) onError?.(e instanceof Error ? e.message : "Could not start scanner");
+        if (cancelled || detectedRef.current) return;
+        const message = e instanceof Error ? e.message : "Could not start scanner";
+        // The plugin rejects when the user dismisses the native sheet.
+        if (/cancel/i.test(message)) {
+          onCancel?.();
+        } else {
+          onError?.(message);
+        }
       }
     })();
 
     return () => {
       cancelled = true;
-      listenerHandles.forEach((h) => h.remove());
-      import("vision-barcode-scanner").then(({ VisionBarcodeScanner }) => {
-        VisionBarcodeScanner.stopScan().catch(() => {});
-      });
     };
   }, [active, onDetected, onError, onCancel]);
 
