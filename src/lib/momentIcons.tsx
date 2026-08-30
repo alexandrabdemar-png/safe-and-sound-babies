@@ -27,7 +27,7 @@ export const DEFAULT_MOMENT_ICON: MomentIconKey = "star";
 // Single neutral ink accent shared by every icon — cards stay the same
 // muted white/warm-gray regardless of which icon is picked, matching the
 // app's existing "neutral except a couple of deliberate accents" direction.
-export const MOMENT_ICON_ACCENT = "#586C81";
+export const MOMENT_ICON_ACCENT = "#96A5BE";
 
 const INK = MOMENT_ICON_ACCENT;
 
@@ -68,18 +68,21 @@ const g = (children: React.ReactNode, strokeWidth = 5.5) => (
   </g>
 );
 
-// Neutral thin-line ledger marks (chosen "Boxed Spine Markers" direction):
-// a growth notch, a note bubble, a bookmark tag and a flag. No hearts,
-// stars, sparkles or smileys — reads as a record, not a sticker sheet.
+// Whimsical pencil-sketch marks in light periwinkle, matching the hand-drawn
+// home page icons (chosen "Whimsical pencil sketch" direction): footprints
+// for movement, a round speech bubble for words, a heart for keepsakes, and
+// a wobbly five-point star for firsts (replacing the old flag mark).
 const StarIcon = ({ px }: { px: number }) =>
   wrap(
     px,
     g(
       <>
-        <path d="M50 12 V88" />
-        <path d="M36 26 H64 M36 44 H64 M36 62 H64 M36 80 H64" />
+        {/* two little footprints */}
+        <path d="M38 30 c-7 0 -11 6 -11 13 c0 6 4 10 9 10 c6 0 10 -6 10 -13 c0 -5 -3 -10 -8 -10 Z" />
+        <path d="M62 52 c-7 0 -11 6 -11 13 c0 6 4 10 9 10 c6 0 10 -6 10 -13 c0 -5 -3 -10 -8 -10 Z" />
+        <path d="M30 20 c2 -3 6 -3 8 0 M24 30 c1 -3 4 -4 6 -2 M70 40 c2 -3 6 -3 8 0 M64 50 c1 -3 4 -4 6 -2" />
       </>,
-      4,
+      3.5,
     ),
   );
 
@@ -88,10 +91,11 @@ const SmileyIcon = ({ px }: { px: number }) =>
     px,
     g(
       <>
-        <path d="M84 62 a8 8 0 0 1 -8 8 H36 L18 88 V24 a8 8 0 0 1 8 -8 h50 a8 8 0 0 1 8 8 Z" />
-        <path d="M34 38 H66 M34 52 H56" />
+        {/* round wobbly speech bubble */}
+        <path d="M50 16 c-20 0 -34 12 -34 27 c0 9 5 17 13 22 l-4 15 l14 -9 c3 1 7 2 11 2 c20 0 34 -12 34 -27 c0 -15 -14 -30 -34 -30 Z" />
+        <path d="M36 42 h6 M48 42 h6 M60 42 h6" />
       </>,
-      4,
+      3.5,
     ),
   );
 
@@ -99,11 +103,8 @@ const HeartIcon = ({ px }: { px: number }) =>
   wrap(
     px,
     g(
-      <>
-        <path d="M28 14 H72 V86 L50 66 L28 86 Z" />
-        <path d="M40 36 H60" />
-      </>,
-      4,
+      <path d="M50 82 c-14 -12 -28 -22 -28 -37 c0 -10 8 -17 16 -17 c6 0 10 3 12 8 c2 -5 6 -8 12 -8 c8 0 16 7 16 17 c0 15 -14 25 -28 37 Z" />,
+      3.5,
     ),
   );
 
@@ -112,10 +113,11 @@ const SparklesIcon = ({ px }: { px: number }) =>
     px,
     g(
       <>
-        <path d="M28 12 V90" />
-        <path d="M28 16 H80 L68 36 L80 56 H28" />
+        {/* wobbly hand-drawn five-point star */}
+        <path d="M50 14 L59 39 L85 40 L64 56 L72 82 L50 66 L28 82 L36 56 L15 40 L41 39 Z" />
+        <path d="M84 18 l0 8 M80 22 l8 0 M18 74 l0 8 M14 78 l8 0" />
       </>,
-      4,
+      3.5,
     ),
   );
 
