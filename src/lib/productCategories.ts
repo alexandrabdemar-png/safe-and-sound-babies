@@ -101,6 +101,10 @@ export const CATEGORIES: {
   { key: "baby_food",       label: "Baby Food",       icon: Cookie,      illustration: illoBabyFood,  hint: "Track expiration dates", minAgeMonths: 6 },
   { key: "toothbrush",      label: "Toothbrush",      icon: Brush,       illustration: illoToothbrush, hint: "Replace every ~3 months", minAgeMonths: 6 },
   { key: "toys",            label: "Toys",            icon: ToyBrick,    illustration: illoBlocks,    hint: "We'll flag choking-hazard recalls, especially for small parts and batteries", minAgeMonths: 0 },
+  { key: "bottle",          label: "Baby bottle",     icon: BottleIcon,  illustration: illoBottle,  hint: "We'll remind you to replace nipples and check for recalls", minAgeMonths: 0 },
+  { key: "bath",            label: "Bath",            icon: Bath,        illustration: illoBath,    hint: "Tubs, soaps & lotions — tracked for recalls and expiration dates", minAgeMonths: 0 },
+  { key: "diaper",          label: "Diapers & wipes", icon: Layers,      illustration: illoDiaper,  hint: "We'll remind you when it's time to size up", minAgeMonths: 0 },
+  { key: "teether",         label: "Teether",         icon: Circle,      illustration: illoTeether, hint: "Tracked for recalls — check regularly for wear and small parts", minAgeMonths: 3 },
   { key: "other",           label: "Other",           icon: Package,     illustration: illoOther, hint: "Anything else you want to track" },
 ];
 
