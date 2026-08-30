@@ -114,8 +114,11 @@ describe("repo Supabase env configuration", () => {
 // checkout in the browser. This walks src/ for `import.meta.env.VITE_*` reads
 // and requires each one to exist in `.env` (or be explicitly optional).
 describe("required client env vars are declared", () => {
-  // Dev-only / documentation-only reads that are meant to be absent.
-  const OPTIONAL = new Set(["VITE_FORCE_PRO", "VITE_FOO"]);
+  // Dev-only / documentation-only reads that are meant to be absent, plus
+  // VITE_VAPID_PUBLIC_KEY — deliberately NOT committed to .env; vite.config.ts
+  // injects it into the bundle at build time from server-side env so local
+  // checkouts without the keypair still build (push just stays disabled).
+  const OPTIONAL = new Set(["VITE_FORCE_PRO", "VITE_FOO", "VITE_VAPID_PUBLIC_KEY"]);
 
   function walk(dir: string): string[] {
     return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
