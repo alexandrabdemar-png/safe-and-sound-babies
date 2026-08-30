@@ -2,29 +2,38 @@ import { useNavigate } from "@tanstack/react-router";
 import { Package, Sparkles, Utensils, ArrowRight } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { BottleIcon } from "@/components/BottleIcon";
+import { CategoryBadge } from "@/components/CategoryBadge";
+import illoProduct from "@/assets/hd-stroller.png";
+import illoMoment from "@/assets/hd-moment.png";
+import illoBottle from "@/assets/hd-breastmilk.png";
+import illoFirstFood from "@/assets/hd-babyfood.png";
 
 export const addOptions = [
   {
     to: "/products/new",
     icon: Package,
+    illustration: illoProduct,
     title: "A product to watch",
     blurb: "Track replacements and recalls on baby gear.",
   },
   {
     to: "/moments/new",
     icon: Sparkles,
+    illustration: illoMoment,
     title: "A new moment",
     blurb: "First smile, first tooth, first steps — log it when it happens.",
   },
   {
     to: "/bottles/new",
     icon: BottleIcon,
+    illustration: illoBottle,
     title: "A bottle",
     blurb: "Log formula or breastmilk and get reminded before it expires.",
   },
   {
     to: "/first-foods",
     icon: Utensils,
+    illustration: illoFirstFood,
     title: "A first food",
     blurb: "Record a new food and note any allergen reactions.",
   },
@@ -53,7 +62,7 @@ export function AddSheet({
           </SheetHeader>
 
           <div className="mt-5 space-y-3">
-            {addOptions.map(({ to, icon: Icon, title, blurb }) => (
+            {addOptions.map(({ to, icon: Icon, illustration, title, blurb }) => (
               <button
                 key={to}
                 type="button"
@@ -63,9 +72,7 @@ export function AddSheet({
                 }}
                 className="flex w-full items-center gap-4 rounded-3xl border border-border/60 bg-card p-4 text-left transition-all hover:border-primary/40 hover:shadow-md"
               >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-                  <Icon className="h-5 w-5" />
-                </div>
+                <CategoryBadge icon={Icon} illustration={illustration} className="h-12 w-12" />
                 <div className="min-w-0 flex-1">
                   <p className="font-display text-base font-semibold tracking-tight">{title}</p>
                   <p className="mt-0.5 font-body text-xs text-muted-foreground">{blurb}</p>
