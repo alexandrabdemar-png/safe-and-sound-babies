@@ -109,37 +109,47 @@ function AuthCallbackPage() {
         });
     }
 
-    // getSession() triggers the PKCE code exchange when detectSessionInUrl is
-    // true and a ?code= param is present in the current URL.
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (done) return;
-      if (error || !data.session) {
-        // Exchange failed — send back to auth with an error flag
-        navigate({
-          to: "/auth",
-          search: { error: error?.message ?? "Magic link sign-in failed. Please try again." },
-        } as never);
-        return;
-      }
-      done = true;
-      routeAfterSession(data.session.user.id);
-    });
+    let unsubscribe: (() => void) | null = null;
 
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (done) return;
-      if (event === "PASSWORD_RECOVERY") {
+    handleNativeHandoff().then((tookOver) => {
+      // The native handoff navigates this tab to the app's URL scheme —
+      // don't also try to route it here.
+      if (tookOver || done) return;
+
+      // getSession() triggers the PKCE code exchange when detectSessionInUrl is
+      // true and a ?code= param is present in the current URL.
+      supabase.auth.getSession().then(({ data, error }) => {
+        if (done) return;
+        if (error || !data.session) {
+          // Exchange failed — send back to auth with an error flag
+          navigate({
+            to: "/auth",
+            search: { error: error?.message ?? "Magic link sign-in failed. Please try again." },
+          } as never);
+          return;
+        }
         done = true;
-        navigate({ to: "/auth", search: { mode: "reset" } } as never);
-        return;
-      }
-      if (event === "SIGNED_IN" && session) {
-        done = true;
-        routeAfterSession(session.user.id);
-      }
+        routeAfterSession(data.session.user.id);
+      });
+
+      const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+        if (done) return;
+        if (event === "PASSWORD_RECOVERY") {
+          done = true;
+          navigate({ to: "/auth", search: { mode: "reset" } } as never);
+          return;
+        }
+        if (event === "SIGNED_IN" && session) {
+          done = true;
+          routeAfterSession(session.user.id);
+        }
+      });
+      unsubscribe = () => sub.subscription.unsubscribe();
     });
 
     return () => {
-      sub.subscription.unsubscribe();
+      done = true;
+      unsubscribe?.();
     };
   }, [navigate]);
 

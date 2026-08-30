@@ -6,10 +6,10 @@
  * started from an embedded app webview). That means the session lands in
  * Safari's storage jar, not the app's — and getting it back into the app
  * relied on a Universal Link firing off a *server redirect* inside
- * SFSafariViewController, which iOS does not reliably do (Apple's flow
- * happened to survive it; Google's, which redirects immediately when the
- * user is already signed in, did not — the tab flashed open and the app was
- * left back on the homepage with no session and no error).
+ * SFSafariViewController, which iOS does not reliably do (Apple's slower
+ * flow happened to survive it; Google's, which redirects immediately when
+ * the user is already signed in, did not — the tab flashed open and the app
+ * was left back on the homepage with no session and no error).
  *
  * A custom URL scheme redirect DOES reliably open the app from a system
  * browser tab, so that's what we use: the callback page, when it detects it
@@ -18,7 +18,7 @@
  * `com.peaceofmine.baby://oauth-callback`. The app then calls setSession and
  * finishes the sign-in in its own webview.
  *
- * Tokens never leave the device: the redirect is handled by iOS locally.
+ * Tokens never leave the device — iOS routes the scheme redirect locally.
  */
 
 /** Registered by scripts/ios-configure.mjs as a CFBundleURLTypes scheme. */

@@ -52,6 +52,20 @@ if (!plist.includes("<key>UIBackgroundModes</key>")) {
   added.push("UIBackgroundModes");
 }
 
+// Custom URL scheme: how the OAuth system-browser tab hands the finished
+// session back to the app (src/lib/nativeOAuth.ts). Without it iOS has no
+// way to route com.peaceofmine.baby://oauth-callback and Google sign-in
+// silently dead-ends back on the homepage.
+if (!plist.includes("<key>CFBundleURLTypes</key>")) {
+  const entry =
+    "\t<key>CFBundleURLTypes</key>\n\t<array>\n\t\t<dict>\n" +
+    "\t\t\t<key>CFBundleURLName</key>\n\t\t\t<string>com.peaceofmine.baby</string>\n" +
+    "\t\t\t<key>CFBundleURLSchemes</key>\n\t\t\t<array>\n\t\t\t\t<string>com.peaceofmine.baby</string>\n\t\t\t</array>\n" +
+    "\t\t</dict>\n\t</array>\n";
+  plist = plist.replace(/\n<\/dict>\n<\/plist>/, `\n${entry}</dict>\n</plist>`);
+  added.push("CFBundleURLTypes");
+}
+
 writeFileSync(PLIST, plist);
 
 if (added.length) {

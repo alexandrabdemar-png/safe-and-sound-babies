@@ -27,9 +27,48 @@ export function useDeepLinks() {
 
       const { App } = await import("@capacitor/app");
 
+      const { parseNativeHandoff } = await import("@/lib/nativeOAuth");
+      const { supabase } = await import("@/integrations/supabase/client");
+
       listeners.push(
         await App.addListener("appUrlOpen", ({ url }) => {
           if (cancelled) return;
+
+          // Google/Apple sign-in finished in the system browser tab and is
+          // handing the session back over our custom URL scheme (see
+          // src/lib/nativeOAuth.ts). Install it in the app's own webview,
+          // which is the storage jar the rest of the app actually reads.
+          const handoff = parseNativeHandoff(url);
+          if (handoff) {
+            import("@capacitor/browser")
+              .then(({ Browser }) => Browser.close())
+              .catch(() => {});
+            if (handoff.error || !handoff.access_token || !handoff.refresh_token) {
+              window.location.href = `/auth?error=${encodeURIComponent(
+                handoff.error ?? "Sign-in didn't complete. Please try again.",
+              )}`;
+              return;
+            }
+            supabase.auth
+              .setSession({
+                access_token: handoff.access_token,
+                refresh_token: handoff.refresh_token,
+              })
+              .then(({ error }) => {
+                if (error) {
+                  window.location.href = `/auth?error=${encodeURIComponent(error.message)}`;
+                  return;
+                }
+                // Session now lives in the app's webview — /auth/callback
+                // routes to /home or /onboarding exactly as it does on web.
+                window.location.href = "/auth/callback";
+              })
+              .catch(() => {
+                window.location.href = "/auth?error=Sign-in%20failed.%20Please%20try%20again.";
+              });
+            return;
+          }
+
           // If this deep link is arriving while the OAuth sign-in flow's
           // system browser tab (src/lib/browser.ts) is still open on top of
           // the app, close it — otherwise it's left stranded over a screen
