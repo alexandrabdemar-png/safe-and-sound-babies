@@ -5,6 +5,7 @@ import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { friendlyAuthError, isAlreadyRegisteredAuthError } from "@/lib/errors";
 import { withTimeout } from "@/lib/promiseTimeout";
+import { oauthRedirectUri } from "@/lib/authCallbackRouting";
 import { Mail, Lock, Sparkles, Loader2, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
@@ -154,7 +155,9 @@ function AuthPage() {
       // This doesn't fire for the normal full-page-redirect path, since the
       // browser navigates away long before it could ever elapse.
       const result = await withTimeout(
-        lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin }),
+        lovable.auth.signInWithOAuth(provider, {
+          redirect_uri: oauthRedirectUri(window.location.origin),
+        }),
         20000,
         () => {
           setLoading(null);
@@ -167,7 +170,8 @@ function AuthPage() {
         toast.error(friendlyAuthError(result.error.message || `${provider} sign-in failed`));
         setLoading(null);
       }
-      // redirected: browser leaves; tokens: onAuthStateChange will redirect
+      // redirected: browser leaves this page entirely; /auth/callback picks
+      // up the session on return and routes to /home (or /onboarding)
     } catch (err) {
       toast.error(friendlyAuthError(err));
       setLoading(null);

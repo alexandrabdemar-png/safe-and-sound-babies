@@ -1,5 +1,24 @@
 import { describe, it, expect } from "vitest";
-import { decidePostCallbackRoute, parseNextParam } from "./authCallbackRouting";
+import { decidePostCallbackRoute, parseNextParam, oauthRedirectUri } from "./authCallbackRouting";
+
+describe("oauthRedirectUri", () => {
+  // Regression: Google/Apple sign-in used to redirect back to the bare
+  // origin, which routes nowhere — the marketing homepage has no code to
+  // notice a session was just created, so the button looked like it did
+  // nothing. Must point at /auth/callback, the route that actually
+  // finishes the sign-in and navigates to /home or /onboarding.
+  it("points at /auth/callback, not the bare origin", () => {
+    expect(oauthRedirectUri("https://peace-of-mine.lovable.app")).toBe(
+      "https://peace-of-mine.lovable.app/auth/callback",
+    );
+  });
+
+  it("works for any origin (e.g. a preview deploy)", () => {
+    expect(oauthRedirectUri("https://id-preview--abc123.lovable.app")).toBe(
+      "https://id-preview--abc123.lovable.app/auth/callback",
+    );
+  });
+});
 
 describe("decidePostCallbackRoute", () => {
   it("routes a recovery link to the reset-password screen (live bug: was racing getSession vs onAuthStateChange)", () => {

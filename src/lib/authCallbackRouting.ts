@@ -42,3 +42,17 @@ export function decidePostCallbackRoute(params: {
   if (params.next) return { to: params.next };
   return params.hasDisplayName ? { to: "/home" } : { to: "/onboarding" };
 }
+
+/**
+ * Where Google/Apple sign-in should send the browser back to.
+ *
+ * Regression: this used to be the bare origin, which routes nowhere —
+ * index.tsx (the marketing homepage) has no code to notice a session was
+ * just created and navigate to /home, so a successful Google/Apple
+ * sign-in looked identical to the button doing nothing. /auth/callback is
+ * the one route that actually finishes the job (see auth.callback.tsx),
+ * matching the pattern email sign-up and password reset already use.
+ */
+export function oauthRedirectUri(origin: string): string {
+  return `${origin}/auth/callback`;
+}
