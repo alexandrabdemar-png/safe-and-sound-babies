@@ -15,13 +15,11 @@ import {
   momentsSummary,
 } from "@/lib/trackingSummaries";
 // Same illustrated artwork used on the marketing home page and the product
-// category picker — reused here so these two cards feel consistent with
-// the rest of the app instead of using a plain outline icon. Moments and
-// Safety Checklists don't have a matching illustration yet, so they keep
-// their lucide icons for now.
+// category picker — reused here so these cards feel consistent with
+// the rest of the app instead of using plain outline icons.
 import illoBreastmilk from "@/assets/hd-breastmilk.png";
 import illoBabyFood from "@/assets/hd-babyfood.png";
-import illoMoments from "@/assets/hd-moments.png";
+import illoMoment from "@/assets/hd-moment.png";
 import illoChecklist from "@/assets/hd-checklist.png";
 
 export const Route = createFileRoute("/_authenticated/tracking")({
@@ -152,7 +150,7 @@ function TrackingPage() {
           <TrackCard
             to="/moments"
             icon={Sparkles}
-            illustration={illoMoments}
+            illustration={illoMoment}
             title="Moments"
             blurb="Milestones and firsts, on a timeline"
             summary={summaries.moments}
