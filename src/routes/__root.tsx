@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { useDeepLinks } from "@/hooks/useDeepLinks";
+import { useAuthAutoRefresh } from "@/hooks/useAuthAutoRefresh";
 
 function NotFoundComponent() {
   return (
@@ -140,6 +141,7 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   useDeepLinks();
+  useAuthAutoRefresh();
 
   return (
     <QueryClientProvider client={queryClient}>
