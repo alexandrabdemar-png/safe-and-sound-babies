@@ -148,12 +148,42 @@ function AuthPage() {
   async function handleOAuth(provider: "google" | "apple") {
     setLoading(provider);
     try {
-      // The underlying OAuth broker (Lovable Cloud) can open a popup and
-      // then simply never resolve — no postMessage, no popup-closed event —
-      // if the provider handshake stalls. There's no timeout in that vendor
-      // code, so without one here the button spins forever with no way out.
-      // This doesn't fire for the normal full-page-redirect path, since the
-      // browser navigates away long before it could ever elapse.
+      // Native: open the OAuth broker in a real system browser tab instead
+      // of navigating the app's own embedded webview to it. Google (and
+      // increasingly other providers) restrict or silently reject sign-in
+      // attempted from an embedded app webview — confirmed live: the button
+      // would sit "loading" for a couple seconds with Google's own sign-in
+      // page never appearing at all, then bounce back to the homepage with
+      // no error. A real system browser tab doesn't read as an embedded
+      // webview to the provider. Universal Links (useDeepLinks) catches the
+      // final redirect back to /auth/callback, which then completes the
+      // sign-in exactly like magic-link/password-reset already do.
+      let isNative = false;
+      try {
+        isNative = (await import("@capacitor/core")).Capacitor.isNativePlatform();
+      } catch {
+        isNative = false;
+      }
+      if (isNative) {
+        const { openUrl } = await import("@/lib/browser");
+        const { buildOAuthInitiateUrl } = await import("@/lib/oauthBroker");
+        await openUrl(
+          buildOAuthInitiateUrl(
+            window.location.origin,
+            provider,
+            oauthRedirectUri(window.location.origin),
+          ),
+        );
+        setLoading(null);
+        return;
+      }
+
+      // Web: the underlying OAuth broker (Lovable Cloud) can open a popup
+      // and then simply never resolve — no postMessage, no popup-closed
+      // event — if the provider handshake stalls. There's no timeout in
+      // that vendor code, so without one here the button spins forever with
+      // no way out. This doesn't fire for the normal full-page-redirect
+      // path, since the browser navigates away long before it could elapse.
       const result = await withTimeout(
         lovable.auth.signInWithOAuth(provider, {
           redirect_uri: oauthRedirectUri(window.location.origin),

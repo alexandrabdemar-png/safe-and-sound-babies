@@ -30,6 +30,15 @@ export function useDeepLinks() {
       listeners.push(
         await App.addListener("appUrlOpen", ({ url }) => {
           if (cancelled) return;
+          // If this deep link is arriving while the OAuth sign-in flow's
+          // system browser tab (src/lib/browser.ts) is still open on top of
+          // the app, close it — otherwise it's left stranded over a screen
+          // that already finished handling the sign-in underneath it.
+          // Harmless no-op when nothing is open (e.g. the password-reset /
+          // magic-link cases, which never open one).
+          import("@capacitor/browser")
+            .then(({ Browser }) => Browser.close())
+            .catch(() => {});
           // The app is already showing the hosted origin in its WKWebView, so
           // navigating to the deep-linked URL's path/query/hash keeps us
           // same-origin instead of bouncing out to an external browser.
