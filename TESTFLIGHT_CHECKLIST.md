@@ -7,7 +7,7 @@ paths are exercised from zero.
 ## 0. Build / config preflight
 - [ ] `bun run ios:sync` run after the last web change; build number bumped.
 - [ ] `capacitor.config.ts` `server.url` points at the intended host (prod vs preview).
-- [ ] Backend secrets present: `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_KEY_P8`, `APNS_BUNDLE_ID`, `APNS_ENVIRONMENT=sandbox`. **Currently the three key secrets are NOT set — iOS push will silently no-op until they are.**
+- [ ] Backend secrets present: `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_KEY_P8`, `APNS_BUNDLE_ID`. Leave `APNS_ENVIRONMENT` unset (defaults to `production`) — TestFlight builds are signed with a distribution provisioning profile, which is the production APNs environment; `sandbox` is only correct for a Debug build run straight from Xcode. Setting `sandbox` for a TestFlight build is a silent-no-push failure mode, not a safer default.
 - [ ] Apple + Google auth providers enabled in the backend auth config (otherwise "Unsupported provider").
 - [ ] Xcode: Push Notifications + Background Modes → Remote notifications capabilities added.
 - [ ] Xcode: In-App Purchase capability added (App target → Signing & Capabilities).

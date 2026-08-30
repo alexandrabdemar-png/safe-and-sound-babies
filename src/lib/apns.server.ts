@@ -13,7 +13,16 @@
 //   APNS_KEY_P8     — contents of the .p8 key file (PEM text, including
 //                     "-----BEGIN PRIVATE KEY-----" / "-----END PRIVATE KEY-----")
 //   APNS_BUNDLE_ID  — defaults to "com.peaceofmine.baby" (see capacitor.config.ts)
-//   APNS_ENVIRONMENT — "production" (default) or "sandbox" (TestFlight/dev builds)
+//   APNS_ENVIRONMENT — "production" (default) or "sandbox". Leave unset/
+//                     "production" for TestFlight AND the App Store — both
+//                     are signed with a distribution provisioning profile,
+//                     which bakes in the production APNs entitlement.
+//                     "sandbox" only applies to a Debug build run straight
+//                     from Xcode onto a device (a development provisioning
+//                     profile). A token registered under one environment is
+//                     rejected by Apple's servers for the other — setting
+//                     this to "sandbox" for a TestFlight build is exactly
+//                     the failure mode that makes push silently not arrive.
 
 type ApnsPushResult = {
   token: string;
@@ -133,7 +142,8 @@ export async function sendApnsPush(
 
     const errBody = await res.json().catch(() => ({}) as { reason?: string });
     const reason = (errBody as { reason?: string }).reason ?? `http_${res.status}`;
-    const invalidToken = res.status === 410 || reason === "BadDeviceToken" || reason === "Unregistered";
+    const invalidToken =
+      res.status === 410 || reason === "BadDeviceToken" || reason === "Unregistered";
     return { token: deviceToken, ok: false, status: res.status, reason, invalidToken };
   } catch (err) {
     return {

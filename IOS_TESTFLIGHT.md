@@ -47,11 +47,16 @@ these backend secrets:
 | `APNS_TEAM_ID`     | Apple Developer Team ID                               |
 | `APNS_KEY_P8`      | full PEM contents of the .p8 file                     |
 | `APNS_BUNDLE_ID`   | `com.peaceofmine.baby` (default)                       |
-| `APNS_ENVIRONMENT` | `sandbox` for TestFlight/dev builds, else `production` |
+| `APNS_ENVIRONMENT` | leave unset — defaults to `production`, which is correct for both TestFlight and the App Store |
 
-TestFlight builds use the **sandbox** APNs environment unless the build is
-distributed through App Store Connect with a production profile — start with
-`sandbox`, switch to `production` at launch.
+TestFlight builds are archived and uploaded through App Store Connect just
+like a real release, so they're signed with a **distribution** provisioning
+profile — that bakes in the **production** APNs entitlement. The
+**sandbox** environment only applies to a Debug build run straight from
+Xcode onto a device (a development provisioning profile). A device token
+registered under one environment is rejected by Apple's servers for the
+other, so setting `APNS_ENVIRONMENT=sandbox` for a TestFlight build is a
+silent-no-push failure mode, not a safer starting point.
 
 ## Ship a build
 

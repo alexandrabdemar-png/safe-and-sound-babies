@@ -171,8 +171,11 @@ names, no health details — which is the right default for a lock-screen.
 
 Gaps:
 - `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_KEY_P8` are **not set** as backend secrets, so
-  iOS push does not deliver yet. Set them (plus `APNS_ENVIRONMENT=sandbox` for
-  TestFlight) before promising push in the tester notes.
+  iOS push does not deliver yet. Set them before promising push in the tester
+  notes — leave `APNS_ENVIRONMENT` unset (defaults to `production`), which is
+  correct for TestFlight as well as the App Store; `sandbox` only applies to
+  a Debug build run straight from Xcode, and setting it for TestFlight is a
+  silent-no-push failure mode, not a safer default.
 - No explanatory pre-prompt before the iOS permission dialog; consider one, since a
   denied prompt is effectively permanent and push is core to the value proposition.
 - Alert-email delivery via Resend duplicates push content by email — confirm that is

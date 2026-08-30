@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, Bell, Clock, Package, PauseCircle, Globe } from "lucide-react";
+import { ChevronLeft, Bell, Clock, Package, PauseCircle, Globe, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
@@ -10,6 +10,7 @@ import {
   subscribeToWebPush,
   unsubscribeFromWebPush,
 } from "@/lib/webPush";
+import { sendTestPushNotification } from "@/lib/pushTest.functions";
 
 export const Route = createFileRoute(
   "/_authenticated/profile_/notification-settings",
@@ -52,6 +53,9 @@ function NotificationSettingsPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [webPushSubscribed, setWebPushSubscribed] = useState(false);
   const [webPushBusy, setWebPushBusy] = useState(false);
+  const [isNative, setIsNative] = useState(false);
+  const [nativeTokenRegistered, setNativeTokenRegistered] = useState(false);
+  const [sendingTestPush, setSendingTestPush] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -78,9 +82,44 @@ function NotificationSettingsPage() {
         setWebPushSubscribed(await getWebPushSubscriptionStatus());
       }
 
+      try {
+        const { Capacitor } = await import("@capacitor/core");
+        if (Capacitor.isNativePlatform()) {
+          setIsNative(true);
+          const { data: profileData } = await (supabase as any)
+            .from("profiles")
+            .select("apns_device_token")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          setNativeTokenRegistered(Boolean(profileData?.apns_device_token));
+        }
+      } catch {
+        // Capacitor not available — web build, nothing to check
+      }
+
       setLoading(false);
     })();
   }, []);
+
+  async function sendTestPush() {
+    setSendingTestPush(true);
+    try {
+      const result = await sendTestPushNotification();
+      if (result.ok) {
+        toast.success("Test notification sent — it should arrive any second.");
+      } else if (result.reason === "no_token") {
+        toast.error(
+          "No device is registered for push yet. Fully close and reopen the app, then make sure you allowed notifications when asked.",
+        );
+      } else {
+        toast.error(`Apple rejected the test push: ${result.reason}`);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't send the test notification.");
+    } finally {
+      setSendingTestPush(false);
+    }
+  }
 
   async function toggleWebPush() {
     setWebPushBusy(true);
@@ -206,6 +245,38 @@ function NotificationSettingsPage() {
             )}
           </div>
         </div>
+
+        {isNative && (
+          <div>
+            <SectionLabel>Test push notifications</SectionLabel>
+            <div className="rounded-3xl border border-border/60 bg-card p-5 space-y-3">
+              <div className="flex items-start gap-3">
+                <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="font-body text-sm font-medium text-foreground">
+                    {loading
+                      ? "Checking this device…"
+                      : nativeTokenRegistered
+                        ? "This device is registered for push."
+                        : "This device isn't registered for push yet."}
+                  </p>
+                  <p className="font-body text-xs text-muted-foreground mt-0.5">
+                    Send yourself a test notification to confirm it actually arrives, instead of
+                    waiting for a real recall or reminder.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={sendTestPush}
+                disabled={loading || sendingTestPush}
+                className="w-full rounded-full border border-primary bg-primary py-2 font-body text-xs font-medium text-primary-foreground transition-colors disabled:opacity-50"
+              >
+                {sendingTestPush ? "Sending…" : "Send test notification"}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div>
           <SectionLabel>In-app alerts only</SectionLabel>

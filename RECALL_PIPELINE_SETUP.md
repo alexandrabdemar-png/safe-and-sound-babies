@@ -80,8 +80,11 @@ add three more:
 - [ ] `APNS_TEAM_ID` = your Team ID from above
 - [ ] `APNS_KEY_P8` = paste the **entire contents** of the downloaded `.p8` file
 
-Optional: if you're testing through TestFlight rather than the live App
-Store, also add `APNS_ENVIRONMENT` = `sandbox`.
+Leave `APNS_ENVIRONMENT` unset — it defaults to `production`, which is
+correct for TestFlight as well as the live App Store (both are signed with
+a distribution provisioning profile). `sandbox` is only for a Debug build
+run straight from Xcode; setting it for a TestFlight build makes push
+silently fail to deliver.
 
 - [ ] Redeploy the app so it picks up the new environment variables
 
