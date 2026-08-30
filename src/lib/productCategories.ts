@@ -30,6 +30,10 @@ import illoBabyGate from "@/assets/hd-babygate.png";
 import illoMonitor from "@/assets/hd-monitor.png";
 import illoToothbrush from "@/assets/hd-toothbrush.png";
 import illoOther from "@/assets/hd-other.png";
+import illoBottle from "@/assets/hd-bottle.png";
+import illoBath from "@/assets/hd-bath.png";
+import illoDiaper from "@/assets/hd-diaper.png";
+import illoTeether from "@/assets/hd-teether.png";
 
 export type CategoryKey =
   | "car_seat"
