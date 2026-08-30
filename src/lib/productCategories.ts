@@ -55,6 +55,10 @@ export type CategoryKey =
   | "baby_monitor"
   | "play_yard"
   | "toys"
+  | "bottle"
+  | "bath"
+  | "diaper"
+  | "teether"
   | "other";
 
 // Age-appropriateness guidance per category, in months of ADJUSTED age.
