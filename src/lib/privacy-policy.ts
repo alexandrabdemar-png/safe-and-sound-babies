@@ -5,7 +5,7 @@ export const PRIVACY_POLICY_UPDATED = "August 30, 2026";
 export const PRIVACY_POLICY = `Peace of Mine — Privacy Policy
 Last updated: ${PRIVACY_POLICY_UPDATED}
 
-We built Peace of Mine for parents who want to keep their children safe. This policy explains exactly what information we collect, why we need it, and how it is protected. Plain language only — no legalese.
+We built Peace of Mine for parents who want to keep their children safe. This policy explains exactly what information we collect, why we need it, and how it is protected.
 
 ──────────────────────────────────────
 1. WHAT INFORMATION WE COLLECT
