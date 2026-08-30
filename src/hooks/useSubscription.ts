@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getStripeEnvironment } from '@/lib/stripe';
 import { computeIsPro } from '@/lib/isPro';
+import { PAYWALL_DISABLED } from '@/lib/paywallConfig';
 
 export type SubscriptionRow = {
   plan: string | null;
@@ -15,8 +16,9 @@ export type SubscriptionRow = {
 
 
 export function useSubscription() {
-  // DEV ONLY — set VITE_FORCE_PRO=true in .env.local to bypass paywalls
-  if (import.meta.env.VITE_FORCE_PRO === 'true') {
+  // VITE_FORCE_PRO=true in .env.local bypasses the paywall for local dev;
+  // PAYWALL_DISABLED (src/lib/paywallConfig.ts) bypasses it app-wide.
+  if (import.meta.env.VITE_FORCE_PRO === 'true' || PAYWALL_DISABLED) {
     return {
       subscription: {
         plan: 'pro',

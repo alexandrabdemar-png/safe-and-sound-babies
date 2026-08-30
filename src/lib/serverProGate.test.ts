@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { hasProSubscription } from "./serverProGate";
+import { PAYWALL_DISABLED } from "./paywallConfig";
 
 // hasProSubscription now selects every subscription row for the user (no
 // .limit/.maybeSingle) and delegates the Pro decision to src/lib/isPro.ts,
@@ -12,7 +13,17 @@ function makeChain(result: { data: unknown; error: unknown }) {
   return chain;
 }
 
-describe("hasProSubscription", () => {
+it("grants Pro to every user while PAYWALL_DISABLED is true, without even querying subscriptions", async () => {
+  if (!PAYWALL_DISABLED) return;
+  const from = vi.fn();
+  expect(await hasProSubscription({ from }, "user-1")).toBe(true);
+  expect(from).not.toHaveBeenCalled();
+});
+
+// The real gate logic below is only meaningful while PAYWALL_DISABLED is
+// false — see src/lib/paywallConfig.ts. Skipped (not deleted) so this
+// regression coverage resumes automatically once the flag is flipped back.
+(PAYWALL_DISABLED ? describe.skip : describe)("hasProSubscription", () => {
   it("returns false when the user has no subscription rows", async () => {
     const supabase = { from: vi.fn(() => makeChain({ data: [], error: null })) };
     expect(await hasProSubscription(supabase, "user-1")).toBe(false);

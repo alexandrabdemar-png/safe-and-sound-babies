@@ -26,6 +26,7 @@ import {
   sendInviteEmail,
 } from "../_shared/caregiverInvite.ts";
 import { hasAnyProSubscription } from "../_shared/subscription.ts";
+import { PAYWALL_DISABLED } from "../_shared/paywallConfig.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -89,7 +90,7 @@ Deno.serve(async (req) => {
     .select("plan, status, current_period_end")
     .eq("user_id", userId);
   if (subsErr) return json({ error: subsErr.message }, 500);
-  if (!hasAnyProSubscription(subs ?? [])) {
+  if (!PAYWALL_DISABLED && !hasAnyProSubscription(subs ?? [])) {
     return json(
       { error: "Caregiver sharing is a Pro feature. Upgrade to invite a co-parent or caregiver." },
       402,

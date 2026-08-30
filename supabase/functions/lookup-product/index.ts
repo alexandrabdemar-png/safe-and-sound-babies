@@ -35,6 +35,7 @@ import {
   type ManualEntryInput,
 } from "../_shared/lookupProduct.ts";
 import { hasAnyProSubscription } from "../_shared/subscription.ts";
+import { PAYWALL_DISABLED } from "../_shared/paywallConfig.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -191,7 +192,9 @@ Deno.serve(async (req) => {
     .from("subscriptions")
     .select("plan,status,current_period_end")
     .eq("user_id", userData.user.id);
-  if (!hasAnyProSubscription(subs ?? [])) return json({ found: false, upgradeAvailable: true });
+  if (!PAYWALL_DISABLED && !hasAnyProSubscription(subs ?? [])) {
+    return json({ found: false, upgradeAvailable: true });
+  }
 
   const paidResult = await racePaidSources(barcode, fetch, paidConfig);
   if (!paidResult) return json({ found: false });

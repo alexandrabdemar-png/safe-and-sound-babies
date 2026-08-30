@@ -1,4 +1,5 @@
 import { hasAnyProSubscription, type ProSubscriptionRow } from "@/lib/isPro";
+import { PAYWALL_DISABLED } from "@/lib/paywallConfig";
 
 /**
  * Server-side Pro subscription gate, shared by every TanStack server
@@ -23,6 +24,7 @@ export async function hasProSubscription(
   supabase: { from: (t: string) => any },
   userId: string,
 ): Promise<boolean> {
+  if (PAYWALL_DISABLED) return true;
   const { data, error } = await supabase
     .from("subscriptions")
     .select("plan, status, current_period_end")
