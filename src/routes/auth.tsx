@@ -167,17 +167,22 @@ function AuthPage() {
       if (isNative) {
         const { Browser } = await import("@capacitor/browser");
         const { buildOAuthInitiateUrl } = await import("@/lib/oauthBroker");
+        const { NATIVE_FLAG } = await import("@/lib/nativeOAuth");
+        // ?native=1 tells /auth/callback (which runs in the system browser,
+        // where the session actually gets created) to hand the tokens back
+        // to this app over its custom URL scheme. Without that handoff we'd
+        // be relying on a Universal Link firing from a server redirect
+        // inside SFSafariViewController, which iOS doesn't reliably do —
+        // that's why Google sign-in flashed open and dumped the user back on
+        // the homepage while Apple's slower flow happened to survive.
+        const redirectUri = `${oauthRedirectUri(window.location.origin)}?${NATIVE_FLAG}=1`;
         // fullscreen, not popover: popover is really an iPad-multitasking
         // presentation style, and on iPhone it's the one that left the app
         // frozen/unresponsive after the sheet was dismissed without
         // completing sign-in. fullscreen is SFSafariViewController's
         // standard, best-tested presentation.
         await Browser.open({
-          url: buildOAuthInitiateUrl(
-            window.location.origin,
-            provider,
-            oauthRedirectUri(window.location.origin),
-          ),
+          url: buildOAuthInitiateUrl(window.location.origin, provider, redirectUri),
           presentationStyle: "fullscreen",
         });
         setLoading(null);
