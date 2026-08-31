@@ -39,6 +39,13 @@ export const Route = createFileRoute("/_authenticated/profile")({
 function ProfilePage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState<string | null>(null);
+  const checkCatalogAdmin = useServerFn(amICatalogAdmin);
+  const catalogAdmin = useQuery({
+    queryKey: ["catalog-admin"],
+    queryFn: () => checkCatalogAdmin(),
+    staleTime: 5 * 60 * 1000,
+  });
+
   const { isPro, subscription, loading: subLoading } = useSubscription();
   const { requirePro } = useProGate();
   const { children, refresh: refreshChildren } = useActiveChild();
