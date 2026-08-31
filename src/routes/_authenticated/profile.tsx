@@ -23,6 +23,11 @@ import { openUrl } from "@/lib/browser";
 import { APP_VERSION, SHARE_URL } from "@/lib/constants";
 import { extractFunctionsErrorMessage } from "@/lib/functionsError";
 import { DevRoleSwitcher } from "@/components/DevRoleSwitcher";
+import { amICatalogAdmin } from "@/lib/catalogModeration.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
+
+
 
 
 export const Route = createFileRoute("/_authenticated/profile")({
