@@ -58,6 +58,7 @@ const SOURCE_LABEL: Record<string, string> = {
   "go-upc": "Go-UPC",
   "barcode-lookup": "Barcode Lookup",
   manual: "Community submission",
+  seed: "Verified product catalog",
 };
 
 type LookupProduct = {
@@ -100,7 +101,7 @@ function guessCategory(p: LookupProduct): CategoryKey {
   return (guessCategoryFromText(hay) || "other") as CategoryKey;
 }
 
-type Step = "scanning" | "looking-up" | "form" | "success";
+type Step = "scanning" | "looking-up" | "confirm" | "form" | "success";
 
 function ScanPage() {
   const navigate = useNavigate();
@@ -186,6 +187,7 @@ function ScanPage() {
           guessedCategory,
           generation,
         );
+        setStep("confirm");
       } else {
         setFoundProduct(null);
         setUpgradeAvailable(Boolean(data?.upgradeAvailable));
@@ -210,7 +212,10 @@ function ScanPage() {
       );
     } finally {
 
-      if (generation === scanGenerationRef.current) setStep("form");
+      // Found matches pause on an explicit confirm step (below); only
+      // unmatched/failed lookups drop straight into the manual form.
+      if (generation === scanGenerationRef.current)
+        setStep((prev) => (prev === "confirm" ? prev : "form"));
     }
   }
 
@@ -443,6 +448,86 @@ function ScanPage() {
               <p className="mt-4 font-body text-sm text-muted-foreground">
                 Looking up barcode <span className="font-mono">{barcode}</span>…
               </p>
+            </div>
+          )}
+          {step === "confirm" && foundProduct && (
+            <div className="space-y-4">
+              <div className="rounded-3xl border border-border bg-card p-5">
+                <p className="font-body text-xs uppercase tracking-wide text-muted-foreground">
+                  Is this your product?
+                </p>
+                <div className="mt-3 flex items-start gap-3">
+                  {foundProduct.imageUrl ? (
+                    <img
+                      src={foundProduct.imageUrl}
+                      alt=""
+                      className="h-20 w-20 rounded-xl border border-border object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-muted">
+                      <PackageSearch className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-display text-lg font-semibold leading-snug">
+                      {foundProduct.name?.trim() || "Unnamed product"}
+                    </p>
+                    <p className="mt-0.5 font-body text-sm text-muted-foreground">
+                      {[foundProduct.brand, CATEGORY_BY_KEY[category].label]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                    <p className="mt-2 font-mono text-xs text-muted-foreground">{barcode}</p>
+                    <p className="mt-1 font-body text-xs text-muted-foreground">
+                      Matched from {SOURCE_LABEL[foundProduct.source] ?? foundProduct.source}
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-4 font-body text-xs text-muted-foreground">
+                  Barcode databases sometimes list the wrong size, colorway, or pack count. Please
+                  confirm this is the exact product you own before we save it — recall matching
+                  depends on it.
+                </p>
+              </div>
+              <Button
+                type="button"
+                onClick={() => setStep("form")}
+                className="h-12 w-full rounded-full font-body text-sm font-semibold"
+              >
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                Yes, this is my product
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  // Keep the scanned barcode (so the manual details still get
+                  // contributed back to the shared catalog for this code), but
+                  // drop the wrong match and let the parent type the truth.
+                  setFoundProduct(null);
+                  setRecallInfo(null);
+                  setRecallCheckError(null);
+                  setName("");
+                  setBrand("");
+                  setCategory("other");
+                  setLookupError(
+                    "No problem — enter the correct details below and we'll use those instead.",
+                  );
+                  setStep("form");
+                }}
+                className="h-12 w-full rounded-full font-body text-sm font-semibold"
+              >
+                No — that&apos;s not it, let me enter the details
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={resetForAnother}
+                className="h-11 w-full rounded-full font-body text-sm"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Scan again
+              </Button>
             </div>
           )}
           {step === "form" && (
