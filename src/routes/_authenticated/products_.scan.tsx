@@ -58,6 +58,7 @@ const SOURCE_LABEL: Record<string, string> = {
   "go-upc": "Go-UPC",
   "barcode-lookup": "Barcode Lookup",
   manual: "Community submission",
+  seed: "Verified product catalog",
 };
 
 type LookupProduct = {
@@ -100,7 +101,7 @@ function guessCategory(p: LookupProduct): CategoryKey {
   return (guessCategoryFromText(hay) || "other") as CategoryKey;
 }
 
-type Step = "scanning" | "looking-up" | "form" | "success";
+type Step = "scanning" | "looking-up" | "confirm" | "form" | "success";
 
 function ScanPage() {
   const navigate = useNavigate();
@@ -186,6 +187,7 @@ function ScanPage() {
           guessedCategory,
           generation,
         );
+        setStep("confirm");
       } else {
         setFoundProduct(null);
         setUpgradeAvailable(Boolean(data?.upgradeAvailable));
@@ -210,7 +212,10 @@ function ScanPage() {
       );
     } finally {
 
-      if (generation === scanGenerationRef.current) setStep("form");
+      // Found matches pause on an explicit confirm step (below); only
+      // unmatched/failed lookups drop straight into the manual form.
+      if (generation === scanGenerationRef.current)
+        setStep((prev) => (prev === "confirm" ? prev : "form"));
     }
   }
 
