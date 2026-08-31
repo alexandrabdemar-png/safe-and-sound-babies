@@ -119,6 +119,13 @@ function TermsPage() {
             </section>
 
             <section>
+              <h2 className="font-display text-xl font-semibold text-foreground">7a. Product Data Sources &amp; Attribution</h2>
+              <p className="mt-2 text-muted-foreground">
+                Product names, brands, categories, and images shown after a barcode scan come from public and licensed product databases, used under their own terms: Open Food Facts, Open Beauty Facts, and Open Products Facts (product data available under the Open Database License, ODbL; product images under CC BY-SA), UPCitemdb, Go-UPC, and Barcode Lookup. Peace of Mine does not scrape retailer or manufacturer websites. Recall data comes from official government sources (CPSC, NHTSA, USDA FSIS, Health Canada, EU Safety Gate). We are not affiliated with, endorsed by, or sponsored by any of these organizations or by the brands whose products you track; brand and product names are used only to identify products.
+              </p>
+            </section>
+
+            <section>
               <h2 className="font-display text-xl font-semibold text-foreground">8. Release</h2>
               <p className="mt-2 text-muted-foreground">
                 To the fullest extent permitted by applicable law, you assume full responsibility for any decisions you make regarding your child's care and the use of any products, and you release and hold harmless Peace of Mine, its owners, employees, contractors, affiliates, licensors, and partners from claims arising from your use of the app, except where such liability cannot legally be excluded.
