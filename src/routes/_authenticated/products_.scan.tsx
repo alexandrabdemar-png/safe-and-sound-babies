@@ -445,6 +445,86 @@ function ScanPage() {
               </p>
             </div>
           )}
+          {step === "confirm" && foundProduct && (
+            <div className="space-y-4">
+              <div className="rounded-3xl border border-border bg-card p-5">
+                <p className="font-body text-xs uppercase tracking-wide text-muted-foreground">
+                  Is this your product?
+                </p>
+                <div className="mt-3 flex items-start gap-3">
+                  {foundProduct.imageUrl ? (
+                    <img
+                      src={foundProduct.imageUrl}
+                      alt=""
+                      className="h-20 w-20 rounded-xl border border-border object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-muted">
+                      <PackageSearch className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-display text-lg font-semibold leading-snug">
+                      {foundProduct.name?.trim() || "Unnamed product"}
+                    </p>
+                    <p className="mt-0.5 font-body text-sm text-muted-foreground">
+                      {[foundProduct.brand, CATEGORY_BY_KEY[category].label]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                    <p className="mt-2 font-mono text-xs text-muted-foreground">{barcode}</p>
+                    <p className="mt-1 font-body text-xs text-muted-foreground">
+                      Matched from {SOURCE_LABEL[foundProduct.source] ?? foundProduct.source}
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-4 font-body text-xs text-muted-foreground">
+                  Barcode databases sometimes list the wrong size, colorway, or pack count. Please
+                  confirm this is the exact product you own before we save it — recall matching
+                  depends on it.
+                </p>
+              </div>
+              <Button
+                type="button"
+                onClick={() => setStep("form")}
+                className="h-12 w-full rounded-full font-body text-sm font-semibold"
+              >
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                Yes, this is my product
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  // Keep the scanned barcode (so the manual details still get
+                  // contributed back to the shared catalog for this code), but
+                  // drop the wrong match and let the parent type the truth.
+                  setFoundProduct(null);
+                  setRecallInfo(null);
+                  setRecallCheckError(null);
+                  setName("");
+                  setBrand("");
+                  setCategory("other");
+                  setLookupError(
+                    "No problem — enter the correct details below and we'll use those instead.",
+                  );
+                  setStep("form");
+                }}
+                className="h-12 w-full rounded-full font-body text-sm font-semibold"
+              >
+                No — that&apos;s not it, let me enter the details
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={resetForAnother}
+                className="h-11 w-full rounded-full font-body text-sm"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Scan again
+              </Button>
+            </div>
+          )}
           {step === "form" && (
             <form onSubmit={handleSave} className="space-y-6">
               <div className="rounded-3xl bg-card border border-border p-5">
