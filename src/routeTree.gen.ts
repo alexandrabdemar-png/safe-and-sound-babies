@@ -46,6 +46,7 @@ import { Route as AuthenticatedProfileSupportRouteImport } from './routes/_authe
 import { Route as AuthenticatedProfilePrivacyPromiseRouteImport } from './routes/_authenticated/profile_/privacy-promise'
 import { Route as AuthenticatedProfilePrivacyPolicyRouteImport } from './routes/_authenticated/profile_.privacy-policy'
 import { Route as AuthenticatedProfileNotificationSettingsRouteImport } from './routes/_authenticated/profile_.notification-settings'
+import { Route as AuthenticatedProfileCatalogModerationRouteImport } from './routes/_authenticated/profile_.catalog-moderation'
 import { Route as AuthenticatedProfileCaregiversRouteImport } from './routes/_authenticated/profile_.caregivers'
 import { Route as AuthenticatedProductsScanRouteImport } from './routes/_authenticated/products_.scan'
 import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products_.new'
@@ -253,6 +254,12 @@ const AuthenticatedProfileNotificationSettingsRoute =
     path: '/profile/notification-settings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedProfileCatalogModerationRoute =
+  AuthenticatedProfileCatalogModerationRouteImport.update({
+    id: '/profile_/catalog-moderation',
+    path: '/profile/catalog-moderation',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProfileCaregiversRoute =
   AuthenticatedProfileCaregiversRouteImport.update({
     id: '/profile_/caregivers',
@@ -348,6 +355,7 @@ export interface FileRoutesByFullPath {
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/scan': typeof AuthenticatedProductsScanRoute
   '/profile/caregivers': typeof AuthenticatedProfileCaregiversRoute
+  '/profile/catalog-moderation': typeof AuthenticatedProfileCatalogModerationRoute
   '/profile/notification-settings': typeof AuthenticatedProfileNotificationSettingsRoute
   '/profile/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/profile/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
@@ -396,6 +404,7 @@ export interface FileRoutesByTo {
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/scan': typeof AuthenticatedProductsScanRoute
   '/profile/caregivers': typeof AuthenticatedProfileCaregiversRoute
+  '/profile/catalog-moderation': typeof AuthenticatedProfileCatalogModerationRoute
   '/profile/notification-settings': typeof AuthenticatedProfileNotificationSettingsRoute
   '/profile/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/profile/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
@@ -446,6 +455,7 @@ export interface FileRoutesById {
   '/_authenticated/products_/new': typeof AuthenticatedProductsNewRoute
   '/_authenticated/products_/scan': typeof AuthenticatedProductsScanRoute
   '/_authenticated/profile_/caregivers': typeof AuthenticatedProfileCaregiversRoute
+  '/_authenticated/profile_/catalog-moderation': typeof AuthenticatedProfileCatalogModerationRoute
   '/_authenticated/profile_/notification-settings': typeof AuthenticatedProfileNotificationSettingsRoute
   '/_authenticated/profile_/privacy-policy': typeof AuthenticatedProfilePrivacyPolicyRoute
   '/_authenticated/profile_/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
@@ -496,6 +506,7 @@ export interface FileRouteTypes {
     | '/products/new'
     | '/products/scan'
     | '/profile/caregivers'
+    | '/profile/catalog-moderation'
     | '/profile/notification-settings'
     | '/profile/privacy-policy'
     | '/profile/privacy-promise'
@@ -544,6 +555,7 @@ export interface FileRouteTypes {
     | '/products/new'
     | '/products/scan'
     | '/profile/caregivers'
+    | '/profile/catalog-moderation'
     | '/profile/notification-settings'
     | '/profile/privacy-policy'
     | '/profile/privacy-promise'
@@ -593,6 +605,7 @@ export interface FileRouteTypes {
     | '/_authenticated/products_/new'
     | '/_authenticated/products_/scan'
     | '/_authenticated/profile_/caregivers'
+    | '/_authenticated/profile_/catalog-moderation'
     | '/_authenticated/profile_/notification-settings'
     | '/_authenticated/profile_/privacy-policy'
     | '/_authenticated/profile_/privacy-promise'
@@ -887,6 +900,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileNotificationSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile_/catalog-moderation': {
+      id: '/_authenticated/profile_/catalog-moderation'
+      path: '/profile/catalog-moderation'
+      fullPath: '/profile/catalog-moderation'
+      preLoaderRoute: typeof AuthenticatedProfileCatalogModerationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile_/caregivers': {
       id: '/_authenticated/profile_/caregivers'
       path: '/profile/caregivers'
@@ -985,6 +1005,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
   AuthenticatedProductsScanRoute: typeof AuthenticatedProductsScanRoute
   AuthenticatedProfileCaregiversRoute: typeof AuthenticatedProfileCaregiversRoute
+  AuthenticatedProfileCatalogModerationRoute: typeof AuthenticatedProfileCatalogModerationRoute
   AuthenticatedProfileNotificationSettingsRoute: typeof AuthenticatedProfileNotificationSettingsRoute
   AuthenticatedProfilePrivacyPolicyRoute: typeof AuthenticatedProfilePrivacyPolicyRoute
   AuthenticatedProfilePrivacyPromiseRoute: typeof AuthenticatedProfilePrivacyPromiseRoute
@@ -1016,6 +1037,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
   AuthenticatedProductsScanRoute: AuthenticatedProductsScanRoute,
   AuthenticatedProfileCaregiversRoute: AuthenticatedProfileCaregiversRoute,
+  AuthenticatedProfileCatalogModerationRoute:
+    AuthenticatedProfileCatalogModerationRoute,
   AuthenticatedProfileNotificationSettingsRoute:
     AuthenticatedProfileNotificationSettingsRoute,
   AuthenticatedProfilePrivacyPolicyRoute:
