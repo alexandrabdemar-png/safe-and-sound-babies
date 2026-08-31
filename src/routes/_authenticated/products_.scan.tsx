@@ -59,6 +59,7 @@ const SOURCE_LABEL: Record<string, string> = {
   "barcode-lookup": "Barcode Lookup",
   manual: "Community submission",
   seed: "Verified product catalog",
+  "upcitemdb-verified": "Sourced UPC catalog (please confirm)",
 };
 
 type LookupProduct = {
