@@ -25,7 +25,13 @@ import { isSchemaMissingTableError } from "@/lib/errors";
 // In-App Purchase on iOS, alongside the existing Stripe web billing) —
 // existing users will NOT be automatically re-prompted per the note
 // above.
-export const CURRENT_TERMS_VERSION = "2026-08-21";
+//
+// Bumped 2026-08-31 for counsel-requested wording changes: Section 8
+// (Release) now names "agents" among the hold-harmless parties, and
+// Section 9 (Limitation of Liability) caps liability at three years of
+// fees paid rather than a flat $50. Existing users will NOT be
+// automatically re-prompted per the note above.
+export const CURRENT_TERMS_VERSION = "2026-08-31";
 
 /**
  * True when the user has NEVER accepted the terms. Once a user has any

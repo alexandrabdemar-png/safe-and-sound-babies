@@ -128,7 +128,7 @@ function TermsPage() {
             <section>
               <h2 className="font-display text-xl font-semibold text-foreground">8. Release</h2>
               <p className="mt-2 text-muted-foreground">
-                To the fullest extent permitted by applicable law, you assume full responsibility for any decisions you make regarding your child's care and the use of any products, and you release and hold harmless Peace of Mine, its owners, employees, contractors, affiliates, licensors, and partners from claims arising from your use of the app, except where such liability cannot legally be excluded.
+                To the fullest extent permitted by applicable law, you assume full responsibility for any decisions you make regarding your child's care and the use of any products, and you release and hold harmless Peace of Mine, its owners, employees, contractors, agents, affiliates, licensors, and partners from claims arising from your use of the app, except where such liability cannot legally be excluded.
               </p>
             </section>
 
@@ -138,7 +138,7 @@ function TermsPage() {
                 To the fullest extent permitted by law, Peace of Mine and its creators will not be liable for any direct, indirect, incidental, consequential, special, or punitive damages arising from your use of (or inability to use) the app or its content, including any damages resulting from a product recall, injury, or safety incident, regardless of the legal theory under which such damages are sought.
               </p>
               <p className="mt-2 text-muted-foreground">
-                Where liability cannot be excluded entirely under applicable law, you agree that Peace of Mine's total, aggregate liability to you for any and all claims arising from or relating to your use of the app is limited to fifty dollars ($50 USD), regardless of the number of claims, the number of children or products involved, or the legal theory asserted. This cap does not apply where prohibited by law.
+                Where liability cannot be excluded entirely under applicable law, you agree that Peace of Mine's total, aggregate liability to you for any and all claims arising from or relating to your use of the app is limited to the total fees you paid to Peace of Mine in the three (3) years immediately preceding the claim, regardless of the number of claims, the number of children or products involved, or the legal theory asserted. This cap does not apply where prohibited by law.
               </p>
             </section>
 
@@ -168,7 +168,7 @@ function TermsPage() {
             <section>
               <h2 className="font-display text-xl font-semibold text-foreground">12. Changes to These Terms</h2>
               <p className="mt-2 text-muted-foreground">
-                We may update these Terms from time to time. When we make a material change, you will be asked to explicitly accept the updated Terms again before continuing to use the app. Continued use of Peace of Mine after a non-material change means you accept the revised Terms.
+                We may update these Terms and Conditions from time to time and in our sole discretion. When we make a material change, you will be asked to explicitly accept the updated Terms again before continuing to use the app. Continued use of Peace of Mine after a non-material change means you accept the revised Terms.
               </p>
             </section>
 

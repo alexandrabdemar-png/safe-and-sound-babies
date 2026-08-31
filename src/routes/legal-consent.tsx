@@ -45,12 +45,12 @@ const ACKNOWLEDGMENTS = [
 // condensed from privacy-policy.ts's fuller version, which stays the
 // source of truth for the complete list.
 const DATA_PRACTICES = [
+  "We never sell your data or share it with advertisers.",
   "Your child's name and any milestones you log — used to time safety reminders to the milestones your child has reached, not a stored birthdate.",
   "Baby products you add (name, brand, barcode) — matched against official recall databases (CPSC, FDA, and others).",
   "Your email — to run your account and send you safety alerts.",
   "If you search for a product or use AI-powered safety guidance, that search text (never your child's name or info) is sent to Google's or Anthropic's AI models.",
   "Payment details, only if you subscribe to Pro — handled entirely by Stripe; we never see your card number.",
-  "We never sell your data or share it with advertisers.",
 ];
 
 function LegalConsentPage() {
