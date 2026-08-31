@@ -23,6 +23,11 @@ import { openUrl } from "@/lib/browser";
 import { APP_VERSION, SHARE_URL } from "@/lib/constants";
 import { extractFunctionsErrorMessage } from "@/lib/functionsError";
 import { DevRoleSwitcher } from "@/components/DevRoleSwitcher";
+import { amICatalogAdmin } from "@/lib/catalogModeration.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
+
+
 
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -34,6 +39,13 @@ export const Route = createFileRoute("/_authenticated/profile")({
 function ProfilePage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState<string | null>(null);
+  const checkCatalogAdmin = useServerFn(amICatalogAdmin);
+  const catalogAdmin = useQuery({
+    queryKey: ["catalog-admin"],
+    queryFn: () => checkCatalogAdmin(),
+    staleTime: 5 * 60 * 1000,
+  });
+
   const { isPro, subscription, loading: subLoading } = useSubscription();
   const { requirePro } = useProGate();
   const { children, refresh: refreshChildren } = useActiveChild();
@@ -286,6 +298,14 @@ function ProfilePage() {
           <Button asChild variant="ghost" className="w-full justify-start rounded-xl">
             <Link to="/profile/support"><HelpCircle className="h-4 w-4 mr-2" /> Help & Support</Link>
           </Button>
+          {catalogAdmin.data?.isAdmin && (
+            <Button asChild variant="ghost" className="w-full justify-start rounded-xl">
+              <Link to="/profile/catalog-moderation">
+                <Shield className="h-4 w-4 mr-2" /> Catalog moderation
+              </Link>
+            </Button>
+          )}
+
         </section>
 
         {/* Account */}
