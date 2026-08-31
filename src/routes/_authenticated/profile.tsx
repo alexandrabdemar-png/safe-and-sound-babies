@@ -291,6 +291,14 @@ function ProfilePage() {
           <Button asChild variant="ghost" className="w-full justify-start rounded-xl">
             <Link to="/profile/support"><HelpCircle className="h-4 w-4 mr-2" /> Help & Support</Link>
           </Button>
+          {catalogAdmin.data?.isAdmin && (
+            <Button asChild variant="ghost" className="w-full justify-start rounded-xl">
+              <Link to="/profile/catalog-moderation">
+                <Shield className="h-4 w-4 mr-2" /> Catalog moderation
+              </Link>
+            </Button>
+          )}
+
         </section>
 
         {/* Account */}
