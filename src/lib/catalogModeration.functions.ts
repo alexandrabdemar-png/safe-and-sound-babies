@@ -116,14 +116,15 @@ export const updateCatalogEntry = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context as unknown as AuthedContext);
     const db = await admin();
-    const patch: Record<string, unknown> = {
+    const patch = {
       name: data.name,
       brand: data.brand,
       category: data.category,
       is_baby_product: data.isBabyProduct,
       updated_at: new Date().toISOString(),
+      ...(data.promote ? { source: VERIFIED_SOURCE } : {}),
     };
-    if (data.promote) patch.source = VERIFIED_SOURCE;
+
     const { data: row, error } = await db
       .from("product_catalog")
       .update(patch)
