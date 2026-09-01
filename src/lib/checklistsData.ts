@@ -25,7 +25,6 @@ export const ROOMS: Room[] = [
     items: [
       { key: "nursery_crib_firm_mattress", label: "Firm, flat crib mattress with fitted sheet" },
       { key: "nursery_crib_no_bumpers", label: "No crib bumpers, pillows, or loose bedding" },
-      { key: "nursery_crib_slat_spacing", label: "Crib slat spacing ≤ 2⅜ inches" },
       { key: "nursery_temp_68_72", label: "Room temperature 68–72°F (20–22°C)" },
       { key: "nursery_co_detector", label: "CO detector installed and tested" },
       { key: "nursery_baby_monitor", label: "Baby monitor positioned safely out of reach" },
@@ -94,7 +93,6 @@ export const ROOMS: Room[] = [
       { key: "bath_door_locked", label: "Bathroom door kept closed/locked", minAgeMonths: 9 },
       { key: "bath_toilet_lock", label: "Toilet lid lock installed", minAgeMonths: 9 },
       { key: "bath_non_slip_mat", label: "Non-slip mat inside and outside tub", minAgeMonths: 6 },
-      { key: "bath_water_temp_120", label: "Water heater set to ≤ 120°F (49°C)" },
       { key: "bath_never_leave_alone", label: "Never leave baby alone in water" },
       { key: "bath_meds_locked", label: "All medications in locked cabinet" },
       {

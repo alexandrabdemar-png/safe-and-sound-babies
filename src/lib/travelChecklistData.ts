@@ -59,7 +59,7 @@ export const TRAVEL_SECTIONS: TravelSection[] = [
       {
         key: "travel_safe_sleep_surface",
         label: "Confirm your accommodation has a safe sleep option",
-        note: "A pack-and-play or travel crib — never let baby sleep in an adult bed or a hotel chair.",
+        note: "A pack-and-play or travel crib.",
       },
     ],
   },
