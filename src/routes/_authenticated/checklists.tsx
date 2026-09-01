@@ -8,7 +8,6 @@ import {
   ArrowLeft,
   ShieldCheck,
   Luggage,
-  HeartPulse,
   Home,
   X,
 } from "lucide-react";
@@ -250,26 +249,6 @@ function ChecklistsPage() {
               </p>
               <p className="font-body text-xs" style={{ color: "var(--muted-foreground)" }}>
                 Check before you add to your registry or use a hand-me-down
-              </p>
-            </div>
-          </Link>
-          <Link
-            to="/emergency-info"
-            className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:border-[var(--accent)]/50"
-            style={{ borderColor: "var(--border)", backgroundColor: "var(--card)" }}
-          >
-            <span
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-              style={{ backgroundColor: "var(--sand)" }}
-            >
-              <HeartPulse className="h-5 w-5" style={{ color: "var(--accent)" }} />
-            </span>
-            <div>
-              <p className="font-display text-sm font-semibold" style={{ color: "var(--foreground)" }}>
-                Emergency Info
-              </p>
-              <p className="font-body text-xs" style={{ color: "var(--muted-foreground)" }}>
-                Card for a babysitter or sitter
               </p>
             </div>
           </Link>

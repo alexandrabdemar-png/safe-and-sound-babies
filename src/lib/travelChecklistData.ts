@@ -105,7 +105,7 @@ export const TRAVEL_SECTIONS: TravelSection[] = [
     items: [
       {
         key: "travel_hotel_no_bed_sleep",
-        label: "Baby sleeps in pack-and-play, not the adult bed or sofa",
+        label: "Make sure you have all the sleep essentials you need",
       },
       {
         key: "travel_hotel_firm_mattress",
