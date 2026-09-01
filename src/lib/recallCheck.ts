@@ -217,6 +217,36 @@ function stem(word: string): string {
 }
 
 
+function wordsOf(s: string): string[] {
+  return s.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter(Boolean);
+}
+
+function meaningfulTokens(words: string[]): string[] {
+  return words.filter((w) => w.length >= 3 && !NOISE_WORDS.has(w)).map(stem);
+}
+
+// Every meaningful token must appear (modulo the plural normalization in
+// `stem`) — not just a majority. A prior "75% of tokens for longer names"
+// rule let a product name whose non-brand words happen to be common food/
+// descriptor terms (e.g. a flavor like "Blueberry Apple") pass against a
+// completely unrelated recall that just happens to mention the same generic
+// words in its own ingredient list, with the actual distinguishing token
+// (the brand) never appearing at all — reported bug: "Beech Nut Blueberry
+// Apple" false-matched an unrelated "Grizzlies" trail mix recall on
+// "blueberry"/"apple" alone. Requiring every token closes that off while the
+// plural normalization still lets real wording differences (recall text
+// says "Pacifiers", product says "Pacifier") through.
+function tokensMatch(
+  tokens: string[],
+  textTokens: Set<string>,
+  wholeQuery: string,
+  text: string,
+): boolean {
+  if (tokens.length === 0) return text.includes(wholeQuery);
+  if (tokens.length === 1) return textTokens.has(tokens[0]);
+  return tokens.every((t) => textTokens.has(t));
+}
+
 /**
  * Fuzzy-match a product name against a block of recall text.
  *
@@ -234,39 +264,50 @@ function stem(word: string): string {
  */
 export function fuzzyMatchProduct(productName: string, recallText: string): boolean {
   const text = recallText.toLowerCase();
-  const textTokens = new Set(
-    text
-      .replace(/[^a-z0-9 ]+/g, " ")
-      .split(/\s+/)
-      .filter(Boolean)
-      .map(stem),
-  );
-  const tokens = productName
-    .toLowerCase()
-    .replace(/[^a-z0-9 ]+/g, " ")
-    .split(/\s+/)
-    .filter((w) => w.length >= 3 && !NOISE_WORDS.has(w))
-    .map(stem);
+  const textTokens = new Set(wordsOf(text).map(stem));
+  const rawWords = wordsOf(productName);
+  const wholeQuery = productName.toLowerCase().trim();
+  const tokens = meaningfulTokens(rawWords);
 
-  if (tokens.length === 0) {
-    return text.includes(productName.toLowerCase().trim());
+  // A lone surviving token sitting right next to a 1-2 letter fragment is
+  // usually the leftover half of a brand word an accidental space split in
+  // two (e.g. "by heart formula" typed for "ByHeart formula") — the "by"
+  // fragment gets dropped as too short to be meaningful, leaving "heart"
+  // alone as the sole token. That's generic enough to false-match a totally
+  // unrelated recall (a "Heart Charm Bracelet") while STILL never matching
+  // the real "ByHeart" recall, whose text has "byheart" as one fused token
+  // that "heart" alone never equals. Skip trusting the bare fragment in
+  // that situation and fall straight through to the glue-back-together
+  // attempt below instead of returning here.
+  const survivorIdx =
+    tokens.length === 1
+      ? rawWords.findIndex((w) => w.length >= 3 && !NOISE_WORDS.has(w) && stem(w) === tokens[0])
+      : -1;
+  const hasShortNeighbor =
+    survivorIdx >= 0 &&
+    ((rawWords[survivorIdx - 1]?.length ?? 99) <= 2 || (rawWords[survivorIdx + 1]?.length ?? 99) <= 2);
+
+  if (!hasShortNeighbor && tokensMatch(tokens, textTokens, wholeQuery, text)) {
+    return true;
   }
-  if (tokens.length === 1) {
-    return textTokens.has(tokens[0]);
+
+  // Re-glue every 1-2 letter fragment to each of its neighbors and retry —
+  // this recovers "byheart" from "by heart" without weakening the
+  // every-token-must-match rule for genuinely multi-word product names
+  // (glued candidates go through the exact same tokensMatch logic above).
+  for (let i = 0; i < rawWords.length; i++) {
+    if (rawWords[i].length > 2) continue;
+    if (i + 1 < rawWords.length) {
+      const glued = [...rawWords.slice(0, i), rawWords[i] + rawWords[i + 1], ...rawWords.slice(i + 2)];
+      if (tokensMatch(meaningfulTokens(glued), textTokens, wholeQuery, text)) return true;
+    }
+    if (i > 0) {
+      const glued = [...rawWords.slice(0, i - 1), rawWords[i - 1] + rawWords[i], ...rawWords.slice(i + 1)];
+      if (tokensMatch(meaningfulTokens(glued), textTokens, wholeQuery, text)) return true;
+    }
   }
-  // Every meaningful token must appear (modulo the plural normalization
-  // above) — not just a majority. A prior "75% of tokens for longer names"
-  // rule let a product name whose non-brand words happen to be common food/
-  // descriptor terms (e.g. a flavor like "Blueberry Apple") pass against a
-  // completely unrelated recall that just happens to mention the same
-  // generic words in its own ingredient list, with the actual distinguishing
-  // token (the brand) never appearing at all — reported bug: "Beech Nut
-  // Blueberry Apple" false-matched an unrelated "Grizzlies" trail mix recall
-  // on "blueberry"/"apple" alone. Requiring every token closes that off
-  // while the plural normalization above still lets real wording
-  // differences (recall text says "Pacifiers", product says "Pacifier")
-  // through.
-  return tokens.every((t) => textTokens.has(t));
+
+  return false;
 }
 
 /**

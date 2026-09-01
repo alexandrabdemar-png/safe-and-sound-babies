@@ -94,6 +94,42 @@ describe("fuzzyMatchProduct", () => {
   });
 });
 
+// ── Regression (live bug report): searching "by heart formula" — an
+// accidental space inside the "ByHeart" brand name — matched an unrelated
+// children's jewelry recall instead of the real ByHeart formula recall.
+// Root cause: the stray "by" fragment was too short/a noise word to survive
+// tokenizing, leaving the single leftover word "heart" as the sole token —
+// generic enough to false-match anything mentioning "heart" while never
+// matching the real recall, whose text has "byheart" as one fused token.
+describe("fuzzyMatchProduct — accidental space inside a brand word (live bug report)", () => {
+  it("regression: still matches the real brand recall when a stray space splits the brand word", () => {
+    expect(
+      fuzzyMatchProduct(
+        "by heart formula",
+        "ByHeart Recalls Whole Nutrition Infant Formula Due to Possible Cronobacter Contamination",
+      ),
+    ).toBe(true);
+  });
+
+  it("regression: does NOT fall back to the generic leftover word and false-match an unrelated recall", () => {
+    expect(
+      fuzzyMatchProduct(
+        "by heart formula",
+        "Recalls Children's Heart Charm Bracelets Due to High Levels of Lead",
+      ),
+    ).toBe(false);
+  });
+
+  it("still matches the exact brand spelling with no accidental space", () => {
+    expect(
+      fuzzyMatchProduct(
+        "byheart formula",
+        "ByHeart Recalls Whole Nutrition Infant Formula Due to Possible Cronobacter Contamination",
+      ),
+    ).toBe(true);
+  });
+});
+
 describe("checkCpscRecalls — structured-field-only matching (regression: Pipa RX false positive)", () => {
   it("does NOT flag a product whose name is only mentioned in free text to say it's unaffected", async () => {
     // This is the exact bug class from earlier this session: a recall for

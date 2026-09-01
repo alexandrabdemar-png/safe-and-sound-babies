@@ -96,36 +96,18 @@ function stem(word: string): string {
 }
 
 
-export function fuzzyMatchProduct(productName: string, recallText: string): boolean {
-  const text = recallText.toLowerCase();
-  // Word-boundary set, not a raw string — checking token membership here
-  // (rather than `text.includes(token)`) is what stops a short token from
-  // matching as a *substring* of an unrelated word. Regression: a product
-  // named "Beech-Nut" tokenizes to ["beech", "nut"], and a completely
-  // unrelated recall for "Grizzlies Granola... Beechwood Trail Mix...
-  // Undeclared Peanuts" contains "beech" (inside "Beechwood") and "nut"
-  // (inside "Peanuts") as pure substrings, with neither word actually
-  // present — substring matching flagged that recall against Beech-Nut
-  // baby food, a false positive with no real connection between the
-  // products. Matching on whole tokens instead closes this off.
-  const textTokens = new Set(tokenize(text).map(stem));
+// Minimum length 2 (not 3) so short distinguishing suffixes like a
+// trim-level code ("RX", "LX") aren't silently dropped — dropping exactly
+// this kind of token is what let a sibling-product false positive slip
+// through in an earlier version of this matcher (see the Pipa RX
+// regression test above).
+function meaningfulTokens(words: string[]): string[] {
+  return [...new Set(words.filter((w) => w.length >= 2 && !NOISE_WORDS.has(w)).map(stem))];
+}
 
-  const tokens = [
-    ...new Set(
-      tokenize(productName)
-        // Minimum length 2 (not 3) so short distinguishing suffixes like a
-        // trim-level code ("RX", "LX") aren't silently dropped — dropping
-        // exactly this kind of token is what let a sibling-product false
-        // positive slip through in an earlier version of this matcher (see
-        // the Pipa RX regression test above).
-        .filter((w) => w.length >= 2 && !NOISE_WORDS.has(w))
-        .map(stem),
-    ),
-  ];
-
-  if (tokens.length === 0) return text.includes(productName.toLowerCase().trim());
+function tokensMatch(tokens: string[], textTokens: Set<string>, wholeQuery: string, text: string): boolean {
+  if (tokens.length === 0) return text.includes(wholeQuery);
   if (tokens.length === 1) return textTokens.has(tokens[0]);
-
   // Every meaningful token must appear (modulo the plural normalization
   // above) — not just a majority. A prior "75% of tokens for longer names"
   // rule let a product name whose non-brand words happen to be common food/
@@ -140,6 +122,65 @@ export function fuzzyMatchProduct(productName: string, recallText: string): bool
   // through. This also still catches the "Pipa" vs "Pipa RX" sibling-
   // product case — "rx" never appears at all, plural or not.
   return tokens.every((t) => textTokens.has(t));
+}
+
+export function fuzzyMatchProduct(productName: string, recallText: string): boolean {
+  const text = recallText.toLowerCase();
+  // Word-boundary set, not a raw string — checking token membership here
+  // (rather than `text.includes(token)`) is what stops a short token from
+  // matching as a *substring* of an unrelated word. Regression: a product
+  // named "Beech-Nut" tokenizes to ["beech", "nut"], and a completely
+  // unrelated recall for "Grizzlies Granola... Beechwood Trail Mix...
+  // Undeclared Peanuts" contains "beech" (inside "Beechwood") and "nut"
+  // (inside "Peanuts") as pure substrings, with neither word actually
+  // present — substring matching flagged that recall against Beech-Nut
+  // baby food, a false positive with no real connection between the
+  // products. Matching on whole tokens instead closes this off.
+  const textTokens = new Set(tokenize(text).map(stem));
+  const rawWords = tokenize(productName);
+  const wholeQuery = productName.toLowerCase().trim();
+  const tokens = meaningfulTokens(rawWords);
+
+  // A lone surviving token sitting right next to a 1-2 letter fragment is
+  // usually the leftover half of a brand word an accidental space split in
+  // two (e.g. "by heart formula" typed for "ByHeart formula") — the "by"
+  // fragment gets dropped (it's both too short and, here, an explicit
+  // NOISE_WORD), leaving "heart" alone as the sole token. That's generic
+  // enough to false-match a totally unrelated recall (a "Heart Charm
+  // Bracelet") while STILL never matching the real "ByHeart" recall, whose
+  // text has "byheart" as one fused token that "heart" alone never equals.
+  // Skip trusting the bare fragment in that situation and fall straight
+  // through to the glue-back-together attempt below instead of returning
+  // here. Mirrors the identical fix in src/lib/recallCheck.ts.
+  const survivorIdx =
+    tokens.length === 1
+      ? rawWords.findIndex((w) => w.length >= 2 && !NOISE_WORDS.has(w) && stem(w) === tokens[0])
+      : -1;
+  const hasShortNeighbor =
+    survivorIdx >= 0 &&
+    ((rawWords[survivorIdx - 1]?.length ?? 99) <= 2 || (rawWords[survivorIdx + 1]?.length ?? 99) <= 2);
+
+  if (!hasShortNeighbor && tokensMatch(tokens, textTokens, wholeQuery, text)) {
+    return true;
+  }
+
+  // Re-glue every 1-2 letter fragment to each of its neighbors and retry —
+  // this recovers "byheart" from "by heart" without weakening the
+  // every-token-must-match rule for genuinely multi-word product names
+  // (glued candidates go through the exact same tokensMatch logic above).
+  for (let i = 0; i < rawWords.length; i++) {
+    if (rawWords[i].length > 2) continue;
+    if (i + 1 < rawWords.length) {
+      const glued = [...rawWords.slice(0, i), rawWords[i] + rawWords[i + 1], ...rawWords.slice(i + 2)];
+      if (tokensMatch(meaningfulTokens(glued), textTokens, wholeQuery, text)) return true;
+    }
+    if (i > 0) {
+      const glued = [...rawWords.slice(0, i - 1), rawWords[i - 1] + rawWords[i], ...rawWords.slice(i + 1)];
+      if (tokensMatch(meaningfulTokens(glued), textTokens, wholeQuery, text)) return true;
+    }
+  }
+
+  return false;
 }
 
 export type RecallHit = {

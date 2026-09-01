@@ -166,6 +166,42 @@ describe("fuzzyMatchProduct — brand-only false positive (live bug report)", ()
   });
 });
 
+// ── Regression (live bug report): searching "by heart formula" — an
+// accidental space inside the "ByHeart" brand name — matched an unrelated
+// children's jewelry recall instead of the real ByHeart formula recall.
+// Root cause: the stray "by" fragment was too short to survive tokenizing,
+// leaving the single leftover word "heart" as the sole token — generic
+// enough to false-match anything mentioning "heart" while never matching
+// the real recall, whose text has "byheart" as one fused token.
+describe("fuzzyMatchProduct — accidental space inside a brand word (live bug report)", () => {
+  it("regression: still matches the real brand recall when a stray space splits the brand word", () => {
+    expect(
+      fuzzyMatchProduct(
+        "by heart formula",
+        "ByHeart Recalls Whole Nutrition Infant Formula Due to Possible Cronobacter Contamination",
+      ),
+    ).toBe(true);
+  });
+
+  it("regression: does NOT fall back to the generic leftover word and false-match an unrelated recall", () => {
+    expect(
+      fuzzyMatchProduct(
+        "by heart formula",
+        "Recalls Children's Heart Charm Bracelets Due to High Levels of Lead",
+      ),
+    ).toBe(false);
+  });
+
+  it("still matches the exact brand spelling with no accidental space", () => {
+    expect(
+      fuzzyMatchProduct(
+        "byheart formula",
+        "ByHeart Recalls Whole Nutrition Infant Formula Due to Possible Cronobacter Contamination",
+      ),
+    ).toBe(true);
+  });
+});
+
 describe("lotMatches", () => {
   it("matches an exact same lot code regardless of case", () => {
     expect(lotMatches("ab1234", "AB1234")).toBe(true);
