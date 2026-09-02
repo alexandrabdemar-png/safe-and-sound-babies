@@ -1,5 +1,11 @@
-import { describe, expect, it } from "vitest";
-import { parseFoodName, computeAllergenProgress, TOP_ALLERGENS } from "./first-foods";
+import { describe, expect, it, beforeEach } from "vitest";
+import {
+  parseFoodName,
+  computeAllergenProgress,
+  TOP_ALLERGENS,
+  isFourDayReminderDismissed,
+  dismissFourDayReminderForever,
+} from "./first-foods";
 
 // Regression: editing an existing first_foods entry re-runs the same
 // "{name} ({Allergen})" suffix logic handleSave() uses when adding — this
@@ -100,5 +106,47 @@ describe("computeAllergenProgress", () => {
     // logged first here — the UI should read in a stable, predictable
     // order rather than shuffling based on when each was logged.
     expect(result.introduced).toEqual(["Milk", "Sesame"]);
+  });
+});
+
+// "Don't remind me again" on the 4-day wait reminder — reported request: once
+// a user picks this, the reminder must never pop up again for them, on this
+// device. Persisted in localStorage (client-only preference, no server round
+// trip needed) under a dedicated key checked before the reminder is shown.
+// This project's vitest config runs in plain Node (no DOM/localStorage
+// global — see whatsNew.test.ts), so a minimal in-memory stand-in is
+// installed as the global for these tests only.
+function makeFakeLocalStorage() {
+  const store = new Map<string, string>();
+  return {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      store.set(key, value);
+    },
+    removeItem: (key: string) => {
+      store.delete(key);
+    },
+    clear: () => store.clear(),
+  };
+}
+
+describe("4-day reminder dismissal", () => {
+  beforeEach(() => {
+    (globalThis as { localStorage?: unknown }).localStorage = makeFakeLocalStorage();
+  });
+
+  it("is not dismissed by default", () => {
+    expect(isFourDayReminderDismissed()).toBe(false);
+  });
+
+  it("stays dismissed after dismissFourDayReminderForever() is called", () => {
+    dismissFourDayReminderForever();
+    expect(isFourDayReminderDismissed()).toBe(true);
+  });
+
+  it("does not affect other localStorage keys", () => {
+    localStorage.setItem("safesound.activeChildId", "abc123");
+    dismissFourDayReminderForever();
+    expect(localStorage.getItem("safesound.activeChildId")).toBe("abc123");
   });
 });

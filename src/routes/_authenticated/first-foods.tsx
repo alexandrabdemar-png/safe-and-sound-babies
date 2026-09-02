@@ -70,6 +70,24 @@ export function computeAllergenProgress(foods: { food_name: string }[]): {
   };
 }
 
+const FOUR_DAY_REMINDER_DISMISSED_KEY = "safesound.fourDayReminderDismissed";
+
+/** Whether this user previously chose "Don't remind me again" on the 4-day wait reminder. */
+export function isFourDayReminderDismissed(): boolean {
+  try {
+    return localStorage.getItem(FOUR_DAY_REMINDER_DISMISSED_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+/** Persists the "Don't remind me again" choice so the 4-day wait reminder never shows again on this device. */
+export function dismissFourDayReminderForever(): void {
+  try {
+    localStorage.setItem(FOUR_DAY_REMINDER_DISMISSED_KEY, "true");
+  } catch {}
+}
+
 type Child = {
   id: string;
   name: string;
@@ -94,6 +112,7 @@ function FirstFoodsPage() {
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [show4DayCard, setShow4DayCard] = useState(false);
+  const [confirmDismiss4Day, setConfirmDismiss4Day] = useState(false);
 
   // Form state — editingId is null while adding a new food, or the id of
   // an existing first_foods row while editing one (see openEdit/handleSave).
@@ -253,7 +272,7 @@ function FirstFoodsPage() {
     setSelectedAllergen("");
     setReactionNotes("");
     setShowForm(false);
-    if (!isEditing) setShow4DayCard(true);
+    if (!isEditing && !isFourDayReminderDismissed()) setShow4DayCard(true);
     setSaving(false);
     // Deliberately not awaited/surfaced as an error toast: the save above
     // already succeeded and the user has already moved on by the time this
@@ -334,11 +353,44 @@ function FirstFoodsPage() {
                     Many pediatricians suggest waiting around 4 days before introducing another new
                     food — confirm this approach with your own doctor.
                   </p>
+                  {confirmDismiss4Day && (
+                    <div className="mt-3 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          dismissFourDayReminderForever();
+                          setShow4DayCard(false);
+                          setConfirmDismiss4Day(false);
+                        }}
+                        className="rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1 font-body text-[11px] font-semibold text-amber-800 hover:bg-amber-200"
+                      >
+                        Don't remind me again
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShow4DayCard(false);
+                          setConfirmDismiss4Day(false);
+                        }}
+                        className="rounded-full border border-amber-300 bg-card px-2.5 py-1 font-body text-[11px] text-amber-700 hover:bg-amber-100"
+                      >
+                        Just close
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <button
                   type="button"
-                  onClick={() => setShow4DayCard(false)}
+                  onClick={() => {
+                    if (confirmDismiss4Day) {
+                      setShow4DayCard(false);
+                      setConfirmDismiss4Day(false);
+                    } else {
+                      setConfirmDismiss4Day(true);
+                    }
+                  }}
                   className="shrink-0 rounded-full p-1 text-amber-600 hover:bg-amber-100"
+                  aria-label={confirmDismiss4Day ? "Close reminder" : "Dismiss reminder"}
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -556,15 +608,6 @@ function FirstFoodsPage() {
               </div>
             </div>
           )}
-
-          {/* 4-day guidance note */}
-          <div className="rounded-2xl bg-muted/40 px-4 py-3">
-            <p className="font-body text-xs text-muted-foreground leading-relaxed">
-              Many pediatricians suggest introducing one new food at a time and waiting around 4
-              days before the next — this helps identify any reactions. Always follow your own
-              doctor's guidance.
-            </p>
-          </div>
         </div>
       </main>
 
