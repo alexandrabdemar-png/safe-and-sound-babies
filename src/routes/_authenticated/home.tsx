@@ -1051,10 +1051,8 @@ function HomePage() {
               className="flex items-center justify-between rounded-3xl border border-border/60 bg-card p-4 transition-all hover:border-primary/40"
             >
               <div>
-                <p className="font-display text-base font-semibold tracking-tight">
-                  ✨ You're all caught up
-                </p>
-                <p className="mt-0.5 font-body text-xs text-muted-foreground">
+                <p className="font-body text-sm font-semibold">✨ You're all caught up</p>
+                <p className="mt-0.5 font-body text-[11px] text-muted-foreground">
                   No recalls, replacements, or size changes found right now — we'll flag it here if
                   that changes based on what we're able to check.
                 </p>
@@ -1080,7 +1078,7 @@ function HomePage() {
         <section className="px-5 pt-4 sm:px-6 animate-fade-up stagger-4">
           <div className="mx-auto max-w-md">
             <div className="rounded-3xl border border-dashed border-border bg-card/40 p-5 text-center">
-              <span className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-sand/60 text-accent">
+              <span className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-primary">
                 <Sparkles className="h-3.5 w-3.5" />
               </span>
               <p className="font-body text-sm text-muted-foreground">
@@ -1096,12 +1094,10 @@ function HomePage() {
             <div className="mx-auto max-w-md">
               <div className="rounded-3xl border border-border/60 bg-card p-5">
                 <div className="mb-3 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sand/60 text-accent">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-primary">
                     <Sparkles className="h-3.5 w-3.5" />
                   </span>
-                  <p className="font-display text-sm font-semibold tracking-tight">
-                    Up next for {child?.name}
-                  </p>
+                  <p className="font-body text-sm font-semibold">Up next for {child?.name}</p>
                 </div>
                 <ul className="space-y-2.5">
                   {upNext.map((i) => (
@@ -1217,7 +1213,7 @@ function SummaryTile({
     tone === "danger"
       ? "bg-destructive/15 text-destructive"
       : count > 0
-        ? "bg-sand/60 text-accent"
+        ? "bg-primary/15 text-primary"
         : "bg-muted text-muted-foreground";
   return (
     <Link
@@ -1256,9 +1252,7 @@ function WeeklyDigestCard({
             <Sparkles className="h-3.5 w-3.5" />
           </span>
           <div>
-            <p className="font-display text-sm font-semibold tracking-tight">
-              This week for {childName}
-            </p>
+            <p className="font-body text-sm font-semibold">This week for {childName}</p>
             <p className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">
               Weekly digest
             </p>
@@ -1336,7 +1330,7 @@ function WhatsNewCard({
             <Zap className="h-3.5 w-3.5" />
           </span>
           <div>
-            <p className="font-display text-sm font-semibold tracking-tight">What's new</p>
+            <p className="font-body text-sm font-semibold">What's new</p>
             <p className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">
               {latest.version} · {latest.date}
             </p>
@@ -1622,9 +1616,7 @@ function HomePersonalizationCard({
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-primary">
               <Sparkles className="h-3.5 w-3.5" />
             </span>
-            <p className="font-display text-sm font-semibold tracking-tight">
-              Help us personalize your reminders
-            </p>
+            <p className="font-body text-sm font-semibold">Help us personalize your reminders</p>
           </div>
           <button
             type="button"
