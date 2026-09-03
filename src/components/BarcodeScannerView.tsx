@@ -63,16 +63,13 @@ export function BarcodeScannerView(props: BarcodeScannerViewProps) {
   return <WebBarcodeScannerView {...props} />;
 }
 
-/**
- * iOS sometimes reports UPC-A barcodes as EAN-13 with a leading "0" (13
- * digits). Most baby-product lookup databases index the 12-digit UPC-A
- * form, so strip a single leading zero from 13-digit numeric codes.
- */
-export function normalizeBarcode(value: string): string {
-  return /^0\d{12}$/.test(value) ? value.slice(1) : value;
-}
-
 const SCANNER_ACTIVE_CLASS = "barcode-scanner-active";
+
+function setPageTransparent(transparent: boolean) {
+  const method = transparent ? "add" : "remove";
+  document.documentElement.classList[method](SCANNER_ACTIVE_CLASS);
+  document.body.classList[method](SCANNER_ACTIVE_CLASS);
+}
 
 function NativeMlKitBarcodeScannerView({
   onDetected,
@@ -97,7 +94,7 @@ function NativeMlKitBarcodeScannerView({
     detectedRef.current = false;
     setPermissionDenied(false);
     let cancelled = false;
-    let cleanup: (() => Promise<void>) | null = null;
+    let session: BarcodeSession | null = null;
 
     (async () => {
       const { BarcodeScanner, BarcodeFormat } = await import(
@@ -105,69 +102,36 @@ function NativeMlKitBarcodeScannerView({
       );
       if (cancelled) return;
 
+      const formats = [
+        BarcodeFormat.UpcA,
+        BarcodeFormat.UpcE,
+        BarcodeFormat.Ean13,
+        BarcodeFormat.Ean8,
+        BarcodeFormat.Code128,
+        BarcodeFormat.Code39,
+        BarcodeFormat.QrCode,
+      ];
+
       try {
-        // Camera permission — check first, then request.
-        let { camera } = await BarcodeScanner.checkPermissions();
-        if (camera !== "granted" && camera !== "limited") {
-          ({ camera } = await BarcodeScanner.requestPermissions());
-        }
-        if (camera !== "granted" && camera !== "limited") {
-          setPermissionDenied(true);
-          onError?.("Camera access is needed to scan barcodes");
-          return;
-        }
-        if (cancelled) return;
-
-        const formats = [
-          BarcodeFormat.UpcA,
-          BarcodeFormat.UpcE,
-          BarcodeFormat.Ean13,
-          BarcodeFormat.Ean8,
-          BarcodeFormat.Code128,
-          BarcodeFormat.Code39,
-          BarcodeFormat.QrCode,
-        ];
-
-        const listener = await BarcodeScanner.addListener(
-          "barcodesScanned",
-          ({ barcodes }) => {
-            if (detectedRef.current) return;
-            const raw = barcodes?.[0]?.rawValue;
-            if (!raw) return;
-            detectedRef.current = true;
-            void stop().then(() => onDetected(normalizeBarcode(raw)));
+        session = await startBarcodeSession(
+          BarcodeScanner as unknown as MlKitLike,
+          formats,
+          {
+            onDetected: (code) => {
+              if (detectedRef.current) return;
+              detectedRef.current = true;
+              onDetected(code);
+            },
+            onError: (message) => {
+              setPermissionDenied(true);
+              onError?.(message);
+            },
+            setTransparent: setPageTransparent,
           },
         );
-
-        const stop = async () => {
-          document.documentElement.classList.remove(SCANNER_ACTIVE_CLASS);
-          document.body.classList.remove(SCANNER_ACTIVE_CLASS);
-          try {
-            await listener.remove();
-          } catch {
-            /* listener already gone */
-          }
-          try {
-            await BarcodeScanner.stopScan();
-          } catch {
-            /* session already stopped */
-          }
-        };
-        cleanup = stop;
-        stopRef.current = stop;
-
-        if (cancelled) {
-          await stop();
-          return;
-        }
-
-        // The native camera preview renders *behind* the WebView, so the
-        // page has to become transparent for the duration of the scan.
-        document.documentElement.classList.add(SCANNER_ACTIVE_CLASS);
-        document.body.classList.add(SCANNER_ACTIVE_CLASS);
-        await BarcodeScanner.startScan({ formats });
+        stopRef.current = session?.stop ?? null;
+        if (cancelled) await session?.stop();
       } catch (e) {
-        await cleanup?.();
         if (cancelled || detectedRef.current) return;
         const message =
           e instanceof Error ? e.message : "Could not start scanner";
@@ -178,6 +142,7 @@ function NativeMlKitBarcodeScannerView({
         }
       }
     })();
+
 
     return () => {
       cancelled = true;
