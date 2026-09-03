@@ -309,3 +309,19 @@
   .text-body    { font-size: 0.9375rem; line-height: 1.7; font-family: var(--font-body); font-weight: 400; letter-spacing: 0.005em; }      /* 15px — body text, slightly airier */
   .text-caption { font-size: 0.75rem;  line-height: 1.6;  font-family: var(--font-caption); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; } /* 12px */
 }
+
+/* Native iOS barcode scanning (@capacitor-mlkit/barcode-scanning startScan).
+   The ML Kit camera preview renders BEHIND the WebView, so while a scan is
+   running the page itself must be transparent — otherwise the user sees the
+   app UI and no camera at all (this is what broke scanning in TestFlight).
+   Only elements marked .barcode-scanner-ui stay visible on top. */
+html.barcode-scanner-active,
+body.barcode-scanner-active {
+  visibility: hidden;
+  background: transparent !important;
+}
+
+body.barcode-scanner-active .barcode-scanner-ui,
+body.barcode-scanner-active .barcode-scanner-ui * {
+  visibility: visible;
+}

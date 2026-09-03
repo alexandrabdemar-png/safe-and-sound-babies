@@ -1,28 +1,33 @@
-import { useEffect, useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Loader2, X } from "lucide-react";
 import {
   WebBarcodeScannerView,
   type BarcodeScannerViewProps,
 } from "@/components/WebBarcodeScannerView";
 import { useIsNativeIOS } from "@/hooks/useIsNativeIOS";
+import {
+  startBarcodeSession,
+  type BarcodeSession,
+  type MlKitLike,
+} from "@/lib/nativeBarcodeSession";
 
 // Platform dispatcher: uses the native ML Kit barcode scanner
-// (@capacitor-mlkit/barcode-scanning — Google's ML Kit on-device detector,
-// presented as a full-screen native view) when running as a native iOS
-// build, falling back to the web-based scanner (html5-qrcode, see
-// WebBarcodeScannerView.tsx) everywhere else — web, Android, and any
-// device where the native module reports itself unsupported.
+// (@capacitor-mlkit/barcode-scanning — Google's ML Kit on-device detector)
+// when running as a native iOS build, falling back to the web-based scanner
+// (html5-qrcode, see WebBarcodeScannerView.tsx) everywhere else.
 //
-// Why ML Kit over the raw camera/web path: much faster lock-on, tolerant
-// of angled and glossy packaging, and works in low light. All detection
-// happens on-device — no camera frames leave the phone.
-//
-// Important UX difference from the web path: the native scanner is a
-// full-screen NATIVE view presented on top of the WebView — it cannot be
-// embedded inline inside this component's box the way the web scanner's
-// live preview is. While it's active, this component just shows a loading
-// placeholder; the actual scanning UI is a separate native screen that
-// dismisses back to the app once a code is found (or the user cancels).
+// IMPORTANT (this was the TestFlight bug): the plugin exposes TWO scanning
+// APIs and they are NOT both available on iOS.
+//   • scan()      → Google's ready-made code-scanner *Activity*. Android only.
+//                   On iOS it rejects ("not implemented"/"not available"), so
+//                   the scanner appeared permanently broken in TestFlight
+//                   while working fine in the browser preview.
+//   • startScan() → starts the camera session behind the WebView and streams
+//                   results through the `barcodeScanned` listener. This is
+//                   the supported iOS path, and it requires the WebView to be
+//                   made transparent so the native preview shows through
+//                   (see `.barcode-scanner-active` in src/styles.css).
+// We now use startScan() on iOS and keep scan() for other native platforms.
 export function BarcodeScannerView(props: BarcodeScannerViewProps) {
   const isNativeIOS = useIsNativeIOS();
   const [nativeAvailable, setNativeAvailable] = useState<boolean | null>(null);
@@ -63,13 +68,12 @@ export function BarcodeScannerView(props: BarcodeScannerViewProps) {
   return <WebBarcodeScannerView {...props} />;
 }
 
-/**
- * iOS sometimes reports UPC-A barcodes as EAN-13 with a leading "0" (13
- * digits). Most baby-product lookup databases index the 12-digit UPC-A
- * form, so strip a single leading zero from 13-digit numeric codes.
- */
-function normalizeBarcode(value: string): string {
-  return /^0\d{12}$/.test(value) ? value.slice(1) : value;
+const SCANNER_ACTIVE_CLASS = "barcode-scanner-active";
+
+function setPageTransparent(transparent: boolean) {
+  const method = transparent ? "add" : "remove";
+  document.documentElement.classList[method](SCANNER_ACTIVE_CLASS);
+  document.body.classList[method](SCANNER_ACTIVE_CLASS);
 }
 
 function NativeMlKitBarcodeScannerView({
@@ -80,11 +84,22 @@ function NativeMlKitBarcodeScannerView({
   className,
 }: BarcodeScannerViewProps) {
   const detectedRef = useRef(false);
+  const stopRef = useRef<(() => Promise<void>) | null>(null);
+  const [permissionDenied, setPermissionDenied] = useState(false);
+
+  const cancel = useCallback(() => {
+    if (detectedRef.current) return;
+    detectedRef.current = true;
+    void stopRef.current?.();
+    onCancel?.();
+  }, [onCancel]);
 
   useEffect(() => {
     if (!active) return;
     detectedRef.current = false;
+    setPermissionDenied(false);
     let cancelled = false;
+    let session: BarcodeSession | null = null;
 
     (async () => {
       const { BarcodeScanner, BarcodeFormat } = await import(
@@ -92,45 +107,39 @@ function NativeMlKitBarcodeScannerView({
       );
       if (cancelled) return;
 
+      const formats = [
+        BarcodeFormat.UpcA,
+        BarcodeFormat.UpcE,
+        BarcodeFormat.Ean13,
+        BarcodeFormat.Ean8,
+        BarcodeFormat.Code128,
+        BarcodeFormat.Code39,
+        BarcodeFormat.QrCode,
+      ];
+
       try {
-        // Camera permission — check first, then request. On denial the
-        // web fallback needs the same permission anyway, so surface the
-        // error rather than silently swapping scanners mid-flow.
-        let { camera } = await BarcodeScanner.checkPermissions();
-        if (camera !== "granted") {
-          ({ camera } = await BarcodeScanner.requestPermissions());
-        }
-        if (camera !== "granted") {
-          onError?.("Camera access is needed to scan barcodes");
-          return;
-        }
-        if (cancelled) return;
-
-        const { barcodes } = await BarcodeScanner.scan({
-          formats: [
-            BarcodeFormat.UpcA,
-            BarcodeFormat.UpcE,
-            BarcodeFormat.Ean13,
-            BarcodeFormat.Ean8,
-            BarcodeFormat.Code128,
-            BarcodeFormat.Code39,
-            BarcodeFormat.QrCode,
-          ],
-        });
-        if (cancelled || detectedRef.current) return;
-
-        const raw = barcodes[0]?.rawValue;
-        if (!raw) {
-          // User closed the scanner without detecting anything.
-          onCancel?.();
-          return;
-        }
-        detectedRef.current = true;
-        onDetected(normalizeBarcode(raw));
+        session = await startBarcodeSession(
+          BarcodeScanner as unknown as MlKitLike,
+          formats,
+          {
+            onDetected: (code) => {
+              if (detectedRef.current) return;
+              detectedRef.current = true;
+              onDetected(code);
+            },
+            onError: (message) => {
+              setPermissionDenied(true);
+              onError?.(message);
+            },
+            setTransparent: setPageTransparent,
+          },
+        );
+        stopRef.current = session?.stop ?? null;
+        if (cancelled) await session?.stop();
       } catch (e) {
         if (cancelled || detectedRef.current) return;
-        const message = e instanceof Error ? e.message : "Could not start scanner";
-        // The plugin rejects when the user dismisses the native sheet.
+        const message =
+          e instanceof Error ? e.message : "Could not start scanner";
         if (/cancel/i.test(message)) {
           onCancel?.();
         } else {
@@ -139,16 +148,45 @@ function NativeMlKitBarcodeScannerView({
       }
     })();
 
+
     return () => {
       cancelled = true;
+      stopRef.current = null;
+      void session?.stop();
+      // Belt-and-braces: never leave the app invisible if we unmounted
+      // before the session was even created.
+      setPageTransparent(false);
     };
   }, [active, onDetected, onError, onCancel]);
 
   return (
     <div className={className}>
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 text-white">
-        <Loader2 className="h-6 w-6 animate-spin" />
+      {/* Stays visible while the rest of the page is transparent (see the
+          .barcode-scanner-active rules in styles.css) so the user always has
+          a way out of the native camera session. */}
+      <div className="barcode-scanner-ui fixed inset-0 z-50 flex flex-col items-center justify-between p-6">
+        <div className="flex w-full justify-end">
+          <button
+            type="button"
+            onClick={cancel}
+            aria-label="Close scanner"
+            className="rounded-full bg-black/60 p-3 text-white"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="h-40 w-64 rounded-2xl border-2 border-white/70" />
+        <p className="rounded-full bg-black/60 px-4 py-2 text-center text-sm text-white">
+          {permissionDenied
+            ? "Camera access is needed to scan barcodes"
+            : "Point at the barcode — we'll capture it automatically"}
+        </p>
       </div>
+      {!permissionDenied && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 text-white">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
+      )}
     </div>
   );
 }
