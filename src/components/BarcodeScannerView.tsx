@@ -5,6 +5,11 @@ import {
   type BarcodeScannerViewProps,
 } from "@/components/WebBarcodeScannerView";
 import { useIsNativeIOS } from "@/hooks/useIsNativeIOS";
+import {
+  startBarcodeSession,
+  type BarcodeSession,
+  type MlKitLike,
+} from "@/lib/nativeBarcodeSession";
 
 // Platform dispatcher: uses the native ML Kit barcode scanner
 // (@capacitor-mlkit/barcode-scanning — Google's ML Kit on-device detector)
