@@ -129,14 +129,13 @@ function NativeMlKitBarcodeScannerView({
         ];
 
         const listener = await BarcodeScanner.addListener(
-          "barcodeScanned",
-          async ({ barcode }) => {
+          "barcodesScanned",
+          ({ barcodes }) => {
             if (detectedRef.current) return;
-            const raw = barcode?.rawValue;
+            const raw = barcodes?.[0]?.rawValue;
             if (!raw) return;
             detectedRef.current = true;
-            await stop();
-            onDetected(normalizeBarcode(raw));
+            void stop().then(() => onDetected(normalizeBarcode(raw)));
           },
         );
 
