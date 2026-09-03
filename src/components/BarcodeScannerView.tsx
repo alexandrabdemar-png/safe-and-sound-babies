@@ -152,11 +152,10 @@ function NativeMlKitBarcodeScannerView({
     return () => {
       cancelled = true;
       stopRef.current = null;
-      void cleanup?.();
+      void session?.stop();
       // Belt-and-braces: never leave the app invisible if we unmounted
-      // before `stop` was even assigned.
-      document.documentElement.classList.remove(SCANNER_ACTIVE_CLASS);
-      document.body.classList.remove(SCANNER_ACTIVE_CLASS);
+      // before the session was even created.
+      setPageTransparent(false);
     };
   }, [active, onDetected, onError, onCancel]);
 
