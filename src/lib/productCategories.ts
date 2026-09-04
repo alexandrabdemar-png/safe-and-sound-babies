@@ -34,6 +34,7 @@ import illoBottle from "@/assets/hd-bottle.png";
 import illoBath from "@/assets/hd-bath.png";
 import illoDiaper from "@/assets/hd-diaper.png";
 import illoTeether from "@/assets/hd-teether.png";
+import illoVitamins from "@/assets/hd-vitamins.png";
 
 export type CategoryKey =
   | "car_seat"
@@ -59,6 +60,7 @@ export type CategoryKey =
   | "bath"
   | "diaper"
   | "teether"
+  | "vitamins"
   | "other";
 
 // Age-appropriateness guidance per category, in months of ADJUSTED age.
