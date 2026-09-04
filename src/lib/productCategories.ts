@@ -1,7 +1,7 @@
 import {
   ShieldCheck, Bed, Moon, Utensils, Music, Armchair, Grid3x3, Wind, DoorClosed,
   Baby, Milk, Cookie, Brush, Radio, Tent, Package, Backpack, ToyBrick,
-  Bath, Layers, Circle,
+  Bath, Layers, Circle, Pill,
 } from "lucide-react";
 import { StrollerIcon } from "@/components/StrollerIcon";
 import { BottleIcon } from "@/components/BottleIcon";
@@ -34,6 +34,7 @@ import illoBottle from "@/assets/hd-bottle.png";
 import illoBath from "@/assets/hd-bath.png";
 import illoDiaper from "@/assets/hd-diaper.png";
 import illoTeether from "@/assets/hd-teether.png";
+import illoVitamins from "@/assets/hd-vitamins.png";
 
 export type CategoryKey =
   | "car_seat"
@@ -59,6 +60,7 @@ export type CategoryKey =
   | "bath"
   | "diaper"
   | "teether"
+  | "vitamins"
   | "other";
 
 // Age-appropriateness guidance per category, in months of ADJUSTED age.
@@ -105,6 +107,7 @@ export const CATEGORIES: {
   { key: "bath",            label: "Bath",            icon: Bath,        illustration: illoBath,    hint: "Tubs, soaps & lotions — tracked for recalls and expiration dates", minAgeMonths: 0 },
   { key: "diaper",          label: "Diapers & wipes", icon: Layers,      illustration: illoDiaper,  hint: "We'll remind you when it's time to size up", minAgeMonths: 0 },
   { key: "teether",         label: "Teether",         icon: Circle,      illustration: illoTeether, hint: "Tracked for recalls — check regularly for wear and small parts", minAgeMonths: 3 },
+  { key: "vitamins",        label: "Vitamins & supplements", icon: Pill, illustration: illoVitamins, hint: "Prenatals, baby vitamin D drops, probiotics & supplements — we'll track expiration dates and recalls", minAgeMonths: 0 },
   { key: "other",           label: "Other",           icon: Package,     illustration: illoOther, hint: "Anything else you want to track" },
 ];
 
@@ -137,6 +140,7 @@ export function guessCategoryFromText(text: string): CategoryKey | "" {
   if (/breast ?milk/.test(hay)) return "breast_milk";
   if (/baby food|puree|stage [1-4]/.test(hay)) return "baby_food";
   if (/toothbrush|tooth ?brush/.test(hay)) return "toothbrush";
+  if (/\bvitamins?\b|\bprenatals?\b|pre-?natal|\bsupplements?\b|\bprobiotics?\b|\bmultivitamins?\b|vitamin ?d ?drops?|\bdha\b|\bgripe water\b|\bfolic acid\b|\biron drops?\b/.test(hay)) return "vitamins";
   if (/baby ?bottle|bottle ?(warmer|brush)|\bbottles?\b|sippy ?cup/.test(hay)) return "bottle";
   if (/\bbath\b|bathtub|bath ?(tub|seat|toy)|baby ?(soap|shampoo|wash|lotion)|shampoo/.test(hay)) return "bath";
   if (/\bdiapers?\b|\bwipes?\b|diaper ?(bag|pail|cream|rash)/.test(hay)) return "diaper";
