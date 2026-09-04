@@ -11,6 +11,7 @@ const BABY_CATEGORY_KEYWORDS = [
   "pack n play", "pack and play", "playard", "playpen",
   "baby food", "puree", "feeding", "sippy", "diaper", "wipe",
   "newborn", "preemie", "layette", "onesie", "sleeper",
+  "vitamin", "prenatal", "supplement", "probiotic", "gripe water",
 ];
 
 // Category terms + every known baby/child brand and parent company name —
