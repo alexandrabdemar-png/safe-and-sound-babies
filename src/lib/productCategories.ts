@@ -140,6 +140,7 @@ export function guessCategoryFromText(text: string): CategoryKey | "" {
   if (/breast ?milk/.test(hay)) return "breast_milk";
   if (/baby food|puree|stage [1-4]/.test(hay)) return "baby_food";
   if (/toothbrush|tooth ?brush/.test(hay)) return "toothbrush";
+  if (/\bvitamins?\b|\bprenatals?\b|pre-?natal|\bsupplements?\b|\bprobiotics?\b|\bmultivitamins?\b|vitamin ?d ?drops?|\bdha\b|\bgripe water\b|\bfolic acid\b|\biron drops?\b/.test(hay)) return "vitamins";
   if (/baby ?bottle|bottle ?(warmer|brush)|\bbottles?\b|sippy ?cup/.test(hay)) return "bottle";
   if (/\bbath\b|bathtub|bath ?(tub|seat|toy)|baby ?(soap|shampoo|wash|lotion)|shampoo/.test(hay)) return "bath";
   if (/\bdiapers?\b|\bwipes?\b|diaper ?(bag|pail|cream|rash)/.test(hay)) return "diaper";
