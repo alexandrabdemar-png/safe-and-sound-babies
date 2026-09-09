@@ -497,6 +497,60 @@ function FirstFoodsPage() {
                 </div>
               )}
 
+              <div className="mb-3">
+                <label className="mb-1 block font-body text-xs text-muted-foreground">
+                  Brand <span className="text-muted-foreground/60">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Happy Baby"
+                  value={brand}
+                  onChange={(e) => setBrand(e.target.value)}
+                  className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 font-body text-sm outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="mb-3">
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <label className="block font-body text-xs text-muted-foreground">
+                    Ingredients <span className="text-muted-foreground/60">(optional)</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setScanOpen(true)}
+                    disabled={lookingUp}
+                    className="flex items-center gap-1 font-body text-xs font-semibold text-primary disabled:opacity-60"
+                  >
+                    <ScanLine className="h-3 w-3" /> Scan package
+                  </button>
+                </div>
+                <textarea
+                  placeholder="Scan a package to fill this in, or type the ingredients as printed."
+                  value={ingredients}
+                  onChange={(e) => setIngredients(e.target.value)}
+                  rows={3}
+                  className="w-full resize-none rounded-xl border border-border/60 bg-background px-3 py-2 font-body text-sm outline-none focus:border-primary"
+                />
+                {parseIngredients(ingredients).length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {parseIngredients(ingredients).map((ing) => (
+                      <span
+                        key={ing}
+                        className="rounded-full bg-muted px-2 py-0.5 font-body text-[11px] text-foreground/70"
+                      >
+                        {ing}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {barcode && (
+                  <p className="mt-1.5 font-body text-[11px] text-muted-foreground">
+                    Scanned code {barcode} — please check the name and ingredients match the package
+                    before saving.
+                  </p>
+                )}
+              </div>
+
               <div className="mb-4">
                 <label className="mb-1 block font-body text-xs text-muted-foreground">
                   Reaction notes <span className="text-muted-foreground/60">(optional)</span>
