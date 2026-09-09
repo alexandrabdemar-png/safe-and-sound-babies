@@ -106,6 +106,14 @@ function FirstFoodsPage() {
   const [isAllergen, setIsAllergen] = useState(false);
   const [selectedAllergen, setSelectedAllergen] = useState<Allergen | "">("");
   const [reactionNotes, setReactionNotes] = useState("");
+  const [ingredients, setIngredients] = useState("");
+  const [brand, setBrand] = useState("");
+  const [barcode, setBarcode] = useState("");
+
+  // Packaged-food scanning: the same camera the product scanner uses, but the
+  // lookup here is for the ingredient list rather than recall matching.
+  const [scanOpen, setScanOpen] = useState(false);
+  const [lookingUp, setLookingUp] = useState(false);
 
   function openAdd() {
     setEditingId(null);
@@ -114,6 +122,9 @@ function FirstFoodsPage() {
     setIsAllergen(false);
     setSelectedAllergen("");
     setReactionNotes("");
+    setIngredients("");
+    setBrand("");
+    setBarcode("");
     setShowForm(true);
   }
 
@@ -125,7 +136,59 @@ function FirstFoodsPage() {
     setIsAllergen(f.is_allergen);
     setSelectedAllergen(f.is_allergen ? allergen : "");
     setReactionNotes(f.reaction_notes ?? "");
+    setIngredients(f.ingredients ?? "");
+    setBrand(f.brand ?? "");
+    setBarcode(f.barcode ?? "");
     setShowForm(true);
+  }
+
+  /**
+   * Scanned a pouch/puffs package: pull the product name, brand and printed
+   * ingredient list from the free food databases and pre-fill the form. The
+   * parent still reviews and saves it, so a wrong or partial match never
+   * lands in the log silently. Nothing is saved if the barcode is unknown —
+   * they can just type the food name as before.
+   */
+  async function handleScanned(code: string) {
+    setBarcode(code);
+    setLookingUp(true);
+    try {
+      const result = await lookupBarcode(code);
+      if (!result) {
+        toast.error("We couldn't find that package. You can type the food in instead.");
+        openFormIfClosed();
+        return;
+      }
+      const name = result.product_name || result.generic_name || "";
+      if (name) setFoodName(name);
+      if (result.brands) setBrand(result.brands.split(",")[0]!.trim());
+      if (result.ingredients_text) setIngredients(result.ingredients_text);
+
+      const tagged = allergensFromTags(result.allergens_tags);
+      if (tagged.length > 0) {
+        setIsAllergen(true);
+        setSelectedAllergen(tagged[0]!);
+        toast.success(
+          `${name || "Product"} found — contains ${tagged.join(", ")}. Review before saving.`,
+        );
+      } else if (result.ingredients_text) {
+        toast.success(`${name || "Product"} found with its ingredient list. Review before saving.`);
+      } else {
+        toast.success(`${name || "Product"} found, but no ingredient list was published.`);
+      }
+      openFormIfClosed();
+    } finally {
+      setLookingUp(false);
+    }
+  }
+
+  function openFormIfClosed() {
+    setShowForm(true);
+  }
+
+  function startScan() {
+    if (!showForm) openAdd();
+    setScanOpen(true);
   }
 
   // Guards every setState/toast in loadData() against firing after the user
