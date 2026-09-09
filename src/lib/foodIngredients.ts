@@ -47,8 +47,11 @@ function tidyIngredient(raw: string): string {
   let s = raw
     .replace(/^[\s.*_•\-–]+|[\s.*_•\-–]+$/g, "")
     .replace(/\s+/g, " ")
-    .replace(/^(and|contains|including)\s+/i, "")
+    // Order matters: strip the "contains 2% or less of" preamble as a whole
+    // before the plain "contains"/"and" prefix rule, otherwise the shorter
+    // rule eats "contains" and leaves "2% or less of salt" behind.
     .replace(/^contains\s+\d+%?\s*(or less)?\s*(of)?\s*/i, "")
+    .replace(/^(and|contains|including)\s+/i, "")
     .replace(/\.$/, "")
     .trim();
   if (!s || s.length > 80) return s.slice(0, 80).trim();
