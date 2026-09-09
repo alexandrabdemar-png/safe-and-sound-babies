@@ -404,6 +404,9 @@ function FirstFoodsPage() {
           {/* Allergen progress */}
           {foods.length > 0 && <AllergenProgressCard foods={foods} />}
 
+          {/* Every ingredient the child has tried, rolled up from scans */}
+          {foods.some((f) => f.ingredients) && <IngredientsTriedCard foods={foods} />}
+
           {/* 4-day wait reminder */}
           {show4DayCard && (
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 animate-scale-in">
