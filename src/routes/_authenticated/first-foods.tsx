@@ -23,18 +23,8 @@ export const Route = createFileRoute("/_authenticated/first-foods")({
   head: () => ({ meta: [{ title: "First Foods — Peace of Mine" }] }),
 });
 
-export const TOP_ALLERGENS = [
-  "Milk",
-  "Eggs",
-  "Fish",
-  "Shellfish",
-  "Tree nuts",
-  "Peanuts",
-  "Wheat",
-  "Soy",
-  "Sesame",
-] as const;
-export type Allergen = (typeof TOP_ALLERGENS)[number];
+export { TOP_ALLERGENS } from "@/lib/topAllergens";
+export type { Allergen } from "@/lib/topAllergens";
 
 // handleSave() below bakes the selected allergen into food_name as a
 // " (Peanuts)" style suffix rather than storing it as a separate column —
