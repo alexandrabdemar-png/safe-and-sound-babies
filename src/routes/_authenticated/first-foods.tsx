@@ -729,7 +729,64 @@ function FirstFoodsPage() {
         </div>
       </main>
 
+      <BarcodeScanner
+        open={scanOpen}
+        onClose={() => setScanOpen(false)}
+        onDetected={(code) => {
+          void handleScanned(code);
+        }}
+      />
+
       <BottomNav />
+    </div>
+  );
+}
+
+/**
+ * Rolls every scanned package's ingredient list into one alphabetical list of
+ * everything the child has tried, with the foods each ingredient came from.
+ * Package data can be incomplete or out of date, so the label is still the
+ * source of truth — that caveat is shown to the parent.
+ */
+function IngredientsTriedCard({
+  foods,
+}: {
+  foods: { ingredients?: string | null; food_name?: string }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const items = collectIngredients(foods);
+  if (items.length === 0) return null;
+  const shown = open ? items : items.slice(0, 12);
+
+  return (
+    <div className="rounded-3xl border border-border/60 bg-card p-4">
+      <p className="font-body text-sm font-semibold">
+        {items.length} ingredients tried
+      </p>
+      <p className="mt-0.5 font-body text-[11px] text-muted-foreground">
+        From the packaged foods you've scanned. Always check the label itself — package data can be
+        incomplete or change.
+      </p>
+      <div className="mt-2.5 flex flex-wrap gap-1.5">
+        {shown.map((i) => (
+          <span
+            key={i.name}
+            title={i.foods.join(", ")}
+            className="rounded-full bg-muted px-2 py-0.5 font-body text-[11px] text-foreground/70"
+          >
+            {i.name}
+          </span>
+        ))}
+      </div>
+      {items.length > 12 && (
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="mt-2.5 font-body text-xs font-semibold text-primary"
+        >
+          {open ? "Show fewer" : `Show all ${items.length}`}
+        </button>
+      )}
     </div>
   );
 }
