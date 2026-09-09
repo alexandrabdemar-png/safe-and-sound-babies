@@ -435,29 +435,38 @@ export type Database = {
       }
       first_foods: {
         Row: {
+          barcode: string | null
+          brand: string | null
           child_id: string
           created_at: string
           date_introduced: string
           food_name: string
           id: string
+          ingredients: string | null
           is_allergen: boolean
           reaction_notes: string | null
         }
         Insert: {
+          barcode?: string | null
+          brand?: string | null
           child_id: string
           created_at?: string
           date_introduced?: string
           food_name: string
           id?: string
+          ingredients?: string | null
           is_allergen?: boolean
           reaction_notes?: string | null
         }
         Update: {
+          barcode?: string | null
+          brand?: string | null
           child_id?: string
           created_at?: string
           date_introduced?: string
           food_name?: string
           id?: string
+          ingredients?: string | null
           is_allergen?: boolean
           reaction_notes?: string | null
         }
