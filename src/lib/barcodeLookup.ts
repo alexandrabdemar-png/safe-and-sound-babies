@@ -9,6 +9,10 @@ export type BarcodeLookupResult = {
   categories?: string;
   categories_tags?: string[];
   image_front_small_url?: string;
+  /** Free-text ingredient list as printed on the package (Open Facts only). */
+  ingredients_text?: string;
+  /** Allergen tags e.g. ["en:milk", "en:soybeans"] (Open Facts only). */
+  allergens_tags?: string[];
   source: "openfoodfacts" | "openproductsfacts" | "openbeautyfacts" | "upcitemdb";
 };
 
@@ -43,6 +47,9 @@ async function tryOpenFacts(
       categories: p.categories,
       categories_tags: p.categories_tags,
       image_front_small_url: p.image_front_small_url,
+      ingredients_text:
+        p.ingredients_text_en || p.ingredients_text || undefined,
+      allergens_tags: Array.isArray(p.allergens_tags) ? p.allergens_tags : [],
       source,
     };
   } catch {

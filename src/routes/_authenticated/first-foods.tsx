@@ -8,6 +8,7 @@ import {
   Check,
   Pencil,
   Plus,
+  ScanLine,
   Search,
   ShieldAlert,
   Utensils,
@@ -16,6 +17,13 @@ import {
 } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { friendlyError } from "@/lib/errors";
+import { BarcodeScanner } from "@/components/BarcodeScanner";
+import { lookupBarcode } from "@/lib/barcodeLookup";
+import {
+  allergensFromTags,
+  collectIngredients,
+  parseIngredients,
+} from "@/lib/foodIngredients";
 
 export const Route = createFileRoute("/_authenticated/first-foods")({
   ssr: false,
@@ -23,18 +31,9 @@ export const Route = createFileRoute("/_authenticated/first-foods")({
   head: () => ({ meta: [{ title: "First Foods — Peace of Mine" }] }),
 });
 
-export const TOP_ALLERGENS = [
-  "Milk",
-  "Eggs",
-  "Fish",
-  "Shellfish",
-  "Tree nuts",
-  "Peanuts",
-  "Wheat",
-  "Soy",
-  "Sesame",
-] as const;
-export type Allergen = (typeof TOP_ALLERGENS)[number];
+import { TOP_ALLERGENS, type Allergen } from "@/lib/topAllergens";
+export { TOP_ALLERGENS } from "@/lib/topAllergens";
+export type { Allergen } from "@/lib/topAllergens";
 
 // handleSave() below bakes the selected allergen into food_name as a
 // " (Peanuts)" style suffix rather than storing it as a separate column —
@@ -83,6 +82,10 @@ type FoodEntry = {
   is_allergen: boolean;
   reaction_notes: string | null;
   created_at: string;
+  /** Ingredient list from the scanned package (packaged foods only). */
+  ingredients: string | null;
+  brand: string | null;
+  barcode: string | null;
 };
 
 function FirstFoodsPage() {
@@ -103,6 +106,14 @@ function FirstFoodsPage() {
   const [isAllergen, setIsAllergen] = useState(false);
   const [selectedAllergen, setSelectedAllergen] = useState<Allergen | "">("");
   const [reactionNotes, setReactionNotes] = useState("");
+  const [ingredients, setIngredients] = useState("");
+  const [brand, setBrand] = useState("");
+  const [barcode, setBarcode] = useState("");
+
+  // Packaged-food scanning: the same camera the product scanner uses, but the
+  // lookup here is for the ingredient list rather than recall matching.
+  const [scanOpen, setScanOpen] = useState(false);
+  const [lookingUp, setLookingUp] = useState(false);
 
   function openAdd() {
     setEditingId(null);
@@ -111,6 +122,9 @@ function FirstFoodsPage() {
     setIsAllergen(false);
     setSelectedAllergen("");
     setReactionNotes("");
+    setIngredients("");
+    setBrand("");
+    setBarcode("");
     setShowForm(true);
   }
 
@@ -122,7 +136,59 @@ function FirstFoodsPage() {
     setIsAllergen(f.is_allergen);
     setSelectedAllergen(f.is_allergen ? allergen : "");
     setReactionNotes(f.reaction_notes ?? "");
+    setIngredients(f.ingredients ?? "");
+    setBrand(f.brand ?? "");
+    setBarcode(f.barcode ?? "");
     setShowForm(true);
+  }
+
+  /**
+   * Scanned a pouch/puffs package: pull the product name, brand and printed
+   * ingredient list from the free food databases and pre-fill the form. The
+   * parent still reviews and saves it, so a wrong or partial match never
+   * lands in the log silently. Nothing is saved if the barcode is unknown —
+   * they can just type the food name as before.
+   */
+  async function handleScanned(code: string) {
+    setBarcode(code);
+    setLookingUp(true);
+    try {
+      const result = await lookupBarcode(code);
+      if (!result) {
+        toast.error("We couldn't find that package. You can type the food in instead.");
+        openFormIfClosed();
+        return;
+      }
+      const name = result.product_name || result.generic_name || "";
+      if (name) setFoodName(name);
+      if (result.brands) setBrand(result.brands.split(",")[0]!.trim());
+      if (result.ingredients_text) setIngredients(result.ingredients_text);
+
+      const tagged = allergensFromTags(result.allergens_tags);
+      if (tagged.length > 0) {
+        setIsAllergen(true);
+        setSelectedAllergen(tagged[0]!);
+        toast.success(
+          `${name || "Product"} found — contains ${tagged.join(", ")}. Review before saving.`,
+        );
+      } else if (result.ingredients_text) {
+        toast.success(`${name || "Product"} found with its ingredient list. Review before saving.`);
+      } else {
+        toast.success(`${name || "Product"} found, but no ingredient list was published.`);
+      }
+      openFormIfClosed();
+    } finally {
+      setLookingUp(false);
+    }
+  }
+
+  function openFormIfClosed() {
+    setShowForm(true);
+  }
+
+  function startScan() {
+    if (!showForm) openAdd();
+    setScanOpen(true);
   }
 
   // Guards every setState/toast in loadData() against firing after the user
@@ -174,7 +240,9 @@ function FirstFoodsPage() {
 
     const { data, error } = await supabase
       .from("first_foods")
-      .select("id, child_id, food_name, date_introduced, is_allergen, reaction_notes, created_at")
+      .select(
+        "id, child_id, food_name, date_introduced, is_allergen, reaction_notes, created_at, ingredients, brand, barcode",
+      )
       .eq("child_id", c.id)
       .order("date_introduced", { ascending: false })
       .order("created_at", { ascending: false });
@@ -218,23 +286,18 @@ function FirstFoodsPage() {
     }
 
     const isEditing = editingId !== null;
+    const shared = {
+      food_name: finalName,
+      date_introduced: dateIntroduced,
+      is_allergen: isAllergen,
+      reaction_notes: reactionNotes.trim() || null,
+      ingredients: ingredients.trim().slice(0, 4000) || null,
+      brand: brand.trim().slice(0, 120) || null,
+      barcode: barcode.trim().slice(0, 64) || null,
+    };
     const { error } = isEditing
-      ? await supabase
-          .from("first_foods")
-          .update({
-            food_name: finalName,
-            date_introduced: dateIntroduced,
-            is_allergen: isAllergen,
-            reaction_notes: reactionNotes.trim() || null,
-          })
-          .eq("id", editingId)
-      : await supabase.from("first_foods").insert({
-          child_id: child.id,
-          food_name: finalName,
-          date_introduced: dateIntroduced,
-          is_allergen: isAllergen,
-          reaction_notes: reactionNotes.trim() || null,
-        });
+      ? await supabase.from("first_foods").update(shared).eq("id", editingId)
+      : await supabase.from("first_foods").insert({ child_id: child.id, ...shared });
 
     if (error) {
       logError("[first-foods] failed to save food:", error.message);
@@ -252,6 +315,9 @@ function FirstFoodsPage() {
     setIsAllergen(false);
     setSelectedAllergen("");
     setReactionNotes("");
+    setIngredients("");
+    setBrand("");
+    setBarcode("");
     setShowForm(false);
     if (!isEditing) setShow4DayCard(true);
     setSaving(false);
@@ -302,16 +368,32 @@ function FirstFoodsPage() {
                 <p className="font-body text-xs text-muted-foreground">{child?.name}</p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => (showForm ? setShowForm(false) : openAdd())}
-              className="ml-auto flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 font-body text-xs font-semibold text-primary-foreground"
-            >
-              <Plus className="h-3.5 w-3.5" /> Add food
-            </button>
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                type="button"
+                onClick={startScan}
+                disabled={lookingUp}
+                className="flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 font-body text-xs font-semibold text-primary disabled:opacity-60"
+              >
+                {lookingUp ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <ScanLine className="h-3.5 w-3.5" />
+                )}{" "}
+                Scan
+              </button>
+              <button
+                type="button"
+                onClick={() => (showForm ? setShowForm(false) : openAdd())}
+                className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 font-body text-xs font-semibold text-primary-foreground"
+              >
+                <Plus className="h-3.5 w-3.5" /> Add food
+              </button>
+            </div>
           </div>
           <p className="font-body text-xs leading-relaxed text-muted-foreground">
-            A quick log of the first time your baby tries each food, and any reactions. Any
+            A quick log of the first time your baby tries each food, and any reactions. Scan a pouch
+            or puffs package and we'll fill in the product and its full ingredient list. Any
             caregiver with access to {child?.name || "this child"} can add to it too.
           </p>
         </div>
@@ -321,6 +403,9 @@ function FirstFoodsPage() {
         <div className="mx-auto max-w-md space-y-4">
           {/* Allergen progress */}
           {foods.length > 0 && <AllergenProgressCard foods={foods} />}
+
+          {/* Every ingredient the child has tried, rolled up from scans */}
+          {foods.some((f) => f.ingredients) && <IngredientsTriedCard foods={foods} />}
 
           {/* 4-day wait reminder */}
           {show4DayCard && (
@@ -415,6 +500,60 @@ function FirstFoodsPage() {
                 </div>
               )}
 
+              <div className="mb-3">
+                <label className="mb-1 block font-body text-xs text-muted-foreground">
+                  Brand <span className="text-muted-foreground/60">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Happy Baby"
+                  value={brand}
+                  onChange={(e) => setBrand(e.target.value)}
+                  className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 font-body text-sm outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="mb-3">
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <label className="block font-body text-xs text-muted-foreground">
+                    Ingredients <span className="text-muted-foreground/60">(optional)</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setScanOpen(true)}
+                    disabled={lookingUp}
+                    className="flex items-center gap-1 font-body text-xs font-semibold text-primary disabled:opacity-60"
+                  >
+                    <ScanLine className="h-3 w-3" /> Scan package
+                  </button>
+                </div>
+                <textarea
+                  placeholder="Scan a package to fill this in, or type the ingredients as printed."
+                  value={ingredients}
+                  onChange={(e) => setIngredients(e.target.value)}
+                  rows={3}
+                  className="w-full resize-none rounded-xl border border-border/60 bg-background px-3 py-2 font-body text-sm outline-none focus:border-primary"
+                />
+                {parseIngredients(ingredients).length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {parseIngredients(ingredients).map((ing) => (
+                      <span
+                        key={ing}
+                        className="rounded-full bg-muted px-2 py-0.5 font-body text-[11px] text-foreground/70"
+                      >
+                        {ing}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {barcode && (
+                  <p className="mt-1.5 font-body text-[11px] text-muted-foreground">
+                    Scanned code {barcode} — please check the name and ingredients match the package
+                    before saving.
+                  </p>
+                )}
+              </div>
+
               <div className="mb-4">
                 <label className="mb-1 block font-body text-xs text-muted-foreground">
                   Reaction notes <span className="text-muted-foreground/60">(optional)</span>
@@ -497,10 +636,32 @@ function FirstFoodsPage() {
                         year: "numeric",
                       })}
                     </p>
+                    {f.brand && (
+                      <p className="mt-0.5 font-body text-[11px] text-muted-foreground">
+                        {f.brand}
+                      </p>
+                    )}
                     {f.reaction_notes && (
                       <p className="mt-1 font-body text-xs text-foreground/70 italic">
                         "{f.reaction_notes}"
                       </p>
+                    )}
+                    {f.ingredients && (
+                      <details className="mt-1.5">
+                        <summary className="cursor-pointer font-body text-[11px] font-semibold text-primary">
+                          {parseIngredients(f.ingredients).length} ingredients
+                        </summary>
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          {parseIngredients(f.ingredients).map((ing) => (
+                            <span
+                              key={ing}
+                              className="rounded-full bg-muted px-2 py-0.5 font-body text-[10px] text-foreground/70"
+                            >
+                              {ing}
+                            </span>
+                          ))}
+                        </div>
+                      </details>
                     )}
                   </div>
                   <button
@@ -568,7 +729,64 @@ function FirstFoodsPage() {
         </div>
       </main>
 
+      <BarcodeScanner
+        open={scanOpen}
+        onClose={() => setScanOpen(false)}
+        onDetected={(code) => {
+          void handleScanned(code);
+        }}
+      />
+
       <BottomNav />
+    </div>
+  );
+}
+
+/**
+ * Rolls every scanned package's ingredient list into one alphabetical list of
+ * everything the child has tried, with the foods each ingredient came from.
+ * Package data can be incomplete or out of date, so the label is still the
+ * source of truth — that caveat is shown to the parent.
+ */
+function IngredientsTriedCard({
+  foods,
+}: {
+  foods: { ingredients?: string | null; food_name?: string }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const items = collectIngredients(foods);
+  if (items.length === 0) return null;
+  const shown = open ? items : items.slice(0, 12);
+
+  return (
+    <div className="rounded-3xl border border-border/60 bg-card p-4">
+      <p className="font-body text-sm font-semibold">
+        {items.length} ingredients tried
+      </p>
+      <p className="mt-0.5 font-body text-[11px] text-muted-foreground">
+        From the packaged foods you've scanned. Always check the label itself — package data can be
+        incomplete or change.
+      </p>
+      <div className="mt-2.5 flex flex-wrap gap-1.5">
+        {shown.map((i) => (
+          <span
+            key={i.name}
+            title={i.foods.join(", ")}
+            className="rounded-full bg-muted px-2 py-0.5 font-body text-[11px] text-foreground/70"
+          >
+            {i.name}
+          </span>
+        ))}
+      </div>
+      {items.length > 12 && (
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="mt-2.5 font-body text-xs font-semibold text-primary"
+        >
+          {open ? "Show fewer" : `Show all ${items.length}`}
+        </button>
+      )}
     </div>
   );
 }
