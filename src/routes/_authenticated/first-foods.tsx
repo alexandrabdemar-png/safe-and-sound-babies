@@ -633,10 +633,32 @@ function FirstFoodsPage() {
                         year: "numeric",
                       })}
                     </p>
+                    {f.brand && (
+                      <p className="mt-0.5 font-body text-[11px] text-muted-foreground">
+                        {f.brand}
+                      </p>
+                    )}
                     {f.reaction_notes && (
                       <p className="mt-1 font-body text-xs text-foreground/70 italic">
                         "{f.reaction_notes}"
                       </p>
+                    )}
+                    {f.ingredients && (
+                      <details className="mt-1.5">
+                        <summary className="cursor-pointer font-body text-[11px] font-semibold text-primary">
+                          {parseIngredients(f.ingredients).length} ingredients
+                        </summary>
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          {parseIngredients(f.ingredients).map((ing) => (
+                            <span
+                              key={ing}
+                              className="rounded-full bg-muted px-2 py-0.5 font-body text-[10px] text-foreground/70"
+                            >
+                              {ing}
+                            </span>
+                          ))}
+                        </div>
+                      </details>
                     )}
                   </div>
                   <button
