@@ -8,6 +8,7 @@ import {
   Check,
   Pencil,
   Plus,
+  ScanLine,
   Search,
   ShieldAlert,
   Utensils,
@@ -16,6 +17,13 @@ import {
 } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { friendlyError } from "@/lib/errors";
+import { BarcodeScanner } from "@/components/BarcodeScanner";
+import { lookupBarcode } from "@/lib/barcodeLookup";
+import {
+  allergensFromTags,
+  collectIngredients,
+  parseIngredients,
+} from "@/lib/foodIngredients";
 
 export const Route = createFileRoute("/_authenticated/first-foods")({
   ssr: false,
