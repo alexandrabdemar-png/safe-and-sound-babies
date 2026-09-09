@@ -107,7 +107,7 @@ You have full control over your data:
 • All data is transmitted over HTTPS. No unencrypted connections are used.
 • Your database rows are protected by Row-Level Security; only your authenticated session can access them.
 • Service keys that bypass RLS are used only for trusted system operations (recall syncing, alert generation, and Stripe webhook processing) and are never exposed to client code or human operators.
-• Uploaded product photos are held in a private storage bucket. There is no public URL: access is checked per request against the same Row-Level Security rules as the rest of your data, so only you, the uploader, can retrieve an image (caregiver access to photos is not yet built — see Section 1).
+• Uploaded product photos are private. If you add a photo to a product, only you can see it — there's no public link, and no one can stumble across it by guessing a URL or searching. The photo is checked against your account every time it's requested, so only the person who uploaded it can open it. (Caregivers you've shared a child's profile with can see that child's product list but can't yet see attached photos — see Section 1.)
 • Error logs are sanitised before storage; email addresses, tokens, and other identifiers are stripped from log entries.
 
 ──────────────────────────────────────
