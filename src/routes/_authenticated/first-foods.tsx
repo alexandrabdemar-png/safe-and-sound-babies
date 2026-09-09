@@ -82,6 +82,10 @@ type FoodEntry = {
   is_allergen: boolean;
   reaction_notes: string | null;
   created_at: string;
+  /** Ingredient list from the scanned package (packaged foods only). */
+  ingredients: string | null;
+  brand: string | null;
+  barcode: string | null;
 };
 
 function FirstFoodsPage() {
