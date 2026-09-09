@@ -368,16 +368,32 @@ function FirstFoodsPage() {
                 <p className="font-body text-xs text-muted-foreground">{child?.name}</p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => (showForm ? setShowForm(false) : openAdd())}
-              className="ml-auto flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 font-body text-xs font-semibold text-primary-foreground"
-            >
-              <Plus className="h-3.5 w-3.5" /> Add food
-            </button>
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                type="button"
+                onClick={startScan}
+                disabled={lookingUp}
+                className="flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 font-body text-xs font-semibold text-primary disabled:opacity-60"
+              >
+                {lookingUp ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <ScanLine className="h-3.5 w-3.5" />
+                )}{" "}
+                Scan
+              </button>
+              <button
+                type="button"
+                onClick={() => (showForm ? setShowForm(false) : openAdd())}
+                className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 font-body text-xs font-semibold text-primary-foreground"
+              >
+                <Plus className="h-3.5 w-3.5" /> Add food
+              </button>
+            </div>
           </div>
           <p className="font-body text-xs leading-relaxed text-muted-foreground">
-            A quick log of the first time your baby tries each food, and any reactions. Any
+            A quick log of the first time your baby tries each food, and any reactions. Scan a pouch
+            or puffs package and we'll fill in the product and its full ingredient list. Any
             caregiver with access to {child?.name || "this child"} can add to it too.
           </p>
         </div>
