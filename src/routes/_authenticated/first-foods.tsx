@@ -286,23 +286,18 @@ function FirstFoodsPage() {
     }
 
     const isEditing = editingId !== null;
+    const shared = {
+      food_name: finalName,
+      date_introduced: dateIntroduced,
+      is_allergen: isAllergen,
+      reaction_notes: reactionNotes.trim() || null,
+      ingredients: ingredients.trim().slice(0, 4000) || null,
+      brand: brand.trim().slice(0, 120) || null,
+      barcode: barcode.trim().slice(0, 64) || null,
+    };
     const { error } = isEditing
-      ? await supabase
-          .from("first_foods")
-          .update({
-            food_name: finalName,
-            date_introduced: dateIntroduced,
-            is_allergen: isAllergen,
-            reaction_notes: reactionNotes.trim() || null,
-          })
-          .eq("id", editingId)
-      : await supabase.from("first_foods").insert({
-          child_id: child.id,
-          food_name: finalName,
-          date_introduced: dateIntroduced,
-          is_allergen: isAllergen,
-          reaction_notes: reactionNotes.trim() || null,
-        });
+      ? await supabase.from("first_foods").update(shared).eq("id", editingId)
+      : await supabase.from("first_foods").insert({ child_id: child.id, ...shared });
 
     if (error) {
       logError("[first-foods] failed to save food:", error.message);
