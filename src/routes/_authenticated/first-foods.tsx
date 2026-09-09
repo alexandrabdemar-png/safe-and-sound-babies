@@ -315,6 +315,9 @@ function FirstFoodsPage() {
     setIsAllergen(false);
     setSelectedAllergen("");
     setReactionNotes("");
+    setIngredients("");
+    setBrand("");
+    setBarcode("");
     setShowForm(false);
     if (!isEditing) setShow4DayCard(true);
     setSaving(false);
