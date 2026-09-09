@@ -23,6 +23,7 @@ export const Route = createFileRoute("/_authenticated/first-foods")({
   head: () => ({ meta: [{ title: "First Foods — Peace of Mine" }] }),
 });
 
+import { TOP_ALLERGENS, type Allergen } from "@/lib/topAllergens";
 export { TOP_ALLERGENS } from "@/lib/topAllergens";
 export type { Allergen } from "@/lib/topAllergens";
 
