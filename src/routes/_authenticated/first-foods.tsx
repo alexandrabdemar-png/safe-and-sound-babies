@@ -240,7 +240,9 @@ function FirstFoodsPage() {
 
     const { data, error } = await supabase
       .from("first_foods")
-      .select("id, child_id, food_name, date_introduced, is_allergen, reaction_notes, created_at")
+      .select(
+        "id, child_id, food_name, date_introduced, is_allergen, reaction_notes, created_at, ingredients, brand, barcode",
+      )
       .eq("child_id", c.id)
       .order("date_introduced", { ascending: false })
       .order("created_at", { ascending: false });
