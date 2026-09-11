@@ -26,9 +26,16 @@ import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { evaluateInsights, URGENCY_LABEL, type Insight, type ProductInput } from "@/lib/insights";
 import { friendlyError, diagnosticDetail } from "@/lib/errors";
-import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
-import { checkCriticalRecalls, CRITICAL_RECALLS } from "@/lib/recallCheck";
+import { fetchRecentBabyRecalls } from "@/lib/cpscSearch";
+import { checkCriticalRecalls } from "@/lib/recallCheck";
 import { recordProductRecall } from "@/lib/recallRecord.functions";
+import {
+  mapCpscResults,
+  mapCriticalRecalls,
+  mapExtraResults,
+  mergeRecallSources,
+  type ExtraRecallRow,
+} from "@/lib/recallRadarMerge";
 import { selectDailyTip, dayIndexFromDate, dayKey as getTipDayKey } from "@/lib/safetyTips";
 import { WHATS_NEW, LATEST_VERSION, whatsNewDismissalKey } from "@/lib/whatsNew";
 import { fetchMilestonesResilient } from "@/lib/momentIcons";
@@ -130,11 +137,10 @@ function HomePage() {
     }
   });
 
-  // Recall radar: live 30-day CPSC count, cached daily
+  // Recall radar: count of undismissed industry-wide recalls — the same
+  // merged list and dismissal filter the /recall-radar detail page uses,
+  // so this badge always matches what's actually behind the tap.
   const [recallRadarCount, setRecallRadarCount] = useState<number | null>(null);
-
-  // FDA baby recall count (Wednesday only), cached daily
-  const [fdaRecallCount, setFdaRecallCount] = useState<number | null>(null);
 
   // Notification preferences (paused_until, expiry_advance_days) — the
   // daily safety tip has no "which day" setting to read here anymore
@@ -697,51 +703,76 @@ function HomePage() {
     } catch {}
   }
 
-  // Recall Radar: fetch 30-day CPSC baby recall count, cached daily
+  // Recall Radar count: same industry-wide, 30-day merge of critical +
+  // CPSC/FDA + extra-source recalls that /recall-radar shows, minus
+  // whatever this user has already marked done there. The merged recall
+  // list is cached per day (it's built from slow external API calls),
+  // but dismissals are always re-fetched fresh — a user can dismiss
+  // everything and return to Home the same day, and the badge should
+  // reflect that instead of showing a stale "you have N to review".
   useEffect(() => {
-    const key = `safesound.recallRadar.${todayKey()}`;
-    try {
-      const cached = localStorage.getItem(key);
-      if (cached !== null) {
-        setRecallRadarCount(parseInt(cached, 10));
-        return;
-      }
-    } catch {}
-    const start30 = new Date();
-    start30.setDate(start30.getDate() - 30);
-    const startStr = start30.toISOString().slice(0, 10);
-    fetch(
-      `https://www.saferproducts.gov/RestWebServices/Recall?format=json&RecallDateStart=${startStr}`,
-    )
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data: CpscRecall[]) => {
-        const count = (Array.isArray(data) ? data : []).filter(isBabyRelated).length;
-        try {
-          localStorage.setItem(key, String(count));
-        } catch {}
-        setRecallRadarCount(count);
-      })
-      .catch(() => setRecallRadarCount(-1));
-  }, []);
+    let cancelled = false;
 
-  // FDA recall count — fetched daily, cached per day
-  useEffect(() => {
-    const key = `safesound.fdaRecalls.${todayKey()}`;
-    try {
-      const cached = localStorage.getItem(key);
-      if (cached !== null) {
-        setFdaRecallCount(parseInt(cached, 10));
+    (async () => {
+      const key = `safesound.recallRadarIds.${todayKey()}`;
+      let ids: string[] | null = null;
+      try {
+        const cached = localStorage.getItem(key);
+        if (cached) ids = JSON.parse(cached);
+      } catch {}
+
+      if (!ids) {
+        try {
+          const [cpscRaw, extraRes] = await Promise.all([
+            fetchRecentBabyRecalls(30),
+            supabase
+              .from("recalls")
+              .select("id, source, title, description, hazard, url, recall_date, official, lot_pattern")
+              .in("source", ["usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"])
+              .order("recall_date", { ascending: false })
+              .limit(50),
+          ]);
+          const merged = mergeRecallSources(
+            mapCriticalRecalls(),
+            mapCpscResults(cpscRaw),
+            mapExtraResults((extraRes.data ?? []) as unknown as ExtraRecallRow[]),
+          );
+          ids = merged.map((r) => r.id);
+          try {
+            localStorage.setItem(key, JSON.stringify(ids));
+          } catch {}
+        } catch {
+          ids = null;
+        }
+      }
+
+      if (cancelled) return;
+      if (!ids) {
+        setRecallRadarCount(-1);
         return;
       }
-    } catch {}
-    fetchFdaBabyRecallCount(30)
-      .then((count) => {
-        try {
-          localStorage.setItem(key, String(count));
-        } catch {}
-        setFdaRecallCount(count);
-      })
-      .catch(() => setFdaRecallCount(0));
+
+      let dismissed = new Set<string>();
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (session) {
+          const { data } = await supabase
+            .from("recall_radar_dismissals")
+            .select("recall_id")
+            .eq("user_id", session.user.id);
+          dismissed = new Set((data ?? []).map((d) => d.recall_id));
+        }
+      } catch {}
+
+      if (cancelled) return;
+      setRecallRadarCount(ids.filter((id) => !dismissed.has(id)).length);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (loading) {
@@ -1008,12 +1039,14 @@ function HomePage() {
         </div>
       )}
 
-      {/* Recall Radar — live 30-day CPSC + FDA count, plus always-relevant critical recalls */}
+      {/* Recall Radar — undismissed count from the same industry-wide,
+          30-day merge (critical + CPSC/FDA + extra sources) the detail
+          page shows, so this always matches what's behind the tap. */}
       {recallRadarCount !== null && recallRadarCount !== -1 && (
         <div className="px-5 pt-3 sm:px-6">
           <div className="mx-auto max-w-md">
             <RecallRadarCard
-              count={recallRadarCount + (fdaRecallCount ?? 0) + CRITICAL_RECALLS.length}
+              count={recallRadarCount}
               matchedCount={alerts.recalls}
               childName={child?.name ?? "your child"}
             />
