@@ -126,9 +126,9 @@ function Index() {
                 style={{ color: "#605C58" }}
                 className="mt-12 max-w-lg font-body text-base font-medium leading-relaxed sm:text-lg"
               >
-                Track your baby's products and milestones in one place, with reminders to check for
-                upcoming replacements, size changes, and fit as your child grows — plus alerts if a
-                product you're tracking turns up in an official recall database.
+                Track your baby's products and safety milestones in one place, with reminders to check
+                for upcoming replacements, size changes, and fit as your child grows — plus alerts if a
+                product you're tracking appears in an official recall database.
               </p>
 
               <Link
