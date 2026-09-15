@@ -113,13 +113,14 @@ export type RecallFetchStatus = {
  * testable independent of React/network calls.
  *
  * Note on wording: "CPSC & FDA" genuinely is a live API fetch, so a
- * failure there really did go unanswered. "USDA FSIS, NHTSA, Health
- * Canada & EU Safety Gate" is different — those aren't fetched live at
- * all; they're read from our own `recalls` table, pre-synced daily by a
- * scheduled job. A failure there means *our database read* failed, not
- * that those agencies "didn't respond" — the caller's copy should reflect
- * that rather than implying a live external timeout for a source that was
- * never contacted live in the first place.
+ * failure there really did go unanswered. "USDA FSIS, NHTSA & EU Safety
+ * Gate" is different — those aren't fetched live at all; they're read
+ * from our own `recalls` table, pre-synced daily by a scheduled job. A
+ * failure there means *our database read* failed, not that those
+ * agencies "didn't respond" — the caller's copy should reflect that
+ * rather than implying a live external timeout for a source that was
+ * never contacted live in the first place. (Health Canada is excluded —
+ * not synced for the US-only launch; see allRecallSources.ts.)
  */
 export function classifyRecallFetchStatus(
   cpscFailed: boolean,
@@ -128,7 +129,7 @@ export function classifyRecallFetchStatus(
 ): RecallFetchStatus {
   const failedSources: string[] = [];
   if (cpscFailed) failedSources.push("CPSC & FDA");
-  if (extraFailed) failedSources.push("USDA FSIS, NHTSA, Health Canada & EU Safety Gate");
+  if (extraFailed) failedSources.push("USDA FSIS, NHTSA & EU Safety Gate");
 
   if (failedSources.length === 0) {
     return { error: null, degradedSources: [] };

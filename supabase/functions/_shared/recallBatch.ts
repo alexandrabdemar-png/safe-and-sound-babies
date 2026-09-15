@@ -370,7 +370,8 @@ export async function runRecallBatch(
       });
     }
 
-    // 3. Extra sources (USDA/NHTSA/Health Canada/EU Safety Gate)
+    // 3. Extra sources (USDA/NHTSA/EU Safety Gate — Health Canada is not
+    //    fetched for the US-only launch, see allRecallSources.ts)
     for (const recall of extraRecalls) {
       if (!matchProductAgainstExtra(product, recall)) continue;
       addCatalogRow(extraRecallToCatalogRow(recall));

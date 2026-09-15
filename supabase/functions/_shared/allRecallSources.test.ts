@@ -193,7 +193,7 @@ describe("fetchEuSafetyGateRecalls", () => {
 });
 
 describe("fetchAllExtraRecallSources", () => {
-  it("merges all four sources and one source's failure doesn't affect the others", async () => {
+  it("merges USDA/NHTSA/EU (not Health Canada) and one source's failure doesn't affect the others", async () => {
     const fetchImpl = vi.fn(async (url: string) => {
       if (url.includes("fsis.usda.gov")) throw new Error("USDA down");
       if (url.includes("transportation.gov")) {
@@ -209,6 +209,10 @@ describe("fetchAllExtraRecallSources", () => {
     });
     const results = await fetchAllExtraRecallSources(fetchImpl as unknown as typeof fetch);
     const sources = results.map((r) => r.source).sort();
-    expect(sources).toEqual(["eu_safety_gate", "health_canada", "nhtsa"]);
+    // Health Canada is deliberately excluded from the aggregate (US-only
+    // launch) even though the fetch above would return a result if called —
+    // proving fetchAllExtraRecallSources never calls it, not just that
+    // canada.ca happens to return nothing here.
+    expect(sources).toEqual(["eu_safety_gate", "nhtsa"]);
   });
 });

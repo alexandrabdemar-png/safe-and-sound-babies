@@ -354,7 +354,9 @@ async function writeSourceStatus(
   // for the dead-man's-switch source). Individual source-level success
   // signals require deeper plumbing in allRecallSources.ts and are a
   // follow-up.
-  const sources = ["cpsc", "fda", "usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"];
+  // Health Canada excluded — not fetched for the US-only launch (see
+  // fetchAllExtraRecallSources in allRecallSources.ts).
+  const sources = ["cpsc", "fda", "usda_fsis", "nhtsa", "eu_safety_gate"];
   for (const source of sources) {
     const records =
       source === "cpsc"

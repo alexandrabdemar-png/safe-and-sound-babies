@@ -151,6 +151,10 @@ function AlertsPage() {
     const { data, error } = await supabase
       .from("recalls")
       .select("id, title, hazard, remedy, description, url, recall_date, category, source")
+      // Health Canada is excluded — US-only launch; those rows would still
+      // be sitting in the table from before the sync pipeline stopped
+      // fetching them (see allRecallSources.ts).
+      .neq("source", "health_canada")
       .gte("recall_date", cutoffStr)
       .order("recall_date", { ascending: false })
       .limit(100);
@@ -346,7 +350,7 @@ function AlertsPage() {
               Recalls published in the last 90 days in your product categories — whether you own the specific product or not.
             </p>
             <DataAsOf
-              sources={["usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"]}
+              sources={["usda_fsis", "nhtsa", "eu_safety_gate"]}
               className="mb-4"
             />
             {historyLoading ? (

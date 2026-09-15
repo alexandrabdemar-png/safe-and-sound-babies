@@ -11,7 +11,6 @@ const SOURCE_LABEL: Record<string, string> = {
   fda: "FDA",
   nhtsa: "NHTSA",
   usda_fsis: "USDA FSIS",
-  health_canada: "Health Canada",
   eu_safety_gate: "EU Safety Gate (unofficial mirror)",
   critical: "Curated critical list",
   __pipeline__: "Pipeline health",

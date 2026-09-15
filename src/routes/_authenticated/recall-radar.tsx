@@ -42,7 +42,6 @@ const SOURCE_LABEL: Record<string, string> = {
   critical: "Critical alert",
   usda_fsis: "USDA FSIS",
   nhtsa: "NHTSA",
-  health_canada: "Health Canada",
   eu_safety_gate: "EU Safety Gate",
 };
 
@@ -114,15 +113,15 @@ function RecallRadarPage() {
         // It's already internally error-safe (returns [] on failure), but
         // Promise.allSettled gives us a second layer of protection.
         fetchRecentBabyRecalls(30),
-        // USDA FSIS, NHTSA, Health Canada, and EU Safety Gate are synced
-        // daily into our own recalls table by check-extra-recalls.ts
-        // rather than fetched live here — Health Canada is a multi-MB
-        // bulk dump unsuitable for a page load, and USDA/NHTSA/EU CORS
-        // support couldn't be confirmed from this build environment.
+        // USDA FSIS, NHTSA, and EU Safety Gate are synced daily into our
+        // own recalls table by check-extra-recalls.ts rather than fetched
+        // live here — USDA/NHTSA/EU CORS support couldn't be confirmed
+        // from this build environment. (Health Canada is deliberately not
+        // synced or queried — US-only launch; see allRecallSources.ts.)
         supabase
           .from("recalls")
           .select("id, source, title, description, hazard, url, recall_date, official, lot_pattern")
-          .in("source", ["usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"])
+          .in("source", ["usda_fsis", "nhtsa", "eu_safety_gate"])
           .order("recall_date", { ascending: false })
           .limit(50),
         // A failure here shouldn't block the radar list itself — fail open
@@ -211,7 +210,7 @@ function RecallRadarPage() {
             </div>
           </div>
           <DataAsOf
-            sources={["cpsc", "fda", "usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"]}
+            sources={["cpsc", "fda", "usda_fsis", "nhtsa", "eu_safety_gate"]}
             className="mt-2"
             showSources={false}
           />
@@ -259,7 +258,7 @@ function RecallRadarPage() {
                   {visibleRecalls.length} recall{visibleRecalls.length !== 1 ? "s" : ""}
                 </p>
                 <span className="font-body text-xs text-muted-foreground">
-                  6 agencies + brand watch
+                  5 agencies + brand watch
                 </span>
               </div>
               {degradedSources.length > 0 && (
@@ -287,7 +286,7 @@ function RecallRadarPage() {
 
           <div className="rounded-2xl border border-border/40 bg-muted/30 px-4 py-3 font-body text-xs text-muted-foreground space-y-1">
             <p>
-              Data sourced from CPSC, the FDA, USDA FSIS, NHTSA, and Health Canada. For the complete
+              Data sourced from CPSC, the FDA, USDA FSIS, and NHTSA. For the complete
               CPSC list visit{" "}
               <a
                 href="https://cpsc.gov/Recalls"

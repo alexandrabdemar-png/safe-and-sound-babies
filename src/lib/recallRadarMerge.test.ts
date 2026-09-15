@@ -217,13 +217,13 @@ describe("mergeRecallSources", () => {
 });
 
 // ── Regression: the degraded-data banner on /recall-radar reads "USDA
-// FSIS, NHTSA, Health Canada & EU Safety Gate didn't respond" — but those
-// four sources are never fetched live from this page (see the code
-// comment in recall-radar.tsx); they're read from our own `recalls` table,
-// pre-synced daily. A failure there means our own database read failed,
-// not that those agencies personally "didn't respond". These tests pin
-// down the actual decision logic (blocking error vs. degraded banner vs.
-// nothing) so it's verified, not just reasoned about.
+// FSIS, NHTSA & EU Safety Gate didn't respond" — but those three sources
+// are never fetched live from this page (see the code comment in
+// recall-radar.tsx); they're read from our own `recalls` table, pre-synced
+// daily. A failure there means our own database read failed, not that
+// those agencies personally "didn't respond". These tests pin down the
+// actual decision logic (blocking error vs. degraded banner vs. nothing)
+// so it's verified, not just reasoned about.
 describe("classifyRecallFetchStatus", () => {
   it("reports nothing when both sources succeed", () => {
     const result = classifyRecallFetchStatus(false, false, 5);
@@ -233,7 +233,7 @@ describe("classifyRecallFetchStatus", () => {
   it("shows a degraded banner (not a blocking error) when only the extra-sources read fails but CPSC still found recalls", () => {
     const result = classifyRecallFetchStatus(false, true, 3);
     expect(result.error).toBeNull();
-    expect(result.degradedSources).toEqual(["USDA FSIS, NHTSA, Health Canada & EU Safety Gate"]);
+    expect(result.degradedSources).toEqual(["USDA FSIS, NHTSA & EU Safety Gate"]);
   });
 
   it("shows a degraded banner when only CPSC/FDA fails but the extra sources still found recalls", () => {
@@ -247,7 +247,7 @@ describe("classifyRecallFetchStatus", () => {
     expect(result.error).toBeNull();
     expect(result.degradedSources).toEqual([
       "CPSC & FDA",
-      "USDA FSIS, NHTSA, Health Canada & EU Safety Gate",
+      "USDA FSIS, NHTSA & EU Safety Gate",
     ]);
   });
 

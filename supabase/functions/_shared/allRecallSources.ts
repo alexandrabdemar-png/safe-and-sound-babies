@@ -1,6 +1,8 @@
 // Ported from src/lib/recallSources.ts (copy, not import — see
 // recallMatch.ts's header comment for why). Fetches + normalizes recalls
-// from USDA FSIS, NHTSA, Health Canada, and the EU Safety Gate.
+// from USDA FSIS, NHTSA, and the EU Safety Gate. (Health Canada is also
+// implemented here but not wired into fetchAllExtraRecallSources — see that
+// function's comment.)
 //
 // IMPORTANT — these four integrations were built against publicly documented
 // API shapes but could not be live-tested from this development sandbox
@@ -292,11 +294,15 @@ export async function fetchEuSafetyGateRecalls(
 export async function fetchAllExtraRecallSources(
   fetchImpl: typeof fetch,
 ): Promise<NormalizedRecall[]> {
-  const [usda, nhtsa, healthCanada, euSafetyGate] = await Promise.all([
+  // Health Canada is intentionally excluded here for the US-only launch —
+  // it's a foreign regulator's recalls surfaced to US parents, which mostly
+  // duplicated or confused rather than added coverage (no US-exclusive baby
+  // brand needs it). fetchHealthCanadaRecalls() is left in place, tested,
+  // and ready to re-wire in if/when a Canada launch needs it.
+  const [usda, nhtsa, euSafetyGate] = await Promise.all([
     fetchUsdaFsisRecalls(fetchImpl),
     fetchNhtsaRecalls(fetchImpl),
-    fetchHealthCanadaRecalls(fetchImpl),
     fetchEuSafetyGateRecalls(fetchImpl),
   ]);
-  return [...usda, ...nhtsa, ...healthCanada, ...euSafetyGate];
+  return [...usda, ...nhtsa, ...euSafetyGate];
 }
