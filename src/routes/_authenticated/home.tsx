@@ -6,12 +6,15 @@ import { toast } from "sonner";
 import {
   AlertTriangle,
   ArrowRight,
+  BarChart2,
   Calendar,
   ChevronDown,
   ChevronUp,
+  ClipboardList,
   Gift,
   Loader2,
   Package,
+  Plus,
   Radio,
   RefreshCw,
   Settings,
@@ -1075,6 +1078,39 @@ function HomePage() {
         </div>
       </section>
 
+      {/* Quick actions — one-tap entry points into the rest of the app */}
+      <section className="px-5 pt-4 sm:px-6 animate-fade-up stagger-2">
+        <div className="mx-auto max-w-md">
+          <p className="mb-3 font-display text-lg font-semibold tracking-tight">Quick actions</p>
+          <div className="flex flex-col gap-2.5">
+            <QuickActionRow
+              to="/tracking"
+              icon={BarChart2}
+              iconBg="bg-primary/15"
+              iconColor="text-primary"
+              title="Track"
+              blurb="Feeds, sleep, diapers & more"
+            />
+            <QuickActionRow
+              to="/products/new"
+              icon={Plus}
+              iconBg="bg-accent/15"
+              iconColor="text-accent"
+              title="Add a product"
+              blurb="Scan a barcode or add manually"
+            />
+            <QuickActionRow
+              to="/checklists"
+              icon={ClipboardList}
+              iconBg="bg-sand/60"
+              iconColor="text-accent"
+              title="Safety checklists"
+              blurb="Room-by-room baby-proofing"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Up next — proactive guidance */}
       {!hasAnyTrackedData ? (
         <section className="px-5 pt-4 sm:px-6 animate-fade-up stagger-4">
@@ -1231,6 +1267,42 @@ function SummaryTile({
       <p className="font-body text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
         {label}
       </p>
+    </Link>
+  );
+}
+
+function QuickActionRow({
+  to,
+  icon: Icon,
+  iconBg,
+  iconColor,
+  title,
+  blurb,
+}: {
+  to: string;
+  icon: React.ComponentType<{ className?: string }>;
+  iconBg: string;
+  iconColor: string;
+  title: string;
+  blurb: string;
+}) {
+  return (
+    <Link
+      to={to}
+      className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3.5 transition-colors hover:border-primary/40"
+    >
+      <div className="flex items-center gap-3">
+        <span
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${iconBg} ${iconColor}`}
+        >
+          <Icon className="h-4 w-4" />
+        </span>
+        <div>
+          <p className="font-body text-sm font-semibold">{title}</p>
+          <p className="font-body text-[11px] text-muted-foreground">{blurb}</p>
+        </div>
+      </div>
+      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
     </Link>
   );
 }
