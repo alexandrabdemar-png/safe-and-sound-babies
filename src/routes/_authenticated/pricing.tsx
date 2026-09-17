@@ -288,10 +288,16 @@ function PricingPage() {
               <p className="text-sm text-muted-foreground">AI-assisted guidance & extended features</p>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold">{appleProduct?.displayPrice ?? '$3.39'}</div>
-              <div className="text-xs text-muted-foreground">per month</div>
+              <div className="text-2xl font-bold">{priceLabel}</div>
+              <div className="text-xs text-muted-foreground">{periodLabel}</div>
+              {isYearly && (
+                <div className="text-xs text-muted-foreground">
+                  about $2.75/month — 2 months free
+                </div>
+              )}
               <div className="text-xs text-primary font-medium">7-day free trial</div>
             </div>
+
           </div>
           <ul className="space-y-2">
             {PRO_FEATURES.map((f) => (
