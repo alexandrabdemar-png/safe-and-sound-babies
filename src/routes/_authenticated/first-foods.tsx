@@ -32,6 +32,8 @@ export const Route = createFileRoute("/_authenticated/first-foods")({
 });
 
 import { TOP_ALLERGENS, type Allergen } from "@/lib/topAllergens";
+import { useProGate } from "@/hooks/useProGate";
+
 export { TOP_ALLERGENS } from "@/lib/topAllergens";
 export type { Allergen } from "@/lib/topAllergens";
 
@@ -187,9 +189,19 @@ function FirstFoodsPage() {
   }
 
   function startScan() {
+    // Scanning a package (and the ingredient capture it fills in) is a Pro
+    // feature; typing a food in by hand stays free.
+    if (
+      !requirePro(
+        "Package scanner",
+        "Scan a pouch or puffs package and we'll fill in the product, brand and its full ingredient list — and add every ingredient to your baby's profile.",
+      )
+    )
+      return;
     if (!showForm) openAdd();
     setScanOpen(true);
   }
+
 
   // Guards every setState/toast in loadData() against firing after the user
   // has already navigated away — e.g. handleSave() below re-calls loadData()
@@ -520,7 +532,7 @@ function FirstFoodsPage() {
                   </label>
                   <button
                     type="button"
-                    onClick={() => setScanOpen(true)}
+                    onClick={startScan}
                     disabled={lookingUp}
                     className="flex items-center gap-1 font-body text-xs font-semibold text-primary disabled:opacity-60"
                   >

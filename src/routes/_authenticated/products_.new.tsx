@@ -354,10 +354,20 @@ function NewProductPage() {
                   type="button"
                   variant="outline"
                   className="h-12 rounded-2xl px-4"
-                  onClick={() => setScannerOpen(true)}
+                  onClick={() => {
+                    if (
+                      !requirePro(
+                        "Barcode scanner",
+                        "Scan a product's barcode and we'll fill in the details and check it for recalls instantly.",
+                      )
+                    )
+                      return;
+                    setScannerOpen(true);
+                  }}
                 >
                   <ScanLine className="mr-1 h-4 w-4" /> Scan
                 </Button>
+
               </div>
             </Field>
 
