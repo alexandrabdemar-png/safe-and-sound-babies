@@ -37,6 +37,8 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { useActiveChild } from "@/hooks/useActiveChild";
+import { useProGate } from "@/hooks/useProGate";
+
 import { CATEGORIES, type CategoryKey } from "@/lib/productCategories";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
