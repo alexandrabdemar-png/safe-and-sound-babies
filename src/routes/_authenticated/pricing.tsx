@@ -52,6 +52,19 @@ function PricingPage() {
   const [applePurchasing, setApplePurchasing] = useState(false);
   const [appleRestoring, setAppleRestoring] = useState(false);
   const [appleProduct, setAppleProduct] = useState<AppleProduct | null>(null);
+  // Web checkout offers monthly or annual billing. On iOS, StoreKit only has
+  // the monthly product configured in App Store Connect, so the toggle is
+  // hidden there and Apple's own reported price is shown instead.
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const isYearly = !isNativeIOS && billingPeriod === 'yearly';
+  const priceLabel = isNativeIOS
+    ? (appleProduct?.displayPrice ?? '$3.39')
+    : isYearly
+      ? '$32.99'
+      : '$3.39';
+  const periodLabel = isYearly ? 'per year' : 'per month';
+  const renewalWord = isYearly ? 'year' : 'month';
+
 
   useEffect(() => {
     if (checkout === 'success') {
