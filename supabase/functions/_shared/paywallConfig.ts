@@ -3,4 +3,4 @@
  * separate deploy target that cannot import from src/. Keep both in sync.
  * See that file for the full explanation.
  */
-export const PAYWALL_DISABLED = true;
+export const PAYWALL_DISABLED = false;
