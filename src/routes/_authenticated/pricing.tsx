@@ -201,7 +201,7 @@ function PricingPage() {
             <ArrowLeft className="h-4 w-4 mr-2" /> Back to pricing
           </Button>
           <StripeEmbeddedCheckout
-            priceId="pro_monthly"
+            priceId={isYearly ? 'pro_yearly' : 'pro_monthly'}
             customerEmail={userEmail}
             userId={userId}
             returnUrl={`${window.location.origin}/pricing?checkout=success`}
@@ -231,6 +231,29 @@ function PricingPage() {
             Safety guidelines based on AAP recommendations.
           </p>
         </div>
+
+        {!isNativeIOS && (
+          <div className="mx-auto flex w-full max-w-xs items-center rounded-full border bg-muted/40 p-1">
+            {(['monthly', 'yearly'] as const).map((period) => (
+              <button
+                key={period}
+                type="button"
+                onClick={() => setBillingPeriod(period)}
+                className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition ${
+                  billingPeriod === period
+                    ? 'bg-background shadow-sm text-foreground'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                {period === 'monthly' ? 'Monthly' : 'Yearly'}
+                {period === 'yearly' && (
+                  <span className="ml-1.5 text-xs font-semibold text-primary">Save 19%</span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
 
         {/* Free plan */}
         <div className="rounded-2xl border bg-card p-6 space-y-4">
