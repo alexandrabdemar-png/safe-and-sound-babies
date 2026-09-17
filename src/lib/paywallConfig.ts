@@ -16,4 +16,4 @@
  * import from src/, so they check their own copy in
  * supabase/functions/_shared/paywallConfig.ts — keep both in sync.
  */
-export const PAYWALL_DISABLED = true;
+export const PAYWALL_DISABLED = false;

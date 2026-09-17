@@ -252,7 +252,7 @@ function PricingPage() {
               <p className="text-sm text-muted-foreground">AI-assisted guidance & extended features</p>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold">{appleProduct?.displayPrice ?? '$3.33'}</div>
+              <div className="text-2xl font-bold">{appleProduct?.displayPrice ?? '$3.39'}</div>
               <div className="text-xs text-muted-foreground">per month</div>
               <div className="text-xs text-primary font-medium">7-day free trial</div>
             </div>
@@ -291,7 +291,7 @@ function PricingPage() {
                 )}
               </Button>
               <p className="text-xs text-center text-muted-foreground">
-                7 days free, then {appleProduct?.displayPrice ?? '$3.33'}/month. Cancel anytime.
+                7 days free, then {appleProduct?.displayPrice ?? '$3.39'}/month. Cancel anytime.
               </p>
               {isNativeIOS && (
                 <Button
@@ -322,7 +322,7 @@ function PricingPage() {
             terms, and Terms/Privacy links on or adjacent to the purchase
             screen. Was previously missing entirely — see COMPLIANCE_REPORT.md §5/§7. */}
         <p className="text-xs text-center text-muted-foreground">
-          Pro is {appleProduct?.displayPrice ?? '$3.33'}/month after a 7-day free trial. Your
+          Pro is {appleProduct?.displayPrice ?? '$3.39'}/month after a 7-day free trial. Your
           subscription renews automatically each month until you cancel; cancel anytime from{' '}
           {isPro ? '"Manage subscription" above' : 'your account settings'} — no charge if you
           cancel before the trial ends.{' '}

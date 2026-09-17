@@ -37,6 +37,8 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { useActiveChild } from "@/hooks/useActiveChild";
+import { useProGate } from "@/hooks/useProGate";
+
 import { CATEGORIES, type CategoryKey } from "@/lib/productCategories";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
@@ -113,6 +115,8 @@ function formatDate(iso: string) {
 
 function NewProductPage() {
   const navigate = useNavigate();
+  const { requirePro } = useProGate();
+
   const { activeChildId, children: childOptions } = useActiveChild();
   const [saving, setSaving] = useState(false);
   const [category, setCategory] = useState<CategoryKey | "">("");
@@ -354,10 +358,20 @@ function NewProductPage() {
                   type="button"
                   variant="outline"
                   className="h-12 rounded-2xl px-4"
-                  onClick={() => setScannerOpen(true)}
+                  onClick={() => {
+                    if (
+                      !requirePro(
+                        "Barcode scanner",
+                        "Scan a product's barcode and we'll fill in the details and check it for recalls instantly.",
+                      )
+                    )
+                      return;
+                    setScannerOpen(true);
+                  }}
                 >
                   <ScanLine className="mr-1 h-4 w-4" /> Scan
                 </Button>
+
               </div>
             </Field>
 
