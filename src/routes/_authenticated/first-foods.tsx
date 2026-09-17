@@ -116,6 +116,8 @@ function FirstFoodsPage() {
   // lookup here is for the ingredient list rather than recall matching.
   const [scanOpen, setScanOpen] = useState(false);
   const [lookingUp, setLookingUp] = useState(false);
+  const { requirePro } = useProGate();
+
 
   function openAdd() {
     setEditingId(null);
