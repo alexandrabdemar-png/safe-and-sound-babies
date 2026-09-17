@@ -52,6 +52,19 @@ function PricingPage() {
   const [applePurchasing, setApplePurchasing] = useState(false);
   const [appleRestoring, setAppleRestoring] = useState(false);
   const [appleProduct, setAppleProduct] = useState<AppleProduct | null>(null);
+  // Web checkout offers monthly or annual billing. On iOS, StoreKit only has
+  // the monthly product configured in App Store Connect, so the toggle is
+  // hidden there and Apple's own reported price is shown instead.
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const isYearly = !isNativeIOS && billingPeriod === 'yearly';
+  const priceLabel = isNativeIOS
+    ? (appleProduct?.displayPrice ?? '$3.39')
+    : isYearly
+      ? '$32.99'
+      : '$3.39';
+  const periodLabel = isYearly ? 'per year' : 'per month';
+  const renewalWord = isYearly ? 'year' : 'month';
+
 
   useEffect(() => {
     if (checkout === 'success') {
@@ -188,7 +201,7 @@ function PricingPage() {
             <ArrowLeft className="h-4 w-4 mr-2" /> Back to pricing
           </Button>
           <StripeEmbeddedCheckout
-            priceId="pro_monthly"
+            priceId={isYearly ? 'pro_yearly' : 'pro_monthly'}
             customerEmail={userEmail}
             userId={userId}
             returnUrl={`${window.location.origin}/pricing?checkout=success`}
@@ -218,6 +231,29 @@ function PricingPage() {
             Safety guidelines based on AAP recommendations.
           </p>
         </div>
+
+        {!isNativeIOS && (
+          <div className="mx-auto flex w-full max-w-xs items-center rounded-full border bg-muted/40 p-1">
+            {(['monthly', 'yearly'] as const).map((period) => (
+              <button
+                key={period}
+                type="button"
+                onClick={() => setBillingPeriod(period)}
+                className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition ${
+                  billingPeriod === period
+                    ? 'bg-background shadow-sm text-foreground'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                {period === 'monthly' ? 'Monthly' : 'Yearly'}
+                {period === 'yearly' && (
+                  <span className="ml-1.5 text-xs font-semibold text-primary">Save 19%</span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
 
         {/* Free plan */}
         <div className="rounded-2xl border bg-card p-6 space-y-4">
@@ -252,10 +288,16 @@ function PricingPage() {
               <p className="text-sm text-muted-foreground">AI-assisted guidance & extended features</p>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold">{appleProduct?.displayPrice ?? '$3.39'}</div>
-              <div className="text-xs text-muted-foreground">per month</div>
+              <div className="text-2xl font-bold">{priceLabel}</div>
+              <div className="text-xs text-muted-foreground">{periodLabel}</div>
+              {isYearly && (
+                <div className="text-xs text-muted-foreground">
+                  about $2.75/month — 2 months free
+                </div>
+              )}
               <div className="text-xs text-primary font-medium">7-day free trial</div>
             </div>
+
           </div>
           <ul className="space-y-2">
             {PRO_FEATURES.map((f) => (
@@ -291,8 +333,9 @@ function PricingPage() {
                 )}
               </Button>
               <p className="text-xs text-center text-muted-foreground">
-                7 days free, then {appleProduct?.displayPrice ?? '$3.39'}/month. Cancel anytime.
+                7 days free, then {priceLabel}/{renewalWord}. Cancel anytime.
               </p>
+
               {isNativeIOS && (
                 <Button
                   onClick={handleAppleRestore}
@@ -322,9 +365,10 @@ function PricingPage() {
             terms, and Terms/Privacy links on or adjacent to the purchase
             screen. Was previously missing entirely — see COMPLIANCE_REPORT.md §5/§7. */}
         <p className="text-xs text-center text-muted-foreground">
-          Pro is {appleProduct?.displayPrice ?? '$3.39'}/month after a 7-day free trial. Your
-          subscription renews automatically each month until you cancel; cancel anytime from{' '}
+          Pro is {priceLabel}/{renewalWord} after a 7-day free trial. Your subscription renews
+          automatically each {renewalWord} until you cancel; cancel anytime from{' '}
           {isPro ? '"Manage subscription" above' : 'your account settings'} — no charge if you
+
           cancel before the trial ends.{' '}
           {isNativeIOS
             ? 'Payment is charged to your Apple ID account and managed entirely through the App Store.'
