@@ -113,6 +113,8 @@ function formatDate(iso: string) {
 
 function NewProductPage() {
   const navigate = useNavigate();
+  const { requirePro } = useProGate();
+
   const { activeChildId, children: childOptions } = useActiveChild();
   const [saving, setSaving] = useState(false);
   const [category, setCategory] = useState<CategoryKey | "">("");
