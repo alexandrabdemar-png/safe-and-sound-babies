@@ -1193,12 +1193,15 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          apple_original_transaction_id: string | null
+          apple_transaction_id: string | null
           cancel_at_period_end: boolean | null
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
           environment: string
           id: string
+          payment_provider: string
           plan: string | null
           price_id: string | null
           product_id: string | null
@@ -1209,12 +1212,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          apple_original_transaction_id?: string | null
+          apple_transaction_id?: string | null
           cancel_at_period_end?: boolean | null
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
           environment?: string
           id?: string
+          payment_provider?: string
           plan?: string | null
           price_id?: string | null
           product_id?: string | null
@@ -1225,12 +1231,15 @@ export type Database = {
           user_id: string
         }
         Update: {
+          apple_original_transaction_id?: string | null
+          apple_transaction_id?: string | null
           cancel_at_period_end?: boolean | null
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
           environment?: string
           id?: string
+          payment_provider?: string
           plan?: string | null
           price_id?: string | null
           product_id?: string | null

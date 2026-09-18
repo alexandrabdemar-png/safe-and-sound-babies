@@ -159,18 +159,31 @@ function NativeMlKitBarcodeScannerView({
     };
   }, [active, onDetected, onError, onCancel]);
 
+  // Camera never started (e.g. permission declined): there is no native
+  // preview to overlay, so rendering a full-screen layer would just swallow
+  // every tap on the error message and the page's own back/close controls.
+  if (permissionDenied) {
+    return (
+      <div className={className}>
+        <div className="flex h-full w-full items-center justify-center bg-black/60 p-6 text-center text-sm text-white">
+          Camera access is needed to scan barcodes
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={className}>
       {/* Stays visible while the rest of the page is transparent (see the
           .barcode-scanner-active rules in styles.css) so the user always has
           a way out of the native camera session. */}
-      <div className="barcode-scanner-ui fixed inset-0 z-50 flex flex-col items-center justify-between p-6">
+      <div className="barcode-scanner-ui pointer-events-none fixed inset-0 z-50 flex flex-col items-center justify-between p-6">
         <div className="flex w-full justify-end">
           <button
             type="button"
             onClick={cancel}
             aria-label="Close scanner"
-            className="rounded-full bg-black/60 p-3 text-white"
+            className="pointer-events-auto rounded-full bg-black/60 p-3 text-white"
           >
             <X className="h-5 w-5" />
           </button>

@@ -46,7 +46,7 @@ export function useSubscription() {
 
     async function refetch() {
       if (!userIdLocal || !env) return;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('subscriptions')
         .select(
           'plan,status,price_id,current_period_end,cancel_at_period_end,stripe_customer_id,payment_provider',
@@ -56,7 +56,14 @@ export function useSubscription() {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (!cancelled) setSubscription((data as SubscriptionRow | null) ?? null);
+      if (cancelled) return;
+      if (error) {
+        // Never downgrade a paying customer because of a transient/schema
+        // query failure — keep whatever we already know and surface the error.
+        console.error('[useSubscription] subscription lookup failed', error.message);
+        return;
+      }
+      setSubscription((data as SubscriptionRow | null) ?? null);
     }
 
     async function load() {
