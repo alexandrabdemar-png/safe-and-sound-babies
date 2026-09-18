@@ -4,6 +4,13 @@ import { createClient } from '@supabase/supabase-js';
 import { type StripeEnv, verifyWebhook } from '@/lib/stripe.server';
 import { sanitizeError } from '@/lib/sanitize-error';
 
+// Any Pro price unlocks Pro — monthly AND yearly (and any future Pro tier).
+// This used to hardcode 'pro_monthly', which wrote plan='free' for annual
+// subscribers so they kept hitting the paywall after paying.
+function isProPriceId(priceId: unknown): boolean {
+  return typeof priceId === 'string' && priceId.startsWith('pro_');
+}
+
 let _supabase: ReturnType<typeof createClient> | null = null;
 function getSupabase() {
   if (!_supabase) {
@@ -32,7 +39,7 @@ async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
   const productId = item?.price?.product;
   const periodStart = item?.current_period_start ?? subscription.current_period_start;
   const periodEnd = item?.current_period_end ?? subscription.current_period_end;
-  const plan = priceId === 'pro_monthly' ? 'pro' : 'free';
+  const plan = isProPriceId(priceId) ? 'pro' : 'free';
 
   await subs().upsert(
     {
@@ -63,7 +70,7 @@ async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
   // Keep plan='pro' while inside the paid/trial period; downgrade only once it lapses.
   const periodEndDate = periodEnd ? new Date(periodEnd * 1000) : null;
   const stillInPeriod = !periodEndDate || periodEndDate > new Date();
-  const isProPrice = priceId === 'pro_monthly';
+  const isProPrice = isProPriceId(priceId);
   const isTrialing = subscription.status === 'trialing';
   const plan = (isProPrice || isTrialing) && stillInPeriod ? 'pro' : 'free';
 

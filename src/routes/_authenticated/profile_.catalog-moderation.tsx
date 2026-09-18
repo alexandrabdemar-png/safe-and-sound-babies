@@ -22,7 +22,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORIES } from "@/lib/productCategories";
+import {
+  CATEGORIES,
+  CATEGORY_BY_KEY,
+  categoryFromLabel,
+  type CategoryKey,
+} from "@/lib/productCategories";
 import {
   amICatalogAdmin,
   deleteCatalogEntry,
@@ -212,7 +217,12 @@ function EntryCard({
 }) {
   const [name, setName] = useState(entry.name ?? "");
   const [brand, setBrand] = useState(entry.brand ?? "");
-  const [category, setCategory] = useState(entry.category ?? "");
+  // Stored categories are human labels ("Baby bottle"), while the dropdown
+  // items are keys ("bottle"). Map label -> key for display, and write the
+  // label back on save so scan-written and moderated rows stay consistent.
+  const [categoryKey, setCategoryKey] = useState(
+    categoryFromLabel(entry.category)?.key ?? "",
+  );
   const [isBaby, setIsBaby] = useState(entry.is_baby_product);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -220,7 +230,7 @@ function EntryCard({
     id: entry.id,
     name: name.trim() || null,
     brand: brand.trim() || null,
-    category: category.trim() || null,
+    category: categoryKey ? (CATEGORY_BY_KEY[categoryKey as CategoryKey]?.label ?? null) : null,
     isBabyProduct: isBaby,
     promote,
   });
@@ -245,7 +255,10 @@ function EntryCard({
       <div className="grid gap-2 sm:grid-cols-2">
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Product name" />
         <Input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Brand" />
-        <Select value={category || "unset"} onValueChange={(v) => setCategory(v === "unset" ? "" : v)}>
+        <Select
+          value={categoryKey || "unset"}
+          onValueChange={(v) => setCategoryKey(v === "unset" ? "" : v)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Category" />
           </SelectTrigger>
