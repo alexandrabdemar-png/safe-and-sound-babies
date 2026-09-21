@@ -292,7 +292,7 @@ function PricingPage() {
               <div className="text-xs text-muted-foreground">{periodLabel}</div>
               {isYearly && (
                 <div className="text-xs text-muted-foreground">
-                  about $2.92/month — 2 months free
+                  about $2.92/month — save 14%
                 </div>
               )}
               <div className="text-xs text-primary font-medium">7-day free trial</div>
