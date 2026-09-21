@@ -33,6 +33,13 @@ export function Footer() {
               Privacy Policy
             </Link>
             <span className="text-border">·</span>
+            <Link
+              to="/support"
+              className="font-body text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Support
+            </Link>
+            <span className="text-border">·</span>
             <p className="font-body text-sm text-muted-foreground">
               For the little things that matter.
             </p>
