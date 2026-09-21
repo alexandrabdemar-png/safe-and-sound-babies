@@ -29,8 +29,13 @@ function getNextParam(): string | null {
 
 function getIsRecovery(): boolean {
   if (typeof window === "undefined") return false;
-  return new URLSearchParams(window.location.search).get("type") === "recovery";
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  return (
+    new URLSearchParams(window.location.search).get("type") === "recovery" ||
+    hash.get("type") === "recovery"
+  );
 }
+
 
 /**
  * When the native app started this OAuth flow, this page is running in a
