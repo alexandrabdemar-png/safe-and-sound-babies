@@ -39,11 +39,37 @@ const removed = [];
 // data is used for tracking. This app genuinely does not track (no ads,
 // analytics or attribution SDKs, no AppTrackingTransparency calls), so the
 // key must NOT be present. Older builds shipped it — strip it if found.
-const trackingKey = /\s*<key>NSUserTrackingUsageDescription<\/key>\s*<string>[\s\S]*?<\/string>/;
-if (trackingKey.test(plist)) {
-  plist = plist.replace(trackingKey, "");
+// Robust removal: delete the key line plus whatever value element follows it,
+// regardless of formatting (single-line string, multi-line string, <string/>).
+if (plist.includes("<key>NSUserTrackingUsageDescription</key>")) {
+  const lines = plist.split("\n");
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].includes("<key>NSUserTrackingUsageDescription</key>")) {
+      // skip the key line, then skip the following value element
+      let j = i + 1;
+      // skip blank lines
+      while (j < lines.length && lines[j].trim() === "") j++;
+      if (j < lines.length) {
+        const v = lines[j].trim();
+        if (/^<string\s*\/>$/.test(v) || /^<(true|false)\s*\/>$/.test(v)) {
+          i = j;
+        } else if (/^<string>.*<\/string>$/.test(v)) {
+          i = j;
+        } else if (/^<string>/.test(v)) {
+          // multi-line string value
+          while (j < lines.length && !lines[j].includes("</string>")) j++;
+          i = j;
+        }
+      }
+      continue;
+    }
+    out.push(lines[i]);
+  }
+  plist = out.join("\n");
   removed.push("NSUserTrackingUsageDescription");
 }
+
 
 for (const [key, value] of Object.entries(STRINGS)) {
   if (plist.includes(`<key>${key}</key>`)) continue;
@@ -78,6 +104,22 @@ if (!plist.includes("<key>CFBundleURLTypes</key>")) {
 }
 
 writeFileSync(PLIST, plist);
+
+// Xcode can also inject the key via build settings (INFOPLIST_KEY_*) in the
+// project file, which produces the same App Store Connect warning.
+const PBXPROJ = "ios/App/App.xcodeproj/project.pbxproj";
+if (existsSync(PBXPROJ)) {
+  const pbx = readFileSync(PBXPROJ, "utf8");
+  const cleaned = pbx
+    .split("\n")
+    .filter((l) => !l.includes("INFOPLIST_KEY_NSUserTrackingUsageDescription"))
+    .join("\n");
+  if (cleaned !== pbx) {
+    writeFileSync(PBXPROJ, cleaned);
+    removed.push("INFOPLIST_KEY_NSUserTrackingUsageDescription (project.pbxproj)");
+  }
+}
+
 
 if (removed.length) {
   console.log(`✓ Info.plist removed: ${removed.join(", ")}`);
