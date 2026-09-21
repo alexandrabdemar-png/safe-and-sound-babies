@@ -331,6 +331,10 @@ function ProfilePage() {
           </div>
         </section>
 
+        {/* Change password */}
+        <ChangePasswordSection />
+
+
         {/* Share */}
         <ShareSection />
 
