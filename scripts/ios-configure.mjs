@@ -105,6 +105,22 @@ if (!plist.includes("<key>CFBundleURLTypes</key>")) {
 
 writeFileSync(PLIST, plist);
 
+// Xcode can also inject the key via build settings (INFOPLIST_KEY_*) in the
+// project file, which produces the same App Store Connect warning.
+const PBXPROJ = "ios/App/App.xcodeproj/project.pbxproj";
+if (existsSync(PBXPROJ)) {
+  const pbx = readFileSync(PBXPROJ, "utf8");
+  const cleaned = pbx
+    .split("\n")
+    .filter((l) => !l.includes("INFOPLIST_KEY_NSUserTrackingUsageDescription"))
+    .join("\n");
+  if (cleaned !== pbx) {
+    writeFileSync(PBXPROJ, cleaned);
+    removed.push("INFOPLIST_KEY_NSUserTrackingUsageDescription (project.pbxproj)");
+  }
+}
+
+
 if (removed.length) {
   console.log(`✓ Info.plist removed: ${removed.join(", ")}`);
 }
