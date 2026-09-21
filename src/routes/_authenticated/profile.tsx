@@ -391,6 +391,115 @@ function ProfilePage() {
   );
 }
 
+/**
+ * Signed-in password change. Lovable Cloud may require current_password for
+ * signed-in updates (the recovery/reset screen is exempt), so we collect it
+ * and send it alongside the new password.
+ */
+function ChangePasswordSection() {
+  const [open, setOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (newPassword.length < 8) {
+      toast.error("Choose a password with at least 8 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("Those passwords don't match.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+        // @ts-expect-error current_password is accepted by Lovable Cloud auth
+        current_password: currentPassword,
+      });
+      if (error) throw error;
+      toast.success("Password updated.");
+      setCurrentPassword(""); setNewPassword(""); setConfirmPassword(""); setOpen(false);
+    } catch (err) {
+      logError("profile.changePassword", err);
+      toast.error(err instanceof Error ? err.message : "Couldn't update your password.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="rounded-3xl border border-border/60 bg-card p-5">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sand/50 text-accent">
+          <KeyRound className="h-4 w-4" />
+        </div>
+        <div>
+          <p className="font-display text-base font-semibold">Password</p>
+          <p className="font-body text-xs text-muted-foreground">
+            Change the password you use to sign in
+          </p>
+        </div>
+      </div>
+      {!open ? (
+        <Button
+          onClick={() => setOpen(true)}
+          variant="outline"
+          className="mt-4 w-full rounded-full"
+        >
+          Change password
+        </Button>
+      ) : (
+        <form onSubmit={handleSubmit} className="mt-4 space-y-2">
+          <Input
+            type="password"
+            autoComplete="current-password"
+            placeholder="Current password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            required
+          />
+          <Input
+            type="password"
+            autoComplete="new-password"
+            placeholder="New password (8+ characters)"
+            minLength={8}
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+          />
+          <Input
+            type="password"
+            autoComplete="new-password"
+            placeholder="Confirm new password"
+            minLength={8}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+          <div className="flex gap-2">
+            <Button type="submit" disabled={saving} className="flex-1 rounded-full">
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="rounded-full"
+              onClick={() => { setOpen(false); setCurrentPassword(""); setNewPassword(""); setConfirmPassword(""); }}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      )}
+    </section>
+  );
+}
+
+
 function ChildRow({
   child,
   onRemove,
