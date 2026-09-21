@@ -60,7 +60,7 @@ function PricingPage() {
   const priceLabel = isNativeIOS
     ? (appleProduct?.displayPrice ?? '$3.39')
     : isYearly
-      ? '$32.99'
+      ? '$34.99'
       : '$3.39';
   const periodLabel = isYearly ? 'per year' : 'per month';
   const renewalWord = isYearly ? 'year' : 'month';
@@ -247,7 +247,7 @@ function PricingPage() {
               >
                 {period === 'monthly' ? 'Monthly' : 'Yearly'}
                 {period === 'yearly' && (
-                  <span className="ml-1.5 text-xs font-semibold text-primary">Save 19%</span>
+                  <span className="ml-1.5 text-xs font-semibold text-primary">Save 14%</span>
                 )}
               </button>
             ))}
@@ -292,7 +292,7 @@ function PricingPage() {
               <div className="text-xs text-muted-foreground">{periodLabel}</div>
               {isYearly && (
                 <div className="text-xs text-muted-foreground">
-                  about $2.75/month — 2 months free
+                  about $2.92/month — 2 months free
                 </div>
               )}
               <div className="text-xs text-primary font-medium">7-day free trial</div>
