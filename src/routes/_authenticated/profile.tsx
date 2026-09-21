@@ -417,7 +417,7 @@ function ChangePasswordSection() {
     try {
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
-        // @ts-expect-error current_password is accepted by Lovable Cloud auth
+        // current_password is accepted by Lovable Cloud auth for signed-in changes
         current_password: currentPassword,
       });
       if (error) throw error;
