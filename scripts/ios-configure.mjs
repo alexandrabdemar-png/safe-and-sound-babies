@@ -79,9 +79,12 @@ if (!plist.includes("<key>CFBundleURLTypes</key>")) {
 
 writeFileSync(PLIST, plist);
 
+if (removed.length) {
+  console.log(`✓ Info.plist removed: ${removed.join(", ")}`);
+}
 if (added.length) {
   console.log(`✓ Info.plist updated: ${added.join(", ")}`);
-} else {
+} else if (!removed.length) {
   console.log("✓ Info.plist already configured — nothing to do.");
 }
 
