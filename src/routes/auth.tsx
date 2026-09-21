@@ -28,10 +28,27 @@ export const Route = createFileRoute("/auth")({
 
 type Mode = "signin" | "signup" | "magic" | "forgot" | "reset";
 
+/**
+ * A Supabase recovery link can announce itself in three ways depending on
+ * flow/version: our own ?type=recovery (set in handleForgotPassword's
+ * redirectTo), the implicit-flow hash fragment (#type=recovery), or the
+ * PASSWORD_RECOVERY auth event. Missing any of them meant the recovery
+ * session was treated as a normal sign-in and the user got bounced to /home
+ * without ever being asked for a new password.
+ */
+function isRecoveryUrl(): boolean {
+  if (typeof window === "undefined") return false;
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const query = new URLSearchParams(window.location.search);
+  return hash.get("type") === "recovery" || query.get("type") === "recovery";
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const { error: authError, mode: modeParam } = Route.useSearch();
-  const [mode, setMode] = useState<Mode>((modeParam as Mode) ?? "signin");
+  const [mode, setMode] = useState<Mode>(
+    () => (modeParam as Mode) ?? (isRecoveryUrl() ? "reset" : "signin"),
+  );
 
   // Show auth callback errors (e.g. expired magic link)
   useEffect(() => {
@@ -41,16 +58,24 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState<null | "email" | "google" | "apple" | "magic">(null);
 
-  // Redirect if already signed in
+  // Redirect if already signed in — but NOT while resetting a password. A
+  // recovery link creates a real session, so without this guard the reset
+  // screen instantly redirected to /home and the password was never changed.
   useEffect(() => {
+    if (mode === "reset") return;
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/home" });
+      if (data.session && !isRecoveryUrl()) navigate({ to: "/home" });
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) navigate({ to: "/home" });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setMode("reset");
+        return;
+      }
+      if (session && !isRecoveryUrl()) navigate({ to: "/home" });
     });
     return () => sub.subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, mode]);
+
 
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();

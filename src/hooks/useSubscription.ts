@@ -76,8 +76,12 @@ export function useSubscription() {
       await refetch();
       if (!cancelled) setLoading(false);
 
+      // Unique suffix: reusing a channel name returns the already-subscribed
+      // channel, and adding listeners to it throws "cannot add
+      // postgres_changes callbacks ... after subscribe()".
       channel = supabase
-        .channel(`subscriptions:${userIdLocal}`)
+        .channel(`subscriptions:${userIdLocal}:${Math.random().toString(36).slice(2)}`)
+
         .on('postgres_changes', {
           event: '*', schema: 'public', table: 'subscriptions',
           filter: `user_id=eq.${userIdLocal}`,
