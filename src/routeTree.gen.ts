@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SupportRouteImport } from './routes/support'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RecallsRouteImport } from './routes/recalls'
 import { Route as RecallSearchRouteImport } from './routes/recall-search'
@@ -61,6 +62,11 @@ import { Route as ApiPublicHooksCheckProductAlertsRouteImport } from './routes/a
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -327,6 +333,7 @@ export interface FileRoutesByFullPath {
   '/recall-search': typeof RecallSearchRoute
   '/recalls': typeof RecallsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
@@ -376,6 +383,7 @@ export interface FileRoutesByTo {
   '/recall-search': typeof RecallSearchRoute
   '/recalls': typeof RecallsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
@@ -427,6 +435,7 @@ export interface FileRoutesById {
   '/recall-search': typeof RecallSearchRoute
   '/recalls': typeof RecallsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/_authenticated/add': typeof AuthenticatedAddRoute
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
@@ -478,6 +487,7 @@ export interface FileRouteTypes {
     | '/recall-search'
     | '/recalls'
     | '/sitemap.xml'
+    | '/support'
     | '/terms'
     | '/add'
     | '/alerts'
@@ -527,6 +537,7 @@ export interface FileRouteTypes {
     | '/recall-search'
     | '/recalls'
     | '/sitemap.xml'
+    | '/support'
     | '/terms'
     | '/add'
     | '/alerts'
@@ -577,6 +588,7 @@ export interface FileRouteTypes {
     | '/recall-search'
     | '/recalls'
     | '/sitemap.xml'
+    | '/support'
     | '/terms'
     | '/_authenticated/add'
     | '/_authenticated/alerts'
@@ -628,6 +640,7 @@ export interface RootRouteChildren {
   RecallSearchRoute: typeof RecallSearchRoute
   RecallsRoute: typeof RecallsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   CaregiverInviteTokenRoute: typeof CaregiverInviteTokenRoute
   EmergencyShareTokenRoute: typeof EmergencyShareTokenRoute
@@ -646,6 +659,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -1071,6 +1091,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecallSearchRoute: RecallSearchRoute,
   RecallsRoute: RecallsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   CaregiverInviteTokenRoute: CaregiverInviteTokenRoute,
   EmergencyShareTokenRoute: EmergencyShareTokenRoute,

@@ -10,3 +10,5 @@ Peace of Mine is a baby-safety tracking app. Parents log the products their chil
 - [Latest Baby Product Recalls](/recalls): Free public list of CPSC baby and kids product recalls from the last 30 days, updated daily.
 - [Sign in](/auth): Sign in or create an account.
 - [Terms & Conditions](/terms): Terms of use, disclaimers, and limitations of liability.
+- [Privacy Policy](/privacy-policy): What information we collect, why, who can see it, and how to delete or export your data.
+- [Support](/support): Support contact email and answers to frequently asked questions.
