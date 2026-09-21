@@ -27,12 +27,23 @@ const STRINGS = {
     "Peace of Mine lets you attach photos of your baby products so you can identify them later.",
   NSPhotoLibraryAddUsageDescription:
     "Peace of Mine can save exported safety records and product photos to your photo library.",
-  NSUserTrackingUsageDescription: "Peace of Mine does not track you across other apps or websites.",
   ITSAppUsesNonExemptEncryption: false,
 };
 
 let plist = readFileSync(PLIST, "utf8");
 const added = [];
+const removed = [];
+
+// App Store Connect blocks the App Privacy "Publish" button when the binary
+// declares NSUserTrackingUsageDescription while the privacy answers say no
+// data is used for tracking. This app genuinely does not track (no ads,
+// analytics or attribution SDKs, no AppTrackingTransparency calls), so the
+// key must NOT be present. Older builds shipped it — strip it if found.
+const trackingKey = /\s*<key>NSUserTrackingUsageDescription<\/key>\s*<string>[\s\S]*?<\/string>/;
+if (trackingKey.test(plist)) {
+  plist = plist.replace(trackingKey, "");
+  removed.push("NSUserTrackingUsageDescription");
+}
 
 for (const [key, value] of Object.entries(STRINGS)) {
   if (plist.includes(`<key>${key}</key>`)) continue;
