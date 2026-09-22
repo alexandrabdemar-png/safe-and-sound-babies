@@ -52,38 +52,10 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-// Temporary connectivity probe (?probe=1): reports which upstream feed
-// endpoints answer from this runtime. Used to find working alternates for the
-// USDA FSIS and NHTSA feeds, which return HTTP 403 here. Remove once resolved.
-const PROBE_URLS: Record<string, string> = {
-  nhtsa_child_seat_query:
-    "https://data.transportation.gov/resource/6axg-epim.json" +
-    "?$q=child%20seat&$limit=2&$order=report_received_date%20DESC",
-};
-
 Deno.serve(async (req) => {
   if (req.method !== "POST" && req.method !== "GET")
     return json({ error: "Method not allowed" }, 405);
 
-  if (new URL(req.url).searchParams.get("probe") === "1") {
-    const out: Record<string, unknown> = {};
-    for (const [name, url] of Object.entries(PROBE_URLS)) {
-      try {
-        const res = await fetch(url, {
-          headers: {
-            Accept: "application/json",
-            "User-Agent":
-              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36",
-          },
-        });
-        const body = await res.text();
-        out[name] = { status: res.status, len: body.length, head: body.slice(0, 2500) };
-      } catch (e) {
-        out[name] = { error: e instanceof Error ? e.message : String(e) };
-      }
-    }
-    return json({ probe: out });
-  }
 
 
   const startedAt = Date.now();
