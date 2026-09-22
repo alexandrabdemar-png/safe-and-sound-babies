@@ -337,15 +337,33 @@ Deno.serve(async (req) => {
     );
 
     // ── Record per-source freshness / dead-man's-switch inputs ───────────
-    await writeSourceStatus(supabase, fetchCounts, matchedProductIds.length);
+    await writeSourceStatus(supabase, sourceStats, matchedProductIds.length);
+
+    const failedSources = Object.entries(sourceStats)
+      .filter(([, s]) => !s.ok)
+      .map(([source, s]) => `${source}: ${s.error ?? "failed"}`);
+    const recordsFetched = Object.values(sourceStats).reduce((n, s) => n + s.records, 0);
+    const newCount = newMatches.filter((m) => m.reason === "new").length;
+
+    await finishRun({
+      status: failedSources.length ? "partial" : "success",
+      records_fetched: recordsFetched,
+      products_checked: batchProducts.length,
+      new_recalls: newCount,
+      total_matches: dedupedMatches.length,
+      notified: (notifyResult as { notified?: number }).notified ?? 0,
+      source_stats: sourceStats,
+      error: failedSources.length ? failedSources.join("; ").slice(0, 500) : null,
+    });
 
     return json({
       ok: true,
       products_checked: batchProducts.length,
       fetch_counts: fetchCounts,
+      source_stats: sourceStats,
       catalog_rows_upserted: catalogRows.length,
       total_matches: dedupedMatches.length,
-      new_matches: newMatches.filter((m) => m.reason === "new").length,
+      new_matches: newCount,
       updated_matches: newMatches.filter((m) => m.reason === "updated").length,
       ...notifyResult,
       duration_ms: Date.now() - startedAt,
@@ -353,6 +371,7 @@ Deno.serve(async (req) => {
   } catch (e) {
     const err = e instanceof Error ? e.message : String(e);
     console.error("[scheduled-recall-check] failed:", err);
+    await finishRun({ status: "failed", error: err.slice(0, 500) });
     // Best-effort: record the failure into recall_source_status so the
     // dead-man's-switch / UI staleness banner can see it.
     try {
