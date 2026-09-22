@@ -180,7 +180,7 @@ export async function fetchNhtsaRecalls(fetchImpl: typeof fetch): Promise<Normal
       "https://data.transportation.gov/resource/aqh3-3rri.json" +
       "?$q=child%20restraint%20OR%20car%20seat%20OR%20booster%20seat" +
       "&$limit=200&$order=report_received_date%20DESC";
-    const res = await fetchWithTimeout(fetchImpl, url, 12_000, undefined, "nhtsa");
+    const res = await fetchWithTimeout(fetchImpl, url, 12_000, { headers: FEED_HEADERS }, "nhtsa");
     if (!res.ok) {
       console.warn(`[allRecallSources] NHTSA returned ${res.status}`);
       return [];
