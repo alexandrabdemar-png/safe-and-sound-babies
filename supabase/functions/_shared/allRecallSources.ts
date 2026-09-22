@@ -64,6 +64,13 @@ function markFailed(source: string, error: string) {
   lastStatus[source] = { ok: false, error: error.slice(0, 500) };
 }
 
+/** Lets sibling fetchers (CPSC, FDA — implemented in recallBatch.ts) report
+ *  into the same per-source health map. */
+export function recordSourceHealth(source: string, ok: boolean, error?: string) {
+  if (ok) markOk(source);
+  else markFailed(source, error ?? "unknown error");
+}
+
 export function getLastSourceStatus(): Record<string, SourceHealth> {
   return { ...lastStatus };
 }
