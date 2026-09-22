@@ -378,10 +378,11 @@ export async function fetchAllExtraRecallSources(
   fetchImpl: typeof fetch,
 ): Promise<NormalizedRecall[]> {
   const [usda, nhtsa, healthCanada, euSafetyGate] = await Promise.all([
-    fetchUsdaFsisRecalls(fetchImpl),
+    USDA_FSIS_ENABLED ? fetchUsdaFsisRecalls(fetchImpl) : Promise.resolve([]),
     fetchNhtsaRecalls(fetchImpl),
     fetchHealthCanadaRecalls(fetchImpl),
     fetchEuSafetyGateRecalls(fetchImpl),
   ]);
+  if (!USDA_FSIS_ENABLED) markDisabled("usda_fsis");
   return [...usda, ...nhtsa, ...healthCanada, ...euSafetyGate];
 }
