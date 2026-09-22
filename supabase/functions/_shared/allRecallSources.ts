@@ -80,6 +80,10 @@ function markFailed(source: string, error: string) {
   lastStatus[source] = { ok: false, error: error.slice(0, 500) };
 }
 
+function markDisabled(source: string) {
+  lastStatus[source] = { ok: true, error: "disabled: upstream blocks this network", disabled: true };
+}
+
 /** Lets sibling fetchers (CPSC, FDA — implemented in recallBatch.ts) report
  *  into the same per-source health map. */
 export function recordSourceHealth(source: string, ok: boolean, error?: string) {
