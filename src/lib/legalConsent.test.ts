@@ -13,8 +13,8 @@ describe("needsLegalConsent", () => {
     expect(needsLegalConsent([])).toBe(true);
   });
 
-  it("returns false once the user has accepted any version (one-time gate)", () => {
-    expect(needsLegalConsent(["2026-01-01"])).toBe(false);
+  it("returns true when the user has only accepted an older version (re-consent after a bump)", () => {
+    expect(needsLegalConsent(["2026-01-01"])).toBe(true);
   });
 
   it("returns false when the current version is among the accepted ones", () => {
@@ -97,8 +97,16 @@ describe("checkNeedsLegalConsent", () => {
     expect(await checkNeedsLegalConsent(client, userId)).toBe(true);
   });
 
-  it("does not re-prompt when the user previously accepted an older version (one-time gate)", async () => {
+  it("re-prompts when the user has only accepted an older version (version-aware re-consent)", async () => {
     const client = makeFakeAgreementsClient([{ user_id: userId, terms_version: "2026-01-01" }]);
+    expect(await checkNeedsLegalConsent(client, userId)).toBe(true);
+  });
+
+  it("does not re-prompt once the current version is accepted on top of an older one", async () => {
+    const client = makeFakeAgreementsClient([
+      { user_id: userId, terms_version: "2026-01-01" },
+      { user_id: userId, terms_version: CURRENT_TERMS_VERSION },
+    ]);
     expect(await checkNeedsLegalConsent(client, userId)).toBe(false);
   });
 
