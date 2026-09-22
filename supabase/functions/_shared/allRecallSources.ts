@@ -59,7 +59,16 @@ const FEED_HEADERS: Record<string, string> = {
   "User-Agent": "PeaceOfMine-RecallMonitor/1.0 (+https://peace-of-mine.lovable.app)",
 };
 
-export type SourceHealth = { ok: boolean; error: string | null };
+// USDA FSIS (meat/poultry recalls) sits behind Akamai, which blocks this
+// backend's whole network range — every request, including the plain web page,
+// returns HTTP 403 regardless of headers. Rather than report a permanent
+// failure on every run, the source is explicitly disabled and reported as
+// such. Coverage impact is small: packaged baby food is covered by the FDA
+// food-enforcement feed, and CPSC covers non-food baby products. Re-enable if
+// a reachable mirror becomes available.
+const USDA_FSIS_ENABLED = false;
+
+export type SourceHealth = { ok: boolean; error: string | null; disabled?: boolean };
 
 const lastStatus: Record<string, SourceHealth> = {};
 
