@@ -56,12 +56,12 @@ function json(body: unknown, status = 200): Response {
 // endpoints answer from this runtime. Used to find working alternates for the
 // USDA FSIS and NHTSA feeds, which return HTTP 403 here. Remove once resolved.
 const PROBE_URLS: Record<string, string> = {
-  fsis_api: "https://www.fsis.usda.gov/fsis/api/recall/v/1",
-  nhtsa_socrata: "https://data.transportation.gov/resource/aqh3-3rri.json?$limit=1",
-  nhtsa_api_campaign: "https://api.nhtsa.gov/recalls/campaignNumber?campaignNumber=20V123000",
-  nhtsa_api_equipment: "https://api.nhtsa.gov/recalls/equipment?productType=Child%20Seat",
-  fsis_datagov:
-    "https://catalog.data.gov/api/3/action/package_search?q=fsis+recall&rows=1",
+  socrata_6axg: "https://data.transportation.gov/resource/6axg-epim.json?$limit=1",
+  socrata_4eik: "https://data.transportation.gov/resource/4eik-ywvs.json?$limit=1",
+  socrata_catalog:
+    "https://api.us.socrata.com/api/catalog/v1?domains=data.transportation.gov&q=recall&limit=8",
+  nhtsa_flatfile_head: "https://static.nhtsa.gov/odi/ffdd/rcl/FLAT_RCL.zip",
+  fsis_recalls_page: "https://www.fsis.usda.gov/recalls-alerts",
 };
 
 Deno.serve(async (req) => {
