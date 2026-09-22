@@ -233,6 +233,8 @@ export async function fetchHealthCanadaRecalls(
       fetchImpl,
       "https://recalls-rappels.canada.ca/sites/default/files/opendata-donneesouvertes/HCRSAMOpenData.json",
       20_000,
+      undefined,
+      "health_canada",
     );
     if (!res.ok) {
       console.warn(`[allRecallSources] Health Canada returned ${res.status}`);
