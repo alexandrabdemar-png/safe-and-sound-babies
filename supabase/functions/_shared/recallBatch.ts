@@ -249,10 +249,21 @@ export async function fetchFdaRecallsForName(
     const res = await fetchImpl(
       `https://api.fda.gov/food/enforcement.json?search=product_description:${enc}&limit=5`,
     );
-    if (!res.ok) return [];
+    // openFDA answers 404 when a search simply has no hits — that's a healthy
+    // "nothing recalled with this name", not a source failure.
+    if (res.status === 404) {
+      recordSourceHealth("fda", true);
+      return [];
+    }
+    if (!res.ok) {
+      recordSourceHealth("fda", false, `HTTP ${res.status}`);
+      return [];
+    }
     const data = await res.json().catch(() => null);
+    recordSourceHealth("fda", true);
     return Array.isArray(data?.results) ? data.results : [];
-  } catch {
+  } catch (err) {
+    recordSourceHealth("fda", false, err instanceof Error ? err.message : "unknown");
     return [];
   }
 }
