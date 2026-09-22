@@ -46,24 +46,107 @@ function isBabyRelevant(text: string): boolean {
   return BABY_KEYWORDS.some((kw) => t.includes(kw));
 }
 
+// ── Per-source health, for honest recall_source_status reporting ──────────
+// The fetch functions below deliberately fail closed (return []), which makes
+// "0 records" ambiguous: it can mean "source is healthy, nothing baby-related
+// today" or "source is down". Every failure path records itself here so the
+// pipeline can write a truthful last_success_at / last_error per source
+// instead of inferring health from the record count.
+// USDA FSIS and NHTSA (Socrata) reject requests with no Accept/User-Agent —
+// both answered HTTP 403 in production until these headers were sent.
+const FEED_HEADERS: Record<string, string> = {
+  Accept: "application/json",
+  "User-Agent": "PeaceOfMine-RecallMonitor/1.0 (+https://peace-of-mine.lovable.app)",
+};
+
+// USDA FSIS (meat/poultry recalls) sits behind Akamai, which blocks this
+// backend's whole network range — every request, including the plain web page,
+// returns HTTP 403 regardless of headers. Rather than report a permanent
+// failure on every run, the source is explicitly disabled and reported as
+// such. Coverage impact is small: packaged baby food is covered by the FDA
+// food-enforcement feed, and CPSC covers non-food baby products. Re-enable if
+// a reachable mirror becomes available.
+const USDA_FSIS_ENABLED = false;
+
+export type SourceHealth = { ok: boolean; error: string | null; disabled?: boolean };
+
+const lastStatus: Record<string, SourceHealth> = {};
+
+function markOk(source: string) {
+  lastStatus[source] = { ok: true, error: null };
+}
+
+function markFailed(source: string, error: string) {
+  lastStatus[source] = { ok: false, error: error.slice(0, 500) };
+}
+
+function markDisabled(source: string) {
+  lastStatus[source] = { ok: true, error: "disabled: upstream blocks this network", disabled: true };
+}
+
+/** Lets sibling fetchers (CPSC, FDA — implemented in recallBatch.ts) report
+ *  into the same per-source health map. */
+export function recordSourceHealth(source: string, ok: boolean, error?: string) {
+  if (ok) markOk(source);
+  else markFailed(source, error ?? "unknown error");
+}
+
+export function getLastSourceStatus(): Record<string, SourceHealth> {
+  return { ...lastStatus };
+}
+
+/**
+ * Fetch with a timeout plus bounded retries. Retries only transient failures
+ * (network error / timeout / 5xx / 429), with fixed backoff — never an
+ * unbounded retry loop, so a provider outage can't turn into rate-limit abuse.
+ */
 async function fetchWithTimeout(
   fetchImpl: typeof fetch,
   url: string,
   timeoutMs = 12_000,
   init?: RequestInit,
+  source?: string,
 ): Promise<Response> {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetchImpl(url, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(id);
+  const BACKOFF_MS = [0, 400, 1_200];
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < BACKOFF_MS.length; attempt++) {
+    if (BACKOFF_MS[attempt] > 0) {
+      await new Promise((r) => setTimeout(r, BACKOFF_MS[attempt]));
+    }
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetchImpl(url, { ...init, signal: controller.signal });
+      const transient = res.status === 429 || res.status >= 500;
+      if (!transient || attempt === BACKOFF_MS.length - 1) {
+        if (source) {
+          if (res.ok) markOk(source);
+          else markFailed(source, `HTTP ${res.status}`);
+        }
+        return res;
+      }
+    } catch (err) {
+      lastErr = err;
+      if (attempt === BACKOFF_MS.length - 1) {
+        if (source) markFailed(source, err instanceof Error ? err.message : "network error");
+        throw err;
+      }
+    } finally {
+      clearTimeout(id);
+    }
   }
+  throw lastErr instanceof Error ? lastErr : new Error("fetch failed");
 }
 
 export async function fetchUsdaFsisRecalls(fetchImpl: typeof fetch): Promise<NormalizedRecall[]> {
   try {
-    const res = await fetchWithTimeout(fetchImpl, "https://www.fsis.usda.gov/fsis/api/recall/v/1");
+    const res = await fetchWithTimeout(
+      fetchImpl,
+      "https://www.fsis.usda.gov/fsis/api/recall/v/1",
+      12_000,
+      { headers: FEED_HEADERS },
+      "usda_fsis",
+    );
     if (!res.ok) {
       console.warn(`[allRecallSources] USDA FSIS returned ${res.status}`);
       return [];
@@ -111,13 +194,20 @@ export async function fetchUsdaFsisRecalls(fetchImpl: typeof fetch): Promise<Nor
   }
 }
 
+// Child-restraint recalls live in NHTSA's "Equipment" recall type. Matching on
+// the free-text summary alone would pull in ordinary vehicle recalls that merely
+// mention a child (e.g. an air-bag suppression defect), so relevance is decided
+// from the structured subject/component fields plus the recall type.
+const CHILD_SEAT_RE = /child (restraint|seat)|car seat|booster seat|infant carrier|cars?eat/i;
+
 export async function fetchNhtsaRecalls(fetchImpl: typeof fetch): Promise<NormalizedRecall[]> {
   try {
+    // Dataset 6axg-epim is NHTSA's current recalls resource; the previously
+    // used aqh3-3rri returns HTTP 403 ("non-tabular table").
     const url =
-      "https://data.transportation.gov/resource/aqh3-3rri.json" +
-      "?$q=child%20restraint%20OR%20car%20seat%20OR%20booster%20seat" +
-      "&$limit=200&$order=report_received_date%20DESC";
-    const res = await fetchWithTimeout(fetchImpl, url);
+      "https://data.transportation.gov/resource/6axg-epim.json" +
+      "?$q=child%20seat&$limit=200&$order=report_received_date%20DESC";
+    const res = await fetchWithTimeout(fetchImpl, url, 12_000, { headers: FEED_HEADERS }, "nhtsa");
     if (!res.ok) {
       console.warn(`[allRecallSources] NHTSA returned ${res.status}`);
       return [];
@@ -130,14 +220,20 @@ export async function fetchNhtsaRecalls(fetchImpl: typeof fetch): Promise<Normal
       const summary = pick(r, "defect_summary", "recall_description", "summary");
       const component = pick(r, "component");
       const manufacturer = pick(r, "manufacturer");
-      const title = component
-        ? `${manufacturer ?? "Recall"} — ${component}`
-        : (summary?.slice(0, 120) ?? null);
+      const subject = pick(r, "subject");
+      const recallType = pick(r, "recall_type");
+      // A whole-vehicle recall is never a child-restraint product recall.
+      if (recallType && /vehicle/i.test(recallType)) continue;
+      // Relevance from structured fields only — never the free-text summary.
+      if (!CHILD_SEAT_RE.test([subject, component].filter(Boolean).join(" "))) continue;
+      const title = subject
+        ? `${manufacturer ?? "Recall"} — ${subject}`
+        : component
+          ? `${manufacturer ?? "Recall"} — ${component}`
+          : (summary?.slice(0, 120) ?? null);
       if (!title) continue;
-      const blob = [title, summary, component, manufacturer].filter(Boolean).join(" ");
-      if (!isBabyRelevant(blob) && !/child restraint|car seat|booster/i.test(blob)) continue;
 
-      const campaign = pick(r, "nhtsa_campaign_number", "campaign_number");
+      const campaign = pick(r, "nhtsa_id", "nhtsa_campaign_number", "campaign_number");
       out.push({
         source: "nhtsa",
         source_id: campaign ?? `${manufacturer ?? "nhtsa"}-${title}`,
@@ -177,6 +273,8 @@ export async function fetchHealthCanadaRecalls(
       fetchImpl,
       "https://recalls-rappels.canada.ca/sites/default/files/opendata-donneesouvertes/HCRSAMOpenData.json",
       20_000,
+      undefined,
+      "health_canada",
     );
     if (!res.ok) {
       console.warn(`[allRecallSources] Health Canada returned ${res.status}`);
@@ -239,7 +337,7 @@ export async function fetchEuSafetyGateRecalls(
     const url =
       "https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/healthref-europe-rapex-en/records" +
       "?order_by=alert_date%20DESC&limit=100";
-    const res = await fetchWithTimeout(fetchImpl, url);
+    const res = await fetchWithTimeout(fetchImpl, url, 12_000, undefined, "eu_safety_gate");
     if (!res.ok) {
       console.warn(`[allRecallSources] EU Safety Gate mirror returned ${res.status}`);
       return [];
@@ -293,10 +391,11 @@ export async function fetchAllExtraRecallSources(
   fetchImpl: typeof fetch,
 ): Promise<NormalizedRecall[]> {
   const [usda, nhtsa, healthCanada, euSafetyGate] = await Promise.all([
-    fetchUsdaFsisRecalls(fetchImpl),
+    USDA_FSIS_ENABLED ? fetchUsdaFsisRecalls(fetchImpl) : Promise.resolve([]),
     fetchNhtsaRecalls(fetchImpl),
     fetchHealthCanadaRecalls(fetchImpl),
     fetchEuSafetyGateRecalls(fetchImpl),
   ]);
+  if (!USDA_FSIS_ENABLED) markDisabled("usda_fsis");
   return [...usda, ...nhtsa, ...healthCanada, ...euSafetyGate];
 }

@@ -11,7 +11,12 @@
 // against that map. This split is what makes the matching logic itself
 // testable under Vitest without a live Supabase connection.
 import { fuzzyMatchProduct } from "./recallMatch.ts";
-import { fetchAllExtraRecallSources, type NormalizedRecall } from "./allRecallSources.ts";
+import {
+  fetchAllExtraRecallSources,
+  getLastSourceStatus,
+  recordSourceHealth,
+  type NormalizedRecall,
+} from "./allRecallSources.ts";
 import { classifyRecallSeverity, type SeverityTier } from "./recallSeverity.ts";
 import { computeContentHash, hazardFingerprint } from "./recallFreshness.ts";
 
@@ -152,16 +157,22 @@ export async function fetchCpscBulkRecalls(fetchImpl: typeof fetch): Promise<Cps
     const res = await fetchImpl(url, { headers: { Accept: "application/json" } });
     if (!res.ok) {
       console.warn(`[recallBatch] CPSC returned ${res.status}`);
+      recordSourceHealth("cpsc", false, `HTTP ${res.status}`);
       return [];
     }
     const data = (await res.json()) as CpscRawRecall[];
-    if (!Array.isArray(data)) return [];
+    if (!Array.isArray(data)) {
+      recordSourceHealth("cpsc", false, "unexpected response shape");
+      return [];
+    }
+    recordSourceHealth("cpsc", true);
     return data.filter((r) => r.RecallID && (r.Title || r.RecallHeading)).slice(0, 500);
   } catch (err) {
     console.warn(
       "[recallBatch] CPSC fetch failed:",
       err instanceof Error ? err.message : "unknown",
     );
+    recordSourceHealth("cpsc", false, err instanceof Error ? err.message : "unknown");
     return [];
   }
 }
@@ -238,10 +249,21 @@ export async function fetchFdaRecallsForName(
     const res = await fetchImpl(
       `https://api.fda.gov/food/enforcement.json?search=product_description:${enc}&limit=5`,
     );
-    if (!res.ok) return [];
+    // openFDA answers 404 when a search simply has no hits — that's a healthy
+    // "nothing recalled with this name", not a source failure.
+    if (res.status === 404) {
+      recordSourceHealth("fda", true);
+      return [];
+    }
+    if (!res.ok) {
+      recordSourceHealth("fda", false, `HTTP ${res.status}`);
+      return [];
+    }
     const data = await res.json().catch(() => null);
+    recordSourceHealth("fda", true);
     return Array.isArray(data?.results) ? data.results : [];
-  } catch {
+  } catch (err) {
+    recordSourceHealth("fda", false, err instanceof Error ? err.message : "unknown");
     return [];
   }
 }
@@ -310,7 +332,10 @@ function matchProductAgainstExtra(product: BatchProduct, recall: NormalizedRecal
 
 // ── Orchestration ────────────────────────────────────────────────────────
 
+export type SourceStat = { ok: boolean; error: string | null; records: number };
+
 export type RecallBatchResult = {
+  sourceStats: Record<string, SourceStat>;
   catalogRows: RecallCatalogRow[];
   matches: RecallMatch[];
   fetchCounts: Record<string, number>;
@@ -415,7 +440,31 @@ export async function runRecallBatch(
   // same physical recall appearing in multiple upstream feeds.
   const enrichedCatalogRows = await Promise.all(catalogRows.map(enrichCatalogRow));
 
+  // Per-source health + record counts. Health comes from the fetch layer
+  // (HTTP status / network outcome), NOT from "did this source return rows",
+  // so a healthy-but-quiet feed is no longer indistinguishable from an outage.
+  const health = getLastSourceStatus();
+  const extraCounts: Record<string, number> = {};
+  for (const r of extraRecalls) extraCounts[r.source] = (extraCounts[r.source] ?? 0) + 1;
+  const sourceStats: Record<string, SourceStat> = {};
+  for (const source of [
+    "cpsc",
+    "fda",
+    "usda_fsis",
+    "nhtsa",
+    "health_canada",
+    "eu_safety_gate",
+  ] as const) {
+    const h = health[source];
+    sourceStats[source] = {
+      ok: h ? h.ok : false,
+      error: h ? h.error : "source not attempted this run",
+      records: source === "cpsc" ? cpscRecalls.length : (extraCounts[source] ?? 0),
+    };
+  }
+
   return {
+    sourceStats,
     catalogRows: enrichedCatalogRows,
     matches,
     fetchCounts: {

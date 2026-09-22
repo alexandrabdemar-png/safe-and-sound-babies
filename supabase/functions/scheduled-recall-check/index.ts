@@ -57,6 +57,7 @@ Deno.serve(async (req) => {
     return json({ error: "Method not allowed" }, 405);
 
   const startedAt = Date.now();
+  const startedAtIso = new Date().toISOString();
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -64,6 +65,37 @@ Deno.serve(async (req) => {
       auth: { persistSession: false },
     },
   );
+
+  // Audit row for this scan attempt — written up-front (status 'running') so a
+  // crash or timeout mid-run still leaves a visible record, then finalized in
+  // the success/failure paths below.
+  let runId: string | null = null;
+  try {
+    const { data: runRow } = await supabase
+      .from("recall_scan_runs")
+      .insert({ started_at: startedAtIso, status: "running" })
+      .select("id")
+      .maybeSingle();
+    runId = (runRow as { id?: string } | null)?.id ?? null;
+  } catch {
+    /* audit logging must never block a scan */
+  }
+
+  async function finishRun(fields: Record<string, unknown>) {
+    if (!runId) return;
+    try {
+      await supabase
+        .from("recall_scan_runs")
+        .update({
+          finished_at: new Date().toISOString(),
+          duration_ms: Date.now() - startedAt,
+          ...fields,
+        })
+        .eq("id", runId);
+    } catch {
+      /* ignore */
+    }
+  }
 
   try {
     const { data: products, error: pErr } = await supabase
@@ -80,7 +112,10 @@ Deno.serve(async (req) => {
       model: p.model ?? null,
     }));
 
-    const { catalogRows, matches, fetchCounts } = await runRecallBatch(fetch, batchProducts);
+    const { catalogRows, matches, fetchCounts, sourceStats } = await runRecallBatch(
+      fetch,
+      batchProducts,
+    );
 
     // ── Upsert the recall catalog ("known recalls") ──────────────────────
     if (catalogRows.length) {
@@ -302,15 +337,33 @@ Deno.serve(async (req) => {
     );
 
     // ── Record per-source freshness / dead-man's-switch inputs ───────────
-    await writeSourceStatus(supabase, fetchCounts, matchedProductIds.length);
+    await writeSourceStatus(supabase, sourceStats, matchedProductIds.length);
+
+    const failedSources = Object.entries(sourceStats)
+      .filter(([, s]) => !s.ok)
+      .map(([source, s]) => `${source}: ${s.error ?? "failed"}`);
+    const recordsFetched = Object.values(sourceStats).reduce((n, s) => n + s.records, 0);
+    const newCount = newMatches.filter((m) => m.reason === "new").length;
+
+    await finishRun({
+      status: failedSources.length ? "partial" : "success",
+      records_fetched: recordsFetched,
+      products_checked: batchProducts.length,
+      new_recalls: newCount,
+      total_matches: dedupedMatches.length,
+      notified: (notifyResult as { notified?: number }).notified ?? 0,
+      source_stats: sourceStats,
+      error: failedSources.length ? failedSources.join("; ").slice(0, 500) : null,
+    });
 
     return json({
       ok: true,
       products_checked: batchProducts.length,
       fetch_counts: fetchCounts,
+      source_stats: sourceStats,
       catalog_rows_upserted: catalogRows.length,
       total_matches: dedupedMatches.length,
-      new_matches: newMatches.filter((m) => m.reason === "new").length,
+      new_matches: newCount,
       updated_matches: newMatches.filter((m) => m.reason === "updated").length,
       ...notifyResult,
       duration_ms: Date.now() - startedAt,
@@ -318,6 +371,7 @@ Deno.serve(async (req) => {
   } catch (e) {
     const err = e instanceof Error ? e.message : String(e);
     console.error("[scheduled-recall-check] failed:", err);
+    await finishRun({ status: "failed", error: err.slice(0, 500) });
     // Best-effort: record the failure into recall_source_status so the
     // dead-man's-switch / UI staleness banner can see it.
     try {
@@ -344,33 +398,41 @@ Deno.serve(async (req) => {
 
 async function writeSourceStatus(
   supabase: ReturnType<typeof createClient>,
-  fetchCounts: Record<string, number>,
+  sourceStats: Record<string, { ok: boolean; error: string | null; records: number }>,
   totalMatches: number,
 ): Promise<void> {
   const nowIso = new Date().toISOString();
-  // Approximation: any source that returned > 0 records is treated as a
-  // success this run; a 0-return source is recorded as attempted but with
-  // consecutive_failures preserved (see the migration's ON CONFLICT logic
-  // for the dead-man's-switch source). Individual source-level success
-  // signals require deeper plumbing in allRecallSources.ts and are a
-  // follow-up.
-  const sources = ["cpsc", "fda", "usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"];
+  // Health now comes from the fetch layer (HTTP status / network outcome) per
+  // source, not from "did it return rows" — a healthy feed with no new baby
+  // recalls today is no longer reported as a failure, and a genuinely broken
+  // feed is no longer masked by a sibling source's record count.
+  const sources = Object.keys(sourceStats);
+  const { data: existing } = await supabase
+    .from("recall_source_status")
+    .select("source, last_success_at, consecutive_failures")
+    .in("source", sources);
+  const prior = new Map(
+    (existing ?? []).map((r) => [
+      r.source as string,
+      {
+        lastSuccessAt: (r.last_success_at as string | null) ?? null,
+        failures: (r.consecutive_failures as number | null) ?? 0,
+      },
+    ]),
+  );
   for (const source of sources) {
-    const records =
-      source === "cpsc"
-        ? (fetchCounts.cpsc ?? 0)
-        : source === "fda"
-          ? 0 // FDA is per-name; count is not exposed
-          : (fetchCounts.extra ?? 0); // grouped; refine per-source in a follow-up
-    const ok = records > 0 || source === "fda"; // FDA presence-check would need per-source counts
+    const stat = sourceStats[source];
+    const before = prior.get(source);
     await supabase.from("recall_source_status").upsert(
       {
         source,
         last_attempt_at: nowIso,
-        last_success_at: ok ? nowIso : null,
-        records_last_run: records,
+        // Never overwrite a real prior success with null on a failed run.
+        last_success_at: stat.ok ? nowIso : (before?.lastSuccessAt ?? null),
+        last_error: stat.ok ? null : stat.error,
+        records_last_run: stat.records,
         matches_last_run: totalMatches,
-        consecutive_failures: 0,
+        consecutive_failures: stat.ok ? 0 : (before?.failures ?? 0) + 1,
         updated_at: nowIso,
       },
       { onConflict: "source" },
