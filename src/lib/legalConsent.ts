@@ -25,7 +25,12 @@ import { isSchemaMissingTableError } from "@/lib/errors";
 // In-App Purchase on iOS, alongside the existing Stripe web billing) —
 // existing users will NOT be automatically re-prompted per the note
 // above.
-export const CURRENT_TERMS_VERSION = "2026-08-21";
+// Bumped 2026-09-22 to add §2a "Not a Medical Device & No Safety Guarantee"
+// and strengthen the in-app informational-only disclaimers. Existing users
+// will NOT be automatically re-prompted per the note above — this only
+// updates the displayed "Last updated" date and the version recorded for
+// new acceptances.
+export const CURRENT_TERMS_VERSION = "2026-09-22";
 
 /**
  * True when the user has NEVER accepted the terms. Once a user has any

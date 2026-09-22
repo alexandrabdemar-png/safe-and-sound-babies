@@ -75,6 +75,19 @@ function TermsPage() {
             </section>
 
             <section>
+              <h2 className="font-display text-xl font-semibold text-foreground">2a. Not a Medical Device & No Safety Guarantee</h2>
+              <p className="mt-2 text-muted-foreground">
+                Peace of Mine is a general-informational organization tool. It is not a medical device or diagnostic software, and it does not diagnose, treat, cure, or prevent any health condition or injury. Nothing in the app constitutes medical, health, legal, or other professional advice, and no reminder, milestone, or safety message is a guarantee that any product is safe for your child or free from defects, recalls, or hazards.
+              </p>
+              <p className="mt-2 text-muted-foreground">
+                Our recall and safety-alert monitoring is provided on a best-effort, informational basis only. We do not guarantee that we will identify every applicable recall, hazard, or safety issue for any product, including products you have added to your account. New recalls may be issued at any time by manufacturers or government agencies, and there may be a delay before any such information appears — or it may never appear — in the app. The absence of an alert, notification, or "no active recalls found" status does not mean a product is safe, has not been recalled, or is free from hazards, and you must not rely on the app as your sole source of safety information.
+              </p>
+              <p className="mt-2 text-muted-foreground">
+                Always verify safety-critical decisions directly with the product manufacturer, official recall sources (such as cpsc.gov/Recalls, nhtsa.gov, and FDA.gov), your child's pediatrician, and other qualified professionals before acting.
+              </p>
+            </section>
+
+            <section>
               <h2 className="font-display text-xl font-semibold text-foreground">3. No Guarantee of Accuracy</h2>
               <p className="mt-2 text-muted-foreground">
                 While we aim to keep information helpful and up to date, we do not guarantee that any reminder, recommendation, or piece of content is accurate, complete, reliable, or suitable for your specific situation. You use Peace of Mine at your own discretion and assume full responsibility for any actions you take based on what you see here.

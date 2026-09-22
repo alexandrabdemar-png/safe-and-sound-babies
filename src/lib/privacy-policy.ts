@@ -1,11 +1,13 @@
 import { SUPPORT_EMAIL } from "@/lib/constants";
 
-export const PRIVACY_POLICY_UPDATED = "August 31, 2026";
+export const PRIVACY_POLICY_UPDATED = "September 22, 2026";
 
 export const PRIVACY_POLICY = `Peace of Mine — Privacy Policy
 Last updated: ${PRIVACY_POLICY_UPDATED}
 
 We built Peace of Mine for parents who want to keep their children safe. This policy explains exactly what information we collect, why we need it, and how it is protected.
+
+Note: Peace of Mine is an informational organization tool only. It is not a medical device, it does not provide medical advice, and it is not a substitute for your pediatrician or other qualified professional. Recall monitoring is provided on a best-effort basis and does not guarantee that any product is safe or free from recalls; always verify safety-critical decisions with the product manufacturer, official recall sources, and your child's healthcare provider.
 
 ──────────────────────────────────────
 1. WHAT INFORMATION WE COLLECT
