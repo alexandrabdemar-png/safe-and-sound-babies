@@ -4,12 +4,6 @@
 //   • CPSC recall sync (check-recalls hook)
 //   • Product-alert fan-out (product-alerts-check hook)
 //   • Stripe webhook subscription writes (payments/webhook)
-//   • Emergency-info share-link reads (api/public/emergency-share) — RLS
-//     intentionally has no anon policy for emergency_info, since the whole
-//     point is that a share link (not an authenticated session) is what
-//     grants access. This route substitutes a server-verified, hashed,
-//     expiring token check for RLS before it ever selects a row — it is
-//     not an operator dashboard and never returns a row without one.
 //
 // PROHIBITED uses:
 //   • Admin dashboards or analytics — must NEVER SELECT individual rows from

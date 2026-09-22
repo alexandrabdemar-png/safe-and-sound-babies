@@ -122,8 +122,8 @@ function ProfilePage() {
     try {
       // Server function cancels any Stripe subscription and deletes the
       // auth user; every public table cascades via ON DELETE CASCADE from
-      // auth.users, so this removes children, emergency info, share links,
-      // caregiver access, profiles (apns token), etc. in one go.
+      // auth.users, so this removes children, caregiver access, profiles
+      // (apns token), etc. in one go.
       const result = await deleteMyAccount();
       await supabase.auth.signOut();
       navigate({ to: "/auth" });

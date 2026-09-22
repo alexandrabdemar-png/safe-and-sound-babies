@@ -28,9 +28,6 @@ INSERT INTO public.milestones (id, child_id, title, logged_at)
 VALUES ('aaaa0003-0000-0000-0000-000000000003',
         'aaaa0001-0000-0000-0000-000000000001', 'Rolled over', CURRENT_DATE);
 
-INSERT INTO public.emergency_info (user_id, child_id, allergies, pediatrician_phone)
-VALUES (:'A', 'aaaa0001-0000-0000-0000-000000000001', 'peanuts', '555-0100');
-
 INSERT INTO public.first_foods (child_id, food_name, date_introduced, is_allergen)
 VALUES ('aaaa0001-0000-0000-0000-000000000001', 'avocado', CURRENT_DATE, false);
 
@@ -66,8 +63,6 @@ SELECT test.assert((SELECT count(*) FROM public.products) = 0,
   'IDOR: user B cannot read user A''s products');
 SELECT test.assert((SELECT count(*) FROM public.milestones) = 0,
   'IDOR: user B cannot read user A''s milestones');
-SELECT test.assert((SELECT count(*) FROM public.emergency_info) = 0,
-  'IDOR: user B cannot read user A''s emergency/medical info');
 SELECT test.assert((SELECT count(*) FROM public.first_foods) = 0,
   'IDOR: user B cannot read user A''s first foods');
 SELECT test.assert((SELECT count(*) FROM public.bottles) = 0,
@@ -100,7 +95,6 @@ SELECT test.assert(
 UPDATE public.children SET name = 'Hacked' WHERE id = 'aaaa0001-0000-0000-0000-000000000001';
 UPDATE public.products SET name = 'Hacked' WHERE id = 'aaaa0002-0000-0000-0000-000000000002';
 UPDATE public.milestones SET title = 'Hacked' WHERE id = 'aaaa0003-0000-0000-0000-000000000003';
-UPDATE public.emergency_info SET allergies = 'Hacked' WHERE user_id = :'A';
 DELETE FROM public.children WHERE id = 'aaaa0001-0000-0000-0000-000000000001';
 DELETE FROM public.products WHERE id = 'aaaa0002-0000-0000-0000-000000000002';
 DELETE FROM public.milestones WHERE id = 'aaaa0003-0000-0000-0000-000000000003';
@@ -155,10 +149,6 @@ SELECT test.assert(
   (SELECT title FROM public.milestones WHERE id = 'aaaa0003-0000-0000-0000-000000000003') = 'Rolled over',
   'Post-attack: user A''s milestone is intact and still present'
 );
-SELECT test.assert(
-  (SELECT allergies FROM public.emergency_info WHERE user_id = :'A') = 'peanuts',
-  'Post-attack: user A''s medical info is unmodified'
-);
 SELECT test.assert((SELECT count(*) FROM public.bottles) = 1,
   'Post-attack: user A''s bottle log survives user B''s DELETE');
 SELECT test.assert((SELECT count(*) FROM public.first_foods) = 1,
@@ -175,8 +165,6 @@ SELECT test.assert_raises($$SELECT count(*) FROM public.children$$,
   'IDOR: anonymous callers are denied access to children');
 SELECT test.assert_raises($$SELECT count(*) FROM public.products$$,
   'IDOR: anonymous callers are denied access to products');
-SELECT test.assert_raises($$SELECT count(*) FROM public.emergency_info$$,
-  'IDOR: anonymous callers are denied access to medical info');
 SELECT test.assert_raises($$SELECT count(*) FROM public.milestones$$,
   'IDOR: anonymous callers are denied access to milestones');
 SELECT test.logout();

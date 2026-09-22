@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { hashShareToken } from "@/lib/emergencyShare";
+import { hashShareToken } from "@/lib/shareToken";
 
 export type AcceptCaregiverInviteResult = { ok: true; childNames: string[] };
 

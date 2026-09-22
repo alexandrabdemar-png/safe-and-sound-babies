@@ -26,10 +26,6 @@ INSERT INTO public.products (id, user_id, child_id, name)
 INSERT INTO public.milestones (child_id, title)
   VALUES ('e2222222-2222-2222-2222-222222222222', 'Rolled over');
 
-INSERT INTO public.emergency_info (user_id, child_id, allergies, medications, blood_type, pediatrician_name, pediatrician_phone, emergency_contact_name, emergency_contact_phone)
-  VALUES ('e1111111-1111-1111-1111-111111111111', 'e2222222-2222-2222-2222-222222222222',
-          'Peanuts', 'None', 'O+', 'Dr. Smith', '555-111-2222', 'Grandma', '555-333-4444');
-
 INSERT INTO public.first_foods (child_id, food_name, is_allergen, reaction_notes)
   VALUES ('e2222222-2222-2222-2222-222222222222', 'Peanut butter', true, 'Mild rash around mouth');
 
@@ -60,10 +56,6 @@ BEGIN
   PERFORM test.assert(
     (SELECT count(*) FROM public.milestones WHERE child_id = 'e2222222-2222-2222-2222-222222222222') = 1,
     'sanity: milestone row exists before deletion'
-  );
-  PERFORM test.assert(
-    (SELECT count(*) FROM public.emergency_info WHERE user_id = 'e1111111-1111-1111-1111-111111111111') = 1,
-    'sanity: emergency_info row exists before deletion'
   );
   PERFORM test.assert(
     (SELECT count(*) FROM public.first_foods WHERE child_id = 'e2222222-2222-2222-2222-222222222222') = 1,
@@ -100,10 +92,6 @@ BEGIN
   PERFORM test.assert(
     (SELECT count(*) FROM public.milestones WHERE child_id = 'e2222222-2222-2222-2222-222222222222') = 0,
     'milestones row (only reachable transitively via children) is gone after account deletion'
-  );
-  PERFORM test.assert(
-    (SELECT count(*) FROM public.emergency_info WHERE user_id = 'e1111111-1111-1111-1111-111111111111') = 0,
-    'emergency_info row (allergies/medications/blood type/emergency contact) is gone after account deletion'
   );
   PERFORM test.assert(
     (SELECT count(*) FROM public.first_foods WHERE child_id = 'e2222222-2222-2222-2222-222222222222') = 0,

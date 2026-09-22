@@ -20,7 +20,6 @@ import { Route as LegalConsentRouteImport } from './routes/legal-consent'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as EmergencyShareTokenRouteImport } from './routes/emergency-share.$token'
 import { Route as CaregiverInviteTokenRouteImport } from './routes/caregiver-invite.$token'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedTravelChecklistRouteImport } from './routes/_authenticated/travel-checklist'
@@ -36,12 +35,10 @@ import { Route as AuthenticatedMomentsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedHomecomingChecklistRouteImport } from './routes/_authenticated/homecoming-checklist'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedFirstFoodsRouteImport } from './routes/_authenticated/first-foods'
-import { Route as AuthenticatedEmergencyInfoRouteImport } from './routes/_authenticated/emergency-info'
 import { Route as AuthenticatedChecklistsRouteImport } from './routes/_authenticated/checklists'
 import { Route as AuthenticatedBottlesRouteImport } from './routes/_authenticated/bottles'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
-import { Route as ApiPublicEmergencyShareRouteImport } from './routes/api/public/emergency-share'
 import { Route as ApiPublicCaregiverInviteRouteImport } from './routes/api/public/caregiver-invite'
 import { Route as AuthenticatedProfileSupportRouteImport } from './routes/_authenticated/profile_.support'
 import { Route as AuthenticatedProfilePrivacyPromiseRouteImport } from './routes/_authenticated/profile_/privacy-promise'
@@ -111,11 +108,6 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EmergencyShareTokenRoute = EmergencyShareTokenRouteImport.update({
-  id: '/emergency-share/$token',
-  path: '/emergency-share/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CaregiverInviteTokenRoute = CaregiverInviteTokenRouteImport.update({
@@ -199,12 +191,6 @@ const AuthenticatedFirstFoodsRoute = AuthenticatedFirstFoodsRouteImport.update({
   path: '/first-foods',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedEmergencyInfoRoute =
-  AuthenticatedEmergencyInfoRouteImport.update({
-    id: '/emergency-info',
-    path: '/emergency-info',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedChecklistsRoute = AuthenticatedChecklistsRouteImport.update({
   id: '/checklists',
   path: '/checklists',
@@ -224,11 +210,6 @@ const AuthenticatedAddRoute = AuthenticatedAddRouteImport.update({
   id: '/add',
   path: '/add',
   getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const ApiPublicEmergencyShareRoute = ApiPublicEmergencyShareRouteImport.update({
-  id: '/api/public/emergency-share',
-  path: '/api/public/emergency-share',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicCaregiverInviteRoute =
   ApiPublicCaregiverInviteRouteImport.update({
@@ -339,7 +320,6 @@ export interface FileRoutesByFullPath {
   '/alerts': typeof AuthenticatedAlertsRoute
   '/bottles': typeof AuthenticatedBottlesRoute
   '/checklists': typeof AuthenticatedChecklistsRoute
-  '/emergency-info': typeof AuthenticatedEmergencyInfoRoute
   '/first-foods': typeof AuthenticatedFirstFoodsRoute
   '/home': typeof AuthenticatedHomeRoute
   '/homecoming-checklist': typeof AuthenticatedHomecomingChecklistRoute
@@ -355,7 +335,6 @@ export interface FileRoutesByFullPath {
   '/travel-checklist': typeof AuthenticatedTravelChecklistRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/caregiver-invite/$token': typeof CaregiverInviteTokenRoute
-  '/emergency-share/$token': typeof EmergencyShareTokenRoute
   '/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
   '/products/$id': typeof AuthenticatedProductsIdRoute
@@ -368,7 +347,6 @@ export interface FileRoutesByFullPath {
   '/profile/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
   '/profile/support': typeof AuthenticatedProfileSupportRoute
   '/api/public/caregiver-invite': typeof ApiPublicCaregiverInviteRoute
-  '/api/public/emergency-share': typeof ApiPublicEmergencyShareRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
   '/api/public/payments/apple-webhook': typeof ApiPublicPaymentsAppleWebhookRoute
@@ -389,7 +367,6 @@ export interface FileRoutesByTo {
   '/alerts': typeof AuthenticatedAlertsRoute
   '/bottles': typeof AuthenticatedBottlesRoute
   '/checklists': typeof AuthenticatedChecklistsRoute
-  '/emergency-info': typeof AuthenticatedEmergencyInfoRoute
   '/first-foods': typeof AuthenticatedFirstFoodsRoute
   '/home': typeof AuthenticatedHomeRoute
   '/homecoming-checklist': typeof AuthenticatedHomecomingChecklistRoute
@@ -405,7 +382,6 @@ export interface FileRoutesByTo {
   '/travel-checklist': typeof AuthenticatedTravelChecklistRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/caregiver-invite/$token': typeof CaregiverInviteTokenRoute
-  '/emergency-share/$token': typeof EmergencyShareTokenRoute
   '/bottles/new': typeof AuthenticatedBottlesNewRoute
   '/moments/new': typeof AuthenticatedMomentsNewRoute
   '/products/$id': typeof AuthenticatedProductsIdRoute
@@ -418,7 +394,6 @@ export interface FileRoutesByTo {
   '/profile/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
   '/profile/support': typeof AuthenticatedProfileSupportRoute
   '/api/public/caregiver-invite': typeof ApiPublicCaregiverInviteRoute
-  '/api/public/emergency-share': typeof ApiPublicEmergencyShareRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
   '/api/public/payments/apple-webhook': typeof ApiPublicPaymentsAppleWebhookRoute
@@ -441,7 +416,6 @@ export interface FileRoutesById {
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
   '/_authenticated/bottles': typeof AuthenticatedBottlesRoute
   '/_authenticated/checklists': typeof AuthenticatedChecklistsRoute
-  '/_authenticated/emergency-info': typeof AuthenticatedEmergencyInfoRoute
   '/_authenticated/first-foods': typeof AuthenticatedFirstFoodsRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/homecoming-checklist': typeof AuthenticatedHomecomingChecklistRoute
@@ -457,7 +431,6 @@ export interface FileRoutesById {
   '/_authenticated/travel-checklist': typeof AuthenticatedTravelChecklistRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/caregiver-invite/$token': typeof CaregiverInviteTokenRoute
-  '/emergency-share/$token': typeof EmergencyShareTokenRoute
   '/_authenticated/bottles_/new': typeof AuthenticatedBottlesNewRoute
   '/_authenticated/moments_/new': typeof AuthenticatedMomentsNewRoute
   '/_authenticated/products_/$id': typeof AuthenticatedProductsIdRoute
@@ -470,7 +443,6 @@ export interface FileRoutesById {
   '/_authenticated/profile_/privacy-promise': typeof AuthenticatedProfilePrivacyPromiseRoute
   '/_authenticated/profile_/support': typeof AuthenticatedProfileSupportRoute
   '/api/public/caregiver-invite': typeof ApiPublicCaregiverInviteRoute
-  '/api/public/emergency-share': typeof ApiPublicEmergencyShareRoute
   '/api/public/hooks/check-product-alerts': typeof ApiPublicHooksCheckProductAlertsRoute
   '/api/public/hooks/product-alerts-check': typeof ApiPublicHooksProductAlertsCheckRoute
   '/api/public/payments/apple-webhook': typeof ApiPublicPaymentsAppleWebhookRoute
@@ -493,7 +465,6 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/bottles'
     | '/checklists'
-    | '/emergency-info'
     | '/first-foods'
     | '/home'
     | '/homecoming-checklist'
@@ -509,7 +480,6 @@ export interface FileRouteTypes {
     | '/travel-checklist'
     | '/auth/callback'
     | '/caregiver-invite/$token'
-    | '/emergency-share/$token'
     | '/bottles/new'
     | '/moments/new'
     | '/products/$id'
@@ -522,7 +492,6 @@ export interface FileRouteTypes {
     | '/profile/privacy-promise'
     | '/profile/support'
     | '/api/public/caregiver-invite'
-    | '/api/public/emergency-share'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/product-alerts-check'
     | '/api/public/payments/apple-webhook'
@@ -543,7 +512,6 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/bottles'
     | '/checklists'
-    | '/emergency-info'
     | '/first-foods'
     | '/home'
     | '/homecoming-checklist'
@@ -559,7 +527,6 @@ export interface FileRouteTypes {
     | '/travel-checklist'
     | '/auth/callback'
     | '/caregiver-invite/$token'
-    | '/emergency-share/$token'
     | '/bottles/new'
     | '/moments/new'
     | '/products/$id'
@@ -572,7 +539,6 @@ export interface FileRouteTypes {
     | '/profile/privacy-promise'
     | '/profile/support'
     | '/api/public/caregiver-invite'
-    | '/api/public/emergency-share'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/product-alerts-check'
     | '/api/public/payments/apple-webhook'
@@ -594,7 +560,6 @@ export interface FileRouteTypes {
     | '/_authenticated/alerts'
     | '/_authenticated/bottles'
     | '/_authenticated/checklists'
-    | '/_authenticated/emergency-info'
     | '/_authenticated/first-foods'
     | '/_authenticated/home'
     | '/_authenticated/homecoming-checklist'
@@ -610,7 +575,6 @@ export interface FileRouteTypes {
     | '/_authenticated/travel-checklist'
     | '/auth/callback'
     | '/caregiver-invite/$token'
-    | '/emergency-share/$token'
     | '/_authenticated/bottles_/new'
     | '/_authenticated/moments_/new'
     | '/_authenticated/products_/$id'
@@ -623,7 +587,6 @@ export interface FileRouteTypes {
     | '/_authenticated/profile_/privacy-promise'
     | '/_authenticated/profile_/support'
     | '/api/public/caregiver-invite'
-    | '/api/public/emergency-share'
     | '/api/public/hooks/check-product-alerts'
     | '/api/public/hooks/product-alerts-check'
     | '/api/public/payments/apple-webhook'
@@ -643,9 +606,7 @@ export interface RootRouteChildren {
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   CaregiverInviteTokenRoute: typeof CaregiverInviteTokenRoute
-  EmergencyShareTokenRoute: typeof EmergencyShareTokenRoute
   ApiPublicCaregiverInviteRoute: typeof ApiPublicCaregiverInviteRoute
-  ApiPublicEmergencyShareRoute: typeof ApiPublicEmergencyShareRoute
   ApiPublicHooksCheckProductAlertsRoute: typeof ApiPublicHooksCheckProductAlertsRoute
   ApiPublicHooksProductAlertsCheckRoute: typeof ApiPublicHooksProductAlertsCheckRoute
   ApiPublicPaymentsAppleWebhookRoute: typeof ApiPublicPaymentsAppleWebhookRoute
@@ -729,13 +690,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/emergency-share/$token': {
-      id: '/emergency-share/$token'
-      path: '/emergency-share/$token'
-      fullPath: '/emergency-share/$token'
-      preLoaderRoute: typeof EmergencyShareTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/caregiver-invite/$token': {
@@ -843,13 +797,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFirstFoodsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/emergency-info': {
-      id: '/_authenticated/emergency-info'
-      path: '/emergency-info'
-      fullPath: '/emergency-info'
-      preLoaderRoute: typeof AuthenticatedEmergencyInfoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/checklists': {
       id: '/_authenticated/checklists'
       path: '/checklists'
@@ -877,13 +824,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/add'
       preLoaderRoute: typeof AuthenticatedAddRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/api/public/emergency-share': {
-      id: '/api/public/emergency-share'
-      path: '/api/public/emergency-share'
-      fullPath: '/api/public/emergency-share'
-      preLoaderRoute: typeof ApiPublicEmergencyShareRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/api/public/caregiver-invite': {
       id: '/api/public/caregiver-invite'
@@ -1005,7 +945,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
   AuthenticatedBottlesRoute: typeof AuthenticatedBottlesRoute
   AuthenticatedChecklistsRoute: typeof AuthenticatedChecklistsRoute
-  AuthenticatedEmergencyInfoRoute: typeof AuthenticatedEmergencyInfoRoute
   AuthenticatedFirstFoodsRoute: typeof AuthenticatedFirstFoodsRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedHomecomingChecklistRoute: typeof AuthenticatedHomecomingChecklistRoute
@@ -1037,7 +976,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
   AuthenticatedBottlesRoute: AuthenticatedBottlesRoute,
   AuthenticatedChecklistsRoute: AuthenticatedChecklistsRoute,
-  AuthenticatedEmergencyInfoRoute: AuthenticatedEmergencyInfoRoute,
   AuthenticatedFirstFoodsRoute: AuthenticatedFirstFoodsRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedHomecomingChecklistRoute: AuthenticatedHomecomingChecklistRoute,
@@ -1094,9 +1032,7 @@ const rootRouteChildren: RootRouteChildren = {
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   CaregiverInviteTokenRoute: CaregiverInviteTokenRoute,
-  EmergencyShareTokenRoute: EmergencyShareTokenRoute,
   ApiPublicCaregiverInviteRoute: ApiPublicCaregiverInviteRoute,
-  ApiPublicEmergencyShareRoute: ApiPublicEmergencyShareRoute,
   ApiPublicHooksCheckProductAlertsRoute: ApiPublicHooksCheckProductAlertsRoute,
   ApiPublicHooksProductAlertsCheckRoute: ApiPublicHooksProductAlertsCheckRoute,
   ApiPublicPaymentsAppleWebhookRoute: ApiPublicPaymentsAppleWebhookRoute,

@@ -3,16 +3,15 @@
 -- sharing model and its use across children/products/milestones/etc.
 --
 -- Run against the full migration chain (needs growth_logs, first_foods,
--- bottles, product_recalls, emergency_info, etc. to all exist) — see the
--- -m list this is invoked with.
+-- bottles, product_recalls, etc. to all exist) — see the -m list this is
+-- invoked with.
 --
 -- IMPORTANT: an UPDATE/DELETE blocked by RLS's USING clause does not raise
 -- an error — it just matches zero rows. test.assert_raises is only used
 -- below for cases that genuinely raise (INSERT policy violations). Every
 -- blocked UPDATE/DELETE is instead run directly, then verified via a
 -- separate service_role (or otherwise-privileged) read that the target
--- row is unchanged / still present — the same pattern used in
--- emergency_info_rls.sql.
+-- row is unchanged / still present.
 --
 -- Cast of characters:
 --   Alice (user A)   — owns the child, is never a caregiver_access grantee
@@ -116,13 +115,6 @@ SELECT test.assert(
 );
 -- But an editor still cannot touch the child record itself.
 UPDATE public.children SET name = 'Hacked By Editor' WHERE id = 'ccccc111-cccc-cccc-cccc-cccccccccccc';
--- ...nor create a new share link for it (deliberately owner-only, per the
--- migration's documented scope).
-SELECT test.assert_raises(
-  $$INSERT INTO public.emergency_share_links (user_id, child_id, token_hash, expires_at)
-    VALUES ('e2222222-2222-2222-2222-222222222222', 'ccccc111-cccc-cccc-cccc-cccccccccccc', 'abc123', now() + interval '1 day')$$,
-  'even an editor caregiver cannot create an emergency-info share link (owner-only by design)'
-);
 SELECT test.logout();
 
 SELECT test.login('service_role');
@@ -253,46 +245,5 @@ SELECT test.login('authenticated', '55555555-5555-5555-5555-555555555555');
 SELECT test.assert(
   (SELECT count(*) FROM public.product_recalls WHERE product_id = '9a000007-0000-0000-0000-000000000007') = 0,
   'a stranger cannot see the recall at all'
-);
-SELECT test.logout();
-
--- ── emergency_info: caregivers extended, unrelated user still blocked ───
--- The viewer (user V) removed their own grant earlier ("leave" test above)
--- — re-grant it here so this section is testing "a current viewer can
--- read emergency_info", not accidentally re-testing revocation.
-SELECT test.login('authenticated', 'a1111111-1111-1111-1111-111111111111');
-INSERT INTO public.caregiver_access (child_id, caregiver_user_id, role) VALUES
-  ('ccccc111-cccc-cccc-cccc-cccccccccccc', '11111111-1111-1111-1111-111111111111', 'viewer');
-INSERT INTO public.emergency_info (user_id, child_id, allergies) VALUES
-  ('a1111111-1111-1111-1111-111111111111', 'ccccc111-cccc-cccc-cccc-cccccccccccc', 'Peanuts');
-SELECT test.logout();
-
-SELECT test.login('authenticated', '11111111-1111-1111-1111-111111111111');
-SELECT test.assert(
-  (SELECT allergies FROM public.emergency_info WHERE child_id = 'ccccc111-cccc-cccc-cccc-cccccccccccc') = 'Peanuts',
-  'a viewer caregiver can read emergency_info for the shared child'
-);
-UPDATE public.emergency_info SET allergies = 'Hacked' WHERE child_id = 'ccccc111-cccc-cccc-cccc-cccccccccccc';
-SELECT test.logout();
-
-SELECT test.login('service_role');
-SELECT test.assert(
-  (SELECT allergies FROM public.emergency_info WHERE child_id = 'ccccc111-cccc-cccc-cccc-cccccccccccc') = 'Peanuts',
-  'a viewer caregiver''s attempt to update emergency_info did not go through'
-);
-SELECT test.logout();
-
-SELECT test.login('authenticated', 'e2222222-2222-2222-2222-222222222222');
-UPDATE public.emergency_info SET blood_type = 'O+' WHERE child_id = 'ccccc111-cccc-cccc-cccc-cccccccccccc';
-SELECT test.assert(
-  (SELECT blood_type FROM public.emergency_info WHERE child_id = 'ccccc111-cccc-cccc-cccc-cccccccccccc') = 'O+',
-  'an editor caregiver can update emergency_info for the shared child'
-);
-SELECT test.logout();
-
-SELECT test.login('authenticated', '55555555-5555-5555-5555-555555555555');
-SELECT test.assert(
-  (SELECT count(*) FROM public.emergency_info WHERE child_id = 'ccccc111-cccc-cccc-cccc-cccccccccccc') = 0,
-  'a stranger cannot read emergency_info for a child they have no relationship to'
 );
 SELECT test.logout();

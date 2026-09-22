@@ -15,7 +15,6 @@ About your child
 • Name — used to personalize the app and label the moments and products you log.
 • Milestones you log (e.g. rolling, sitting, crawling, first steps) — used to time safety reminders to the developmental stage your child has actually reached, not a stored birthdate. We do not collect or store your child's date of birth, height, or weight.
 • Milestone notes — optional free-text notes you write about your child's development.
-• Emergency and medical info (optional) — if you fill out the Emergency Info card, we store allergies, medications, blood type, and the name/phone number of your pediatrician and an emergency contact. This is stored only for your own quick reference (and on a shareable link you explicitly choose to create) — we do not use it for any other purpose.
 • Food and allergen notes (optional) — if you use the Starting Solids tracker, we store which foods you've introduced, whether you've flagged one as an allergen, and any reaction notes you write.
 
 About your baby products
@@ -79,7 +78,7 @@ We do not sell, rent, or share your personal data with advertisers, data brokers
 4. HOW LONG WE KEEP YOUR DATA
 ──────────────────────────────────────
 
-Your data is kept for as long as your account is active. If you delete your account (see Section 5), your account, all of your children's profiles, milestones, products, medical/emergency info, food and bottle logs, caregiver grants and invites, subscription record, notification tokens, and uploaded product photos are permanently deleted immediately.
+Your data is kept for as long as your account is active. If you delete your account (see Section 5), your account, all of your children's profiles, milestones, products, food and bottle logs, caregiver grants and invites, subscription record, notification tokens, and uploaded product photos are permanently deleted immediately.
 
 Database backups and server logs are retained by our hosting provider according to the retention settings of the current hosting plan. Those settings may not include a fixed 7-day window (for example, automated backups may be shorter or not available on some plans). If deleted data still exists in a backup or log at the time of deletion, it is kept only until that backup or log expires as part of the provider's normal cycle and is used only for disaster recovery. If you need the exact retention window for your account, email ${SUPPORT_EMAIL} and we will confirm the current plan settings.
 

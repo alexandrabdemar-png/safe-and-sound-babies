@@ -23,7 +23,7 @@ export const Route = createFileRoute("/api/public/caregiver-invite")({
           return json({ error: "This invite is invalid or has expired." }, 404);
         }
 
-        const { hashShareToken } = await import("@/lib/emergencyShare");
+        const { hashShareToken } = await import("@/lib/shareToken");
         const tokenHash = await hashShareToken(token);
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

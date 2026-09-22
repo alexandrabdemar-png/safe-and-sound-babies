@@ -8,9 +8,9 @@ import { createStripeClient } from '@/lib/stripe.server';
  *     user is not billed again after "deleting").
  *  2. Delete the auth user via the admin API. Every public table with a
  *     user_id / caregiver_user_id FK to auth.users has ON DELETE CASCADE,
- *     so this wipes children, products, milestones, emergency_info,
- *     emergency_share_links, bottles, caregiver_access, profiles
- *     (apns_device_token), subscriptions, insight_dismissals, etc.
+ *     so this wipes children, products, milestones, bottles,
+ *     caregiver_access, profiles (apns_device_token), subscriptions,
+ *     insight_dismissals, etc.
  */
 export const deleteMyAccount = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
