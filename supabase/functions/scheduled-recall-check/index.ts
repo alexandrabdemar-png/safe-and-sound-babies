@@ -52,9 +52,42 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
+// Temporary connectivity probe (?probe=1): reports which upstream feed
+// endpoints answer from this runtime. Used to find working alternates for the
+// USDA FSIS and NHTSA feeds, which return HTTP 403 here. Remove once resolved.
+const PROBE_URLS: Record<string, string> = {
+  fsis_api: "https://www.fsis.usda.gov/fsis/api/recall/v/1",
+  nhtsa_socrata: "https://data.transportation.gov/resource/aqh3-3rri.json?$limit=1",
+  nhtsa_api_campaign: "https://api.nhtsa.gov/recalls/campaignNumber?campaignNumber=20V123000",
+  nhtsa_api_equipment: "https://api.nhtsa.gov/recalls/equipment?productType=Child%20Seat",
+  fsis_datagov:
+    "https://catalog.data.gov/api/3/action/package_search?q=fsis+recall&rows=1",
+};
+
 Deno.serve(async (req) => {
   if (req.method !== "POST" && req.method !== "GET")
     return json({ error: "Method not allowed" }, 405);
+
+  if (new URL(req.url).searchParams.get("probe") === "1") {
+    const out: Record<string, unknown> = {};
+    for (const [name, url] of Object.entries(PROBE_URLS)) {
+      try {
+        const res = await fetch(url, {
+          headers: {
+            Accept: "application/json",
+            "User-Agent":
+              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36",
+          },
+        });
+        const body = await res.text();
+        out[name] = { status: res.status, len: body.length, head: body.slice(0, 100) };
+      } catch (e) {
+        out[name] = { error: e instanceof Error ? e.message : String(e) };
+      }
+    }
+    return json({ probe: out });
+  }
+
 
   const startedAt = Date.now();
   const startedAtIso = new Date().toISOString();
