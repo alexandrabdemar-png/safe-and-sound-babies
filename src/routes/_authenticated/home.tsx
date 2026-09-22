@@ -1,4 +1,5 @@
 import { logError } from "@/lib/sanitize-error";
+import { WeeklyTopRecalls } from "@/components/WeeklyTopRecalls";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -1431,6 +1432,10 @@ export function RecallRadarCard({
         </div>
         <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
       </Link>
+
+      {/* Live industry-wide preview so a parent who never added the product
+          still sees the week's recalls without tapping through. */}
+      <WeeklyTopRecalls />
 
       {/* Alerts for [Child] — only recalls matched to products this user
           actually added. A separate section on purpose: this is a
