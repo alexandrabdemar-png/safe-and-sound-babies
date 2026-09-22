@@ -157,16 +157,22 @@ export async function fetchCpscBulkRecalls(fetchImpl: typeof fetch): Promise<Cps
     const res = await fetchImpl(url, { headers: { Accept: "application/json" } });
     if (!res.ok) {
       console.warn(`[recallBatch] CPSC returned ${res.status}`);
+      recordSourceHealth("cpsc", false, `HTTP ${res.status}`);
       return [];
     }
     const data = (await res.json()) as CpscRawRecall[];
-    if (!Array.isArray(data)) return [];
+    if (!Array.isArray(data)) {
+      recordSourceHealth("cpsc", false, "unexpected response shape");
+      return [];
+    }
+    recordSourceHealth("cpsc", true);
     return data.filter((r) => r.RecallID && (r.Title || r.RecallHeading)).slice(0, 500);
   } catch (err) {
     console.warn(
       "[recallBatch] CPSC fetch failed:",
       err instanceof Error ? err.message : "unknown",
     );
+    recordSourceHealth("cpsc", false, err instanceof Error ? err.message : "unknown");
     return [];
   }
 }
