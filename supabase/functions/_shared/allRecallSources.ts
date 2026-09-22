@@ -124,7 +124,7 @@ export async function fetchUsdaFsisRecalls(fetchImpl: typeof fetch): Promise<Nor
       fetchImpl,
       "https://www.fsis.usda.gov/fsis/api/recall/v/1",
       12_000,
-      undefined,
+      { headers: FEED_HEADERS },
       "usda_fsis",
     );
     if (!res.ok) {
