@@ -85,3 +85,16 @@ CAP_SERVER_URL=https://id-preview--<project-id>.lovable.app bun run ios:sync
 - Builds expire after 90 days.
 - Keep the medical/safety disclaimer visible (`PediatricianDisclaimer`) — Apple
   requires it for recall/health guidance content.
+
+## Privacy manifest (PrivacyInfo.xcprivacy)
+
+`scripts/ios-configure.mjs` generates `ios/App/App/PrivacyInfo.xcprivacy` on
+`ios:setup` / `ios:sync`. It declares `NSPrivacyTracking = false`, the same
+collected data types as the App Store Connect App Privacy answers (all
+purpose = App Functionality, linked, not tracking), and the one required-reason
+API the Capacitor layer touches (`NSPrivacyAccessedAPICategoryUserDefaults`,
+reason `CA92.1`).
+
+One-time manual step: drag that file into the **App** group in Xcode's sidebar
+(target: App) so it is bundled into the binary. Apple rejects builds that use
+required-reason APIs without a manifest.
