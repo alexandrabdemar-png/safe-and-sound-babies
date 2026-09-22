@@ -56,8 +56,6 @@ Deno.serve(async (req) => {
   if (req.method !== "POST" && req.method !== "GET")
     return json({ error: "Method not allowed" }, 405);
 
-
-
   const startedAt = Date.now();
   const startedAtIso = new Date().toISOString();
   const supabase = createClient(
