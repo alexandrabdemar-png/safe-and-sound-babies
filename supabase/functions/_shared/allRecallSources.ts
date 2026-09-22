@@ -46,19 +46,59 @@ function isBabyRelevant(text: string): boolean {
   return BABY_KEYWORDS.some((kw) => t.includes(kw));
 }
 
+// ── Per-source health, for honest recall_source_status reporting ──────────
+// The fetch functions below deliberately fail closed (return []), which makes
+// "0 records" ambiguous: it can mean "source is healthy, nothing baby-related
+// today" or "source is down". Every failure path records itself here so the
+// pipeline can write a truthful last_success_at / last_error per source
+// instead of inferring health from the record count.
+export type SourceHealth = { ok: boolean; error: string | null };
+
+const lastStatus: Record<string, SourceHealth> = {};
+
+function markOk(source: string) {
+  lastStatus[source] = { ok: true, error: null };
+}
+
+function markFailed(source: string, error: string) {
+  lastStatus[source] = { ok: false, error: error.slice(0, 500) };
+}
+
+export function getLastSourceStatus(): Record<string, SourceHealth> {
+  return { ...lastStatus };
+}
+
+/**
+ * Fetch with a timeout plus bounded retries. Retries only transient failures
+ * (network error / timeout / 5xx / 429), with fixed backoff — never an
+ * unbounded retry loop, so a provider outage can't turn into rate-limit abuse.
+ */
 async function fetchWithTimeout(
   fetchImpl: typeof fetch,
   url: string,
   timeoutMs = 12_000,
   init?: RequestInit,
 ): Promise<Response> {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetchImpl(url, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(id);
+  const BACKOFF_MS = [0, 1_000, 4_000];
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < BACKOFF_MS.length; attempt++) {
+    if (BACKOFF_MS[attempt] > 0) {
+      await new Promise((r) => setTimeout(r, BACKOFF_MS[attempt]));
+    }
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetchImpl(url, { ...init, signal: controller.signal });
+      const transient = res.status === 429 || res.status >= 500;
+      if (!transient || attempt === BACKOFF_MS.length - 1) return res;
+    } catch (err) {
+      lastErr = err;
+      if (attempt === BACKOFF_MS.length - 1) throw err;
+    } finally {
+      clearTimeout(id);
+    }
   }
+  throw lastErr instanceof Error ? lastErr : new Error("fetch failed");
 }
 
 export async function fetchUsdaFsisRecalls(fetchImpl: typeof fetch): Promise<NormalizedRecall[]> {
