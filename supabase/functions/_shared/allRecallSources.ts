@@ -87,7 +87,7 @@ async function fetchWithTimeout(
   init?: RequestInit,
   source?: string,
 ): Promise<Response> {
-  const BACKOFF_MS = [0, 1_000, 4_000];
+  const BACKOFF_MS = [0, 400, 1_200];
   let lastErr: unknown;
   for (let attempt = 0; attempt < BACKOFF_MS.length; attempt++) {
     if (BACKOFF_MS[attempt] > 0) {
