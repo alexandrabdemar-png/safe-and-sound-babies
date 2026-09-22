@@ -1,4 +1,5 @@
 import { logError } from "@/lib/sanitize-error";
+import { WeeklyTopRecalls } from "@/components/WeeklyTopRecalls";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
