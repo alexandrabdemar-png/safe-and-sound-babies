@@ -113,7 +113,13 @@ async function fetchWithTimeout(
 
 export async function fetchUsdaFsisRecalls(fetchImpl: typeof fetch): Promise<NormalizedRecall[]> {
   try {
-    const res = await fetchWithTimeout(fetchImpl, "https://www.fsis.usda.gov/fsis/api/recall/v/1");
+    const res = await fetchWithTimeout(
+      fetchImpl,
+      "https://www.fsis.usda.gov/fsis/api/recall/v/1",
+      12_000,
+      undefined,
+      "usda_fsis",
+    );
     if (!res.ok) {
       console.warn(`[allRecallSources] USDA FSIS returned ${res.status}`);
       return [];
