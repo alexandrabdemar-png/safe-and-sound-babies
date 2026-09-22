@@ -78,6 +78,7 @@ async function fetchWithTimeout(
   url: string,
   timeoutMs = 12_000,
   init?: RequestInit,
+  source?: string,
 ): Promise<Response> {
   const BACKOFF_MS = [0, 1_000, 4_000];
   let lastErr: unknown;
@@ -90,10 +91,19 @@ async function fetchWithTimeout(
     try {
       const res = await fetchImpl(url, { ...init, signal: controller.signal });
       const transient = res.status === 429 || res.status >= 500;
-      if (!transient || attempt === BACKOFF_MS.length - 1) return res;
+      if (!transient || attempt === BACKOFF_MS.length - 1) {
+        if (source) {
+          if (res.ok) markOk(source);
+          else markFailed(source, `HTTP ${res.status}`);
+        }
+        return res;
+      }
     } catch (err) {
       lastErr = err;
-      if (attempt === BACKOFF_MS.length - 1) throw err;
+      if (attempt === BACKOFF_MS.length - 1) {
+        if (source) markFailed(source, err instanceof Error ? err.message : "network error");
+        throw err;
+      }
     } finally {
       clearTimeout(id);
     }
