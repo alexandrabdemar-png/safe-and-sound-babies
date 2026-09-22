@@ -181,12 +181,19 @@ export async function fetchUsdaFsisRecalls(fetchImpl: typeof fetch): Promise<Nor
   }
 }
 
+// Child-restraint recalls live in NHTSA's "Equipment" recall type. Matching on
+// the free-text summary alone would pull in ordinary vehicle recalls that merely
+// mention a child (e.g. an air-bag suppression defect), so relevance is decided
+// from the structured subject/component fields plus the recall type.
+const CHILD_SEAT_RE = /child (restraint|seat)|car seat|booster seat|infant carrier|cars?eat/i;
+
 export async function fetchNhtsaRecalls(fetchImpl: typeof fetch): Promise<NormalizedRecall[]> {
   try {
+    // Dataset 6axg-epim is NHTSA's current recalls resource; the previously
+    // used aqh3-3rri returns HTTP 403 ("non-tabular table").
     const url =
-      "https://data.transportation.gov/resource/aqh3-3rri.json" +
-      "?$q=child%20restraint%20OR%20car%20seat%20OR%20booster%20seat" +
-      "&$limit=200&$order=report_received_date%20DESC";
+      "https://data.transportation.gov/resource/6axg-epim.json" +
+      "?$q=child%20seat&$limit=200&$order=report_received_date%20DESC";
     const res = await fetchWithTimeout(fetchImpl, url, 12_000, { headers: FEED_HEADERS }, "nhtsa");
     if (!res.ok) {
       console.warn(`[allRecallSources] NHTSA returned ${res.status}`);
@@ -200,14 +207,20 @@ export async function fetchNhtsaRecalls(fetchImpl: typeof fetch): Promise<Normal
       const summary = pick(r, "defect_summary", "recall_description", "summary");
       const component = pick(r, "component");
       const manufacturer = pick(r, "manufacturer");
-      const title = component
-        ? `${manufacturer ?? "Recall"} — ${component}`
-        : (summary?.slice(0, 120) ?? null);
+      const subject = pick(r, "subject");
+      const recallType = pick(r, "recall_type");
+      // A whole-vehicle recall is never a child-restraint product recall.
+      if (recallType && /vehicle/i.test(recallType)) continue;
+      // Relevance from structured fields only — never the free-text summary.
+      if (!CHILD_SEAT_RE.test([subject, component].filter(Boolean).join(" "))) continue;
+      const title = subject
+        ? `${manufacturer ?? "Recall"} — ${subject}`
+        : component
+          ? `${manufacturer ?? "Recall"} — ${component}`
+          : (summary?.slice(0, 120) ?? null);
       if (!title) continue;
-      const blob = [title, summary, component, manufacturer].filter(Boolean).join(" ");
-      if (!isBabyRelevant(blob) && !/child restraint|car seat|booster/i.test(blob)) continue;
 
-      const campaign = pick(r, "nhtsa_campaign_number", "campaign_number");
+      const campaign = pick(r, "nhtsa_id", "nhtsa_campaign_number", "campaign_number");
       out.push({
         source: "nhtsa",
         source_id: campaign ?? `${manufacturer ?? "nhtsa"}-${title}`,
