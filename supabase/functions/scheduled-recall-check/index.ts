@@ -398,33 +398,41 @@ Deno.serve(async (req) => {
 
 async function writeSourceStatus(
   supabase: ReturnType<typeof createClient>,
-  fetchCounts: Record<string, number>,
+  sourceStats: Record<string, { ok: boolean; error: string | null; records: number }>,
   totalMatches: number,
 ): Promise<void> {
   const nowIso = new Date().toISOString();
-  // Approximation: any source that returned > 0 records is treated as a
-  // success this run; a 0-return source is recorded as attempted but with
-  // consecutive_failures preserved (see the migration's ON CONFLICT logic
-  // for the dead-man's-switch source). Individual source-level success
-  // signals require deeper plumbing in allRecallSources.ts and are a
-  // follow-up.
-  const sources = ["cpsc", "fda", "usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"];
+  // Health now comes from the fetch layer (HTTP status / network outcome) per
+  // source, not from "did it return rows" — a healthy feed with no new baby
+  // recalls today is no longer reported as a failure, and a genuinely broken
+  // feed is no longer masked by a sibling source's record count.
+  const sources = Object.keys(sourceStats);
+  const { data: existing } = await supabase
+    .from("recall_source_status")
+    .select("source, last_success_at, consecutive_failures")
+    .in("source", sources);
+  const prior = new Map(
+    (existing ?? []).map((r) => [
+      r.source as string,
+      {
+        lastSuccessAt: (r.last_success_at as string | null) ?? null,
+        failures: (r.consecutive_failures as number | null) ?? 0,
+      },
+    ]),
+  );
   for (const source of sources) {
-    const records =
-      source === "cpsc"
-        ? (fetchCounts.cpsc ?? 0)
-        : source === "fda"
-          ? 0 // FDA is per-name; count is not exposed
-          : (fetchCounts.extra ?? 0); // grouped; refine per-source in a follow-up
-    const ok = records > 0 || source === "fda"; // FDA presence-check would need per-source counts
+    const stat = sourceStats[source];
+    const before = prior.get(source);
     await supabase.from("recall_source_status").upsert(
       {
         source,
         last_attempt_at: nowIso,
-        last_success_at: ok ? nowIso : null,
-        records_last_run: records,
+        // Never overwrite a real prior success with null on a failed run.
+        last_success_at: stat.ok ? nowIso : (before?.lastSuccessAt ?? null),
+        last_error: stat.ok ? null : stat.error,
+        records_last_run: stat.records,
         matches_last_run: totalMatches,
-        consecutive_failures: 0,
+        consecutive_failures: stat.ok ? 0 : (before?.failures ?? 0) + 1,
         updated_at: nowIso,
       },
       { onConflict: "source" },
