@@ -1080,6 +1080,54 @@ export type Database = {
         }
         Relationships: []
       }
+      recall_scan_runs: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          finished_at: string | null
+          id: string
+          new_recalls: number | null
+          notified: number | null
+          products_checked: number | null
+          records_fetched: number | null
+          source_stats: Json | null
+          started_at: string
+          status: string
+          total_matches: number | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          new_recalls?: number | null
+          notified?: number | null
+          products_checked?: number | null
+          records_fetched?: number | null
+          source_stats?: Json | null
+          started_at?: string
+          status?: string
+          total_matches?: number | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          new_recalls?: number | null
+          notified?: number | null
+          products_checked?: number | null
+          records_fetched?: number | null
+          source_stats?: Json | null
+          started_at?: string
+          status?: string
+          total_matches?: number | null
+        }
+        Relationships: []
+      }
       recall_source_status: {
         Row: {
           consecutive_failures: number
