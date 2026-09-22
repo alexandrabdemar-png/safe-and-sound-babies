@@ -57,6 +57,7 @@ Deno.serve(async (req) => {
     return json({ error: "Method not allowed" }, 405);
 
   const startedAt = Date.now();
+  const startedAtIso = new Date().toISOString();
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -64,6 +65,37 @@ Deno.serve(async (req) => {
       auth: { persistSession: false },
     },
   );
+
+  // Audit row for this scan attempt — written up-front (status 'running') so a
+  // crash or timeout mid-run still leaves a visible record, then finalized in
+  // the success/failure paths below.
+  let runId: string | null = null;
+  try {
+    const { data: runRow } = await supabase
+      .from("recall_scan_runs")
+      .insert({ started_at: startedAtIso, status: "running" })
+      .select("id")
+      .maybeSingle();
+    runId = (runRow as { id?: string } | null)?.id ?? null;
+  } catch {
+    /* audit logging must never block a scan */
+  }
+
+  async function finishRun(fields: Record<string, unknown>) {
+    if (!runId) return;
+    try {
+      await supabase
+        .from("recall_scan_runs")
+        .update({
+          finished_at: new Date().toISOString(),
+          duration_ms: Date.now() - startedAt,
+          ...fields,
+        })
+        .eq("id", runId);
+    } catch {
+      /* ignore */
+    }
+  }
 
   try {
     const { data: products, error: pErr } = await supabase
