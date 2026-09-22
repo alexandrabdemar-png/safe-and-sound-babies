@@ -52,6 +52,13 @@ function isBabyRelevant(text: string): boolean {
 // today" or "source is down". Every failure path records itself here so the
 // pipeline can write a truthful last_success_at / last_error per source
 // instead of inferring health from the record count.
+// USDA FSIS and NHTSA (Socrata) reject requests with no Accept/User-Agent —
+// both answered HTTP 403 in production until these headers were sent.
+const FEED_HEADERS: Record<string, string> = {
+  Accept: "application/json",
+  "User-Agent": "PeaceOfMine-RecallMonitor/1.0 (+https://peace-of-mine.lovable.app)",
+};
+
 export type SourceHealth = { ok: boolean; error: string | null };
 
 const lastStatus: Record<string, SourceHealth> = {};
