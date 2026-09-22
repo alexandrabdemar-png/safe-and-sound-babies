@@ -6,39 +6,32 @@ import { isSchemaMissingTableError } from "@/lib/errors";
 // user_agreements.terms_version, and what the "Last updated" date on
 // /terms is derived from.
 //
-// IMPORTANT — this does NOT by itself re-prompt existing users. Despite
-// what an earlier version of this comment claimed, needsLegalConsent()
-// below is a one-time gate (true only when a user has zero recorded
-// acceptances, regardless of version) — bumping this constant changes the
-// version a brand-new acceptance is recorded under and the displayed
-// date, but an existing user who already has any row in user_agreements
-// is never routed back to /legal-consent just because this changed. If a
-// future Terms change is significant enough that existing users need to
-// see and accept it again (e.g. the 2026-08-21 subscriptions/billing
-// section, added when Apple In-App Purchase was introduced), that
-// requires an actual code change to needsLegalConsent/checkNeedsLegalConsent
-// — bumping this string alone will not do it. See COMPLIANCE_REPORT.md
-// §5's re-consent item, which flags this as a decision to make
-// deliberately rather than assume.
+// RE-CONSENT — bumping this constant re-prompts any existing user who has
+// NOT yet accepted the new version the next time they enter an
+// authenticated route (see needsLegalConsent below). user_agreements has a
+// UNIQUE(user_id, terms_version) constraint, so accepting a new version
+// inserts a fresh row while a duplicate re-accept of the same version is
+// treated as success by /legal-consent. Use a bump for MATERIAL Terms
+// changes only (e.g. new liability sections, billing changes, or — as here
+// — a strengthened medical-advice/safety disclaimer), because every
+// existing user is forced through the consent wall again.
 //
-// Bumped 2026-08-21 to add the Subscriptions & Billing section (Apple
-// In-App Purchase on iOS, alongside the existing Stripe web billing) —
-// existing users will NOT be automatically re-prompted per the note
-// above.
-// Bumped 2026-09-22 to add §2a "Not a Medical Device & No Safety Guarantee"
-// and strengthen the in-app informational-only disclaimers. Existing users
-// will NOT be automatically re-prompted per the note above — this only
-// updates the displayed "Last updated" date and the version recorded for
-// new acceptances.
+// Version history:
+//  - 2026-08-21: Subscriptions & Billing section (Apple In-App Purchase).
+//  - 2026-09-22: §2a "Not a Medical Device & No Safety Guarantee" +
+//    strengthened informational-only disclaimers across the app.
 export const CURRENT_TERMS_VERSION = "2026-09-22";
 
 /**
- * True when the user has NEVER accepted the terms. Once a user has any
- * recorded acceptance in user_agreements, we never prompt them again —
- * the wall is strictly a one-time gate, not a per-version re-consent.
+ * Version-aware consent gate: a user needs to (re-)accept when the
+ * CURRENT Terms version is NOT among the versions they have on file.
+ * A brand-new user (empty list) needs consent; an existing user who only
+ * accepted an older version is prompted again when CURRENT_TERMS_VERSION
+ * is bumped for a material change; a user who has already accepted the
+ * current version is not re-prompted.
  */
 export function needsLegalConsent(acceptedVersions: string[]): boolean {
-  return acceptedVersions.length === 0;
+  return !acceptedVersions.includes(CURRENT_TERMS_VERSION);
 }
 
 type AgreementsClient = {
