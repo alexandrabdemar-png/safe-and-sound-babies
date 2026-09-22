@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
           },
         });
         const body = await res.text();
-        out[name] = { status: res.status, len: body.length, head: body.slice(0, 100) };
+        out[name] = { status: res.status, len: body.length, head: body.slice(0, 2500) };
       } catch (e) {
         out[name] = { error: e instanceof Error ? e.message : String(e) };
       }
