@@ -112,7 +112,10 @@ Deno.serve(async (req) => {
       model: p.model ?? null,
     }));
 
-    const { catalogRows, matches, fetchCounts } = await runRecallBatch(fetch, batchProducts);
+    const { catalogRows, matches, fetchCounts, sourceStats } = await runRecallBatch(
+      fetch,
+      batchProducts,
+    );
 
     // ── Upsert the recall catalog ("known recalls") ──────────────────────
     if (catalogRows.length) {
