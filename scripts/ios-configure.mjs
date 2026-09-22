@@ -180,5 +180,8 @@ Remaining manual steps in Xcode (one time):
          (this makes links like password reset / magic link emails open
          inside the app instead of Safari — the site already serves the
          required apple-app-site-association file)
-  4. Product → Archive → Distribute App → TestFlight
+  4. Drag ios/App/App/PrivacyInfo.xcprivacy into the App group in Xcode's
+     sidebar (check "Copy items if needed" OFF, target: App) so the privacy
+     manifest is bundled — Apple requires it. Only needed once.
+  5. Product → Archive → Distribute App → TestFlight
 `);
