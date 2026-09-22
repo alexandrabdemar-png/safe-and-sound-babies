@@ -121,6 +121,55 @@ if (existsSync(PBXPROJ)) {
 }
 
 
+// ---------------------------------------------------------------------------
+// Privacy manifest (PrivacyInfo.xcprivacy) — Apple requires this for apps that
+// use "required reason" APIs. Capacitor's preferences/plugin layer touches
+// UserDefaults (reason CA92.1: access limited to the app itself). Tracking is
+// declared false: this app ships no ad/analytics/attribution SDK.
+// The declared collected data types mirror the App Privacy answers exactly.
+const MANIFEST = "ios/App/App/PrivacyInfo.xcprivacy";
+if (!existsSync(MANIFEST)) {
+  const collected = [
+    ["NSPrivacyCollectedDataTypeName", "NSPrivacyCollectedDataTypeEmailAddress"],
+    ["NSPrivacyCollectedDataTypePhoneNumber"],
+    ["NSPrivacyCollectedDataTypeHealth"],
+    ["NSPrivacyCollectedDataTypePhotosorVideos"],
+    ["NSPrivacyCollectedDataTypeCustomerSupport"],
+    ["NSPrivacyCollectedDataTypeUserID"],
+    ["NSPrivacyCollectedDataTypePurchaseHistory"],
+  ];
+  const types = [
+    "NSPrivacyCollectedDataTypeName",
+    "NSPrivacyCollectedDataTypeEmailAddress",
+    "NSPrivacyCollectedDataTypePhoneNumber",
+    "NSPrivacyCollectedDataTypeHealth",
+    "NSPrivacyCollectedDataTypePhotosorVideos",
+    "NSPrivacyCollectedDataTypeCustomerSupport",
+    "NSPrivacyCollectedDataTypeUserID",
+    "NSPrivacyCollectedDataTypePurchaseHistory",
+  ];
+  void collected;
+  const entry = (t) =>
+    `\t\t<dict>\n\t\t\t<key>NSPrivacyCollectedDataType</key>\n\t\t\t<string>${t}</string>\n` +
+    `\t\t\t<key>NSPrivacyCollectedDataTypeLinked</key>\n\t\t\t<true/>\n` +
+    `\t\t\t<key>NSPrivacyCollectedDataTypeTracking</key>\n\t\t\t<false/>\n` +
+    `\t\t\t<key>NSPrivacyCollectedDataTypePurposes</key>\n\t\t\t<array>\n\t\t\t\t<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>\n\t\t\t</array>\n\t\t</dict>\n`;
+  writeFileSync(
+    MANIFEST,
+    `<?xml version="1.0" encoding="UTF-8"?>\n` +
+      `<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n` +
+      `<plist version="1.0">\n<dict>\n` +
+      `\t<key>NSPrivacyTracking</key>\n\t<false/>\n` +
+      `\t<key>NSPrivacyTrackingDomains</key>\n\t<array/>\n` +
+      `\t<key>NSPrivacyCollectedDataTypes</key>\n\t<array>\n${types.map(entry).join("")}\t</array>\n` +
+      `\t<key>NSPrivacyAccessedAPITypes</key>\n\t<array>\n\t\t<dict>\n` +
+      `\t\t\t<key>NSPrivacyAccessedAPIType</key>\n\t\t\t<string>NSPrivacyAccessedAPICategoryUserDefaults</string>\n` +
+      `\t\t\t<key>NSPrivacyAccessedAPITypeReasons</key>\n\t\t\t<array>\n\t\t\t\t<string>CA92.1</string>\n\t\t\t</array>\n` +
+      `\t\t</dict>\n\t</array>\n</dict>\n</plist>\n`,
+  );
+  added.push("PrivacyInfo.xcprivacy (created)");
+}
+
 if (removed.length) {
   console.log(`✓ Info.plist removed: ${removed.join(", ")}`);
 }
