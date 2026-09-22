@@ -56,7 +56,16 @@ describe("pickWeeklyTopRecalls", () => {
 });
 
 describe("weekly top recalls cache", () => {
-  beforeEach(() => localStorage.clear());
+  // Node test env has no localStorage; a tiny in-memory stand-in is enough.
+  beforeEach(() => {
+    const store = new Map<string, string>();
+    (globalThis as { localStorage?: unknown }).localStorage = {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => void store.set(k, v),
+      removeItem: (k: string) => void store.delete(k),
+      clear: () => store.clear(),
+    };
+  });
 
   it("round-trips a fresh cache", () => {
     writeWeeklyTopRecallsCache({ fetchedAt: NOW.toISOString(), recalls: [recall({ id: "a" })] });
