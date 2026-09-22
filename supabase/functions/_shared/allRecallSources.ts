@@ -297,7 +297,7 @@ export async function fetchEuSafetyGateRecalls(
     const url =
       "https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/healthref-europe-rapex-en/records" +
       "?order_by=alert_date%20DESC&limit=100";
-    const res = await fetchWithTimeout(fetchImpl, url);
+    const res = await fetchWithTimeout(fetchImpl, url, 12_000, undefined, "eu_safety_gate");
     if (!res.ok) {
       console.warn(`[allRecallSources] EU Safety Gate mirror returned ${res.status}`);
       return [];
