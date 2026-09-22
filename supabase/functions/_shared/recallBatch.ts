@@ -332,7 +332,10 @@ function matchProductAgainstExtra(product: BatchProduct, recall: NormalizedRecal
 
 // ── Orchestration ────────────────────────────────────────────────────────
 
+export type SourceStat = { ok: boolean; error: string | null; records: number };
+
 export type RecallBatchResult = {
+  sourceStats: Record<string, SourceStat>;
   catalogRows: RecallCatalogRow[];
   matches: RecallMatch[];
   fetchCounts: Record<string, number>;
