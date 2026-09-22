@@ -129,15 +129,6 @@ if (existsSync(PBXPROJ)) {
 // The declared collected data types mirror the App Privacy answers exactly.
 const MANIFEST = "ios/App/App/PrivacyInfo.xcprivacy";
 if (!existsSync(MANIFEST)) {
-  const collected = [
-    ["NSPrivacyCollectedDataTypeName", "NSPrivacyCollectedDataTypeEmailAddress"],
-    ["NSPrivacyCollectedDataTypePhoneNumber"],
-    ["NSPrivacyCollectedDataTypeHealth"],
-    ["NSPrivacyCollectedDataTypePhotosorVideos"],
-    ["NSPrivacyCollectedDataTypeCustomerSupport"],
-    ["NSPrivacyCollectedDataTypeUserID"],
-    ["NSPrivacyCollectedDataTypePurchaseHistory"],
-  ];
   const types = [
     "NSPrivacyCollectedDataTypeName",
     "NSPrivacyCollectedDataTypeEmailAddress",
@@ -148,7 +139,6 @@ if (!existsSync(MANIFEST)) {
     "NSPrivacyCollectedDataTypeUserID",
     "NSPrivacyCollectedDataTypePurchaseHistory",
   ];
-  void collected;
   const entry = (t) =>
     `\t\t<dict>\n\t\t\t<key>NSPrivacyCollectedDataType</key>\n\t\t\t<string>${t}</string>\n` +
     `\t\t\t<key>NSPrivacyCollectedDataTypeLinked</key>\n\t\t\t<true/>\n` +
