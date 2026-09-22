@@ -440,7 +440,31 @@ export async function runRecallBatch(
   // same physical recall appearing in multiple upstream feeds.
   const enrichedCatalogRows = await Promise.all(catalogRows.map(enrichCatalogRow));
 
+  // Per-source health + record counts. Health comes from the fetch layer
+  // (HTTP status / network outcome), NOT from "did this source return rows",
+  // so a healthy-but-quiet feed is no longer indistinguishable from an outage.
+  const health = getLastSourceStatus();
+  const extraCounts: Record<string, number> = {};
+  for (const r of extraRecalls) extraCounts[r.source] = (extraCounts[r.source] ?? 0) + 1;
+  const sourceStats: Record<string, SourceStat> = {};
+  for (const source of [
+    "cpsc",
+    "fda",
+    "usda_fsis",
+    "nhtsa",
+    "health_canada",
+    "eu_safety_gate",
+  ] as const) {
+    const h = health[source];
+    sourceStats[source] = {
+      ok: h ? h.ok : false,
+      error: h ? h.error : "source not attempted this run",
+      records: source === "cpsc" ? cpscRecalls.length : (extraCounts[source] ?? 0),
+    };
+  }
+
   return {
+    sourceStats,
     catalogRows: enrichedCatalogRows,
     matches,
     fetchCounts: {
