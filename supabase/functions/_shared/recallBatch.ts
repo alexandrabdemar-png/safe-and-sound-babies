@@ -11,7 +11,12 @@
 // against that map. This split is what makes the matching logic itself
 // testable under Vitest without a live Supabase connection.
 import { fuzzyMatchProduct } from "./recallMatch.ts";
-import { fetchAllExtraRecallSources, type NormalizedRecall } from "./allRecallSources.ts";
+import {
+  fetchAllExtraRecallSources,
+  getLastSourceStatus,
+  recordSourceHealth,
+  type NormalizedRecall,
+} from "./allRecallSources.ts";
 import { classifyRecallSeverity, type SeverityTier } from "./recallSeverity.ts";
 import { computeContentHash, hazardFingerprint } from "./recallFreshness.ts";
 
