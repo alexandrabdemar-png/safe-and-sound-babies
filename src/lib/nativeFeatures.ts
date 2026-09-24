@@ -37,7 +37,7 @@ export async function verifyWithBiometrics(reason: string): Promise<boolean> {
     const { NativeBiometric } = await import("@capgo/capacitor-native-biometric");
     const { isAvailable } = await NativeBiometric.isAvailable({ useFallback: true });
     if (!isAvailable) return true;
-    await NativeBiometric.verifyIdentity({ reason, title: "Unlock Emergency Info", useFallback: true });
+    await NativeBiometric.verifyIdentity({ reason, title: "Unlock Peace of Mine", useFallback: true });
     return true;
   } catch {
     return false;
