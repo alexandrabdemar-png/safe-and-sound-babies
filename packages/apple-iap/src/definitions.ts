@@ -7,7 +7,8 @@ import type { PluginListenerHandle } from "@capacitor/core";
  * so this plugin's API is deliberately built around a single, known
  * product rather than taking a product id as a parameter everywhere.
  */
-export const APPLE_PRO_MONTHLY_PRODUCT_ID = "com.peaceofmine.baby.pro.monthly";
+export const APPLE_PRO_MONTHLY_PRODUCT_ID = "monthlyplan";
+export const APPLE_PRO_ANNUAL_PRODUCT_ID = "annualplan";
 
 export type AppleIAPEnvironment = "sandbox" | "live";
 
@@ -34,7 +35,7 @@ export interface AppleIAPPlugin {
    * Store or the product isn't found (e.g. it hasn't been created yet, or
    * isn't in the "Ready to Submit"/approved state App Store Connect requires
    * before it's purchasable, even in sandbox). */
-  getProduct(): Promise<AppleProduct>;
+  getProduct(options?: { productId?: string }): Promise<AppleProduct>;
 
   /**
    * Starts a StoreKit purchase sheet for the Pro subscription.
@@ -49,7 +50,7 @@ export interface AppleIAPPlugin {
    * since server-side re-verification against Apple is what actually
    * grants the entitlement.
    */
-  purchase(options: { appAccountToken: string }): Promise<AppleTransactionResult>;
+  purchase(options: { appAccountToken: string; productId?: string }): Promise<AppleTransactionResult>;
 
   /** Re-syncs with the App Store and returns every currently-entitled
    * transaction for the signed-in Apple ID — used by "Restore purchases"

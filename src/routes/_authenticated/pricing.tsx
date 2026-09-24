@@ -56,9 +56,10 @@ function PricingPage() {
   // the monthly product configured in App Store Connect, so the toggle is
   // hidden there and Apple's own reported price is shown instead.
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
-  const isYearly = !isNativeIOS && billingPeriod === 'yearly';
-  const priceLabel = isNativeIOS
-    ? (appleProduct?.displayPrice ?? '$3.39')
+  const isYearly = billingPeriod === 'yearly';
+  const appleProductId = isYearly ? 'annualplan' : 'monthlyplan';
+  const priceLabel = isNativeIOS && appleProduct
+    ? appleProduct.displayPrice
     : isYearly
       ? '$34.99'
       : '$3.39';
@@ -85,7 +86,7 @@ function PricingPage() {
     (async () => {
       try {
         const { AppleIAP } = await import('apple-iap');
-        const product = await AppleIAP.getProduct();
+        const product = await AppleIAP.getProduct({ productId: appleProductId });
         if (!cancelled) setAppleProduct(product);
       } catch {
         // Fall back to the hardcoded price/trial copy.
@@ -94,7 +95,7 @@ function PricingPage() {
     return () => {
       cancelled = true;
     };
-  }, [isNativeIOS]);
+  }, [isNativeIOS, appleProductId]);
 
   const handleAppleUpgrade = async () => {
     setApplePurchasing(true);
@@ -105,7 +106,7 @@ function PricingPage() {
         return;
       }
       const { AppleIAP } = await import('apple-iap');
-      const result = await AppleIAP.purchase({ appAccountToken: data.user.id });
+      const result = await AppleIAP.purchase({ appAccountToken: data.user.id, productId: appleProductId });
       const verified = await verifyAppleTransaction({
         data: { transactionId: result.transactionId, environment: result.environment },
       });
@@ -232,7 +233,7 @@ function PricingPage() {
           </p>
         </div>
 
-        {!isNativeIOS && (
+        {(
           <div className="mx-auto flex w-full max-w-xs items-center rounded-full border bg-muted/40 p-1">
             {(['monthly', 'yearly'] as const).map((period) => (
               <button
