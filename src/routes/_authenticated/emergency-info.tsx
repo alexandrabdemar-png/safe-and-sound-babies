@@ -3,7 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
-import { HeartPulse, Copy, Check, Link2, Ban } from "lucide-react";
+import { HeartPulse, Copy, Check, Link2, Ban, Share2, Lock } from "lucide-react";
+import { shareLink, verifyWithBiometrics } from "@/lib/nativeFeatures";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { generateShareToken, hashShareToken, computeShareLinkExpiry } from "@/lib/emergencyShare";
@@ -57,6 +58,13 @@ function EmergencyInfoPage() {
   const [freshShareUrl, setFreshShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [unlocked, setUnlocked] = useState(false);
+  const unlock = async () => {
+    setUnlocked(await verifyWithBiometrics("Unlock your child's emergency info"));
+  };
+  useEffect(() => {
+    void unlock();
+  }, []);
 
   useEffect(() => {
     async function init() {
@@ -214,6 +222,17 @@ function EmergencyInfoPage() {
     });
   }
 
+  if (!unlocked) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-6 text-center">
+        <Lock className="h-8 w-8 text-muted-foreground" />
+        <p className="font-body text-sm text-muted-foreground">Emergency info is locked with Face ID.</p>
+        <Button onClick={unlock}>Unlock</Button>
+        <BottomNav />
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -357,12 +376,28 @@ function EmergencyInfoPage() {
                 <p className="flex-1 truncate font-body text-xs text-muted-foreground">
                   {freshShareUrl}
                 </p>
-                <Button size="sm" variant="ghost" onClick={copyLink} className="shrink-0 px-2">
+                <Button size="sm" variant="ghost" onClick={copyLink} className="shrink-0 px-2" aria-label="Copy link">
                   {copied ? (
                     <Check className="h-4 w-4 text-green-600" />
                   ) : (
                     <Copy className="h-4 w-4" />
                   )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="shrink-0 px-2"
+                  aria-label="Share link"
+                  onClick={async () => {
+                    const ok = await shareLink({
+                      title: `${child.name}'s emergency info`,
+                      text: `Emergency info for ${child.name}`,
+                      url: freshShareUrl,
+                    });
+                    if (!ok) copyLink();
+                  }}
+                >
+                  <Share2 className="h-4 w-4" />
                 </Button>
               </div>
             )}

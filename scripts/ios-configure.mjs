@@ -27,6 +27,8 @@ const STRINGS = {
     "Peace of Mine lets you attach photos of your baby products so you can identify them later.",
   NSPhotoLibraryAddUsageDescription:
     "Peace of Mine can save exported safety records and product photos to your photo library.",
+  NSFaceIDUsageDescription:
+    "Peace of Mine uses Face ID to keep your child's emergency medical info private.",
   ITSAppUsesNonExemptEncryption: false,
 };
 
