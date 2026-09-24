@@ -10,7 +10,7 @@ import type { AppleIAPPlugin, AppleProduct, AppleTransactionResult } from "./def
  * the native and web scanners.
  */
 export class AppleIAPWeb extends WebPlugin implements AppleIAPPlugin {
-  async getProduct(): Promise<AppleProduct> {
+  async getProducts(): Promise<{ products: AppleProduct[] }> {
     throw new Error("Apple In-App Purchase is only available on iOS native builds");
   }
 

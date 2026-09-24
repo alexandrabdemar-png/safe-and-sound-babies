@@ -2,12 +2,14 @@ import Foundation
 import Capacitor
 import StoreKit
 
-/// The auto-renewable subscription product id created in App Store
+/// The auto-renewable subscription product ids created in App Store
 /// Connect (Monetization → Subscriptions) — must exactly match
-/// APPLE_PRO_MONTHLY_PRODUCT_ID in src/definitions.ts. Only one paid tier
-/// exists in this app, so this is a constant rather than a parameter
-/// threaded through every method.
-private let proMonthlyProductId = "com.peaceofmine.baby.pro.monthly"
+/// APPLE_PRO_PRODUCT_IDS in src/definitions.ts. Both are duration variants
+/// (monthly/annual) of the same Pro tier.
+private let proProductIds: Set<String> = [
+    "com.peaceofmine.baby.pro.monthly",
+    "com.peaceofmine.baby.pro.annual",
+]
 
 enum AppleIAPError: LocalizedError {
     case failedVerification
@@ -23,9 +25,9 @@ enum AppleIAPError: LocalizedError {
     }
 }
 
-/// Capacitor bridge for StoreKit 2 — purchases the app's single Pro
-/// subscription product and reports transactions back to JS, which is
-/// responsible for confirming them with the server (verifyAppleTransaction
+/// Capacitor bridge for StoreKit 2 — purchases one of the app's two Pro
+/// subscription products (monthly/annual) and reports transactions back to
+/// JS, which is responsible for confirming them with the server (verifyAppleTransaction
 /// in src/utils/appleIap.functions.ts) before treating Pro as unlocked.
 /// This plugin deliberately does the minimum StoreKit-side: it never
 /// decides entitlement itself, since a client-side "the purchase
@@ -39,7 +41,7 @@ public class AppleIAPPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "AppleIAPPlugin"
     public let jsName = "AppleIAP"
     public let pluginMethods: [CAPPluginMethod] = [
-        CAPPluginMethod(name: "getProduct", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getProducts", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "purchase", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "restorePurchases", returnType: CAPPluginReturnPromise),
     ]
@@ -63,23 +65,23 @@ public class AppleIAPPlugin: CAPPlugin, CAPBridgedPlugin {
         updatesTask?.cancel()
     }
 
-    @objc func getProduct(_ call: CAPPluginCall) {
+    @objc func getProducts(_ call: CAPPluginCall) {
         Task {
             do {
-                let products = try await Product.products(for: [proMonthlyProductId])
-                guard let product = products.first else {
-                    call.reject(AppleIAPError.unknownProduct.localizedDescription)
-                    return
-                }
+                let products = try await Product.products(for: proProductIds)
                 call.resolve([
-                    "id": product.id,
-                    "displayName": product.displayName,
-                    "description": product.description,
-                    "price": NSDecimalNumber(decimal: product.price).doubleValue,
-                    "displayPrice": product.displayPrice,
+                    "products": products.map { product in
+                        [
+                            "id": product.id,
+                            "displayName": product.displayName,
+                            "description": product.description,
+                            "price": NSDecimalNumber(decimal: product.price).doubleValue,
+                            "displayPrice": product.displayPrice,
+                        ]
+                    },
                 ])
             } catch {
-                call.reject("Could not load the Pro subscription product: \(error.localizedDescription)")
+                call.reject("Could not load the Pro subscription products: \(error.localizedDescription)")
             }
         }
     }
@@ -90,10 +92,14 @@ public class AppleIAPPlugin: CAPPlugin, CAPBridgedPlugin {
             call.reject("A valid appAccountToken (the signed-in user's id) is required")
             return
         }
+        guard let productId = call.getString("productId"), proProductIds.contains(productId) else {
+            call.reject(AppleIAPError.unknownProduct.localizedDescription)
+            return
+        }
 
         Task {
             do {
-                let products = try await Product.products(for: [proMonthlyProductId])
+                let products = try await Product.products(for: [productId])
                 guard let product = products.first else {
                     call.reject(AppleIAPError.unknownProduct.localizedDescription)
                     return

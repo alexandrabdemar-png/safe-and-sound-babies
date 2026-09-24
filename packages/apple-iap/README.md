@@ -1,16 +1,19 @@
 # apple-iap
 
 Local (unpublished) Capacitor plugin: native Apple In-App Purchase via
-StoreKit 2, for the app's one Pro subscription. Not usable from a Linux
-build environment — everything past `npm install` here requires a Mac with
-Xcode, and StoreKit purchases can't be tested at all without an actual App
-Store Connect subscription product and a sandbox tester Apple ID.
+StoreKit 2, for the app's Pro subscription (monthly or annual). Not usable
+from a Linux build environment — everything past `npm install` here
+requires a Mac with Xcode, and StoreKit purchases can't be tested at all
+without actual App Store Connect subscription products and a sandbox
+tester Apple ID.
 
 ## What this does
 
-- Purchases and restores the `com.peaceofmine.baby.pro.monthly` subscription
-  through Apple's own purchase sheet, instead of Stripe checkout — required
-  by App Store review for unlocking a digital feature (Pro) inside an iOS app.
+- Purchases and restores the `com.peaceofmine.baby.pro.monthly` or
+  `com.peaceofmine.baby.pro.annual` subscription (the user's choice, same
+  Pro tier either way) through Apple's own purchase sheet, instead of
+  Stripe checkout — required by App Store review for unlocking a digital
+  feature (Pro) inside an iOS app.
 - The web app is unaffected: `StripeEmbeddedCheckout` keeps handling web
   purchases exactly as before. `src/routes/_authenticated/pricing.tsx`
   branches between the two based on platform.
@@ -44,16 +47,25 @@ This assumes you've already done the base iOS setup from `IOS_TESTFLIGHT.md`.
    create it). Download the `.p8` file once — Apple only lets you download it
    the one time — and note its **Key ID** and the **Issuer ID** shown on that
    same page.
-2. **My Apps → Peace of Mine → Monetization → Subscriptions** — create a
+2. **My Apps → Peace of Mine → Monetization → Subscriptions** — create one
    subscription group (any internal name, e.g. "Pro"), then inside it create
-   one auto-renewable subscription:
-   - Product ID: `com.peaceofmine.baby.pro.monthly` (must match exactly —
-     this is hardcoded in both `src/definitions.ts` and the native plugin).
-   - Price: $3.33/month (or your chosen tier).
-   - Add a 7-day free trial as an introductory offer, matching the existing
-     Stripe trial.
+   **two** auto-renewable subscriptions — both at the **same level** (Level
+   1), since they're duration variants of the identical Pro tier, not
+   different tiers of service. (Levels rank tiers of service for
+   upgrade/downgrade purposes — putting monthly and annual at different
+   levels miscategorizes switching between them as an upgrade/downgrade
+   instead of a same-tier duration change, and the "Edit Level" control can
+   get stuck once a subscription has already been added to a version for
+   review, so get this right before you add either one for review.)
+   - Product IDs: `com.peaceofmine.baby.pro.monthly` and
+     `com.peaceofmine.baby.pro.annual` (must match exactly — these are
+     hardcoded as `APPLE_PRO_MONTHLY_PRODUCT_ID`/`APPLE_PRO_ANNUAL_PRODUCT_ID`
+     in `src/definitions.ts` and the native plugin).
+   - Price: $3.33/month and $34.99/year (or your chosen tiers).
+   - Add a 7-day free trial as an introductory offer on each, matching the
+     existing Stripe trial.
    - Fill in the required subscription display name, description, and a
-     screenshot of the paywall for review.
+     screenshot of the paywall for review, for each.
 3. **App Information** — note the numeric **Apple ID** for the app (shown
    near the top of the App Information page, distinct from the bundle id) —
    this is `APPLE_IAP_APP_APPLE_ID`.
@@ -78,12 +90,15 @@ This assumes you've already done the base iOS setup from `IOS_TESTFLIGHT.md`.
    regular Apple ID) before testing a purchase.
 7. A brand-new subscription typically needs to sit in **Ready to Submit**
    status (fully filled out, screenshot attached) before StoreKit will even
-   let a sandbox purchase go through — an incomplete product silently fails
-   to load in `getProduct()`.
+   let a sandbox purchase go through — an incomplete product silently
+   drops out of `getProducts()`'s results.
 
 ## Testing checklist (do this before trusting the native path)
 
-- [ ] `getProduct()` returns the real price/trial info from App Store Connect.
+- [ ] `getProducts()` returns real price/trial info for both the monthly and
+      annual products from App Store Connect.
+- [ ] The monthly/annual toggle on the pricing screen works on iOS and
+      purchases the product matching your selection.
 - [ ] Purchase completes with a sandbox tester account; `verifyAppleTransaction`
       is called and the app unlocks Pro.
 - [ ] Cancel out of the purchase sheet — confirm a clean, non-crashing
@@ -103,7 +118,7 @@ This assumes you've already done the base iOS setup from `IOS_TESTFLIGHT.md`.
 ## Files
 
 - `src/definitions.ts` — the plugin's TypeScript interface and the shared
-  `APPLE_PRO_MONTHLY_PRODUCT_ID` constant.
+  `APPLE_PRO_MONTHLY_PRODUCT_ID`/`APPLE_PRO_ANNUAL_PRODUCT_ID` constants.
 - `src/web.ts` — web fallback (every method throws; the web app never calls
   this plugin, it keeps using Stripe).
 - `src/index.ts` — plugin registration.
@@ -112,6 +127,6 @@ This assumes you've already done the base iOS setup from `IOS_TESTFLIGHT.md`.
 - `AppleIAP.podspec` — CocoaPods fallback manifest, used when `ios/`'s
   Capacitor project has a `Podfile`.
 - `ios/Sources/AppleIAPPlugin/AppleIAPPlugin.swift` — Capacitor bridge
-  (`getProduct`, `purchase`, `restorePurchases`, plus a `transactionUpdate`
+  (`getProducts`, `purchase`, `restorePurchases`, plus a `transactionUpdate`
   listener for renewals) wrapping StoreKit 2, registered via the
   `CAPBridgedPlugin` protocol (same pattern as `vision-barcode-scanner`).

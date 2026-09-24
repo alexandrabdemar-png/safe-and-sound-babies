@@ -1,13 +1,18 @@
 import type { PluginListenerHandle } from "@capacitor/core";
 
 /**
- * Must exactly match the auto-renewable subscription product id created in
+ * Must exactly match the auto-renewable subscription product ids created in
  * App Store Connect (Monetization → Subscriptions) — StoreKit looks products
- * up by this string. Only one paid tier exists in this app (Pro monthly),
- * so this plugin's API is deliberately built around a single, known
- * product rather than taking a product id as a parameter everywhere.
+ * up by these strings. Both are duration variants of the same Pro tier, so
+ * in App Store Connect they belong in one subscription group at the same
+ * level (see packages/apple-iap/README.md).
  */
 export const APPLE_PRO_MONTHLY_PRODUCT_ID = "com.peaceofmine.baby.pro.monthly";
+export const APPLE_PRO_ANNUAL_PRODUCT_ID = "com.peaceofmine.baby.pro.annual";
+export const APPLE_PRO_PRODUCT_IDS = [
+  APPLE_PRO_MONTHLY_PRODUCT_ID,
+  APPLE_PRO_ANNUAL_PRODUCT_ID,
+] as const;
 
 export type AppleIAPEnvironment = "sandbox" | "live";
 
@@ -29,27 +34,28 @@ export type AppleTransactionResult = {
 };
 
 export interface AppleIAPPlugin {
-  /** Fetches App Store Connect metadata (price, display name) for the one
-   * Pro subscription product. Rejects if StoreKit can't reach the App
-   * Store or the product isn't found (e.g. it hasn't been created yet, or
-   * isn't in the "Ready to Submit"/approved state App Store Connect requires
-   * before it's purchasable, even in sandbox). */
-  getProduct(): Promise<AppleProduct>;
+  /** Fetches App Store Connect metadata (price, display name) for both Pro
+   * subscription products (monthly and annual). Rejects if StoreKit can't
+   * reach the App Store; resolves with whichever of the two products it
+   * did find if one is missing/not yet "Ready to Submit" rather than
+   * failing the whole call, so the pricing screen can still show the other
+   * duration's real price. */
+  getProducts(): Promise<{ products: AppleProduct[] }>;
 
   /**
-   * Starts a StoreKit purchase sheet for the Pro subscription.
-   * appAccountToken must be the signed-in Supabase user's own id (a UUID) —
-   * StoreKit attaches it to the transaction and Apple echoes it back on
-   * every future transaction/notification for this subscription, which is
-   * how the server (verifyAppleTransaction, apple-webhook) knows which
-   * account to credit without trusting anything else the client reports.
-   * Resolves once StoreKit finishes the transaction locally; the caller
-   * still needs to report transactionId+environment to the server
-   * (verifyAppleTransaction) before treating the purchase as confirmed,
-   * since server-side re-verification against Apple is what actually
-   * grants the entitlement.
+   * Starts a StoreKit purchase sheet for the given Pro product id (one of
+   * APPLE_PRO_PRODUCT_IDS). appAccountToken must be the signed-in Supabase
+   * user's own id (a UUID) — StoreKit attaches it to the transaction and
+   * Apple echoes it back on every future transaction/notification for this
+   * subscription, which is how the server (verifyAppleTransaction,
+   * apple-webhook) knows which account to credit without trusting anything
+   * else the client reports. Resolves once StoreKit finishes the
+   * transaction locally; the caller still needs to report
+   * transactionId+environment to the server (verifyAppleTransaction) before
+   * treating the purchase as confirmed, since server-side re-verification
+   * against Apple is what actually grants the entitlement.
    */
-  purchase(options: { appAccountToken: string }): Promise<AppleTransactionResult>;
+  purchase(options: { appAccountToken: string; productId: string }): Promise<AppleTransactionResult>;
 
   /** Re-syncs with the App Store and returns every currently-entitled
    * transaction for the signed-in Apple ID — used by "Restore purchases"

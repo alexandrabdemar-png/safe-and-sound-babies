@@ -11,7 +11,7 @@ paths are exercised from zero.
 - [ ] Apple + Google auth providers enabled in the backend auth config (otherwise "Unsupported provider").
 - [ ] Xcode: Push Notifications + Background Modes → Remote notifications capabilities added.
 - [ ] Xcode: In-App Purchase capability added (App target → Signing & Capabilities).
-- [ ] App Store Connect: Pro subscription product created and backend secrets set (`APPLE_IAP_KEY_ID`, `APPLE_IAP_ISSUER_ID`, `APPLE_IAP_PRIVATE_KEY`, `APPLE_IAP_BUNDLE_ID`, `APPLE_IAP_APP_APPLE_ID`) — see `packages/apple-iap/README.md`. **Purchasing Pro on iOS will fail with none of this done yet.**
+- [ ] App Store Connect: Pro subscription products (monthly + annual) created and backend secrets set (`APPLE_IAP_KEY_ID`, `APPLE_IAP_ISSUER_ID`, `APPLE_IAP_PRIVATE_KEY`, `APPLE_IAP_BUNDLE_ID`, `APPLE_IAP_APP_APPLE_ID`) — see `packages/apple-iap/README.md`. **Purchasing Pro on iOS will fail with none of this done yet.**
 - [ ] Verify `20260818000000_purge_child_birthdate_and_measurements.sql` and `20260818010000_drop_dead_sizeup_prediction_columns.sql` have actually been applied to the live database, not just committed as migration files — see COMPLIANCE_REPORT.md §"Prioritized pre-launch checklist" item 5 for how to check and the exact SQL to run if not.
 
 ## 1. Account creation & auth

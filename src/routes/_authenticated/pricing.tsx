@@ -12,7 +12,7 @@ import { verifyAppleTransaction } from '@/utils/appleIap.functions';
 import { getStripeEnvironment } from '@/lib/stripe';
 import { openUrl } from '@/lib/browser';
 import { toast } from 'sonner';
-import type { AppleProduct } from 'apple-iap';
+import { APPLE_PRO_MONTHLY_PRODUCT_ID, APPLE_PRO_ANNUAL_PRODUCT_ID, type AppleProduct } from 'apple-iap';
 
 export const Route = createFileRoute('/_authenticated/pricing')({
   ssr: false,
@@ -51,14 +51,17 @@ function PricingPage() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [applePurchasing, setApplePurchasing] = useState(false);
   const [appleRestoring, setAppleRestoring] = useState(false);
-  const [appleProduct, setAppleProduct] = useState<AppleProduct | null>(null);
-  // Web checkout offers monthly or annual billing. On iOS, StoreKit only has
-  // the monthly product configured in App Store Connect, so the toggle is
-  // hidden there and Apple's own reported price is shown instead.
+  const [appleProducts, setAppleProducts] = useState<Record<string, AppleProduct>>({});
+  // Both web (Stripe) and iOS (StoreKit) offer monthly or annual billing —
+  // on iOS, appleProducts is keyed by Apple's product id and filled in once
+  // getProducts() resolves; the hardcoded prices below are the fallback
+  // shown before that resolves or if it fails.
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
-  const isYearly = !isNativeIOS && billingPeriod === 'yearly';
+  const isYearly = billingPeriod === 'yearly';
+  const appleProduct =
+    appleProducts[isYearly ? APPLE_PRO_ANNUAL_PRODUCT_ID : APPLE_PRO_MONTHLY_PRODUCT_ID];
   const priceLabel = isNativeIOS
-    ? (appleProduct?.displayPrice ?? '$3.39')
+    ? (appleProduct?.displayPrice ?? (isYearly ? '$34.99' : '$3.39'))
     : isYearly
       ? '$34.99'
       : '$3.39';
@@ -77,7 +80,7 @@ function PricingPage() {
   // hardcoded copy below — Apple can localize or adjust the displayed
   // price by region/tax, so what StoreKit reports is the source of truth
   // once it's available. Silently keeps the hardcoded fallback if this
-  // fails (e.g. the product isn't fully configured yet) rather than
+  // fails (e.g. a product isn't fully configured yet) rather than
   // blocking the whole pricing screen on it.
   useEffect(() => {
     if (!isNativeIOS) return;
@@ -85,8 +88,10 @@ function PricingPage() {
     (async () => {
       try {
         const { AppleIAP } = await import('apple-iap');
-        const product = await AppleIAP.getProduct();
-        if (!cancelled) setAppleProduct(product);
+        const { products } = await AppleIAP.getProducts();
+        if (!cancelled) {
+          setAppleProducts(Object.fromEntries(products.map((p) => [p.id, p])));
+        }
       } catch {
         // Fall back to the hardcoded price/trial copy.
       }
@@ -105,7 +110,8 @@ function PricingPage() {
         return;
       }
       const { AppleIAP } = await import('apple-iap');
-      const result = await AppleIAP.purchase({ appAccountToken: data.user.id });
+      const productId = isYearly ? APPLE_PRO_ANNUAL_PRODUCT_ID : APPLE_PRO_MONTHLY_PRODUCT_ID;
+      const result = await AppleIAP.purchase({ appAccountToken: data.user.id, productId });
       const verified = await verifyAppleTransaction({
         data: { transactionId: result.transactionId, environment: result.environment },
       });
@@ -232,27 +238,25 @@ function PricingPage() {
           </p>
         </div>
 
-        {!isNativeIOS && (
-          <div className="mx-auto flex w-full max-w-xs items-center rounded-full border bg-muted/40 p-1">
-            {(['monthly', 'yearly'] as const).map((period) => (
-              <button
-                key={period}
-                type="button"
-                onClick={() => setBillingPeriod(period)}
-                className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition ${
-                  billingPeriod === period
-                    ? 'bg-background shadow-sm text-foreground'
-                    : 'text-muted-foreground'
-                }`}
-              >
-                {period === 'monthly' ? 'Monthly' : 'Yearly'}
-                {period === 'yearly' && (
-                  <span className="ml-1.5 text-xs font-semibold text-primary">Save 14%</span>
-                )}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="mx-auto flex w-full max-w-xs items-center rounded-full border bg-muted/40 p-1">
+          {(['monthly', 'yearly'] as const).map((period) => (
+            <button
+              key={period}
+              type="button"
+              onClick={() => setBillingPeriod(period)}
+              className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition ${
+                billingPeriod === period
+                  ? 'bg-background shadow-sm text-foreground'
+                  : 'text-muted-foreground'
+              }`}
+            >
+              {period === 'monthly' ? 'Monthly' : 'Yearly'}
+              {period === 'yearly' && (
+                <span className="ml-1.5 text-xs font-semibold text-primary">Save 14%</span>
+              )}
+            </button>
+          ))}
+        </div>
 
 
         {/* Free plan */}
