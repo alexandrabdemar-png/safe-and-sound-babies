@@ -197,83 +197,27 @@ export type Database = {
         }
         Relationships: []
       }
-      child_measurements: {
-        Row: {
-          child_id: string
-          created_at: string
-          height_inches: number | null
-          id: string
-          recorded_at: string
-          user_id: string
-          weight_lbs: number | null
-        }
-        Insert: {
-          child_id: string
-          created_at?: string
-          height_inches?: number | null
-          id?: string
-          recorded_at?: string
-          user_id: string
-          weight_lbs?: number | null
-        }
-        Update: {
-          child_id?: string
-          created_at?: string
-          height_inches?: number | null
-          id?: string
-          recorded_at?: string
-          user_id?: string
-          weight_lbs?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "child_measurements_child_id_fkey"
-            columns: ["child_id"]
-            isOneToOne: false
-            referencedRelation: "children"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       children: {
         Row: {
-          birth_week: number | null
           created_at: string
-          date_of_birth: string | null
-          due_date: string | null
-          height_inches: number | null
           id: string
-          measurements_updated_at: string | null
           name: string
           updated_at: string
           user_id: string
-          weight_lbs: number | null
         }
         Insert: {
-          birth_week?: number | null
           created_at?: string
-          date_of_birth?: string | null
-          due_date?: string | null
-          height_inches?: number | null
           id?: string
-          measurements_updated_at?: string | null
           name: string
           updated_at?: string
           user_id: string
-          weight_lbs?: number | null
         }
         Update: {
-          birth_week?: number | null
           created_at?: string
-          date_of_birth?: string | null
-          due_date?: string | null
-          height_inches?: number | null
           id?: string
-          measurements_updated_at?: string | null
           name?: string
           updated_at?: string
           user_id?: string
-          weight_lbs?: number | null
         }
         Relationships: []
       }
@@ -473,41 +417,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "first_foods_child_id_fkey"
-            columns: ["child_id"]
-            isOneToOne: false
-            referencedRelation: "children"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      growth_logs: {
-        Row: {
-          child_id: string
-          created_at: string
-          height_inches: number | null
-          id: string
-          recorded_at: string
-          weight_lbs: number | null
-        }
-        Insert: {
-          child_id: string
-          created_at?: string
-          height_inches?: number | null
-          id?: string
-          recorded_at?: string
-          weight_lbs?: number | null
-        }
-        Update: {
-          child_id?: string
-          created_at?: string
-          height_inches?: number | null
-          id?: string
-          recorded_at?: string
-          weight_lbs?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "growth_logs_child_id_fkey"
             columns: ["child_id"]
             isOneToOne: false
             referencedRelation: "children"
@@ -939,11 +848,9 @@ export type Database = {
           manufacture_date: string | null
           model: string | null
           name: string
-          next_size_at: string | null
           notes: string | null
           photo_url: string | null
           predicted_replacement_date: string | null
-          predicted_sizeup_date: string | null
           product_type: string
           purchased_at: string | null
           recall_checked_at: string | null
@@ -966,11 +873,9 @@ export type Database = {
           manufacture_date?: string | null
           model?: string | null
           name: string
-          next_size_at?: string | null
           notes?: string | null
           photo_url?: string | null
           predicted_replacement_date?: string | null
-          predicted_sizeup_date?: string | null
           product_type?: string
           purchased_at?: string | null
           recall_checked_at?: string | null
@@ -993,11 +898,9 @@ export type Database = {
           manufacture_date?: string | null
           model?: string | null
           name?: string
-          next_size_at?: string | null
           notes?: string | null
           photo_url?: string | null
           predicted_replacement_date?: string | null
-          predicted_sizeup_date?: string | null
           product_type?: string
           purchased_at?: string | null
           recall_checked_at?: string | null
