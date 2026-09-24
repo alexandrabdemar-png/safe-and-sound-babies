@@ -24,9 +24,8 @@ export type WeeklyTopRecallsCache = {
 };
 
 /**
- * Picks the recalls to show: curated critical alerts first (they're always
- * relevant and carry sortDate = MAX_SAFE_INTEGER), then the most recent
- * official recalls published inside the window. Recalls with no usable date
+ * Picks the recalls to show: the most recent official recalls (curated critical alerts are
+ * excluded — they carry a synthetic sortDate and may be months old) published inside the window. Recalls with no usable date
  * are excluded — an undated row can't honestly be called "this week".
  */
 export function pickWeeklyTopRecalls(
@@ -38,7 +37,9 @@ export function pickWeeklyTopRecalls(
   return all
     .filter((r) => {
       if (!r || typeof r.id !== "string") return false;
-      if (r.source === "critical") return true;
+      // Curated critical alerts are pinned in Recall Radar itself; they are not
+      // necessarily from this week, so they never appear in this list.
+      if (r.source === "critical") return false;
       return Number.isFinite(r.sortDate) && r.sortDate > 0 && r.sortDate >= cutoff;
     })
     .sort((a, b) => b.sortDate - a.sortDate)

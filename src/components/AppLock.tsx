@@ -11,9 +11,9 @@ const RELOCK_AFTER_MS = 60_000;
 
 export function isAppLockEnabled(): boolean {
   try {
-    return localStorage.getItem(STORAGE_KEY) !== "off";
+    return localStorage.getItem(STORAGE_KEY) === "on";
   } catch {
-    return true;
+    return false;
   }
 }
 
@@ -79,6 +79,7 @@ export function AppLock() {
       </button>
       <button
         onClick={async () => {
+          setAppLockEnabled(false);
           await supabase.auth.signOut();
           window.location.assign("/auth");
         }}
@@ -93,7 +94,7 @@ export function AppLock() {
 /** Profile setting to turn the Face ID lock on/off. Only shown in the iPhone app. */
 export function AppLockSetting() {
   const [native, setNative] = useState(false);
-  const [on, setOn] = useState(true);
+  const [on, setOn] = useState(false);
   useEffect(() => {
     setNative(isNativeApp());
     setOn(isAppLockEnabled());

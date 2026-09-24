@@ -31,7 +31,7 @@ describe("pickWeeklyTopRecalls", () => {
     expect(pickWeeklyTopRecalls([fresh, old], NOW).map((r) => r.id)).toEqual(["a"]);
   });
 
-  it("always keeps curated critical alerts and pins them first", () => {
+  it("excludes curated critical alerts, which may be months old", () => {
     const critical = recall({
       id: "critical-x",
       source: "critical",
