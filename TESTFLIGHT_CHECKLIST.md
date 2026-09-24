@@ -58,13 +58,12 @@ paths are exercised from zero.
 - [ ] Bottles: create, expiry countdown correct, alert fires.
 - [ ] First foods: add allergen, reaction notes saved.
 - [ ] Checklists (homecoming, travel) persist completion.
-- [ ] Emergency info saves; share link opens in a private window and shows only that child.
 - [ ] Caregiver invite: send, accept on a second account, then revoke → access gone.
 
 ## 7. Subscription
 - [ ] Pricing screen shows price, billing period, trial length, and renewal wording.
-- [ ] On the web build: Stripe purchase path completes.
-- [ ] On a native iOS build: native StoreKit purchase sheet appears (not Stripe checkout) and completes with a sandbox tester account — see `packages/apple-iap/README.md` for the full checklist (getProduct, purchase, cancel, restore, renewal, refund).
+- [ ] On the web build: Stripe purchase path completes for both monthly and annual.
+- [ ] On a native iOS build: monthly/annual toggle works, native StoreKit purchase sheet appears (not Stripe checkout) for whichever is selected, and completes with a sandbox tester account — see `packages/apple-iap/README.md` for the full checklist (getProducts, purchase, cancel, restore, renewal, refund).
 - [ ] Restore purchases (iOS) recovers a purchase after a force-quit before it reported to the server.
 - [ ] Manage/cancel path reachable; cancelled-but-in-period user keeps Pro until period end. On iOS this opens the App Store subscription management page, not Stripe's billing portal.
 - [ ] Pro features lock again after the period ends.
