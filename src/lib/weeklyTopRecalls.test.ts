@@ -31,17 +31,14 @@ describe("pickWeeklyTopRecalls", () => {
     expect(pickWeeklyTopRecalls([fresh, old], NOW).map((r) => r.id)).toEqual(["a"]);
   });
 
-  it("always keeps curated critical alerts and pins them first", () => {
+  it("excludes curated critical alerts, which may be months old", () => {
     const critical = recall({
       id: "critical-x",
       source: "critical",
       sortDate: Number.MAX_SAFE_INTEGER,
     });
     const fresh = recall({ id: "a", sortDate: NOW.getTime() - 86_400_000 });
-    expect(pickWeeklyTopRecalls([fresh, critical], NOW).map((r) => r.id)).toEqual([
-      "critical-x",
-      "a",
-    ]);
+    expect(pickWeeklyTopRecalls([fresh, critical], NOW).map((r) => r.id)).toEqual(["a"]);
   });
 
   it("drops undated rows and caps the list at three", () => {
