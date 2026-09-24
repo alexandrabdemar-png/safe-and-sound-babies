@@ -1,3 +1,4 @@
+import { hapticSuccess } from "@/lib/haptic";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   Html5Qrcode,
@@ -83,6 +84,7 @@ export function WebBarcodeScannerView({
         (decodedText) => {
           if (detectedRef.current) return;
           detectedRef.current = true;
+          hapticSuccess();
           onDetected(decodedText);
         },
         () => {

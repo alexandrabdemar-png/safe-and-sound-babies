@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
+import { AppLock } from "@/components/AppLock";
 import { toast } from "sonner";
 import { AlertTriangle, Users, WifiOff } from "lucide-react";
 import { usePushRegistration } from "@/hooks/usePushRegistration";
@@ -183,6 +184,7 @@ function AuthenticatedLayout() {
       )}
       <Outlet />
       <UpgradePrompt />
+      <AppLock />
     </>
   );
 }

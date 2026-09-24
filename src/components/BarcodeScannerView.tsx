@@ -1,3 +1,4 @@
+import { hapticSuccess } from "@/lib/haptic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, X } from "lucide-react";
 import {
@@ -125,6 +126,7 @@ function NativeMlKitBarcodeScannerView({
             onDetected: (code) => {
               if (detectedRef.current) return;
               detectedRef.current = true;
+              hapticSuccess();
               onDetected(code);
             },
             onError: (message) => {
