@@ -82,6 +82,7 @@ function PricingPage() {
   // blocking the whole pricing screen on it.
   useEffect(() => {
     if (!isNativeIOS) return;
+    setAppleProduct(null);
     let cancelled = false;
     (async () => {
       try {
