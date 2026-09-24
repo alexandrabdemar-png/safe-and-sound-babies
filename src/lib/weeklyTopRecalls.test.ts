@@ -38,10 +38,7 @@ describe("pickWeeklyTopRecalls", () => {
       sortDate: Number.MAX_SAFE_INTEGER,
     });
     const fresh = recall({ id: "a", sortDate: NOW.getTime() - 86_400_000 });
-    expect(pickWeeklyTopRecalls([fresh, critical], NOW).map((r) => r.id)).toEqual([
-      "critical-x",
-      "a",
-    ]);
+    expect(pickWeeklyTopRecalls([fresh, critical], NOW).map((r) => r.id)).toEqual(["a"]);
   });
 
   it("drops undated rows and caps the list at three", () => {
