@@ -1,6 +1,6 @@
 -- Creates the `private` schema and private.call_edge_function() helper
 -- from 20260705000000_recall_alerts_pipeline.sql — confirmed missing from
--- production (the daily-scheduled-expiration-check cron job already
+-- production. The daily-scheduled-expiration-check cron job already
 -- references private.call_edge_function('scheduled-expiration-check'),
 -- but since neither the schema nor the function actually existed, every
 -- run of that job has been erroring outright with "schema \"private\"
