@@ -1,3 +1,4 @@
+import { AppLockSetting } from "@/components/AppLock";
 import { logError } from "@/lib/sanitize-error";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -334,6 +335,7 @@ function ProfilePage() {
 
         {/* Change password */}
         <ChangePasswordSection />
+        <AppLockSetting />
 
 
         {/* Share */}
