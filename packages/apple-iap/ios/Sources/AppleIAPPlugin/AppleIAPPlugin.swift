@@ -7,7 +7,16 @@ import StoreKit
 /// APPLE_PRO_MONTHLY_PRODUCT_ID in src/definitions.ts. Only one paid tier
 /// exists in this app, so this is a constant rather than a parameter
 /// threaded through every method.
-private let proMonthlyProductId = "com.peaceofmine.baby.pro.monthly"
+private let proMonthlyProductId = "monthlyplan"
+private let proAnnualProductId = "annualplan"
+private let allowedProductIds: Set<String> = [proMonthlyProductId, proAnnualProductId]
+
+/// Reads the optional productId argument, defaulting to monthly and only
+/// allowing the two Pro products configured in App Store Connect.
+private func requestedProductId(_ call: CAPPluginCall) -> String? {
+    let id = call.getString("productId") ?? proMonthlyProductId
+    return allowedProductIds.contains(id) ? id : nil
+}
 
 enum AppleIAPError: LocalizedError {
     case failedVerification
@@ -64,9 +73,13 @@ public class AppleIAPPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func getProduct(_ call: CAPPluginCall) {
+        guard let productId = requestedProductId(call) else {
+            call.reject(AppleIAPError.unknownProduct.localizedDescription)
+            return
+        }
         Task {
             do {
-                let products = try await Product.products(for: [proMonthlyProductId])
+                let products = try await Product.products(for: [productId])
                 guard let product = products.first else {
                     call.reject(AppleIAPError.unknownProduct.localizedDescription)
                     return
@@ -90,10 +103,14 @@ public class AppleIAPPlugin: CAPPlugin, CAPBridgedPlugin {
             call.reject("A valid appAccountToken (the signed-in user's id) is required")
             return
         }
+        guard let productId = requestedProductId(call) else {
+            call.reject(AppleIAPError.unknownProduct.localizedDescription)
+            return
+        }
 
         Task {
             do {
-                let products = try await Product.products(for: [proMonthlyProductId])
+                let products = try await Product.products(for: [productId])
                 guard let product = products.first else {
                     call.reject(AppleIAPError.unknownProduct.localizedDescription)
                     return
