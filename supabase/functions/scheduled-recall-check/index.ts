@@ -66,6 +66,22 @@ Deno.serve(async (req) => {
     },
   );
 
+  // Close out runs that died without finishing (e.g. the worker hit its CPU
+  // limit) so the history never shows a scan stuck on "running" forever.
+  try {
+    await supabase
+      .from("recall_scan_runs")
+      .update({
+        status: "failed",
+        finished_at: new Date().toISOString(),
+        error: "Run stopped before finishing (worker terminated)",
+      })
+      .eq("status", "running")
+      .lt("started_at", new Date(Date.now() - 10 * 60_000).toISOString());
+  } catch {
+    /* best-effort cleanup */
+  }
+
   // Audit row for this scan attempt — written up-front (status 'running') so a
   // crash or timeout mid-run still leaves a visible record, then finalized in
   // the success/failure paths below.
@@ -79,6 +95,29 @@ Deno.serve(async (req) => {
     runId = (runRow as { id?: string } | null)?.id ?? null;
   } catch {
     /* audit logging must never block a scan */
+  }
+
+  // Single-flight guard: the platform sometimes delivers one scheduled call
+  // twice ~1s apart. Every attempt registers itself first, then only the
+  // earliest in-progress run from the last 5 minutes proceeds; the rest bow out.
+  if (runId) {
+    try {
+      const { data: active } = await supabase
+        .from("recall_scan_runs")
+        .select("id, started_at")
+        .eq("status", "running")
+        .gte("started_at", new Date(Date.now() - 5 * 60_000).toISOString())
+        .order("started_at", { ascending: true })
+        .order("id", { ascending: true })
+        .limit(1);
+      const leader = (active as { id: string }[] | null)?.[0]?.id;
+      if (leader && leader !== runId) {
+        await supabase.from("recall_scan_runs").delete().eq("id", runId);
+        return json({ skipped: true, reason: "another scan is already running" });
+      }
+    } catch {
+      /* if the guard check fails, fall through and scan anyway */
+    }
   }
 
   async function finishRun(fields: Record<string, unknown>) {
