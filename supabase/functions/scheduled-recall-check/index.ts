@@ -526,11 +526,11 @@ async function notifyAffectedUsers(
   }
 
   const apnsConfig: ApnsConfig | null =
-    Deno.env.get("APNS_KEY_ID") && Deno.env.get("APNS_TEAM_ID") && Deno.env.get("APNS_KEY_P8")
+    Deno.env.get("APNS_KEY_ID") && Deno.env.get("APNS_TEAM_ID") && (Deno.env.get("APNS_KEY_P8") ?? Deno.env.get("APNS_PRIVATE_KEY"))
       ? {
           keyId: Deno.env.get("APNS_KEY_ID")!,
           teamId: Deno.env.get("APNS_TEAM_ID")!,
-          keyP8: Deno.env.get("APNS_KEY_P8")!,
+          keyP8: ((Deno.env.get("APNS_KEY_P8") ?? Deno.env.get("APNS_PRIVATE_KEY")) ?? Deno.env.get("APNS_PRIVATE_KEY"))!,
           bundleId: Deno.env.get("APNS_BUNDLE_ID") || "com.peaceofmine.baby",
           environment: Deno.env.get("APNS_ENVIRONMENT") === "sandbox" ? "sandbox" : "production",
         }

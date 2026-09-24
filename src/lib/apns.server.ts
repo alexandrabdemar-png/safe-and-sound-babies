@@ -57,7 +57,7 @@ const JWT_MAX_AGE_MS = 50 * 60 * 1000; // Apple recommends reusing tokens up to 
 
 async function getSigningKey(): Promise<CryptoKey> {
   if (cachedKey) return cachedKey;
-  const p8 = process.env.APNS_KEY_P8;
+  const p8 = process.env.APNS_KEY_P8 ?? process.env.APNS_PRIVATE_KEY;
   if (!p8) throw new Error("Missing APNS_KEY_P8 environment variable");
   const der = pemToDer(p8);
   cachedKey = await crypto.subtle.importKey(
