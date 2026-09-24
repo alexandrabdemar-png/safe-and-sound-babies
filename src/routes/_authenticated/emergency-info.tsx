@@ -58,6 +58,13 @@ function EmergencyInfoPage() {
   const [freshShareUrl, setFreshShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [unlocked, setUnlocked] = useState(false);
+  const unlock = async () => {
+    setUnlocked(await verifyWithBiometrics("Unlock your child's emergency info"));
+  };
+  useEffect(() => {
+    void unlock();
+  }, []);
 
   useEffect(() => {
     async function init() {
@@ -213,6 +220,17 @@ function EmergencyInfoPage() {
       toast.success("Copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);
     });
+  }
+
+  if (!unlocked) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-6 text-center">
+        <Lock className="h-8 w-8 text-muted-foreground" />
+        <p className="font-body text-sm text-muted-foreground">Emergency info is locked with Face ID.</p>
+        <Button onClick={unlock}>Unlock</Button>
+        <BottomNav />
+      </div>
+    );
   }
 
   if (loading) {
