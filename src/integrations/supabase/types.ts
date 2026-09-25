@@ -388,6 +388,8 @@ export type Database = {
           id: string
           ingredients: string | null
           is_allergen: boolean
+          is_packaged: boolean | null
+          product_id: string | null
           reaction_notes: string | null
         }
         Insert: {
@@ -400,6 +402,8 @@ export type Database = {
           id?: string
           ingredients?: string | null
           is_allergen?: boolean
+          is_packaged?: boolean | null
+          product_id?: string | null
           reaction_notes?: string | null
         }
         Update: {
@@ -412,6 +416,8 @@ export type Database = {
           id?: string
           ingredients?: string | null
           is_allergen?: boolean
+          is_packaged?: boolean | null
+          product_id?: string | null
           reaction_notes?: string | null
         }
         Relationships: [
@@ -420,6 +426,13 @@ export type Database = {
             columns: ["child_id"]
             isOneToOne: false
             referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "first_foods_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
