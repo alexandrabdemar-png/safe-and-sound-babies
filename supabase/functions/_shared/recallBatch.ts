@@ -27,6 +27,12 @@ export type BatchProduct = {
   brand: string | null;
   category: string | null;
   model: string | null;
+  // Set for rows mirrored from First Foods (product_type 'food'). Foods are
+  // matched on brand + product name only (never name alone — "oat puffs"
+  // on its own would match any brand's puffs), and a UPC printed in the
+  // recall notice is an exact match on its own.
+  product_type?: string | null;
+  barcode?: string | null;
 };
 
 export type RecallCatalogRow = {
@@ -77,6 +83,42 @@ export type RecallMatch = {
 
 function productDisplayName(p: BatchProduct): string {
   return [p.name, p.brand ?? ""].filter(Boolean).join(" ");
+}
+
+function isFood(p: BatchProduct): boolean {
+  return p.product_type === "food";
+}
+
+/**
+ * True when the product's UPC/EAN appears in the recall text. FDA and USDA
+ * notices print UPCs with arbitrary spacing ("UPC 0 15000 07418 6"), so this
+ * compares digit runs with separators stripped. A 12-digit UPC-A and its
+ * 13-digit EAN form (leading 0) are treated as the same code. Codes shorter
+ * than 8 digits are ignored — too short to be a reliable identifier.
+ */
+export function recallTextHasBarcode(barcode: string | null | undefined, text: string): boolean {
+  const code = (barcode ?? "").replace(/\D/g, "");
+  if (code.length < 8) return false;
+  const variants = new Set([code, code.replace(/^0+/, "")]);
+  const runs = text.match(/\d[\d -]{6,20}\d/g) ?? [];
+  return runs.some((run) => {
+    const digits = run.replace(/\D/g, "");
+    const trimmed = digits.replace(/^0+/, "");
+    for (const v of variants) {
+      if (!v) continue;
+      if (digits === v || trimmed === v || digits.includes(v)) return true;
+    }
+    return false;
+  });
+}
+
+/**
+ * The text the FDA search and match use for a product. Foods use brand +
+ * name so a recall has to name the same brand; everything else keeps the
+ * long-standing name-only query.
+ */
+export function fdaQueryFor(p: BatchProduct): string {
+  return isFood(p) ? [p.brand ?? "", p.name].filter(Boolean).join(" ").trim() : p.name;
 }
 
 // ── Critical recalls — manually curated, no network, instant ───────────────
@@ -321,6 +363,14 @@ function extraRecallToCatalogRow(r: NormalizedRecall): RecallCatalogRow {
 }
 
 function matchProductAgainstExtra(product: BatchProduct, recall: NormalizedRecall): boolean {
+  if (
+    isFood(product) &&
+    recallTextHasBarcode(
+      product.barcode,
+      [recall.title, recall.product_name, recall.description].filter(Boolean).join(" "),
+    )
+  )
+    return true;
   const recallText = [recall.title, recall.brand, recall.product_name, recall.model]
     .filter(Boolean)
     .join(" ");
@@ -408,22 +458,30 @@ export async function runRecallBatch(
     }
   }
 
-  // 4. FDA — once per unique product name (capped), then linked to every
-  // product sharing that name.
-  const uniqueNames = [...new Set(products.map((p) => p.name))].slice(0, 100);
-  const productsByName = new Map<string, BatchProduct[]>();
+  // 4. FDA — once per unique query (capped), then linked to every product
+  // sharing that query. The query is the product name, or brand + name for
+  // foods (see fdaQueryFor).
+  const productsByQuery = new Map<string, BatchProduct[]>();
   for (const p of products) {
-    const arr = productsByName.get(p.name) ?? [];
+    const q = fdaQueryFor(p);
+    const arr = productsByQuery.get(q) ?? [];
     arr.push(p);
-    productsByName.set(p.name, arr);
+    productsByQuery.set(q, arr);
   }
-  for (const name of uniqueNames) {
-    const fdaHits = await fetchFdaRecallsForName(fetchImpl, name);
+  const uniqueQueries = [...productsByQuery.keys()].slice(0, 100);
+  for (const query of uniqueQueries) {
+    const fdaHits = await fetchFdaRecallsForName(fetchImpl, query);
     for (const hit of fdaHits) {
-      if (!matchProductAgainstFda(name, hit)) continue;
+      const nameMatch = matchProductAgainstFda(query, hit);
+      const group = (productsByQuery.get(query) ?? []).filter(
+        (p) =>
+          nameMatch ||
+          (isFood(p) && recallTextHasBarcode(p.barcode, hit.product_description ?? "")),
+      );
+      if (!group.length) continue;
       const row = fdaRecallToCatalogRow(hit);
       addCatalogRow(row);
-      for (const product of productsByName.get(name) ?? []) {
+      for (const product of group) {
         matches.push({
           user_id: product.user_id,
           product_id: product.id,

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { parseFoodName, computeAllergenProgress, TOP_ALLERGENS } from "./first-foods";
+import {
+  parseFoodName,
+  computeAllergenProgress,
+  TOP_ALLERGENS,
+  recallStatusFor,
+} from "./first-foods";
 
 // Regression: editing an existing first_foods entry re-runs the same
 // "{name} ({Allergen})" suffix logic handleSave() uses when adding — this
@@ -100,5 +105,47 @@ describe("computeAllergenProgress", () => {
     // logged first here — the UI should read in a stable, predictable
     // order rather than shuffling based on when each was logged.
     expect(result.introduced).toEqual(["Milk", "Sesame"]);
+  });
+});
+
+describe("recallStatusFor", () => {
+  const base = { is_packaged: true, brand: "Gerber", product_id: "p1", products: null };
+
+  it("marks fresh / homemade foods as not packaged", () => {
+    expect(recallStatusFor({ ...base, is_packaged: false }).label).toMatch(/^Not packaged/);
+  });
+
+  it("asks older entries whether they're store-bought", () => {
+    expect(recallStatusFor({ ...base, is_packaged: null }).label).toMatch(/^Not checked/);
+  });
+
+  it("never shows a packaged food without a brand as covered", () => {
+    expect(recallStatusFor({ ...base, brand: " ", product_id: null }).label).toBe(
+      "Can't check for recalls — add brand or scan",
+    );
+  });
+
+  it("shows pending until the first scan has actually run", () => {
+    const s = recallStatusFor({
+      ...base,
+      products: { recalled: false, recall_checked_at: null },
+    });
+    expect(s.label).toMatch(/pending/);
+  });
+
+  it("shows Recall-checked once the scan has stamped it", () => {
+    const s = recallStatusFor({
+      ...base,
+      products: { recalled: false, recall_checked_at: "2026-09-25T15:00:00Z" },
+    });
+    expect(s).toEqual({ label: "Recall-checked", tone: "ok" });
+  });
+
+  it("flags a possible match", () => {
+    const s = recallStatusFor({
+      ...base,
+      products: { recalled: true, recall_checked_at: "2026-09-25T15:00:00Z" },
+    });
+    expect(s.tone).toBe("danger");
   });
 });

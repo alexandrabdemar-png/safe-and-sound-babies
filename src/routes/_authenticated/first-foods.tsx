@@ -19,11 +19,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { friendlyError } from "@/lib/errors";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { lookupBarcode } from "@/lib/barcodeLookup";
-import {
-  allergensFromTags,
-  collectIngredients,
-  parseIngredients,
-} from "@/lib/foodIngredients";
+import { allergensFromTags, collectIngredients, parseIngredients } from "@/lib/foodIngredients";
 
 export const Route = createFileRoute("/_authenticated/first-foods")({
   ssr: false,
@@ -90,29 +86,46 @@ type FoodEntry = {
   barcode: string | null;
   is_packaged: boolean | null;
   product_id: string | null;
-  products: { recalled: boolean } | null;
+  products: { recalled: boolean; recall_checked_at: string | null } | null;
 };
 
-function RecallStatusBadge({ food }: { food: FoodEntry }) {
-  let label: string;
-  let tone: string;
+export function recallStatusFor(
+  food: Pick<FoodEntry, "is_packaged" | "brand" | "product_id" | "products">,
+): {
+  label: string;
+  tone: "muted" | "ok" | "warn" | "danger";
+} {
   if (food.is_packaged === false) {
-    label = "Fresh / homemade — no recall check needed";
-    tone = "text-muted-foreground";
-  } else if (food.is_packaged && food.product_id && food.products?.recalled) {
-    label = "Possible recall match — check Recall Radar";
-    tone = "text-destructive font-semibold";
-  } else if (food.is_packaged && food.product_id) {
-    label = "Recall-checked every 30 minutes";
-    tone = "text-primary";
-  } else if (food.is_packaged) {
-    label = "Can't check for recalls — add the brand or scan it";
-    tone = "text-destructive";
-  } else {
-    label = "Not checked — edit to say if it's packaged";
-    tone = "text-muted-foreground";
+    return { label: "Not packaged — not checked for recalls", tone: "muted" };
   }
-  return <p className={`mt-0.5 font-body text-[11px] ${tone}`}>{label}</p>;
+  if (food.is_packaged === null) {
+    return { label: "Not checked — edit to say if it's store-bought", tone: "muted" };
+  }
+  if (!food.brand?.trim()) {
+    return { label: "Can't check for recalls — add brand or scan", tone: "warn" };
+  }
+  if (!food.product_id || !food.products) {
+    return { label: "Not checked — open and save to turn recall checks on", tone: "warn" };
+  }
+  if (food.products.recalled) {
+    return { label: "Possible recall match — check Recall Radar", tone: "danger" };
+  }
+  if (!food.products.recall_checked_at) {
+    return { label: "Recall check pending — runs within 30 minutes", tone: "muted" };
+  }
+  return { label: "Recall-checked", tone: "ok" };
+}
+
+const RECALL_TONE_CLASS = {
+  muted: "text-muted-foreground",
+  ok: "text-primary",
+  warn: "text-destructive",
+  danger: "text-destructive font-semibold",
+} as const;
+
+function RecallStatusBadge({ food }: { food: FoodEntry }) {
+  const { label, tone } = recallStatusFor(food);
+  return <p className={`mt-0.5 font-body text-[11px] ${RECALL_TONE_CLASS[tone]}`}>{label}</p>;
 }
 
 function FirstFoodsPage() {
@@ -143,7 +156,6 @@ function FirstFoodsPage() {
   const [scanOpen, setScanOpen] = useState(false);
   const [lookingUp, setLookingUp] = useState(false);
   const { requirePro } = useProGate();
-
 
   function openAdd() {
     setEditingId(null);
@@ -233,7 +245,6 @@ function FirstFoodsPage() {
     setScanOpen(true);
   }
 
-
   // Guards every setState/toast in loadData() against firing after the user
   // has already navigated away — e.g. handleSave() below re-calls loadData()
   // as a background refresh after a successful save, unawaited, and if that
@@ -284,7 +295,7 @@ function FirstFoodsPage() {
     const { data, error } = await supabase
       .from("first_foods")
       .select(
-        "id, child_id, food_name, date_introduced, is_allergen, reaction_notes, created_at, ingredients, brand, barcode, is_packaged, product_id, products(recalled)",
+        "id, child_id, food_name, date_introduced, is_allergen, reaction_notes, created_at, ingredients, brand, barcode, is_packaged, product_id, products(recalled, recall_checked_at)",
       )
       .eq("child_id", c.id)
       .order("date_introduced", { ascending: false })
@@ -337,6 +348,7 @@ function FirstFoodsPage() {
       ingredients: ingredients.trim().slice(0, 4000) || null,
       brand: brand.trim().slice(0, 120) || null,
       barcode: barcode.trim().slice(0, 64) || null,
+      is_packaged: isPackaged,
     };
     const { error } = isEditing
       ? await supabase.from("first_foods").update(shared).eq("id", editingId)
@@ -361,6 +373,7 @@ function FirstFoodsPage() {
     setIngredients("");
     setBrand("");
     setBarcode("");
+    setIsPackaged(null);
     setShowForm(false);
     if (!isEditing) setShow4DayCard(true);
     setSaving(false);
@@ -566,7 +579,11 @@ function FirstFoodsPage() {
                 {isPackaged === true && !barcode && (
                   <p className="mt-1.5 font-body text-[11px] text-muted-foreground">
                     For the most accurate recall checks,{" "}
-                    <button type="button" onClick={startScan} className="font-semibold text-primary">
+                    <button
+                      type="button"
+                      onClick={startScan}
+                      className="font-semibold text-primary"
+                    >
                       scan the barcode
                     </button>
                     . Otherwise enter the brand and the product name exactly as printed.
@@ -724,7 +741,7 @@ function FirstFoodsPage() {
                       </p>
                     )}
                     <RecallStatusBadge food={f} />
-                    
+
                     {f.reaction_notes && (
                       <p className="mt-1 font-body text-xs text-foreground/70 italic">
                         "{f.reaction_notes}"
@@ -844,9 +861,7 @@ function IngredientsTriedCard({
 
   return (
     <div className="rounded-3xl border border-border/60 bg-card p-4">
-      <p className="font-body text-sm font-semibold">
-        {items.length} ingredients tried
-      </p>
+      <p className="font-body text-sm font-semibold">{items.length} ingredients tried</p>
       <p className="mt-0.5 font-body text-[11px] text-muted-foreground">
         From the packaged foods you've scanned. Always check the label itself — package data can be
         incomplete or change.

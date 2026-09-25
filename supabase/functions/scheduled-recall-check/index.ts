@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
   try {
     const { data: products, error: pErr } = await supabase
       .from("products")
-      .select("id, user_id, name, brand, category, model");
+      .select("id, user_id, name, brand, category, model, product_type, barcode");
     if (pErr) throw pErr;
 
     const batchProducts: BatchProduct[] = (products ?? []).map((p) => ({
@@ -149,6 +149,8 @@ Deno.serve(async (req) => {
       brand: p.brand ?? null,
       category: p.category ?? null,
       model: p.model ?? null,
+      product_type: p.product_type ?? null,
+      barcode: p.barcode ?? null,
     }));
 
     const { catalogRows, matches, fetchCounts, sourceStats } = await runRecallBatch(

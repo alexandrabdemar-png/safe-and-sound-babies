@@ -4,6 +4,8 @@ import {
   matchProductAgainstCpsc,
   matchProductAgainstFda,
   runRecallBatch,
+  recallTextHasBarcode,
+  fdaQueryFor,
   type BatchProduct,
 } from "./recallBatch";
 
@@ -261,5 +263,77 @@ describe("runRecallBatch", () => {
       source: "cpsc",
       source_id: "556",
     });
+  });
+});
+
+describe("recallTextHasBarcode", () => {
+  it("finds a UPC printed with spaces in an FDA product description", () => {
+    expect(recallTextHasBarcode("015000074186", "Gerber Puffs, 1.48 oz. UPC 0 15000 07418 6")).toBe(
+      true,
+    );
+  });
+
+  it("treats UPC-A and its 13-digit EAN form as the same code", () => {
+    expect(recallTextHasBarcode("0015000074186", "UPC 015000074186")).toBe(true);
+    expect(recallTextHasBarcode("015000074186", "EAN 0015000074186")).toBe(true);
+  });
+
+  it("does not match a different code, or a code too short to be reliable", () => {
+    expect(recallTextHasBarcode("015000074186", "UPC 0 15000 07419 3")).toBe(false);
+    expect(recallTextHasBarcode("1234", "Lot 1234 best by 2026")).toBe(false);
+    expect(recallTextHasBarcode(null, "UPC 0 15000 07418 6")).toBe(false);
+  });
+});
+
+describe("food products (mirrored from First Foods)", () => {
+  function mockFetch(fdaResults: unknown[]) {
+    return vi.fn(async (url: string) => {
+      if (url.includes("api.fda.gov")) return jsonResponse({ results: fdaResults });
+      if (url.includes("opendatasoft.com")) return jsonResponse({ results: [] });
+      return jsonResponse([]);
+    }) as unknown as typeof fetch;
+  }
+
+  const food = (overrides: Partial<BatchProduct> = {}) =>
+    product({ product_type: "food", name: "Oat Puffs", brand: "Gerber", ...overrides });
+
+  it("queries FDA with brand + name for foods, name only for everything else", () => {
+    expect(fdaQueryFor(food())).toBe("Gerber Oat Puffs");
+    expect(fdaQueryFor(product({ name: "Gentle Formula", brand: "Bobbie" }))).toBe(
+      "Gentle Formula",
+    );
+  });
+
+  it("matches a recall for the same brand's product", async () => {
+    const result = await runRecallBatch(
+      mockFetch([{ recall_number: "F-10", product_description: "Gerber Oat Puffs Cereal Snack" }]),
+      [food({ id: "f1" })],
+    );
+    expect(result.matches.filter((m) => m.source === "fda").map((m) => m.product_id)).toEqual([
+      "f1",
+    ]);
+  });
+
+  it("does not match another brand's puffs", async () => {
+    const result = await runRecallBatch(
+      mockFetch([{ recall_number: "F-11", product_description: "Happy Baby Oat Puffs" }]),
+      [food({ id: "f1" })],
+    );
+    expect(result.matches.filter((m) => m.source === "fda")).toEqual([]);
+  });
+
+  it("matches on the scanned barcode even when the notice words the name differently", async () => {
+    const result = await runRecallBatch(
+      mockFetch([
+        {
+          recall_number: "F-12",
+          product_description: "Graduates Puffs Banana, 1.48 oz, UPC 0 15000 07418 6",
+        },
+      ]),
+      [food({ id: "f1", barcode: "015000074186" })],
+    );
+    expect(result.matches.filter((m) => m.source === "fda").map((m) => m.product_id)).toEqual([
+      "f1",
+    ]);
   });
 });
