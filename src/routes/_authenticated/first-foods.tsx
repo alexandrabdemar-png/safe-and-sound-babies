@@ -88,7 +88,32 @@ type FoodEntry = {
   ingredients: string | null;
   brand: string | null;
   barcode: string | null;
+  is_packaged: boolean | null;
+  product_id: string | null;
+  products: { recalled: boolean } | null;
 };
+
+function RecallStatusBadge({ food }: { food: FoodEntry }) {
+  let label: string;
+  let tone: string;
+  if (food.is_packaged === false) {
+    label = "Fresh / homemade — no recall check needed";
+    tone = "text-muted-foreground";
+  } else if (food.is_packaged && food.product_id && food.products?.recalled) {
+    label = "Possible recall match — check Recall Radar";
+    tone = "text-destructive font-semibold";
+  } else if (food.is_packaged && food.product_id) {
+    label = "Recall-checked every 30 minutes";
+    tone = "text-primary";
+  } else if (food.is_packaged) {
+    label = "Can't check for recalls — add the brand or scan it";
+    tone = "text-destructive";
+  } else {
+    label = "Not checked — edit to say if it's packaged";
+    tone = "text-muted-foreground";
+  }
+  return <p className={`mt-0.5 font-body text-[11px] ${tone}`}>{label}</p>;
+}
 
 function FirstFoodsPage() {
   const navigate = useNavigate();
@@ -111,6 +136,7 @@ function FirstFoodsPage() {
   const [ingredients, setIngredients] = useState("");
   const [brand, setBrand] = useState("");
   const [barcode, setBarcode] = useState("");
+  const [isPackaged, setIsPackaged] = useState<boolean | null>(null);
 
   // Packaged-food scanning: the same camera the product scanner uses, but the
   // lookup here is for the ingredient list rather than recall matching.
@@ -129,6 +155,7 @@ function FirstFoodsPage() {
     setIngredients("");
     setBrand("");
     setBarcode("");
+    setIsPackaged(null);
     setShowForm(true);
   }
 
@@ -143,6 +170,7 @@ function FirstFoodsPage() {
     setIngredients(f.ingredients ?? "");
     setBrand(f.brand ?? "");
     setBarcode(f.barcode ?? "");
+    setIsPackaged(f.is_packaged ?? null);
     setShowForm(true);
   }
 
@@ -157,6 +185,7 @@ function FirstFoodsPage() {
     setBarcode(code);
     setLookingUp(true);
     try {
+      setIsPackaged(true);
       const result = await lookupBarcode(code);
       if (!result) {
         toast.error("We couldn't find that package. You can type the food in instead.");
@@ -255,7 +284,7 @@ function FirstFoodsPage() {
     const { data, error } = await supabase
       .from("first_foods")
       .select(
-        "id, child_id, food_name, date_introduced, is_allergen, reaction_notes, created_at, ingredients, brand, barcode",
+        "id, child_id, food_name, date_introduced, is_allergen, reaction_notes, created_at, ingredients, brand, barcode, is_packaged, product_id, products(recalled)",
       )
       .eq("child_id", c.id)
       .order("date_introduced", { ascending: false })
@@ -516,7 +545,46 @@ function FirstFoodsPage() {
 
               <div className="mb-3">
                 <label className="mb-1 block font-body text-xs text-muted-foreground">
-                  Brand <span className="text-muted-foreground/60">(optional)</span>
+                  Is this a store-bought packaged food?
+                </label>
+                <div className="flex gap-2">
+                  {([true, false] as const).map((v) => (
+                    <button
+                      key={String(v)}
+                      type="button"
+                      onClick={() => setIsPackaged(v)}
+                      className={`flex-1 rounded-xl border px-3 py-2 font-body text-xs transition-colors ${
+                        isPackaged === v
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border/60 bg-background text-muted-foreground"
+                      }`}
+                    >
+                      {v ? "Yes, packaged" : "No (fresh / homemade)"}
+                    </button>
+                  ))}
+                </div>
+                {isPackaged === true && !barcode && (
+                  <p className="mt-1.5 font-body text-[11px] text-muted-foreground">
+                    For the most accurate recall checks,{" "}
+                    <button type="button" onClick={startScan} className="font-semibold text-primary">
+                      scan the barcode
+                    </button>
+                    . Otherwise enter the brand and the product name exactly as printed.
+                  </p>
+                )}
+                {isPackaged === false && (
+                  <p className="mt-1.5 font-body text-[11px] text-muted-foreground">
+                    Fresh and homemade foods aren't checked against recalls.
+                  </p>
+                )}
+              </div>
+
+              <div className="mb-3">
+                <label className="mb-1 block font-body text-xs text-muted-foreground">
+                  Brand{" "}
+                  <span className="text-muted-foreground/60">
+                    {isPackaged ? "(needed for recall checks)" : "(optional)"}
+                  </span>
                 </label>
                 <input
                   type="text"
@@ -655,6 +723,8 @@ function FirstFoodsPage() {
                         {f.brand}
                       </p>
                     )}
+                    <RecallStatusBadge food={f} />
+                    
                     {f.reaction_notes && (
                       <p className="mt-1 font-body text-xs text-foreground/70 italic">
                         "{f.reaction_notes}"
