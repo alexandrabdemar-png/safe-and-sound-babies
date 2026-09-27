@@ -33,6 +33,7 @@ export const Route = createFileRoute("/_authenticated/first-foods")({
 
 import { TOP_ALLERGENS, type Allergen } from "@/lib/topAllergens";
 import { useProGate } from "@/hooks/useProGate";
+import { FoodSearch } from "@/components/FoodSearch";
 
 export { TOP_ALLERGENS } from "@/lib/topAllergens";
 export type { Allergen } from "@/lib/topAllergens";
@@ -157,6 +158,9 @@ function FirstFoodsPage() {
     setBarcode("");
     setIsPackaged(null);
     setShowForm(true);
+    requestAnimationFrame(() =>
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
   }
 
   function openEdit(f: FoodEntry) {
@@ -243,6 +247,7 @@ function FirstFoodsPage() {
   // went wrong on our end" showing up right after adding food and going
   // back to Home, even though the save itself had already succeeded.
   const mountedRef = useRef(true);
+  const formRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     mountedRef.current = true;
     return () => {
@@ -307,6 +312,8 @@ function FirstFoodsPage() {
 
   useEffect(() => {
     loadData();
+    // Arriving from the Add sheet opens the form straight away.
+    if (new URLSearchParams(window.location.search).get("add") === "1") openAdd();
   }, []);
 
   async function handleSave() {
@@ -480,10 +487,25 @@ function FirstFoodsPage() {
 
           {/* Add food form */}
           {showForm && (
-            <div className="rounded-2xl border border-border/60 bg-card p-4 animate-scale-in">
+            <div ref={formRef} className="scroll-mt-4 rounded-2xl border border-border/60 bg-card p-4 animate-scale-in">
               <p className="mb-3 font-display text-sm font-semibold">
                 {editingId ? "Edit food" : "Add a new food"}
               </p>
+
+              {!editingId && (
+                <FoodSearch
+                  onPick={(p) => {
+                    setFoodName(p.name);
+                    if (p.kind === "fresh") {
+                      setIsPackaged(false);
+                    } else {
+                      setIsPackaged(true);
+                      if (p.brand) setBrand(p.brand);
+                      if (p.barcode) setBarcode(p.barcode);
+                    }
+                  }}
+                />
+              )}
 
               <div className="mb-3">
                 <label className="mb-1 block font-body text-xs text-muted-foreground">
