@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, Search } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { searchProductCatalog, type CatalogSearchResult } from "@/lib/searchProductCatalog";
+import { useServerFn } from "@tanstack/react-start";
+import { searchPackagedFoods, type FoodSearchHit } from "@/lib/foodSearch.functions";
 
 /** Common fresh / homemade first foods — never recall-matched. */
 const COMMON_FOODS = [
@@ -11,73 +11,49 @@ const COMMON_FOODS = [
   "Pumpkin", "Zucchini", "Tofu", "Cheese", "Strawberries", "Beef", "Quinoa",
 ];
 
-async function searchOpenFoodFacts(q: string): Promise<CatalogSearchResult[]> {
-  try {
-    const res = await fetch(
-      `https://search.openfoodfacts.org/search?q=${encodeURIComponent(q)}&page_size=10&fields=code,product_name,brands`,
-    );
-    if (!res.ok) return [];
-    const json = (await res.json()) as {
-      hits?: Array<{ code?: string; product_name?: string; brands?: string[] | string }>;
-    };
-    return (json.hits ?? [])
-      .filter((p) => p.product_name)
-      .map((p) => ({
-        barcode: p.code ?? null,
-        name: p.product_name as string,
-        brand: (Array.isArray(p.brands) ? p.brands[0] : p.brands?.split(",")[0])?.trim() || null,
-        category: null,
-        imageUrl: null,
-        source: "openfoodfacts",
-      }));
-  } catch {
-    return [];
-  }
-}
-
 export type FoodPick =
   | { kind: "fresh"; name: string }
   | { kind: "packaged"; name: string; brand: string | null; barcode: string | null };
 
 export function FoodSearch({ onPick }: { onPick: (p: FoodPick) => void }) {
+  const search = useServerFn(searchPackagedFoods);
   const [q, setQ] = useState("");
-  const [results, setResults] = useState<CatalogSearchResult[]>([]);
+  const [results, setResults] = useState<FoodSearchHit[]>([]);
   const [loading, setLoading] = useState(false);
   const trimmed = q.trim();
 
   useEffect(() => {
     if (trimmed.length < 2) {
       setResults([]);
+      setLoading(false);
       return;
     }
     let cancelled = false;
     setLoading(true);
     const t = setTimeout(() => {
-      Promise.all([
-        searchProductCatalog(trimmed, { supabase: supabase as never, fetchImpl: fetch }).catch(
-          () => [],
-        ),
-        searchOpenFoodFacts(trimmed),
-      ])
-        .then(([a, b]) => {
+      search({ data: { query: trimmed } })
+        .then((r) => {
           if (cancelled) return;
           const seen = new Set<string>();
-          const merged = [...a, ...b].filter((r) => {
-            const k = r.barcode ?? `${r.name}|${r.brand}`.toLowerCase();
-            if (seen.has(k)) return false;
-            seen.add(k);
-            return true;
-          });
-          setResults(merged.slice(0, 8));
+          setResults(
+            r
+              .filter((h) => {
+                const k = h.barcode ?? `${h.name}|${h.brand}`.toLowerCase();
+                if (seen.has(k)) return false;
+                seen.add(k);
+                return true;
+              })
+              .slice(0, 8),
+          );
         })
         .catch(() => !cancelled && setResults([]))
         .finally(() => !cancelled && setLoading(false));
-    }, 350);
+    }, 400);
     return () => {
       cancelled = true;
       clearTimeout(t);
     };
-  }, [trimmed]);
+  }, [trimmed, search]);
 
   const fresh =
     trimmed.length >= 1
@@ -123,9 +99,7 @@ export function FoodSearch({ onPick }: { onPick: (p: FoodPick) => void }) {
             <button
               key={`p-${r.barcode ?? i}-${r.name}`}
               type="button"
-              onClick={() =>
-                pick({ kind: "packaged", name: r.name, brand: r.brand, barcode: r.barcode })
-              }
+              onClick={() => pick({ kind: "packaged", ...r })}
               className="block w-full px-3 py-2 text-left font-body text-sm hover:bg-muted"
             >
               {r.name}
