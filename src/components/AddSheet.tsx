@@ -31,7 +31,7 @@ export const addOptions = [
     blurb: "Log formula or breastmilk and get reminded before it expires.",
   },
   {
-    to: "/first-foods",
+    to: "/first-foods?add=1",
     icon: Utensils,
     illustration: illoFirstFood,
     title: "A first food",
