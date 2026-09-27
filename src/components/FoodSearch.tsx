@@ -11,6 +11,30 @@ const COMMON_FOODS = [
   "Pumpkin", "Zucchini", "Tofu", "Cheese", "Strawberries", "Beef", "Quinoa",
 ];
 
+async function searchOpenFoodFacts(q: string): Promise<CatalogSearchResult[]> {
+  try {
+    const res = await fetch(
+      `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&json=1&page_size=10&fields=code,product_name,brands`,
+    );
+    if (!res.ok) return [];
+    const json = (await res.json()) as {
+      products?: Array<{ code?: string; product_name?: string; brands?: string }>;
+    };
+    return (json.products ?? [])
+      .filter((p) => p.product_name)
+      .map((p) => ({
+        barcode: p.code ?? null,
+        name: p.product_name as string,
+        brand: p.brands ? p.brands.split(",")[0]!.trim() : null,
+        category: null,
+        imageUrl: null,
+        source: "openfoodfacts",
+      }));
+  } catch {
+    return [];
+  }
+}
+
 export type FoodPick =
   | { kind: "fresh"; name: string }
   | { kind: "packaged"; name: string; brand: string | null; barcode: string | null };
@@ -29,8 +53,23 @@ export function FoodSearch({ onPick }: { onPick: (p: FoodPick) => void }) {
     let cancelled = false;
     setLoading(true);
     const t = setTimeout(() => {
-      searchProductCatalog(trimmed, { supabase: supabase as never, fetchImpl: fetch })
-        .then((r) => !cancelled && setResults(r.slice(0, 8)))
+      Promise.all([
+        searchProductCatalog(trimmed, { supabase: supabase as never, fetchImpl: fetch }).catch(
+          () => [],
+        ),
+        searchOpenFoodFacts(trimmed),
+      ])
+        .then(([a, b]) => {
+          if (cancelled) return;
+          const seen = new Set<string>();
+          const merged = [...a, ...b].filter((r) => {
+            const k = r.barcode ?? `${r.name}|${r.brand}`.toLowerCase();
+            if (seen.has(k)) return false;
+            seen.add(k);
+            return true;
+          });
+          setResults(merged.slice(0, 8));
+        })
         .catch(() => !cancelled && setResults([]))
         .finally(() => !cancelled && setLoading(false));
     }, 350);
