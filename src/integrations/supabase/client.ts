@@ -2,6 +2,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 import { brokeredPreviewStorage } from './previewAuthStorage';
+import { isNativeIOS, keychainBackedStorage } from './nativeAuthStorage';
 
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
@@ -21,7 +22,9 @@ function createSupabaseClient() {
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: {
-      storage: brokeredPreviewStorage(),
+      // iPhone app: also keep the login in the Keychain so it survives iOS
+      // clearing the web view's storage (see nativeAuthStorage.ts).
+      storage: isNativeIOS() ? keychainBackedStorage() : brokeredPreviewStorage(),
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
