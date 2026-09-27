@@ -14,18 +14,18 @@ const COMMON_FOODS = [
 async function searchOpenFoodFacts(q: string): Promise<CatalogSearchResult[]> {
   try {
     const res = await fetch(
-      `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&json=1&page_size=10&fields=code,product_name,brands`,
+      `https://search.openfoodfacts.org/search?q=${encodeURIComponent(q)}&page_size=10&fields=code,product_name,brands`,
     );
     if (!res.ok) return [];
     const json = (await res.json()) as {
-      products?: Array<{ code?: string; product_name?: string; brands?: string }>;
+      hits?: Array<{ code?: string; product_name?: string; brands?: string[] | string }>;
     };
-    return (json.products ?? [])
+    return (json.hits ?? [])
       .filter((p) => p.product_name)
       .map((p) => ({
         barcode: p.code ?? null,
         name: p.product_name as string,
-        brand: p.brands ? p.brands.split(",")[0]!.trim() : null,
+        brand: (Array.isArray(p.brands) ? p.brands[0] : p.brands?.split(",")[0])?.trim() || null,
         category: null,
         imageUrl: null,
         source: "openfoodfacts",
