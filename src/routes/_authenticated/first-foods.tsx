@@ -337,7 +337,11 @@ function FirstFoodsPage() {
       ingredients: ingredients.trim().slice(0, 4000) || null,
       brand: brand.trim().slice(0, 120) || null,
       barcode: barcode.trim().slice(0, 64) || null,
+      is_packaged: isPackaged ?? (barcode.trim() ? true : null),
     };
+    if (isPackaged && !brand.trim() && !barcode.trim()) {
+      toast.warning("Saved, but add the brand or scan it so we can check it for recalls.");
+    }
     const { error } = isEditing
       ? await supabase.from("first_foods").update(shared).eq("id", editingId)
       : await supabase.from("first_foods").insert({ child_id: child.id, ...shared });
