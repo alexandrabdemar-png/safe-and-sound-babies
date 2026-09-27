@@ -313,7 +313,10 @@ function FirstFoodsPage() {
   useEffect(() => {
     loadData();
     // Arriving from the Add sheet opens the form straight away.
-    if (new URLSearchParams(window.location.search).get("add") === "1") openAdd();
+    if (sessionStorage.getItem("firstFoods.openAdd") === "1") {
+      sessionStorage.removeItem("firstFoods.openAdd");
+      openAdd();
+    }
   }, []);
 
   async function handleSave() {

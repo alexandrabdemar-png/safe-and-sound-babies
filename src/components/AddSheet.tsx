@@ -31,7 +31,7 @@ export const addOptions = [
     blurb: "Log formula or breastmilk and get reminded before it expires.",
   },
   {
-    to: "/first-foods?add=1",
+    to: "/first-foods",
     icon: Utensils,
     illustration: illoFirstFood,
     title: "A first food",
@@ -68,6 +68,7 @@ export function AddSheet({
                 type="button"
                 onClick={() => {
                   onOpenChange(false);
+                  if (to === "/first-foods") sessionStorage.setItem("firstFoods.openAdd", "1");
                   navigate({ to });
                 }}
                 className="flex w-full items-center gap-4 rounded-3xl border border-border/60 bg-card p-4 text-left transition-all hover:border-primary/40 hover:shadow-md"
