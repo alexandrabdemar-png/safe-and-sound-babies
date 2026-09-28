@@ -61,7 +61,7 @@ Where recall data comes from — We read recall notices from public government s
 
 Where barcode lookups go — On iOS, scanning a barcode itself happens entirely on your device and nothing is sent to Google or Apple. 
 
-Trusted vendors who help us provide these services.  None of these vendors have access to your content or information.  
+Trusted vendors who help us provide these services.  None of these vendors have access to your content or information. ("Content" means the information you enter about your child and your family in the app, such as your child's name, milestones, milestone notes, and the products you use.)
 We do not sell, rent, or share your personal data with advertisers, data brokers, or any other third parties.
 
 ──────────────────────────────────────
