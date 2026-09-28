@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ensureNativeSessionRestored } from "@/lib/nativeSessionBackup";
 
 /**
  * Keeps Supabase's session-refresh timer in sync with the native app's
@@ -26,6 +27,7 @@ export function useAuthAutoRefresh() {
         return; // Capacitor not available (shouldn't happen, but never block the app on it)
       }
       if (!Capacitor.isNativePlatform() || cancelled) return;
+      void ensureNativeSessionRestored();
 
       const { App } = await import("@capacitor/app");
 

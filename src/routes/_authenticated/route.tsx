@@ -7,10 +7,12 @@ import { toast } from "sonner";
 import { AlertTriangle, Users, WifiOff } from "lucide-react";
 import { usePushRegistration } from "@/hooks/usePushRegistration";
 import { checkNeedsLegalConsentCached } from "@/lib/legalConsent";
+import { ensureNativeSessionRestored } from "@/lib/nativeSessionBackup";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async ({ location }) => {
+    await ensureNativeSessionRestored();
     const {
       data: { session },
     } = await supabase.auth.getSession();
