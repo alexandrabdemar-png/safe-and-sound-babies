@@ -1,13 +1,11 @@
 import { SUPPORT_EMAIL } from "@/lib/constants";
 
-export const PRIVACY_POLICY_UPDATED = "September 22, 2026";
+export const PRIVACY_POLICY_UPDATED = "September 9, 2026";
 
 export const PRIVACY_POLICY = `Peace of Mine — Privacy Policy
 Last updated: ${PRIVACY_POLICY_UPDATED}
 
 We built Peace of Mine for parents who want to keep their children safe. This policy explains exactly what information we collect, why we need it, and how it is protected.
-
-Note: Peace of Mine is an informational organization tool only. It is not a medical device, it does not provide medical advice, and it is not a substitute for your pediatrician or other qualified professional. Recall monitoring is provided on a best-effort basis and does not guarantee that any product is safe or free from recalls; always verify safety-critical decisions with the product manufacturer, official recall sources, and your child's healthcare provider.
 
 ──────────────────────────────────────
 1. WHAT INFORMATION WE COLLECT
@@ -17,7 +15,6 @@ About your child
 • Name — used to personalize the app and label the moments and products you log.
 • Milestones you log (e.g. rolling, sitting, crawling, first steps) — used to time safety reminders to the developmental stage your child has actually reached, not a stored birthdate. We do not collect or store your child's date of birth, height, or weight.
 • Milestone notes — optional free-text notes you write about your child's development.
-• Emergency and medical info (optional) — if you fill out the Emergency Info card, we store allergies, medications, blood type, and the name/phone number of your pediatrician and an emergency contact. This is stored only for your own quick reference (and on a shareable link you explicitly choose to create) — we do not use it for any other purpose.
 • Food and allergen notes (optional) — if you use the Starting Solids tracker, we store which foods you've introduced, whether you've flagged one as an allergen, and any reaction notes you write.
 
 About your baby products
@@ -34,7 +31,7 @@ About your account
 • Caregiver invites (optional, Pro feature) — if you invite a co-parent, grandparent, or nanny to share access to a child's profile, we store the invitee's email address and send them an invite link. The link expires after 7 days if not accepted.
 
 What we do NOT collect
-• We do not collect your own home address or payment card details. Payment is processed entirely by Stripe (web) or Apple (Pro purchased from the iOS app); we never see or store your card number.
+• We do not collect your own home address or payment card details. Payment is processed entirely by third party payment processors we never see or store your card number.
 • We do not use advertising trackers or third-party analytics SDKs inside the app.
 
 ──────────────────────────────────────
@@ -55,42 +52,30 @@ App improvements — Aggregate, non-identifiable statistics (total number of use
 3. WHO CAN SEE YOUR DATA
 ──────────────────────────────────────
 
-You — Only you can read your child's profile, milestones, and product list. Every database query is enforced by Supabase Row-Level Security, which means our own server code cannot return your rows to a different user.
+You — Only you can read your child's profile, milestones, and product list. 
+Caregivers you invite — If you use the caregiver-sharing feature to invite a co-parent, grandparent, or nanny, that person can view and edit the profile, products, milestones, and alerts for the children you share with them, once they accept the emailed invite. You choose which children to share and can grant either edit or view-only access. Invite links expire after 7 days if unused.
 
-Caregivers you invite — If you use the Pro caregiver-sharing feature to invite a co-parent, grandparent, or nanny, that person can view and edit the profile, products, milestones, and alerts for the children you share with them, once they accept the emailed invite. You choose which children to share and can grant either edit or view-only access. Invite links expire after 7 days if unused.
-
-Our team — Human team members (admins) can see only aggregate statistics: for example, "the app has 500 users and 1,200 products." Admins cannot query individual profiles, children's names, milestones, or product lists. This restriction is enforced at the database permission level, not just by policy.
+Our team — Human team members (admins) can see only aggregate statistics: for example, "the app has 500 users and 1,200 products." Admins cannot query individual profiles, children's names, milestones, or product lists. 
 
 Where recall data comes from — We read recall notices from public government sources: the U.S. Consumer Product Safety Commission (CPSC), the U.S. National Highway Traffic Safety Administration (NHTSA) and its recall dataset on data.transportation.gov, the USDA Food Safety and Inspection Service, Health Canada (recalls-rappels.canada.ca), and the EU Safety Gate (ec.europa.eu). We only read from these sources — nothing about you or your child is ever sent to them.
 
-Face ID — If you turn on the Face ID lock in the iPhone app, your face or passcode is checked by Apple's iOS on your device. We never receive, store, or have access to your face data or passcode; the app only learns whether the check passed.
+Where barcode lookups go — On iOS, scanning a barcode itself happens entirely on your device and nothing is sent to Google or Apple. 
 
-Where barcode lookups go — On iOS, scanning a barcode itself happens entirely on your device using Google ML Kit's on-device barcode scanner: the camera image is processed locally, the camera image and decoded barcode never leave your phone at that step, and nothing is sent to Google or Apple. Once a barcode is decoded (on iOS, or typed/scanned on the web), the barcode number alone (never your name, your child's data, or your account email) is sent to third-party product-identification services to find the product's name and brand: Barcode Lookup, UPCitemdb, Go-UPC, Open Food Facts, Open Beauty Facts, and Open Products Facts. If a lookup succeeds, the resulting product name/brand/barcode is cached in our shared product catalog so future scans of the same item are faster. That cache entry contains no information about you and is not tied to your account. We also pre-load that shared catalog with product records obtained from those same public and licensed sources (Open Food Facts, Open Beauty Facts and Open Products Facts data is used under the Open Database License; UPCitemdb, Go-UPC and Barcode Lookup under their own API terms). We do not scrape retailer or manufacturer websites, and no user data is involved in building that catalog.
-
-Trusted processors — We share limited data with:
-  • Resend (transactional email) — delivers caregiver invites, feedback emails, and safety-alert emails on our behalf; receives the recipient email address and message contents.
-  • Supabase (database hosting, EU/US data centres) — stores your encrypted data.
-  • Stripe (payment processing for purchases made on the web) — receives your email and payment details when you subscribe outside the iOS app; Stripe's privacy policy applies to that data.
-  • Lovable (app hosting platform) — hosts the application servers, and its AI Gateway relays product-search text to an AI model (see below) on our behalf; does not have access to your database rows.
-  • Google — if you search for a product, your search text is sent through Lovable's AI Gateway to Google's Gemini model to help find matching products. If you choose "Sign in with Google," Google shares your account email/profile with us per Google's own privacy policy.
-  • Anthropic — for Pro subscribers, a product's name and category (never your child's data) are sent to Anthropic's Claude model to look up safety guidelines for that product.
-  • Apple — if you choose "Sign in with Apple," or if you use the app on iOS with notifications enabled, Apple shares your account email (Sign in with Apple) or delivers push notifications (Apple Push Notification service) on our behalf. If you subscribe to Pro from the iOS app, Apple also processes that payment as the merchant of record: Apple, not us, collects your payment details, and Apple's own privacy policy applies to that transaction. We receive only your subscription status and an Apple-assigned transaction identifier — never your card details.
-  • Your browser's push service (e.g. Google, Mozilla, or Microsoft, depending on your browser) — if you enable notifications on the web, delivers the notification on our behalf; it only ever sees an encrypted payload, not its contents.
-
+Trusted vendors who help us provide these services.  None of these vendors have access to your content or information.  
 We do not sell, rent, or share your personal data with advertisers, data brokers, or any other third parties.
 
 ──────────────────────────────────────
 4. HOW LONG WE KEEP YOUR DATA
 ──────────────────────────────────────
 
-Your data is kept for as long as your account is active. If you delete your account (see Section 5), your account, all of your children's profiles, milestones, products, medical/emergency info, food and bottle logs, caregiver grants and invites, subscription record, notification tokens, and uploaded product photos are permanently deleted immediately.
+Your data is kept for as long as your account is active. If you no longer want to use our site, then  your account, all of your children's profiles, milestones, products, medical/emergency info, food and bottle logs, caregiver grants and invites, subscription record, notifications, and uploaded product photos are permanently deleted immediately.
 
-Database backups and server logs are retained by our hosting provider according to the retention settings of the current hosting plan. Those settings may not include a fixed 7-day window (for example, automated backups may be shorter or not available on some plans). If deleted data still exists in a backup or log at the time of deletion, it is kept only until that backup or log expires as part of the provider's normal cycle and is used only for disaster recovery. If you need the exact retention window for your account, email ${SUPPORT_EMAIL} and we will confirm the current plan settings.
+If deleted data still exists in a backup or log at the time of deletion, it is kept only until that backup or log expires as part of the vendor’s normal cycle and is used only for disaster recovery. 
 
 What is NOT removed by deleting your account:
-• Feedback and bug reports you sent us — these are emailed to our support inbox and also stored in our feedback table. Deleting your account unlinks the feedback from you (your user ID is removed), but the message text remains. Email ${SUPPORT_EMAIL} and we will delete the message itself on request.
+• Feedback and bug reports you sent us — these are emailed to our support inbox and also stored in our feedback table. Deleting your account unlinks the feedback from you (your user ID is removed), but the message text remains. 
 • Shared product-catalog entries created by a barcode scan — these hold only a product's name, brand, barcode, and category, contain nothing about you or your child, and are not linked to your account.
-• Anonymised aggregate statistics (counts only, no personal data), which may be retained indefinitely.
+• Anonymised aggregate statistics, which may be retained indefinitely.
 
 ──────────────────────────────────────
 5. HOW TO DELETE YOUR DATA
@@ -108,9 +93,8 @@ You have full control over your data:
 6. SECURITY
 ──────────────────────────────────────
 
-• All data is transmitted over HTTPS. No unencrypted connections are used.
+• All data is transmitted over encrypted connections.
 • Your database rows are protected by Row-Level Security; only your authenticated session can access them.
-• Service keys that bypass RLS are used only for trusted system operations (recall syncing, alert generation, and Stripe webhook processing) and are never exposed to client code or human operators.
 • Uploaded product photos are held in a private storage bucket. There is no public URL: access is checked per request against the same Row-Level Security rules as the rest of your data, so only you, the uploader, can retrieve an image (caregiver access to photos is not yet built — see Section 1).
 • Error logs are sanitised before storage; email addresses, tokens, and other identifiers are stripped from log entries.
 
@@ -134,4 +118,5 @@ Questions about this policy or your data? We are happy to help.
 
   Email: ${SUPPORT_EMAIL}
 
-We aim to respond within 48 hours.`;
+We aim to respond within 48 hours.
+Questions? ${SUPPORT_EMAIL}`;
