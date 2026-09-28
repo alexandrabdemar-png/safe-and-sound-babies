@@ -1,3 +1,4 @@
+import { ensureNativeSessionRestored } from "@/lib/nativeSessionBackup";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Header } from "@/components/Header";
@@ -89,7 +90,7 @@ function Index() {
   // state. /home re-routes on to /onboarding itself for a brand-new user,
   // so sending everyone here to /home first is safe either way.
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    ensureNativeSessionRestored().then(() => supabase.auth.getSession()).then(({ data }) => {
       if (data.session) navigate({ to: "/home" });
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {

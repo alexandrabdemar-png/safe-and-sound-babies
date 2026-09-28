@@ -1,3 +1,4 @@
+import { ensureNativeSessionRestored } from "@/lib/nativeSessionBackup";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,7 +64,7 @@ function AuthPage() {
   // screen instantly redirected to /home and the password was never changed.
   useEffect(() => {
     if (mode === "reset") return;
-    supabase.auth.getSession().then(({ data }) => {
+    ensureNativeSessionRestored().then(() => supabase.auth.getSession()).then(({ data }) => {
       if (data.session && !isRecoveryUrl()) navigate({ to: "/home" });
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
