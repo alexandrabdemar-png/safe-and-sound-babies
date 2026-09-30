@@ -916,7 +916,6 @@ function HomePage() {
         </div>
       </header>
 
-      <BetaBanner />
 
       {/* Home Personalization Setup — one-time, shown after onboarding */}
       {shouldShowHomeProfileCard(homeProfileSetup, homeProfileLoaded) && child && (
