@@ -1271,6 +1271,10 @@ export type Database = {
       }
     }
     Functions: {
+      first_food_product_name: {
+        Args: { p_food_name: string }
+        Returns: string
+      }
       generate_milestones_for_child: {
         Args: { p_child_id: string; p_dob: string }
         Returns: undefined
