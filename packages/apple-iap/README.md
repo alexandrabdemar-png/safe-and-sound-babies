@@ -1,16 +1,18 @@
 # apple-iap
 
 Local (unpublished) Capacitor plugin: native Apple In-App Purchase via
-StoreKit 2, for the app's one Pro subscription. Not usable from a Linux
-build environment — everything past `npm install` here requires a Mac with
-Xcode, and StoreKit purchases can't be tested at all without an actual App
-Store Connect subscription product and a sandbox tester Apple ID.
+StoreKit 2, for the app's two Pro subscription tiers (monthly and annual).
+Not usable from a Linux build environment — everything past `npm install`
+here requires a Mac with Xcode, and StoreKit purchases can't be tested at
+all without actual App Store Connect subscription products and a sandbox
+tester Apple ID.
 
 ## What this does
 
-- Purchases and restores the `com.peaceofmine.baby.pro.monthly` subscription
-  through Apple's own purchase sheet, instead of Stripe checkout — required
-  by App Store review for unlocking a digital feature (Pro) inside an iOS app.
+- Purchases and restores the `monthlyplan` / `annualplan` subscription
+  (whichever the pricing screen's monthly/yearly toggle selects) through
+  Apple's own purchase sheet, instead of Stripe checkout — required by App
+  Store review for unlocking a digital feature (Pro) inside an iOS app.
 - The web app is unaffected: `StripeEmbeddedCheckout` keeps handling web
   purchases exactly as before. `src/routes/_authenticated/pricing.tsx`
   branches between the two based on platform.
@@ -44,16 +46,24 @@ This assumes you've already done the base iOS setup from `IOS_TESTFLIGHT.md`.
    create it). Download the `.p8` file once — Apple only lets you download it
    the one time — and note its **Key ID** and the **Issuer ID** shown on that
    same page.
-2. **My Apps → Peace of Mine → Monetization → Subscriptions** — create a
-   subscription group (any internal name, e.g. "Pro"), then inside it create
-   one auto-renewable subscription:
-   - Product ID: `com.peaceofmine.baby.pro.monthly` (must match exactly —
-     this is hardcoded in both `src/definitions.ts` and the native plugin).
-   - Price: $3.33/month (or your chosen tier).
-   - Add a 7-day free trial as an introductory offer, matching the existing
-     Stripe trial.
+2. **My Apps → Peace of Mine → Monetization → Subscriptions** (not
+   "In-App Purchases" — that's a different section, for one-time/
+   non-renewing products) — create a subscription group (any internal
+   name, e.g. "Pro"), then inside it create **two** auto-renewable
+   subscriptions, both at the same level so users can switch between them:
+   - Product ID: `monthlyplan`, duration 1 month.
+   - Product ID: `annualplan`, duration 1 year.
+   - Both must match these exact strings, case-sensitive — they're
+     hardcoded in `src/definitions.ts` and the native plugin.
+   - Set your chosen price for each; add a 7-day free trial as an
+     introductory offer on at least the monthly tier, matching the
+     existing Stripe trial.
    - Fill in the required subscription display name, description, and a
-     screenshot of the paywall for review.
+     screenshot of the paywall for review, for both.
+   - When submitting an app version, confirm both subscriptions show as
+     attached under that version's "In-App Purchases and Subscriptions"
+     section — a subscription's first submission has to go out together
+     with an app version, the same as a one-time IAP.
 3. **App Information** — note the numeric **Apple ID** for the app (shown
    near the top of the App Information page, distinct from the bundle id) —
    this is `APPLE_IAP_APP_APPLE_ID`.
@@ -102,8 +112,8 @@ This assumes you've already done the base iOS setup from `IOS_TESTFLIGHT.md`.
 
 ## Files
 
-- `src/definitions.ts` — the plugin's TypeScript interface and the shared
-  `APPLE_PRO_MONTHLY_PRODUCT_ID` constant.
+- `src/definitions.ts` — the plugin's TypeScript interface and the
+  `APPLE_PRO_MONTHLY_PRODUCT_ID` / `APPLE_PRO_ANNUAL_PRODUCT_ID` constants.
 - `src/web.ts` — web fallback (every method throws; the web app never calls
   this plugin, it keeps using Stripe).
 - `src/index.ts` — plugin registration.

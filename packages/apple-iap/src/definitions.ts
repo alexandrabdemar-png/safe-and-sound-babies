@@ -1,11 +1,12 @@
 import type { PluginListenerHandle } from "@capacitor/core";
 
 /**
- * Must exactly match the auto-renewable subscription product id created in
- * App Store Connect (Monetization → Subscriptions) — StoreKit looks products
- * up by this string. Only one paid tier exists in this app (Pro monthly),
- * so this plugin's API is deliberately built around a single, known
- * product rather than taking a product id as a parameter everywhere.
+ * Must exactly match the two auto-renewable subscription product ids
+ * created in App Store Connect (Monetization → Subscriptions), both inside
+ * the same subscription group — StoreKit looks products up by this string.
+ * getProduct()/purchase() default to the monthly id but accept either via
+ * their optional productId parameter (see pricing.tsx's monthly/yearly
+ * toggle).
  */
 export const APPLE_PRO_MONTHLY_PRODUCT_ID = "monthlyplan";
 export const APPLE_PRO_ANNUAL_PRODUCT_ID = "annualplan";
@@ -30,11 +31,12 @@ export type AppleTransactionResult = {
 };
 
 export interface AppleIAPPlugin {
-  /** Fetches App Store Connect metadata (price, display name) for the one
-   * Pro subscription product. Rejects if StoreKit can't reach the App
-   * Store or the product isn't found (e.g. it hasn't been created yet, or
-   * isn't in the "Ready to Submit"/approved state App Store Connect requires
-   * before it's purchasable, even in sandbox). */
+  /** Fetches App Store Connect metadata (price, display name) for a Pro
+   * subscription product — monthly by default, or whichever productId is
+   * passed. Rejects if StoreKit can't reach the App Store or the product
+   * isn't found (e.g. it hasn't been created yet, or isn't in the "Ready
+   * to Submit"/approved state App Store Connect requires before it's
+   * purchasable, even in sandbox). */
   getProduct(options?: { productId?: string }): Promise<AppleProduct>;
 
   /**

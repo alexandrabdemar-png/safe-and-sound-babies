@@ -2,11 +2,10 @@ import Foundation
 import Capacitor
 import StoreKit
 
-/// The auto-renewable subscription product id created in App Store
-/// Connect (Monetization → Subscriptions) — must exactly match
-/// APPLE_PRO_MONTHLY_PRODUCT_ID in src/definitions.ts. Only one paid tier
-/// exists in this app, so this is a constant rather than a parameter
-/// threaded through every method.
+/// The auto-renewable subscription product ids created in App Store
+/// Connect (Monetization → Subscriptions), inside one subscription
+/// group — must exactly match APPLE_PRO_MONTHLY_PRODUCT_ID and
+/// APPLE_PRO_ANNUAL_PRODUCT_ID in src/definitions.ts.
 private let proMonthlyProductId = "monthlyplan"
 private let proAnnualProductId = "annualplan"
 private let allowedProductIds: Set<String> = [proMonthlyProductId, proAnnualProductId]
