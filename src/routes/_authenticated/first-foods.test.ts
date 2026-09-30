@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseFoodName, computeAllergenProgress, TOP_ALLERGENS } from "./first-foods";
+import { parseFoodName, computeAllergenProgress, sortFoods, TOP_ALLERGENS } from "./first-foods";
 
 // Regression: editing an existing first_foods entry re-runs the same
 // "{name} ({Allergen})" suffix logic handleSave() uses when adding — this
@@ -100,5 +100,28 @@ describe("computeAllergenProgress", () => {
     // logged first here — the UI should read in a stable, predictable
     // order rather than shuffling based on when each was logged.
     expect(result.introduced).toEqual(["Milk", "Sesame"]);
+  });
+});
+
+describe("sortFoods", () => {
+  const foods = [{ food_name: "Banana" }, { food_name: "avocado" }, { food_name: "Carrot" }];
+
+  it("leaves the input order untouched in 'recent' mode", () => {
+    expect(sortFoods(foods, "recent")).toEqual(foods);
+  });
+
+  it("sorts alphabetically, case-insensitively, in 'az' mode", () => {
+    expect(sortFoods(foods, "az").map((f) => f.food_name)).toEqual(["avocado", "Banana", "Carrot"]);
+  });
+
+  it("does not mutate the original array in 'az' mode", () => {
+    const original = [...foods];
+    sortFoods(foods, "az");
+    expect(foods).toEqual(original);
+  });
+
+  it("handles an empty list without throwing", () => {
+    expect(sortFoods([], "az")).toEqual([]);
+    expect(sortFoods([], "recent")).toEqual([]);
   });
 });

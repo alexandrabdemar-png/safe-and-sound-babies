@@ -19,11 +19,9 @@ import { BottomNav } from "@/components/BottomNav";
 import { friendlyError } from "@/lib/errors";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { lookupBarcode } from "@/lib/barcodeLookup";
-import {
-  allergensFromTags,
-  collectIngredients,
-  parseIngredients,
-} from "@/lib/foodIngredients";
+import { allergensFromTags, collectIngredients, parseIngredients } from "@/lib/foodIngredients";
+
+const DISMISSED_4DAY_KEY = "safesound.dismissed4DayReminder";
 
 export const Route = createFileRoute("/_authenticated/first-foods")({
   ssr: false,
@@ -70,6 +68,17 @@ export function computeAllergenProgress(foods: { food_name: string }[]): {
     introduced: TOP_ALLERGENS.filter((a) => introducedSet.has(a)),
     remaining: TOP_ALLERGENS.filter((a) => !introducedSet.has(a)),
   };
+}
+
+/**
+ * "recent" leaves the list in whatever order it was given — the loaded
+ * food list is already most-recently-introduced-first (see loadData's
+ * query), so re-sorting here would be redundant. "az" sorts a copy
+ * alphabetically by food name without mutating the input array.
+ */
+export function sortFoods<T extends { food_name: string }>(foods: T[], mode: "recent" | "az"): T[] {
+  if (mode !== "az") return foods;
+  return [...foods].sort((a, b) => a.food_name.localeCompare(b.food_name));
 }
 
 type Child = {
@@ -125,6 +134,7 @@ function FirstFoodsPage() {
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [show4DayCard, setShow4DayCard] = useState(false);
+  const [sortMode, setSortMode] = useState<"recent" | "az">("recent");
 
   // Form state — editingId is null while adding a new food, or the id of
   // an existing first_foods row while editing one (see openEdit/handleSave).
@@ -144,7 +154,6 @@ function FirstFoodsPage() {
   const [scanOpen, setScanOpen] = useState(false);
   const [lookingUp, setLookingUp] = useState(false);
   const { requirePro } = useProGate();
-
 
   function openAdd() {
     setEditingId(null);
@@ -236,7 +245,6 @@ function FirstFoodsPage() {
     if (!showForm) openAdd();
     setScanOpen(true);
   }
-
 
   // Guards every setState/toast in loadData() against firing after the user
   // has already navigated away — e.g. handleSave() below re-calls loadData()
@@ -376,7 +384,13 @@ function FirstFoodsPage() {
     setBrand("");
     setBarcode("");
     setShowForm(false);
-    if (!isEditing) setShow4DayCard(true);
+    if (!isEditing) {
+      let dismissedForGood = false;
+      try {
+        dismissedForGood = localStorage.getItem(DISMISSED_4DAY_KEY) === "1";
+      } catch {}
+      if (!dismissedForGood) setShow4DayCard(true);
+    }
     setSaving(false);
     // Deliberately not awaited/surfaced as an error toast: the save above
     // already succeeded and the user has already moved on by the time this
@@ -391,9 +405,10 @@ function FirstFoodsPage() {
     });
   }
 
-  const filtered = search.trim()
+  const searched = search.trim()
     ? foods.filter((f) => f.food_name.toLowerCase().includes(search.trim().toLowerCase()))
     : foods;
+  const filtered = sortFoods(searched, sortMode);
 
   if (loading) {
     return (
@@ -479,7 +494,12 @@ function FirstFoodsPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setShow4DayCard(false)}
+                  onClick={() => {
+                    setShow4DayCard(false);
+                    try {
+                      localStorage.setItem(DISMISSED_4DAY_KEY, "1");
+                    } catch {}
+                  }}
                   className="shrink-0 rounded-full p-1 text-amber-600 hover:bg-amber-100"
                 >
                   <X className="h-3.5 w-3.5" />
@@ -490,7 +510,10 @@ function FirstFoodsPage() {
 
           {/* Add food form */}
           {showForm && (
-            <div ref={formRef} className="scroll-mt-4 rounded-2xl border border-border/60 bg-card p-4 animate-scale-in">
+            <div
+              ref={formRef}
+              className="scroll-mt-4 rounded-2xl border border-border/60 bg-card p-4 animate-scale-in"
+            >
               <p className="mb-3 font-display text-sm font-semibold">
                 {editingId ? "Edit food" : "Add a new food"}
               </p>
@@ -595,7 +618,11 @@ function FirstFoodsPage() {
                 {isPackaged === true && !barcode && (
                   <p className="mt-1.5 font-body text-[11px] text-muted-foreground">
                     For the most accurate recall checks,{" "}
-                    <button type="button" onClick={startScan} className="font-semibold text-primary">
+                    <button
+                      type="button"
+                      onClick={startScan}
+                      className="font-semibold text-primary"
+                    >
                       scan the barcode
                     </button>
                     . Otherwise enter the brand and the product name exactly as printed.
@@ -701,17 +728,36 @@ function FirstFoodsPage() {
             </div>
           )}
 
-          {/* Search bar */}
+          {/* Search bar + sort toggle */}
           {foods.length > 0 && (
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search foods introduced…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-2xl border border-border/60 bg-card py-2.5 pl-9 pr-4 font-body text-sm outline-none focus:border-primary"
-              />
+            <div className="space-y-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search foods introduced…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full rounded-2xl border border-border/60 bg-card py-2.5 pl-9 pr-4 font-body text-sm outline-none focus:border-primary"
+                />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-body text-xs text-muted-foreground">Sort:</span>
+                {(["recent", "az"] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setSortMode(mode)}
+                    className={`rounded-full px-3 py-1 font-body text-xs font-medium transition-colors ${
+                      sortMode === mode
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:bg-muted/70"
+                    }`}
+                  >
+                    {mode === "recent" ? "Recent" : "A–Z"}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -753,7 +799,7 @@ function FirstFoodsPage() {
                       </p>
                     )}
                     <RecallStatusBadge food={f} />
-                    
+
                     {f.reaction_notes && (
                       <p className="mt-1 font-body text-xs text-foreground/70 italic">
                         "{f.reaction_notes}"
@@ -873,9 +919,7 @@ function IngredientsTriedCard({
 
   return (
     <div className="rounded-3xl border border-border/60 bg-card p-4">
-      <p className="font-body text-sm font-semibold">
-        {items.length} ingredients tried
-      </p>
+      <p className="font-body text-sm font-semibold">{items.length} ingredients tried</p>
       <p className="mt-0.5 font-body text-[11px] text-muted-foreground">
         From the packaged foods you've scanned. Always check the label itself — package data can be
         incomplete or change.
