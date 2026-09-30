@@ -367,7 +367,8 @@ function PricingPage() {
             terms, and Terms/Privacy links on or adjacent to the purchase
             screen. Was previously missing entirely — see COMPLIANCE_REPORT.md §5/§7. */}
         <p className="text-xs text-center text-muted-foreground">
-          Pro is {priceLabel}/{renewalWord} after a 7-day free trial. Your subscription renews
+          <strong>Peace of Mine Pro — {isYearly ? 'Annual (1 year)' : 'Monthly (1 month)'}</strong>:{' '}
+          {priceLabel}/{renewalWord} after a 7-day free trial. Your subscription renews
           automatically each {renewalWord} until you cancel; cancel anytime from{' '}
           {isPro ? '"Manage subscription" above' : 'your account settings'} — no charge if you
 
@@ -378,7 +379,16 @@ function PricingPage() {
           By subscribing you agree to our{' '}
           <Link to="/terms" className="underline hover:text-foreground">
             Terms of Service
-          </Link>{' '}
+          </Link>
+          ,{' '}
+          <a
+            href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-foreground"
+          >
+            Terms of Use (EULA)
+          </a>{' '}
           and{' '}
           <Link to="/privacy-policy" className="underline hover:text-foreground">
             Privacy Policy
