@@ -385,7 +385,7 @@ function ProfilePage() {
       </div>
 
       <p className="mt-2 mb-6 text-center font-body text-xs text-muted-foreground/50">
-        Version {APP_VERSION} Beta
+        Version {APP_VERSION}
       </p>
 
       <BottomNav />
