@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   ArrowUpRight,
   Check,
+  ChevronDown,
   Loader2,
   Radio,
   RotateCw,
@@ -29,6 +30,7 @@ import {
   type ExtraRecallRow,
   type RadarRecall,
 } from "@/lib/recallRadarMerge";
+import { pickTopFdaRecalls } from "@/lib/fdaTopRecalls";
 
 export const Route = createFileRoute("/_authenticated/recall-radar")({
   ssr: false,
@@ -185,6 +187,8 @@ function RecallRadarPage() {
     [recalls, dismissedIds],
   );
 
+  const topFdaRecalls = useMemo(() => pickTopFdaRecalls(visibleRecalls), [visibleRecalls]);
+
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28 animate-fade-in">
       <header className="px-5 pt-8 pb-4 sm:px-6">
@@ -277,6 +281,9 @@ function RecallRadarPage() {
                   </button>
                 </div>
               )}
+              {topFdaRecalls.length > 0 && (
+                <FdaAlertsSection recalls={topFdaRecalls} onDone={(id) => markRecallDone(id)} />
+              )}
               <ul className="space-y-3">
                 {visibleRecalls.map((r) => (
                   <RecallCard key={r.id} recall={r} onDone={() => markRecallDone(r.id)} />
@@ -317,6 +324,55 @@ function RecallRadarPage() {
 
       <BottomNav />
     </div>
+  );
+}
+
+/**
+ * Tap-to-expand "FDA alerts" section: the most relevant recent FDA baby
+ * food / formula recalls (ranked by pickTopFdaRecalls), so parents can jump
+ * straight to them instead of scanning the full mixed-agency list below.
+ */
+function FdaAlertsSection({
+  recalls,
+  onDone,
+}: {
+  recalls: RadarRecall[];
+  onDone: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <section className="rounded-2xl border border-border/60 bg-card">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-controls="fda-alerts-list"
+        className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left"
+      >
+        <div className="flex items-center gap-3">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-destructive/15 text-destructive">
+            <ShieldAlert className="h-4 w-4" />
+          </span>
+          <div>
+            <p className="font-body text-sm font-semibold">FDA alerts</p>
+            <p className="font-body text-[11px] text-muted-foreground">
+              Top {recalls.length} baby food &amp; formula recall{recalls.length !== 1 ? "s" : ""}{" "}
+              this month
+            </p>
+          </div>
+        </div>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && (
+        <ul id="fda-alerts-list" className="space-y-3 px-3 pb-3">
+          {recalls.map((r) => (
+            <RecallCard key={r.id} recall={r} onDone={() => onDone(r.id)} />
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
