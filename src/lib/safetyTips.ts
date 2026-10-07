@@ -419,6 +419,212 @@ export const SAFETY_TIPS: SafetyTip[] = [
     maxMonths: 24,
     text: "If your baby uses a pacifier, double-check you're using the size made for their current age — most brands mark stages like 0–6 months and 6–18 months, and a pacifier sized for a younger baby can be a choking or fit hazard as they grow.",
   },
+
+  // ── Broader ages and topics: sleep, cars, poisons, burns, outdoors, school age, teens ──
+  {
+    id: "t062",
+    minMonths: 0,
+    maxMonths: 12,
+    text: "Always lay your baby down on their back for every sleep, naps included — it's the single most effective step for reducing the risk of SIDS.",
+  },
+  {
+    id: "t063",
+    minMonths: 0,
+    maxMonths: 12,
+    text: "Avoid letting your baby fall asleep on a couch, armchair, or adult bed with you — these surfaces carry a much higher suffocation risk than a crib or bassinet.",
+  },
+  {
+    id: "t064",
+    minMonths: 0,
+    maxMonths: 72,
+    text: "Never leave your child alone in the car, even for a minute — a car's interior can heat up to a dangerous temperature quickly, even on a mild day.",
+  },
+  {
+    id: "t065",
+    minMonths: 0,
+    maxMonths: 24,
+    text: "Set your hot tap temperature to 120°F (49°C) or lower — at higher settings, tap water can scald a young child's skin in seconds.",
+  },
+  {
+    id: "t066",
+    minMonths: 0,
+    maxMonths: 999,
+    text: "Save the Poison Help number (1-800-222-1222 in the US) in your phone and post it where babysitters and grandparents can see it.",
+  },
+  {
+    id: "t067",
+    minMonths: 0,
+    maxMonths: 999,
+    text: "Keep a stocked first aid kit at home and another in the car, and check both twice a year for anything used up or expired.",
+  },
+  {
+    id: "t068",
+    minMonths: 4,
+    maxMonths: 18,
+    text: "Buckle the waist and crotch straps on the high chair every time — the tray alone won't stop a baby from sliding down or climbing out.",
+  },
+  {
+    id: "t069",
+    minMonths: 6,
+    maxMonths: 48,
+    text: "Cut round foods like grapes, cherry tomatoes, and hot dogs lengthwise into small pieces — their size and shape can block a young child's airway.",
+  },
+  {
+    id: "t070",
+    minMonths: 6,
+    maxMonths: 72,
+    text: "Keep button batteries, and devices with easy-open battery doors (remotes, key fobs, musical cards), out of reach — a swallowed button battery can cause serious internal burns within hours.",
+  },
+  {
+    id: "t071",
+    minMonths: 6,
+    maxMonths: 36,
+    text: "Cook on the back burners when you can and turn pot handles toward the back of the stove — a grabbed handle can tip hot food straight down.",
+  },
+  {
+    id: "t072",
+    minMonths: 9,
+    maxMonths: 36,
+    text: "Keep handbags, diaper bags, and visitors' bags up off the floor — they often hold medications, gum, or other hazards at exactly toddler height.",
+  },
+  {
+    id: "t073",
+    minMonths: 6,
+    maxMonths: 999,
+    text: "Use a broad-spectrum SPF 30+ sunscreen on outdoor days and reapply every two hours — hats, shade, and covered arms help too.",
+  },
+  {
+    id: "t074",
+    minMonths: 12,
+    maxMonths: 48,
+    text: "Keep your child rear-facing in their car seat until they reach the seat's rear-facing height or weight limit — it gives the head, neck, and spine the most protection.",
+  },
+  {
+    id: "t075",
+    minMonths: 12,
+    maxMonths: 72,
+    text: "Hold hands in parking lots and keep your child beside you while you load the car — small children are very hard for reversing drivers to see.",
+  },
+  {
+    id: "t076",
+    minMonths: 12,
+    maxMonths: 96,
+    text: "Store small, high-powered magnets (from desk toys, building sets, or jewelry) well out of reach — swallowing more than one can cause serious internal injuries.",
+  },
+  {
+    id: "t077",
+    minMonths: 12,
+    maxMonths: 240,
+    text: "Lock away vape liquid, nicotine pouches, alcohol, and cannabis edibles — small amounts can poison a child, and edibles can look just like ordinary candy.",
+  },
+  {
+    id: "t078",
+    minMonths: 12,
+    maxMonths: 240,
+    text: "If there are firearms in your home, store them unloaded and locked, with ammunition locked separately — and ask about safe storage at homes your child visits.",
+  },
+  {
+    id: "t079",
+    minMonths: 18,
+    maxMonths: 36,
+    text: "Move your toddler to a low toddler bed once they can climb out of the crib or the rail sits below chest height — a fall from the crib rail is a long drop.",
+  },
+  {
+    id: "t080",
+    minMonths: 24,
+    maxMonths: 96,
+    text: "Re-check that TVs, dressers, and bookshelves are anchored to the wall — climbing preschoolers can tip furniture that never moved when they were smaller.",
+  },
+  {
+    id: "t081",
+    minMonths: 24,
+    maxMonths: 120,
+    text: "Practise stopping at the curb and waiting for an adult's hand before crossing — young children can't yet judge the speed and distance of traffic.",
+  },
+  {
+    id: "t082",
+    minMonths: 24,
+    maxMonths: 120,
+    text: "Teach your child to ask before petting any dog, even one they know, and to leave dogs alone while they're eating or sleeping.",
+  },
+  {
+    id: "t083",
+    minMonths: 36,
+    maxMonths: 120,
+    text: "Teach your child their full name and a parent's phone number — turning it into a song or rhyme helps it stick.",
+  },
+  {
+    id: "t084",
+    minMonths: 36,
+    maxMonths: 240,
+    text: "Make a home fire escape plan with two ways out of each room and a meeting spot outside, and practise it with your child twice a year.",
+  },
+  {
+    id: "t085",
+    minMonths: 36,
+    maxMonths: 144,
+    text: "Choose a family code word that anyone picking your child up unexpectedly has to know — and practise what your child should do if someone doesn't know it.",
+  },
+  {
+    id: "t086",
+    minMonths: 36,
+    maxMonths: 144,
+    text: "Keep children under six off the top bunk, and make sure any top bunk has guardrails on both sides.",
+  },
+  {
+    id: "t087",
+    minMonths: 36,
+    maxMonths: 240,
+    text: "Replace any bike or scooter helmet after a crash, even if it looks fine — the foam inside is designed to protect against one impact.",
+  },
+  {
+    id: "t088",
+    minMonths: 36,
+    maxMonths: 144,
+    text: "If you have a home trampoline, allow one jumper at a time and use a safety net and padding — most trampoline injuries happen when several children jump together.",
+  },
+  {
+    id: "t089",
+    minMonths: 48,
+    maxMonths: 144,
+    text: "Keep your child in a booster seat until the adult seat belt fits properly — lap belt low across the upper thighs and shoulder belt across the chest, usually somewhere between ages 8 and 12.",
+  },
+  {
+    id: "t090",
+    minMonths: 48,
+    maxMonths: 156,
+    text: "Keep children under 13 in the back seat — front airbags are designed for adults and can seriously injure a child.",
+  },
+  {
+    id: "t091",
+    minMonths: 48,
+    maxMonths: 144,
+    text: "Teach your child the difference between a safe secret (a surprise party) and an unsafe one, and that they can always tell you if an adult asks them to keep something from you.",
+  },
+  {
+    id: "t092",
+    minMonths: 60,
+    maxMonths: 240,
+    text: "Keep internet-connected devices in shared spaces, set up parental controls, and make sure your child knows they can tell you about anything online that makes them uncomfortable.",
+  },
+  {
+    id: "t093",
+    minMonths: 60,
+    maxMonths: 240,
+    text: "Make sure your child wears the right protective gear for their sport — mouthguards, shin guards, and properly fitted helmets — and sits out after any suspected head injury.",
+  },
+  {
+    id: "t094",
+    minMonths: 120,
+    maxMonths: 240,
+    text: "Agree on a no-questions-asked pickup rule, so your child always calls you rather than riding with a driver who has been drinking or using drugs.",
+  },
+  {
+    id: "t095",
+    minMonths: 180,
+    maxMonths: 240,
+    text: "Set clear rules for a new teen driver — phone out of reach, seat belts for everyone, and limits on passengers and night driving for the first months.",
+  },
 ];
 
 // Tips that assume a feature of a single-family house — a private outdoor
@@ -446,6 +652,32 @@ function excluding(pool: SafetyTip[], matches: (t: SafetyTip) => boolean): Safet
   return filtered.length > 0 ? filtered : pool;
 }
 
+// Water-safety tips (pools, swimming, drowning) — matched by text so a new
+// water tip is picked up without tagging it. Deliberately not a bare
+// /water/ or /bath/, which would also catch the tap-temperature and
+// bathroom-cabinet tips.
+export const WATER_TIP_PATTERN =
+  /pool|swim|drown|life jacket|near (?:any body of |the )?water|around water|outdoor water/i;
+
+// The water tips sit together in SAFETY_TIPS, so rotating through the pool
+// in array order showed them on several consecutive days. Reorders the pool
+// so water tips are spaced evenly between the other topics — same tips, same
+// lap length, just never a run of water days while other tips are available.
+function spreadWaterTips(pool: SafetyTip[]): SafetyTip[] {
+  const water = pool.filter((t) => WATER_TIP_PATTERN.test(t.text));
+  const other = pool.filter((t) => !WATER_TIP_PATTERN.test(t.text));
+  if (water.length === 0 || other.length === 0) return pool;
+  const spread: SafetyTip[] = [];
+  let w = 0;
+  other.forEach((tip, i) => {
+    spread.push(tip);
+    if (w < water.length && ((i + 1) * water.length) / other.length >= w + 1) {
+      spread.push(water[w++]);
+    }
+  });
+  return spread.concat(water.slice(w));
+}
+
 // Select the best tip for a given age and day index (see dayIndexFromDate).
 // Prefers age-appropriate tips; falls back to any tip if none match.
 //
@@ -460,9 +692,8 @@ function excluding(pool: SafetyTip[], matches: (t: SafetyTip) => boolean): Safet
 // and never let the pool go empty.
 //
 // Note on cadence: the smallest age-filtered pool across the whole 0–240mo
-// range is 11 tips (see safetyTips.test.ts), so a daily cadence completes a
-// full lap of an age's pool in as little as ~11 days before repeating —
-// noticeably faster than the old weekly cadence's ~11-week lap. Acceptable
+// range is 21 tips (see safetyTips.test.ts), so a daily cadence completes a
+// full lap of an age's pool in as little as ~3 weeks before repeating. Acceptable
 // here since every tip is evergreen advisory content, not something that
 // goes stale, but worth knowing if the pool ever needs to grow.
 export function selectDailyTip(
@@ -484,6 +715,7 @@ export function selectDailyTip(
   if (hasStairs === false) pool = excluding(pool, (t) => /stair/i.test(t.text));
   if (homeType === "apartment") pool = excluding(pool, (t) => HOUSE_ONLY_PATTERN.test(t.text));
   if (hasPool === false) pool = excluding(pool, (t) => HOME_POOL_ONLY_PATTERN.test(t.text));
+  pool = spreadWaterTips(pool);
   return pool[dayIndex % pool.length];
 }
 

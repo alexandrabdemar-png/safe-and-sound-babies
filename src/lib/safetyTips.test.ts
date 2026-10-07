@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { dayIndexFromDate, dayKey, SAFETY_TIPS, selectDailyTip } from "./safetyTips";
+import {
+  dayIndexFromDate,
+  dayKey,
+  SAFETY_TIPS,
+  selectDailyTip,
+  WATER_TIP_PATTERN,
+} from "./safetyTips";
 
 describe("dayIndexFromDate", () => {
   it("returns the same index for every moment within the same UTC calendar day", () => {
@@ -68,7 +74,10 @@ function makeFakeLocalStorage() {
   };
 }
 
-function isTipDismissedForDay(storage: ReturnType<typeof makeFakeLocalStorage>, date: Date): boolean {
+function isTipDismissedForDay(
+  storage: ReturnType<typeof makeFakeLocalStorage>,
+  date: Date,
+): boolean {
   return !!storage.getItem(`safesound.tipDone.${dayKey(date)}`);
 }
 
@@ -333,9 +342,7 @@ describe("daily tip rotation actually changes day to day", () => {
 
   it("over one full lap of an age's pool, every tip in that pool is actually shown (no index is unreachable)", () => {
     const ageMonths = 8;
-    const pool = SAFETY_TIPS.filter(
-      (t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths,
-    );
+    const pool = SAFETY_TIPS.filter((t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths);
     const seenIds = new Set<string>();
     for (let day = 0; day < pool.length; day++) {
       seenIds.add(selectDailyTip(ageMonths, day).id);
@@ -345,9 +352,7 @@ describe("daily tip rotation actually changes day to day", () => {
 
   it("the tip only repeats after a full lap of the pool, not sooner (rotation isn't secretly shorter than it looks)", () => {
     const ageMonths = 8;
-    const pool = SAFETY_TIPS.filter(
-      (t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths,
-    );
+    const pool = SAFETY_TIPS.filter((t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths);
     const firstTip = selectDailyTip(ageMonths, 0);
     for (let day = 1; day < pool.length; day++) {
       expect(selectDailyTip(ageMonths, day).id).not.toBe(firstTip.id);
@@ -356,11 +361,11 @@ describe("daily tip rotation actually changes day to day", () => {
     expect(selectDailyTip(ageMonths, pool.length).id).toBe(firstTip.id);
   });
 
-  it("a full lap now takes as little as ~11 days (down from ~11 weeks) — documents the cadence tradeoff", () => {
+  it("a full lap takes at least ~3 weeks at every age — documents the cadence tradeoff", () => {
     // Not a bug — just makes the tradeoff mentioned in selectDailyTip's
     // doc comment concrete and monitorable: the smallest age-filtered pool
-    // anywhere in 0-240mo is 11, so that age sees its tips repeat roughly
-    // every 11 days under a daily cadence.
+    // anywhere in 0-240mo is 21, so that age sees its tips repeat roughly
+    // every 3 weeks under a daily cadence.
     let minPoolSize = Infinity;
     for (let ageMonths = 0; ageMonths <= 240; ageMonths++) {
       const ageTips = SAFETY_TIPS.filter(
@@ -369,6 +374,60 @@ describe("daily tip rotation actually changes day to day", () => {
       const poolSize = ageTips.length > 0 ? ageTips.length : SAFETY_TIPS.length;
       minPoolSize = Math.min(minPoolSize, poolSize);
     }
-    expect(minPoolSize).toBe(11);
+    expect(minPoolSize).toBe(21);
+  });
+});
+
+describe("daily tip topic variety", () => {
+  it("never shows water-safety tips on consecutive days, at any age or home setup", () => {
+    const setups: [boolean | null, string | null, boolean | null][] = [
+      [null, null, null],
+      [false, "apartment", false],
+      [true, "house", true],
+    ];
+    for (let ageMonths = 0; ageMonths <= 240; ageMonths++) {
+      for (const [hasStairs, homeType, hasPool] of setups) {
+        const lap = SAFETY_TIPS.length;
+        let previousWasWater = WATER_TIP_PATTERN.test(
+          selectDailyTip(ageMonths, lap - 1, hasStairs, homeType, hasPool).text,
+        );
+        for (let day = 0; day < lap; day++) {
+          const isWater = WATER_TIP_PATTERN.test(
+            selectDailyTip(ageMonths, day, hasStairs, homeType, hasPool).text,
+          );
+          expect(previousWasWater && isWater, `age ${ageMonths}mo, day ${day}`).toBe(false);
+          previousWasWater = isWater;
+        }
+      }
+    }
+  });
+
+  it("water tips are at most a third of any age's pool, so other topics lead", () => {
+    for (let ageMonths = 0; ageMonths <= 240; ageMonths++) {
+      const pool = SAFETY_TIPS.filter((t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths);
+      const water = pool.filter((t) => WATER_TIP_PATTERN.test(t.text));
+      expect(water.length, `age ${ageMonths}mo`).toBeLessThanOrEqual(pool.length / 3);
+    }
+  });
+
+  it("the water pattern doesn't misfile tap-temperature or bathroom-cabinet tips as water safety", () => {
+    for (const id of ["t022", "t065"]) {
+      const tip = SAFETY_TIPS.find((t) => t.id === id)!;
+      expect(WATER_TIP_PATTERN.test(tip.text)).toBe(false);
+    }
+  });
+
+  it("school-age and teen children get tips written for their age, not just the evergreen ones", () => {
+    for (const ageMonths of [72, 120, 180, 216]) {
+      const ageSpecific = SAFETY_TIPS.filter(
+        (t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths && t.maxMonths < 999,
+      );
+      expect(ageSpecific.length, `age ${ageMonths}mo`).toBeGreaterThanOrEqual(5);
+    }
+  });
+
+  it("every tip id is unique", () => {
+    const ids = SAFETY_TIPS.map((t) => t.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });
