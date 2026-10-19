@@ -173,9 +173,11 @@ if (added.length) {
 
 console.log(`
 Remaining manual steps in Xcode (one time):
-  1. Open ios/App/App.xcworkspace
+  1. Open the project with: bun run ios:open
   2. Select the "App" target → Signing & Capabilities
   3. Set your Team, then click "+ Capability" and add:
+       • In-App Purchase (required for the monthly/annual subscriptions —
+         without it StoreKit cannot load them and App Review rejects the build)
        • Push Notifications
        • Background Modes → check "Remote notifications"
        • Associated Domains → add an entry: applinks:peace-of-mine.lovable.app
@@ -185,5 +187,6 @@ Remaining manual steps in Xcode (one time):
   4. Drag ios/App/App/PrivacyInfo.xcprivacy into the App group in Xcode's
      sidebar (check "Copy items if needed" OFF, target: App) so the privacy
      manifest is bundled — Apple requires it. Only needed once.
-  5. Product → Archive → Distribute App → TestFlight
+  5. Raise the build number above the last upload (General → Identity → Build)
+  6. Product → Archive → Distribute App → TestFlight
 `);
