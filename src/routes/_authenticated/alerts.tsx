@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
-import { AlertTriangle, ArrowLeft, ArrowUpRight, Bell, Check, ChevronDown, ChevronUp, Clock, Loader2, Plus, RefreshCw } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, ArrowUpRight, Bell, Check, ChevronDown, ChevronUp, Clock, Loader2, Plus, Radio, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { hapticSuccess, hapticDismiss } from "@/lib/haptic";
@@ -316,6 +316,25 @@ function AlertsPage() {
           <p className="mt-2 font-body text-sm text-muted-foreground">
             Only the things that matter — recalls and replacements for the gear you've logged.
           </p>
+          {/* Every user can check the latest industry-wide recalls here, in
+              case a product they own was never added to the app. */}
+          <Link
+            to="/recall-radar"
+            className="mt-4 flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3.5 transition-colors hover:border-primary/40"
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                <Radio className="h-4 w-4" />
+              </span>
+              <div>
+                <p className="font-body text-sm font-semibold">Recall Radar</p>
+                <p className="font-body text-[11px] text-muted-foreground">
+                  All baby recalls from the past month, even for things you haven't added
+                </p>
+              </div>
+            </div>
+            <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </Link>
         </div>
       </header>
 

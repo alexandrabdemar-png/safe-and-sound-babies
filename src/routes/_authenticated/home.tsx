@@ -1008,18 +1008,23 @@ function HomePage() {
         </div>
       )}
 
-      {/* Recall Radar — live 30-day CPSC + FDA count, plus always-relevant critical recalls */}
-      {recallRadarCount !== null && recallRadarCount !== -1 && (
-        <div className="px-5 pt-3 sm:px-6">
-          <div className="mx-auto max-w-md">
-            <RecallRadarCard
-              count={recallRadarCount + (fdaRecallCount ?? 0) + CRITICAL_RECALLS.length}
-              matchedCount={alerts.recalls}
-              childName={child?.name ?? "your child"}
-            />
-          </div>
+      {/* Recall Radar — live 30-day CPSC + FDA count, plus always-relevant
+          critical recalls. Always shown, even while the count is loading or
+          the CPSC fetch failed, so every parent can open the latest recalls
+          (not just ones matching products they added). */}
+      <div className="px-5 pt-3 sm:px-6">
+        <div className="mx-auto max-w-md">
+          <RecallRadarCard
+            count={
+              recallRadarCount !== null && recallRadarCount !== -1
+                ? recallRadarCount + (fdaRecallCount ?? 0) + CRITICAL_RECALLS.length
+                : null
+            }
+            matchedCount={alerts.recalls}
+            childName={child?.name ?? "your child"}
+          />
         </div>
-      )}
+      </div>
 
       {/* Pool alarm nudge — shown when home profile says they have a pool */}
       {shouldShowPoolAlarmNudge(homeProfile?.has_pool) && (
@@ -1403,7 +1408,8 @@ export function RecallRadarCard({
   matchedCount,
   childName,
 }: {
-  count: number;
+  /** null when the live count is still loading or couldn't be fetched. */
+  count: number | null;
   matchedCount: number;
   childName: string;
 }) {
@@ -1423,9 +1429,11 @@ export function RecallRadarCard({
           <div>
             <p className="font-body text-sm font-semibold">Recall Radar</p>
             <p className="font-body text-[11px] text-muted-foreground">
-              {count > 0
-                ? `${count} new recall${count > 1 ? "s" : ""} published this month, industry-wide`
-                : "No new recalls published this month, industry-wide"}
+              {count === null
+                ? "See every baby recall from the past month"
+                : count > 0
+                  ? `${count} new recall${count > 1 ? "s" : ""} published this month, industry-wide`
+                  : "No new recalls published this month, industry-wide"}
             </p>
           </div>
         </div>

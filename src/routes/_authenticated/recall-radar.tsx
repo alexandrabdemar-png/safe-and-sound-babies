@@ -103,6 +103,8 @@ function RecallRadarPage() {
       // fail — always available regardless of what happens below.
       const criticalItems = mapCriticalRecalls();
 
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+
       // Each remote source is isolated so one failing source degrades
       // gracefully instead of blanking the whole page. Both promises always
       // resolve (never reject) — failures are caught here and logged.
@@ -123,6 +125,9 @@ function RecallRadarPage() {
           .from("recalls")
           .select("id, source, title, description, hazard, url, recall_date, official, lot_pattern")
           .in("source", ["usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"])
+          // Same 30-day window as the CPSC/FDA fetch above, so the page is
+          // "the past month" across every source, not older synced rows.
+          .gte("recall_date", thirtyDaysAgo)
           .order("recall_date", { ascending: false })
           .limit(50),
         // A failure here shouldn't block the radar list itself — fail open
@@ -206,7 +211,7 @@ function RecallRadarPage() {
             <div>
               <h1 className="font-display text-3xl font-semibold tracking-tight">Recall Radar</h1>
               <p className="font-body text-xs text-muted-foreground">
-                Baby &amp; kids product recalls
+                Every baby &amp; kids recall from the past 30 days
               </p>
             </div>
           </div>
