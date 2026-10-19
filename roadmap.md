@@ -1,3 +1,6 @@
 - [x] Recall tracking for logged foods (packaged question, brand, status badges)
 - [x] Fix "Add food" button on First Foods
 - [x] Add food search when adding a food
+- [ ] Investigate and repair Apple subscription discovery and purchase availability
+- [ ] Verify purchase fixes with automated tests
+- [ ] Complete physical-iPhone sandbox recording and App Store resubmission (requires owner’s device and Apple account)
