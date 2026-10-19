@@ -9,94 +9,63 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as SupportRouteImport } from './routes/support'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as RecallsRouteImport } from './routes/recalls'
-import { Route as RecallSearchRouteImport } from './routes/recall-search'
-import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as LegalConsentRouteImport } from './routes/legal-consent'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as EmergencyShareTokenRouteImport } from './routes/emergency-share.$token'
-import { Route as CaregiverInviteTokenRouteImport } from './routes/caregiver-invite.$token'
-import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
-import { Route as AuthenticatedTravelChecklistRouteImport } from './routes/_authenticated/travel-checklist'
-import { Route as AuthenticatedTrackingRouteImport } from './routes/_authenticated/tracking'
-import { Route as AuthenticatedSafetyGuidesRouteImport } from './routes/_authenticated/safety-guides'
-import { Route as AuthenticatedRegistryCheckRouteImport } from './routes/_authenticated/registry-check'
-import { Route as AuthenticatedRecallRadarRouteImport } from './routes/_authenticated/recall-radar'
-import { Route as AuthenticatedRecallCheckRouteImport } from './routes/_authenticated/recall-check'
-import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
-import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
-import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
-import { Route as AuthenticatedMomentsRouteImport } from './routes/_authenticated/moments'
-import { Route as AuthenticatedHomecomingChecklistRouteImport } from './routes/_authenticated/homecoming-checklist'
-import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
-import { Route as AuthenticatedFirstFoodsRouteImport } from './routes/_authenticated/first-foods'
-import { Route as AuthenticatedEmergencyInfoRouteImport } from './routes/_authenticated/emergency-info'
-import { Route as AuthenticatedChecklistsRouteImport } from './routes/_authenticated/checklists'
-import { Route as AuthenticatedBottlesRouteImport } from './routes/_authenticated/bottles'
-import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as LegalConsentRouteImport } from './routes/legal-consent'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as RecallSearchRouteImport } from './routes/recall-search'
+import { Route as RecallsRouteImport } from './routes/recalls'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SupportRouteImport } from './routes/support'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
-import { Route as ApiPublicEmergencyShareRouteImport } from './routes/api/public/emergency-share'
-import { Route as ApiPublicCaregiverInviteRouteImport } from './routes/api/public/caregiver-invite'
-import { Route as AuthenticatedProfileSupportRouteImport } from './routes/_authenticated/profile_.support'
-import { Route as AuthenticatedProfilePrivacyPromiseRouteImport } from './routes/_authenticated/profile_/privacy-promise'
-import { Route as AuthenticatedProfilePrivacyPolicyRouteImport } from './routes/_authenticated/profile_.privacy-policy'
-import { Route as AuthenticatedProfileNotificationSettingsRouteImport } from './routes/_authenticated/profile_.notification-settings'
-import { Route as AuthenticatedProfileCatalogModerationRouteImport } from './routes/_authenticated/profile_.catalog-moderation'
-import { Route as AuthenticatedProfileCaregiversRouteImport } from './routes/_authenticated/profile_.caregivers'
-import { Route as AuthenticatedProductsScanRouteImport } from './routes/_authenticated/products_.scan'
-import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products_.new'
-import { Route as AuthenticatedProductsIdRouteImport } from './routes/_authenticated/products_.$id'
-import { Route as AuthenticatedMomentsNewRouteImport } from './routes/_authenticated/moments_.new'
+import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
+import { Route as AuthenticatedBottlesRouteImport } from './routes/_authenticated/bottles'
+import { Route as AuthenticatedChecklistsRouteImport } from './routes/_authenticated/checklists'
+import { Route as AuthenticatedEmergencyInfoRouteImport } from './routes/_authenticated/emergency-info'
+import { Route as AuthenticatedFirstFoodsRouteImport } from './routes/_authenticated/first-foods'
+import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedHomecomingChecklistRouteImport } from './routes/_authenticated/homecoming-checklist'
+import { Route as AuthenticatedMomentsRouteImport } from './routes/_authenticated/moments'
+import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
+import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedRecallCheckRouteImport } from './routes/_authenticated/recall-check'
+import { Route as AuthenticatedRecallRadarRouteImport } from './routes/_authenticated/recall-radar'
+import { Route as AuthenticatedRegistryCheckRouteImport } from './routes/_authenticated/registry-check'
+import { Route as AuthenticatedSafetyGuidesRouteImport } from './routes/_authenticated/safety-guides'
+import { Route as AuthenticatedTrackingRouteImport } from './routes/_authenticated/tracking'
+import { Route as AuthenticatedTravelChecklistRouteImport } from './routes/_authenticated/travel-checklist'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as CaregiverInviteTokenRouteImport } from './routes/caregiver-invite.$token'
+import { Route as EmergencyShareTokenRouteImport } from './routes/emergency-share.$token'
 import { Route as AuthenticatedBottlesNewRouteImport } from './routes/_authenticated/bottles_.new'
-import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
-import { Route as ApiPublicPaymentsAppleWebhookRouteImport } from './routes/api/public/payments/apple-webhook'
-import { Route as ApiPublicHooksProductAlertsCheckRouteImport } from './routes/api/public/hooks/product-alerts-check'
+import { Route as AuthenticatedMomentsNewRouteImport } from './routes/_authenticated/moments_.new'
+import { Route as AuthenticatedProductsIdRouteImport } from './routes/_authenticated/products_.$id'
+import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products_.new'
+import { Route as AuthenticatedProductsScanRouteImport } from './routes/_authenticated/products_.scan'
+import { Route as AuthenticatedProfileCaregiversRouteImport } from './routes/_authenticated/profile_.caregivers'
+import { Route as AuthenticatedProfileCatalogModerationRouteImport } from './routes/_authenticated/profile_.catalog-moderation'
+import { Route as AuthenticatedProfileNotificationSettingsRouteImport } from './routes/_authenticated/profile_.notification-settings'
+import { Route as AuthenticatedProfilePrivacyPolicyRouteImport } from './routes/_authenticated/profile_.privacy-policy'
+import { Route as AuthenticatedProfilePrivacyPromiseRouteImport } from './routes/_authenticated/profile_/privacy-promise'
+import { Route as AuthenticatedProfileSupportRouteImport } from './routes/_authenticated/profile_.support'
+import { Route as ApiPublicCaregiverInviteRouteImport } from './routes/api/public/caregiver-invite'
+import { Route as ApiPublicEmergencyShareRouteImport } from './routes/api/public/emergency-share'
 import { Route as ApiPublicHooksCheckProductAlertsRouteImport } from './routes/api/public/hooks/check-product-alerts'
+import { Route as ApiPublicHooksProductAlertsCheckRouteImport } from './routes/api/public/hooks/product-alerts-check'
+import { Route as ApiPublicPaymentsAppleWebhookRouteImport } from './routes/api/public/payments/apple-webhook'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SupportRoute = SupportRouteImport.update({
-  id: '/support',
-  path: '/support',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecallsRoute = RecallsRouteImport.update({
-  id: '/recalls',
-  path: '/recalls',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecallSearchRoute = RecallSearchRouteImport.update({
-  id: '/recall-search',
-  path: '/recall-search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
-  id: '/privacy-policy',
-  path: '/privacy-policy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LegalConsentRoute = LegalConsentRouteImport.update({
-  id: '/legal-consent',
-  path: '/legal-consent',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -104,99 +73,64 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const LegalConsentRoute = LegalConsentRouteImport.update({
+  id: '/legal-consent',
+  path: '/legal-consent',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmergencyShareTokenRoute = EmergencyShareTokenRouteImport.update({
-  id: '/emergency-share/$token',
-  path: '/emergency-share/$token',
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CaregiverInviteTokenRoute = CaregiverInviteTokenRouteImport.update({
-  id: '/caregiver-invite/$token',
-  path: '/caregiver-invite/$token',
+const RecallSearchRoute = RecallSearchRouteImport.update({
+  id: '/recall-search',
+  path: '/recall-search',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/callback',
-  path: '/callback',
-  getParentRoute: () => AuthRoute,
+const RecallsRoute = RecallsRouteImport.update({
+  id: '/recalls',
+  path: '/recalls',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedTravelChecklistRoute =
-  AuthenticatedTravelChecklistRouteImport.update({
-    id: '/travel-checklist',
-    path: '/travel-checklist',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedTrackingRoute = AuthenticatedTrackingRouteImport.update({
-  id: '/tracking',
-  path: '/tracking',
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAddRoute = AuthenticatedAddRouteImport.update({
+  id: '/add',
+  path: '/add',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedSafetyGuidesRoute =
-  AuthenticatedSafetyGuidesRouteImport.update({
-    id: '/safety-guides',
-    path: '/safety-guides',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedRegistryCheckRoute =
-  AuthenticatedRegistryCheckRouteImport.update({
-    id: '/registry-check',
-    path: '/registry-check',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedRecallRadarRoute =
-  AuthenticatedRecallRadarRouteImport.update({
-    id: '/recall-radar',
-    path: '/recall-radar',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedRecallCheckRoute =
-  AuthenticatedRecallCheckRouteImport.update({
-    id: '/recall-check',
-    path: '/recall-check',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
+const AuthenticatedAlertsRoute = AuthenticatedAlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedProductsRoute = AuthenticatedProductsRouteImport.update({
-  id: '/products',
-  path: '/products',
+const AuthenticatedBottlesRoute = AuthenticatedBottlesRouteImport.update({
+  id: '/bottles',
+  path: '/bottles',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedPricingRoute = AuthenticatedPricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMomentsRoute = AuthenticatedMomentsRouteImport.update({
-  id: '/moments',
-  path: '/moments',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedHomecomingChecklistRoute =
-  AuthenticatedHomecomingChecklistRouteImport.update({
-    id: '/homecoming-checklist',
-    path: '/homecoming-checklist',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
-  id: '/home',
-  path: '/home',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedFirstFoodsRoute = AuthenticatedFirstFoodsRouteImport.update({
-  id: '/first-foods',
-  path: '/first-foods',
+const AuthenticatedChecklistsRoute = AuthenticatedChecklistsRouteImport.update({
+  id: '/checklists',
+  path: '/checklists',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedEmergencyInfoRoute =
@@ -205,71 +139,111 @@ const AuthenticatedEmergencyInfoRoute =
     path: '/emergency-info',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedChecklistsRoute = AuthenticatedChecklistsRouteImport.update({
-  id: '/checklists',
-  path: '/checklists',
+const AuthenticatedFirstFoodsRoute = AuthenticatedFirstFoodsRouteImport.update({
+  id: '/first-foods',
+  path: '/first-foods',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedBottlesRoute = AuthenticatedBottlesRouteImport.update({
-  id: '/bottles',
-  path: '/bottles',
+const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAlertsRoute = AuthenticatedAlertsRouteImport.update({
-  id: '/alerts',
-  path: '/alerts',
+const AuthenticatedHomecomingChecklistRoute =
+  AuthenticatedHomecomingChecklistRouteImport.update({
+    id: '/homecoming-checklist',
+    path: '/homecoming-checklist',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMomentsRoute = AuthenticatedMomentsRouteImport.update({
+  id: '/moments',
+  path: '/moments',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAddRoute = AuthenticatedAddRouteImport.update({
-  id: '/add',
-  path: '/add',
+const AuthenticatedPricingRoute = AuthenticatedPricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ApiPublicEmergencyShareRoute = ApiPublicEmergencyShareRouteImport.update({
-  id: '/api/public/emergency-share',
-  path: '/api/public/emergency-share',
+const AuthenticatedProductsRoute = AuthenticatedProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRecallCheckRoute =
+  AuthenticatedRecallCheckRouteImport.update({
+    id: '/recall-check',
+    path: '/recall-check',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRecallRadarRoute =
+  AuthenticatedRecallRadarRouteImport.update({
+    id: '/recall-radar',
+    path: '/recall-radar',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRegistryCheckRoute =
+  AuthenticatedRegistryCheckRouteImport.update({
+    id: '/registry-check',
+    path: '/registry-check',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSafetyGuidesRoute =
+  AuthenticatedSafetyGuidesRouteImport.update({
+    id: '/safety-guides',
+    path: '/safety-guides',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTrackingRoute = AuthenticatedTrackingRouteImport.update({
+  id: '/tracking',
+  path: '/tracking',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTravelChecklistRoute =
+  AuthenticatedTravelChecklistRouteImport.update({
+    id: '/travel-checklist',
+    path: '/travel-checklist',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
+const CaregiverInviteTokenRoute = CaregiverInviteTokenRouteImport.update({
+  id: '/caregiver-invite/$token',
+  path: '/caregiver-invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicCaregiverInviteRoute =
-  ApiPublicCaregiverInviteRouteImport.update({
-    id: '/api/public/caregiver-invite',
-    path: '/api/public/caregiver-invite',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const AuthenticatedProfileSupportRoute =
-  AuthenticatedProfileSupportRouteImport.update({
-    id: '/profile_/support',
-    path: '/profile/support',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedProfilePrivacyPromiseRoute =
-  AuthenticatedProfilePrivacyPromiseRouteImport.update({
-    id: '/profile_/privacy-promise',
-    path: '/profile/privacy-promise',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedProfilePrivacyPolicyRoute =
-  AuthenticatedProfilePrivacyPolicyRouteImport.update({
-    id: '/profile_/privacy-policy',
-    path: '/profile/privacy-policy',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedProfileNotificationSettingsRoute =
-  AuthenticatedProfileNotificationSettingsRouteImport.update({
-    id: '/profile_/notification-settings',
-    path: '/profile/notification-settings',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedProfileCatalogModerationRoute =
-  AuthenticatedProfileCatalogModerationRouteImport.update({
-    id: '/profile_/catalog-moderation',
-    path: '/profile/catalog-moderation',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedProfileCaregiversRoute =
-  AuthenticatedProfileCaregiversRouteImport.update({
-    id: '/profile_/caregivers',
-    path: '/profile/caregivers',
+const EmergencyShareTokenRoute = EmergencyShareTokenRouteImport.update({
+  id: '/emergency-share/$token',
+  path: '/emergency-share/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedBottlesNewRoute = AuthenticatedBottlesNewRouteImport.update({
+  id: '/bottles_/new',
+  path: '/bottles/new',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMomentsNewRoute = AuthenticatedMomentsNewRouteImport.update({
+  id: '/moments_/new',
+  path: '/moments/new',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProductsIdRoute = AuthenticatedProductsIdRouteImport.update({
+  id: '/products_/$id',
+  path: '/products/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProductsNewRoute =
+  AuthenticatedProductsNewRouteImport.update({
+    id: '/products_/new',
+    path: '/products/new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedProductsScanRoute =
@@ -278,37 +252,57 @@ const AuthenticatedProductsScanRoute =
     path: '/products/scan',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedProductsNewRoute =
-  AuthenticatedProductsNewRouteImport.update({
-    id: '/products_/new',
-    path: '/products/new',
+const AuthenticatedProfileCaregiversRoute =
+  AuthenticatedProfileCaregiversRouteImport.update({
+    id: '/profile_/caregivers',
+    path: '/profile/caregivers',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedProductsIdRoute = AuthenticatedProductsIdRouteImport.update({
-  id: '/products_/$id',
-  path: '/products/$id',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMomentsNewRoute = AuthenticatedMomentsNewRouteImport.update({
-  id: '/moments_/new',
-  path: '/moments/new',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedBottlesNewRoute = AuthenticatedBottlesNewRouteImport.update({
-  id: '/bottles_/new',
-  path: '/bottles/new',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const ApiPublicPaymentsWebhookRoute =
-  ApiPublicPaymentsWebhookRouteImport.update({
-    id: '/api/public/payments/webhook',
-    path: '/api/public/payments/webhook',
+const AuthenticatedProfileCatalogModerationRoute =
+  AuthenticatedProfileCatalogModerationRouteImport.update({
+    id: '/profile_/catalog-moderation',
+    path: '/profile/catalog-moderation',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProfileNotificationSettingsRoute =
+  AuthenticatedProfileNotificationSettingsRouteImport.update({
+    id: '/profile_/notification-settings',
+    path: '/profile/notification-settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProfilePrivacyPolicyRoute =
+  AuthenticatedProfilePrivacyPolicyRouteImport.update({
+    id: '/profile_/privacy-policy',
+    path: '/profile/privacy-policy',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProfilePrivacyPromiseRoute =
+  AuthenticatedProfilePrivacyPromiseRouteImport.update({
+    id: '/profile_/privacy-promise',
+    path: '/profile/privacy-promise',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProfileSupportRoute =
+  AuthenticatedProfileSupportRouteImport.update({
+    id: '/profile_/support',
+    path: '/profile/support',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const ApiPublicCaregiverInviteRoute =
+  ApiPublicCaregiverInviteRouteImport.update({
+    id: '/api/public/caregiver-invite',
+    path: '/api/public/caregiver-invite',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicPaymentsAppleWebhookRoute =
-  ApiPublicPaymentsAppleWebhookRouteImport.update({
-    id: '/api/public/payments/apple-webhook',
-    path: '/api/public/payments/apple-webhook',
+const ApiPublicEmergencyShareRoute = ApiPublicEmergencyShareRouteImport.update({
+  id: '/api/public/emergency-share',
+  path: '/api/public/emergency-share',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksCheckProductAlertsRoute =
+  ApiPublicHooksCheckProductAlertsRouteImport.update({
+    id: '/api/public/hooks/check-product-alerts',
+    path: '/api/public/hooks/check-product-alerts',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicHooksProductAlertsCheckRoute =
@@ -317,10 +311,16 @@ const ApiPublicHooksProductAlertsCheckRoute =
     path: '/api/public/hooks/product-alerts-check',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksCheckProductAlertsRoute =
-  ApiPublicHooksCheckProductAlertsRouteImport.update({
-    id: '/api/public/hooks/check-product-alerts',
-    path: '/api/public/hooks/check-product-alerts',
+const ApiPublicPaymentsAppleWebhookRoute =
+  ApiPublicPaymentsAppleWebhookRouteImport.update({
+    id: '/api/public/payments/apple-webhook',
+    path: '/api/public/payments/apple-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -654,67 +654,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/support': {
-      id: '/support'
-      path: '/support'
-      fullPath: '/support'
-      preLoaderRoute: typeof SupportRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/recalls': {
-      id: '/recalls'
-      path: '/recalls'
-      fullPath: '/recalls'
-      preLoaderRoute: typeof RecallsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/recall-search': {
-      id: '/recall-search'
-      path: '/recall-search'
-      fullPath: '/recall-search'
-      preLoaderRoute: typeof RecallSearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy-policy': {
-      id: '/privacy-policy'
-      path: '/privacy-policy'
-      fullPath: '/privacy-policy'
-      preLoaderRoute: typeof PrivacyPolicyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/legal-consent': {
-      id: '/legal-consent'
-      path: '/legal-consent'
-      fullPath: '/legal-consent'
-      preLoaderRoute: typeof LegalConsentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -724,144 +668,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/emergency-share/$token': {
-      id: '/emergency-share/$token'
-      path: '/emergency-share/$token'
-      fullPath: '/emergency-share/$token'
-      preLoaderRoute: typeof EmergencyShareTokenRouteImport
+    '/legal-consent': {
+      id: '/legal-consent'
+      path: '/legal-consent'
+      fullPath: '/legal-consent'
+      preLoaderRoute: typeof LegalConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/caregiver-invite/$token': {
-      id: '/caregiver-invite/$token'
-      path: '/caregiver-invite/$token'
-      fullPath: '/caregiver-invite/$token'
-      preLoaderRoute: typeof CaregiverInviteTokenRouteImport
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/callback': {
-      id: '/auth/callback'
-      path: '/callback'
-      fullPath: '/auth/callback'
-      preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof AuthRoute
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/travel-checklist': {
-      id: '/_authenticated/travel-checklist'
-      path: '/travel-checklist'
-      fullPath: '/travel-checklist'
-      preLoaderRoute: typeof AuthenticatedTravelChecklistRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/recall-search': {
+      id: '/recall-search'
+      path: '/recall-search'
+      fullPath: '/recall-search'
+      preLoaderRoute: typeof RecallSearchRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/tracking': {
-      id: '/_authenticated/tracking'
-      path: '/tracking'
-      fullPath: '/tracking'
-      preLoaderRoute: typeof AuthenticatedTrackingRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/recalls': {
+      id: '/recalls'
+      path: '/recalls'
+      fullPath: '/recalls'
+      preLoaderRoute: typeof RecallsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/safety-guides': {
-      id: '/_authenticated/safety-guides'
-      path: '/safety-guides'
-      fullPath: '/safety-guides'
-      preLoaderRoute: typeof AuthenticatedSafetyGuidesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/registry-check': {
-      id: '/_authenticated/registry-check'
-      path: '/registry-check'
-      fullPath: '/registry-check'
-      preLoaderRoute: typeof AuthenticatedRegistryCheckRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/recall-radar': {
-      id: '/_authenticated/recall-radar'
-      path: '/recall-radar'
-      fullPath: '/recall-radar'
-      preLoaderRoute: typeof AuthenticatedRecallRadarRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/recall-check': {
-      id: '/_authenticated/recall-check'
-      path: '/recall-check'
-      fullPath: '/recall-check'
-      preLoaderRoute: typeof AuthenticatedRecallCheckRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/profile': {
-      id: '/_authenticated/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof AuthenticatedProfileRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/products': {
-      id: '/_authenticated/products'
-      path: '/products'
-      fullPath: '/products'
-      preLoaderRoute: typeof AuthenticatedProductsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/pricing': {
-      id: '/_authenticated/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof AuthenticatedPricingRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/moments': {
-      id: '/_authenticated/moments'
-      path: '/moments'
-      fullPath: '/moments'
-      preLoaderRoute: typeof AuthenticatedMomentsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/homecoming-checklist': {
-      id: '/_authenticated/homecoming-checklist'
-      path: '/homecoming-checklist'
-      fullPath: '/homecoming-checklist'
-      preLoaderRoute: typeof AuthenticatedHomecomingChecklistRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/home': {
-      id: '/_authenticated/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof AuthenticatedHomeRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/first-foods': {
-      id: '/_authenticated/first-foods'
-      path: '/first-foods'
-      fullPath: '/first-foods'
-      preLoaderRoute: typeof AuthenticatedFirstFoodsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/emergency-info': {
-      id: '/_authenticated/emergency-info'
-      path: '/emergency-info'
-      fullPath: '/emergency-info'
-      preLoaderRoute: typeof AuthenticatedEmergencyInfoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/checklists': {
-      id: '/_authenticated/checklists'
-      path: '/checklists'
-      fullPath: '/checklists'
-      preLoaderRoute: typeof AuthenticatedChecklistsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/bottles': {
-      id: '/_authenticated/bottles'
-      path: '/bottles'
-      fullPath: '/bottles'
-      preLoaderRoute: typeof AuthenticatedBottlesRouteImport
+    '/_authenticated/add': {
+      id: '/_authenticated/add'
+      path: '/add'
+      fullPath: '/add'
+      preLoaderRoute: typeof AuthenticatedAddRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/alerts': {
@@ -871,88 +745,144 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAlertsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/add': {
-      id: '/_authenticated/add'
-      path: '/add'
-      fullPath: '/add'
-      preLoaderRoute: typeof AuthenticatedAddRouteImport
+    '/_authenticated/bottles': {
+      id: '/_authenticated/bottles'
+      path: '/bottles'
+      fullPath: '/bottles'
+      preLoaderRoute: typeof AuthenticatedBottlesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/emergency-share': {
-      id: '/api/public/emergency-share'
-      path: '/api/public/emergency-share'
-      fullPath: '/api/public/emergency-share'
-      preLoaderRoute: typeof ApiPublicEmergencyShareRouteImport
+    '/_authenticated/checklists': {
+      id: '/_authenticated/checklists'
+      path: '/checklists'
+      fullPath: '/checklists'
+      preLoaderRoute: typeof AuthenticatedChecklistsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/emergency-info': {
+      id: '/_authenticated/emergency-info'
+      path: '/emergency-info'
+      fullPath: '/emergency-info'
+      preLoaderRoute: typeof AuthenticatedEmergencyInfoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/first-foods': {
+      id: '/_authenticated/first-foods'
+      path: '/first-foods'
+      fullPath: '/first-foods'
+      preLoaderRoute: typeof AuthenticatedFirstFoodsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/home': {
+      id: '/_authenticated/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AuthenticatedHomeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/homecoming-checklist': {
+      id: '/_authenticated/homecoming-checklist'
+      path: '/homecoming-checklist'
+      fullPath: '/homecoming-checklist'
+      preLoaderRoute: typeof AuthenticatedHomecomingChecklistRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/moments': {
+      id: '/_authenticated/moments'
+      path: '/moments'
+      fullPath: '/moments'
+      preLoaderRoute: typeof AuthenticatedMomentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pricing': {
+      id: '/_authenticated/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof AuthenticatedPricingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/products': {
+      id: '/_authenticated/products'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof AuthenticatedProductsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/recall-check': {
+      id: '/_authenticated/recall-check'
+      path: '/recall-check'
+      fullPath: '/recall-check'
+      preLoaderRoute: typeof AuthenticatedRecallCheckRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/recall-radar': {
+      id: '/_authenticated/recall-radar'
+      path: '/recall-radar'
+      fullPath: '/recall-radar'
+      preLoaderRoute: typeof AuthenticatedRecallRadarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/registry-check': {
+      id: '/_authenticated/registry-check'
+      path: '/registry-check'
+      fullPath: '/registry-check'
+      preLoaderRoute: typeof AuthenticatedRegistryCheckRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/safety-guides': {
+      id: '/_authenticated/safety-guides'
+      path: '/safety-guides'
+      fullPath: '/safety-guides'
+      preLoaderRoute: typeof AuthenticatedSafetyGuidesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tracking': {
+      id: '/_authenticated/tracking'
+      path: '/tracking'
+      fullPath: '/tracking'
+      preLoaderRoute: typeof AuthenticatedTrackingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/travel-checklist': {
+      id: '/_authenticated/travel-checklist'
+      path: '/travel-checklist'
+      fullPath: '/travel-checklist'
+      preLoaderRoute: typeof AuthenticatedTravelChecklistRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/caregiver-invite/$token': {
+      id: '/caregiver-invite/$token'
+      path: '/caregiver-invite/$token'
+      fullPath: '/caregiver-invite/$token'
+      preLoaderRoute: typeof CaregiverInviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/caregiver-invite': {
-      id: '/api/public/caregiver-invite'
-      path: '/api/public/caregiver-invite'
-      fullPath: '/api/public/caregiver-invite'
-      preLoaderRoute: typeof ApiPublicCaregiverInviteRouteImport
+    '/emergency-share/$token': {
+      id: '/emergency-share/$token'
+      path: '/emergency-share/$token'
+      fullPath: '/emergency-share/$token'
+      preLoaderRoute: typeof EmergencyShareTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/profile_/support': {
-      id: '/_authenticated/profile_/support'
-      path: '/profile/support'
-      fullPath: '/profile/support'
-      preLoaderRoute: typeof AuthenticatedProfileSupportRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/profile_/privacy-promise': {
-      id: '/_authenticated/profile_/privacy-promise'
-      path: '/profile/privacy-promise'
-      fullPath: '/profile/privacy-promise'
-      preLoaderRoute: typeof AuthenticatedProfilePrivacyPromiseRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/profile_/privacy-policy': {
-      id: '/_authenticated/profile_/privacy-policy'
-      path: '/profile/privacy-policy'
-      fullPath: '/profile/privacy-policy'
-      preLoaderRoute: typeof AuthenticatedProfilePrivacyPolicyRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/profile_/notification-settings': {
-      id: '/_authenticated/profile_/notification-settings'
-      path: '/profile/notification-settings'
-      fullPath: '/profile/notification-settings'
-      preLoaderRoute: typeof AuthenticatedProfileNotificationSettingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/profile_/catalog-moderation': {
-      id: '/_authenticated/profile_/catalog-moderation'
-      path: '/profile/catalog-moderation'
-      fullPath: '/profile/catalog-moderation'
-      preLoaderRoute: typeof AuthenticatedProfileCatalogModerationRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/profile_/caregivers': {
-      id: '/_authenticated/profile_/caregivers'
-      path: '/profile/caregivers'
-      fullPath: '/profile/caregivers'
-      preLoaderRoute: typeof AuthenticatedProfileCaregiversRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/products_/scan': {
-      id: '/_authenticated/products_/scan'
-      path: '/products/scan'
-      fullPath: '/products/scan'
-      preLoaderRoute: typeof AuthenticatedProductsScanRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/products_/new': {
-      id: '/_authenticated/products_/new'
-      path: '/products/new'
-      fullPath: '/products/new'
-      preLoaderRoute: typeof AuthenticatedProductsNewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/products_/$id': {
-      id: '/_authenticated/products_/$id'
-      path: '/products/$id'
-      fullPath: '/products/$id'
-      preLoaderRoute: typeof AuthenticatedProductsIdRouteImport
+    '/_authenticated/bottles_/new': {
+      id: '/_authenticated/bottles_/new'
+      path: '/bottles/new'
+      fullPath: '/bottles/new'
+      preLoaderRoute: typeof AuthenticatedBottlesNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/moments_/new': {
@@ -962,25 +892,88 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMomentsNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/bottles_/new': {
-      id: '/_authenticated/bottles_/new'
-      path: '/bottles/new'
-      fullPath: '/bottles/new'
-      preLoaderRoute: typeof AuthenticatedBottlesNewRouteImport
+    '/_authenticated/products_/$id': {
+      id: '/_authenticated/products_/$id'
+      path: '/products/$id'
+      fullPath: '/products/$id'
+      preLoaderRoute: typeof AuthenticatedProductsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/payments/webhook': {
-      id: '/api/public/payments/webhook'
-      path: '/api/public/payments/webhook'
-      fullPath: '/api/public/payments/webhook'
-      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+    '/_authenticated/products_/new': {
+      id: '/_authenticated/products_/new'
+      path: '/products/new'
+      fullPath: '/products/new'
+      preLoaderRoute: typeof AuthenticatedProductsNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/products_/scan': {
+      id: '/_authenticated/products_/scan'
+      path: '/products/scan'
+      fullPath: '/products/scan'
+      preLoaderRoute: typeof AuthenticatedProductsScanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile_/caregivers': {
+      id: '/_authenticated/profile_/caregivers'
+      path: '/profile/caregivers'
+      fullPath: '/profile/caregivers'
+      preLoaderRoute: typeof AuthenticatedProfileCaregiversRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile_/catalog-moderation': {
+      id: '/_authenticated/profile_/catalog-moderation'
+      path: '/profile/catalog-moderation'
+      fullPath: '/profile/catalog-moderation'
+      preLoaderRoute: typeof AuthenticatedProfileCatalogModerationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile_/notification-settings': {
+      id: '/_authenticated/profile_/notification-settings'
+      path: '/profile/notification-settings'
+      fullPath: '/profile/notification-settings'
+      preLoaderRoute: typeof AuthenticatedProfileNotificationSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile_/privacy-policy': {
+      id: '/_authenticated/profile_/privacy-policy'
+      path: '/profile/privacy-policy'
+      fullPath: '/profile/privacy-policy'
+      preLoaderRoute: typeof AuthenticatedProfilePrivacyPolicyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile_/privacy-promise': {
+      id: '/_authenticated/profile_/privacy-promise'
+      path: '/profile/privacy-promise'
+      fullPath: '/profile/privacy-promise'
+      preLoaderRoute: typeof AuthenticatedProfilePrivacyPromiseRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile_/support': {
+      id: '/_authenticated/profile_/support'
+      path: '/profile/support'
+      fullPath: '/profile/support'
+      preLoaderRoute: typeof AuthenticatedProfileSupportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/caregiver-invite': {
+      id: '/api/public/caregiver-invite'
+      path: '/api/public/caregiver-invite'
+      fullPath: '/api/public/caregiver-invite'
+      preLoaderRoute: typeof ApiPublicCaregiverInviteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/payments/apple-webhook': {
-      id: '/api/public/payments/apple-webhook'
-      path: '/api/public/payments/apple-webhook'
-      fullPath: '/api/public/payments/apple-webhook'
-      preLoaderRoute: typeof ApiPublicPaymentsAppleWebhookRouteImport
+    '/api/public/emergency-share': {
+      id: '/api/public/emergency-share'
+      path: '/api/public/emergency-share'
+      fullPath: '/api/public/emergency-share'
+      preLoaderRoute: typeof ApiPublicEmergencyShareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/check-product-alerts': {
+      id: '/api/public/hooks/check-product-alerts'
+      path: '/api/public/hooks/check-product-alerts'
+      fullPath: '/api/public/hooks/check-product-alerts'
+      preLoaderRoute: typeof ApiPublicHooksCheckProductAlertsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/product-alerts-check': {
@@ -990,11 +983,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksProductAlertsCheckRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/check-product-alerts': {
-      id: '/api/public/hooks/check-product-alerts'
-      path: '/api/public/hooks/check-product-alerts'
-      fullPath: '/api/public/hooks/check-product-alerts'
-      preLoaderRoute: typeof ApiPublicHooksCheckProductAlertsRouteImport
+    '/api/public/payments/apple-webhook': {
+      id: '/api/public/payments/apple-webhook'
+      path: '/api/public/payments/apple-webhook'
+      fullPath: '/api/public/payments/apple-webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsAppleWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
