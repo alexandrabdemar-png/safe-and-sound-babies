@@ -12,8 +12,9 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:rls": "supabase/tests/run_rls_tests.sh -m supabase/migrations/20260704000000_product_catalog.sql -m supabase/migrations/20260704000001_product_photos_bucket.sql supabase/tests/product_catalog_rls.sql supabase/tests/product_photos_bucket_rls.sql",
-    "ios:setup": "npx cap add ios && npx cap sync ios && node scripts/ios-configure.mjs",
-    "ios:sync": "npx cap sync ios && node scripts/ios-configure.mjs",
+    "ios:setup": "npx cap add ios && npx cap sync ios && node scripts/ios-configure.mjs && node scripts/ios-verify-iap.mjs",
+    "ios:sync": "npx cap sync ios && node scripts/ios-configure.mjs && node scripts/ios-verify-iap.mjs",
+    "ios:verify-iap": "node scripts/ios-verify-iap.mjs",
     "ios:open": "npx cap open ios"
   },
   "dependencies": {
