@@ -12,8 +12,9 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:rls": "supabase/tests/run_rls_tests.sh -m supabase/migrations/20260704000000_product_catalog.sql -m supabase/migrations/20260704000001_product_photos_bucket.sql supabase/tests/product_catalog_rls.sql supabase/tests/product_photos_bucket_rls.sql",
-    "ios:setup": "npx cap add ios && npx cap sync ios && node scripts/ios-configure.mjs",
-    "ios:sync": "npx cap sync ios && node scripts/ios-configure.mjs",
+    "ios:setup": "npx cap add ios && npx cap sync ios && node scripts/ios-configure.mjs && node scripts/ios-verify-iap.mjs",
+    "ios:sync": "npx cap sync ios && node scripts/ios-configure.mjs && node scripts/ios-verify-iap.mjs",
+    "ios:verify-iap": "node scripts/ios-verify-iap.mjs",
     "ios:open": "npx cap open ios"
   },
   "dependencies": {
@@ -67,9 +68,9 @@
     "@supabase/supabase-js": "^2.107.0",
     "@tailwindcss/vite": "^4.2.1",
     "@tanstack/react-query": "^5.83.0",
-    "@tanstack/react-router": "^1.168.25",
-    "@tanstack/react-start": "^1.167.50",
-    "@tanstack/router-plugin": "^1.167.28",
+    "@tanstack/react-router": "1.170.41",
+    "@tanstack/react-start": "1.168.60",
+    "@tanstack/router-plugin": "1.168.42",
     "ai": "^6.0.197",
     "apple-iap": "file:./packages/apple-iap",
     "class-variance-authority": "^0.7.1",
@@ -98,7 +99,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
-    "@lovable.dev/vite-tanstack-config": "2.25.2",
+    "@lovable.dev/vite-tanstack-config": "2.26.5",
     "@types/node": "^22.16.5",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",

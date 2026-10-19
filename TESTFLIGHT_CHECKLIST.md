@@ -11,6 +11,7 @@ paths are exercised from zero.
 - [ ] Apple + Google auth providers enabled in the backend auth config (otherwise "Unsupported provider").
 - [ ] Xcode: Push Notifications + Background Modes → Remote notifications capabilities added.
 - [ ] Xcode: In-App Purchase capability added (App target → Signing & Capabilities).
+- [ ] `bun run ios:verify-iap` passes: AppleIAPPlugin registered and AppleIap/AppleIAP native dependency installed. This is not a substitute for checking the actual archive.
 - [ ] App Store Connect: Pro subscription product created and backend secrets set (`APPLE_IAP_KEY_ID`, `APPLE_IAP_ISSUER_ID`, `APPLE_IAP_PRIVATE_KEY`, `APPLE_IAP_BUNDLE_ID`, `APPLE_IAP_APP_APPLE_ID`) — see `packages/apple-iap/README.md`. **Purchasing Pro on iOS will fail with none of this done yet.**
 - [ ] Verify `20260818000000_purge_child_birthdate_and_measurements.sql` and `20260818010000_drop_dead_sizeup_prediction_columns.sql` have actually been applied to the live database, not just committed as migration files — see COMPLIANCE_REPORT.md §"Prioritized pre-launch checklist" item 5 for how to check and the exact SQL to run if not.
 
@@ -65,6 +66,8 @@ paths are exercised from zero.
 - [ ] Pricing screen shows price, billing period, trial length, and renewal wording.
 - [ ] On the web build: Stripe purchase path completes.
 - [ ] On a native iOS build: native StoreKit purchase sheet appears (not Stripe checkout) and completes with a sandbox tester account — see `packages/apple-iap/README.md` for the full checklist (getProduct, purchase, cancel, restore, renewal, refund).
+- [ ] Both Monthly (`monthlyplan`) and Yearly (`annualplan`) load their actual StoreKit price and complete on the new physical-iPhone TestFlight build. No hidden lookup errors or web checkout.
+- [ ] Apple review recording starts at the iPhone Home Screen, uses the supplied demo account, and demonstrates core features and successful sandbox purchase flows. See `APP_STORE_RESUBMISSION.md`.
 - [ ] Restore purchases (iOS) recovers a purchase after a force-quit before it reported to the server.
 - [ ] Manage/cancel path reachable; cancelled-but-in-period user keeps Pro until period end. On iOS this opens the App Store subscription management page, not Stripe's billing portal.
 - [ ] Pro features lock again after the period ends.

@@ -13,11 +13,19 @@ import { getStripeEnvironment } from '@/lib/stripe';
 import { openUrl } from '@/lib/browser';
 import { toast } from 'sonner';
 import type { AppleProduct } from 'apple-iap';
+import { appleProductIdForPeriod, loadAppleProduct } from '@/lib/appleProducts';
 
 export const Route = createFileRoute('/_authenticated/pricing')({
   ssr: false,
   component: PricingPage,
-  head: () => ({ meta: [{ title: 'Pricing — Peace of Mine' }] }),
+  head: () => ({ meta: [
+    { title: 'Pro Subscriptions — Peace of Mine' },
+    { name: 'description', content: 'Choose a monthly or annual Peace of Mine Pro subscription and manage your purchases.' },
+    { property: 'og:title', content: 'Pro Subscriptions — Peace of Mine' },
+    { property: 'og:description', content: 'Monthly and annual subscriptions for Peace of Mine Pro.' },
+    { property: 'og:type', content: 'website' },
+    { name: 'twitter:card', content: 'summary' },
+  ] }),
   validateSearch: (s: Record<string, unknown>): { checkout?: string } => ({
     checkout: typeof s.checkout === 'string' ? s.checkout : undefined,
   }),
@@ -52,14 +60,15 @@ function PricingPage() {
   const [applePurchasing, setApplePurchasing] = useState(false);
   const [appleRestoring, setAppleRestoring] = useState(false);
   const [appleProduct, setAppleProduct] = useState<AppleProduct | null>(null);
-  // Web checkout offers monthly or annual billing. On iOS, StoreKit only has
-  // the monthly product configured in App Store Connect, so the toggle is
-  // hidden there and Apple's own reported price is shown instead.
+  const [appleProductError, setAppleProductError] = useState<string | null>(null);
+  const [appleLoadAttempt, setAppleLoadAttempt] = useState(0);
+  // Both billing periods are offered on iOS and web.
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const isYearly = billingPeriod === 'yearly';
-  const appleProductId = isYearly ? 'annualplan' : 'monthlyplan';
-  const priceLabel = isNativeIOS && appleProduct
-    ? appleProduct.displayPrice
+  const appleProductId = appleProductIdForPeriod(billingPeriod);
+  const appleProductReady = appleProduct?.id === appleProductId;
+  const priceLabel = isNativeIOS !== false
+    ? appleProductReady ? appleProduct?.displayPrice : '—'
     : isYearly
       ? '$34.99'
       : '$3.39';
@@ -74,31 +83,29 @@ function PricingPage() {
     }
   }, [checkout]);
 
-  // On iOS, show the actual App Store Connect price/trial instead of the
-  // hardcoded copy below — Apple can localize or adjust the displayed
-  // price by region/tax, so what StoreKit reports is the source of truth
-  // once it's available. Silently keeps the hardcoded fallback if this
-  // fails (e.g. the product isn't fully configured yet) rather than
-  // blocking the whole pricing screen on it.
+  // A native price must come from StoreKit, never from the web fallback.
   useEffect(() => {
     if (!isNativeIOS) return;
     setAppleProduct(null);
+    setAppleProductError(null);
     let cancelled = false;
     (async () => {
       try {
         const { AppleIAP } = await import('apple-iap');
-        const product = await AppleIAP.getProduct({ productId: appleProductId });
+        const { Capacitor } = await import('@capacitor/core');
+        const product = await loadAppleProduct(appleProductId, Capacitor.isPluginAvailable('AppleIAP'), (options) => AppleIAP.getProduct(options));
         if (!cancelled) setAppleProduct(product);
-      } catch {
-        // Fall back to the hardcoded price/trial copy.
+      } catch (error) {
+        if (!cancelled) setAppleProductError(error instanceof Error ? error.message : 'Could not load this subscription from the App Store. Please try again.');
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [isNativeIOS, appleProductId]);
+  }, [isNativeIOS, appleProductId, appleLoadAttempt]);
 
   const handleAppleUpgrade = async () => {
+    if (!appleProductReady) return;
     setApplePurchasing(true);
     try {
       const { data } = await supabase.auth.getUser();
@@ -156,6 +163,7 @@ function PricingPage() {
   };
 
   const handleUpgrade = async () => {
+    if (isNativeIOS === null) return;
     if (isNativeIOS) {
       await handleAppleUpgrade();
       return;
@@ -237,9 +245,11 @@ function PricingPage() {
         {(
           <div className="mx-auto flex w-full max-w-xs items-center rounded-full border bg-muted/40 p-1">
             {(['monthly', 'yearly'] as const).map((period) => (
-              <button
+              <Button
                 key={period}
+                variant="ghost"
                 type="button"
+                disabled={applePurchasing}
                 onClick={() => setBillingPeriod(period)}
                 className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition ${
                   billingPeriod === period
@@ -251,7 +261,7 @@ function PricingPage() {
                 {period === 'yearly' && (
                   <span className="ml-1.5 text-xs font-semibold text-primary">Save 14%</span>
                 )}
-              </button>
+              </Button>
             ))}
           </div>
         )}
@@ -292,7 +302,7 @@ function PricingPage() {
             <div className="text-right">
               <div className="text-2xl font-bold">{priceLabel}</div>
               <div className="text-xs text-muted-foreground">{periodLabel}</div>
-              {isYearly && (
+              {isYearly && isNativeIOS === false && (
                 <div className="text-xs text-muted-foreground">
                   about $2.92/month — save 14%
                 </div>
@@ -327,13 +337,19 @@ function PricingPage() {
             </div>
           ) : (
             <div className="space-y-1.5">
-              <Button onClick={handleUpgrade} className="w-full" disabled={applePurchasing}>
-                {applePurchasing ? (
+              <Button onClick={handleUpgrade} className="w-full" disabled={applePurchasing || isNativeIOS === null || (isNativeIOS && !appleProductReady)}>
+                {applePurchasing || isNativeIOS === null || (isNativeIOS && !appleProductReady && !appleProductError) ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  'Start free trial'
+                  appleProductError ? 'Subscription unavailable' : 'Start free trial'
                 )}
               </Button>
+              {isNativeIOS && appleProductError && (
+                <div role="alert" className="space-y-2 py-2 text-center">
+                  <p className="text-sm text-destructive">{appleProductError}</p>
+                  <Button variant="outline" size="sm" onClick={() => setAppleLoadAttempt((attempt) => attempt + 1)}>Retry App Store</Button>
+                </div>
+              )}
               <p className="text-xs text-center text-muted-foreground">
                 7 days free, then {priceLabel}/{renewalWord}. Cancel anytime.
               </p>
