@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Package, Plus, BarChart2, Bell } from "lucide-react";
+import { Home, Package, Plus, BarChart2 } from "lucide-react";
+import { BellIcon } from "@/components/BellIcon";
 import { cn } from "@/lib/utils";
 import { useUnackedRecalls } from "@/hooks/useUnackedRecalls";
 import { AddSheet } from "@/components/AddSheet";
@@ -11,7 +12,7 @@ const tabs = [
 ] as const;
 
 const rightTabs = [
-  { to: "/alerts", label: "Alerts", icon: Bell },
+  { to: "/alerts", label: "Alerts", icon: BellIcon },
   { to: "/products", label: "Products", icon: Package },
 ] as const;
 

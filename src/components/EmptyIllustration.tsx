@@ -66,25 +66,25 @@ export function SparkleIllustration({ className = "" }: IllustrationProps) {
   );
 }
 
-// A gentle bell with leaves — for Alerts empty state
+// A gentle hand-drawn bell with sound waves — for Alerts empty state
 export function BellIllustration({ className = "" }: IllustrationProps) {
   return (
     <svg viewBox="0 0 120 90" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden>
-      {/* bell body */}
-      <path d="M60 18 C46 18 36 30 36 46 L36 60 L84 60 L84 46 C84 30 74 18 60 18 Z" style={S.creamFillSageStroke} strokeWidth="1.5" strokeLinejoin="round"/>
-      {/* bell clapper */}
-      <path d="M36 60 Q60 68 84 60" style={S.sageFill} strokeWidth="1.5" strokeLinecap="round"/>
-      <circle cx="60" cy="65" r="4" style={S.creamFillSageStroke} strokeWidth="1.5"/>
-      {/* hanger */}
-      <line x1="60" y1="18" x2="60" y2="12" style={S.sageStroke} strokeWidth="1.5" strokeLinecap="round"/>
-      <circle cx="60" cy="10" r="2.5" fill="none" style={S.sageStroke} strokeWidth="1.5"/>
-      {/* leaves */}
-      <path d="M28 52 C22 44 26 36 34 40 C30 46 32 52 28 52 Z" style={S.creamFillSageStroke} strokeWidth="1.2"/>
-      <path d="M92 52 C98 44 94 36 86 40 C90 46 88 52 92 52 Z" style={S.creamFillSageStroke} strokeWidth="1.2"/>
+      {/* top loop */}
+      <path d="M56 16 v-2.5 a4 4 0 0 1 8 0 V16" style={S.sageStroke} strokeWidth="1.5" strokeLinecap="round"/>
+      {/* bell body — rounded dome with a gently flared skirt */}
+      <path d="M60 16 C47 16 39 26 39 40 L39 55 Q39 60 44 60 L76 60 Q81 60 81 55 L81 40 C81 26 73 16 60 16 Z" style={S.creamFillSageStroke} strokeWidth="1.5" strokeLinejoin="round"/>
+      {/* clapper hanging below the rim */}
+      <line x1="60" y1="60" x2="60" y2="62.5" style={S.sageStroke} strokeWidth="1.5" strokeLinecap="round"/>
+      <circle cx="60" cy="66.5" r="4" style={S.creamFillSageStroke} strokeWidth="1.5"/>
+      {/* gentle sound waves */}
+      <path d="M27 36 Q22.5 43 27 50" style={S.sageStroke} strokeWidth="1.3" strokeLinecap="round" opacity="0.55"/>
+      <path d="M93 36 Q97.5 43 93 50" style={S.sageStroke} strokeWidth="1.3" strokeLinecap="round" opacity="0.55"/>
       {/* sparkle dots */}
-      <circle cx="46" cy="28" r="1.5" style={S.sageFill} opacity="0.5"/>
-      <circle cx="74" cy="26" r="1" style={S.sageFill} opacity="0.4"/>
-      <circle cx="80" cy="38" r="1.2" style={S.sageFill} opacity="0.3"/>
+      <circle cx="46" cy="26" r="1.5" style={S.sageFill} opacity="0.5"/>
+      <circle cx="75" cy="24" r="1" style={S.sageFill} opacity="0.4"/>
+      <circle cx="86" cy="34" r="1.2" style={S.sageFill} opacity="0.35"/>
+      <circle cx="34" cy="30" r="1" style={S.sageFill} opacity="0.35"/>
     </svg>
   );
 }
