@@ -12,6 +12,7 @@ import {
   Download, CreditCard, Shield, Share2, Gift, Copy, Check, HelpCircle, MessageSquare,
   FileText, KeyRound,
 } from "lucide-react";
+import { BellIcon } from "@/components/BellIcon";
 
 import { useSubscription } from "@/hooks/useSubscription";
 import { useProGate } from "@/hooks/useProGate";
@@ -273,7 +274,7 @@ function ProfilePage() {
             </p>
           </div>
           <Button asChild variant="ghost" className="w-full justify-start rounded-xl">
-            <Link to="/profile/notification-settings"><Bell className="h-4 w-4 mr-2" /> Notification Settings</Link>
+            <Link to="/profile/notification-settings"><BellIcon className="h-4 w-4 mr-2" /> Notification Settings</Link>
           </Button>
           <Button
             variant="ghost"
