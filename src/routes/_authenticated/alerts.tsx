@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
-import { AlertTriangle, ArrowLeft, ArrowUpRight, Bell, Check, ChevronDown, ChevronUp, Clock, Loader2, Plus, RefreshCw } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowUpRight, AlarmClock, Check, ChevronDown, ChevronUp, Clock, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { hapticSuccess, hapticDismiss } from "@/lib/haptic";
@@ -437,7 +437,7 @@ function AlertsPage() {
               )}
 
               {visibleReplace.length > 0 && (
-                <Section title="Worth reviewing for replacement" icon={RefreshCw}>
+                <Section title="Worth reviewing for replacement" icon={AlarmClock}>
                   <ul className="space-y-2.5">
                     {visibleReplace.map((p) => (
                       <ProductRow

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   LogOut, User as UserIcon, Sparkles, Loader2, Plus, Trash2,
-  Download, CreditCard, Shield, Bell, Share2, Gift, Copy, Check, HelpCircle, MessageSquare,
+  Download, CreditCard, Shield, Share2, Gift, Copy, Check, HelpCircle, MessageSquare,
   FileText, KeyRound,
 } from "lucide-react";
 

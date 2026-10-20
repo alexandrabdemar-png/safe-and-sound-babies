@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, Bell, Clock, Package, PauseCircle, Globe, Smartphone } from "lucide-react";
+import { ChevronLeft, Clock, Package, PauseCircle, Globe, Smartphone } from "lucide-react";
+import { BellIcon } from "@/components/BellIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
@@ -197,7 +198,7 @@ function NotificationSettingsPage() {
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <Bell className="h-5 w-5 text-accent" />
+        <BellIcon className="h-5 w-5 text-accent" />
         <h1 className="font-display text-base font-semibold">Notification Settings</h1>
       </header>
 
