@@ -1,4 +1,12 @@
-# Apple review follow-up — build 22 (October 18, 2026)
+# Apple review follow-up — build 24 (October 21, 2026)
+
+## Root cause found for "unable to purchase subscription"
+
+Every Apple purchase failed after the App Store sheet completed: saving the purchase hit a database error ("no unique or exclusion constraint matching the ON CONFLICT specification"), so the app showed an error and Pro never unlocked. No Apple purchase had ever been recorded. Fixed on October 21, 2026. Also fixed: an App Review/TestFlight (sandbox) purchase now unlocks Pro in the production app.
+
+This fix is on the hosted site, so **publish in Lovable** before the next review. A new binary is not required for this fix, but uploading build 25 is fine. Also confirm the Paid Apps Agreement shows **Active** (it was Processing on Oct 18).
+
+# Earlier follow-up — build 22 (October 18, 2026)
 
 Apple’s current rejection is Guideline 2.1(b): the monthly and annual in-app purchases could not be found in the submitted app. The screenshot shows both subscriptions already included in the submission as Ready for Review. Do not remove them; they are intended to be available.
 
