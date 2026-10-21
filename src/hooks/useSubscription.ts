@@ -45,17 +45,14 @@ export function useSubscription() {
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     async function refetch() {
-      if (!userIdLocal || !env) return;
+      if (!userIdLocal) return;
       const { data, error } = await supabase
         .from('subscriptions')
         .select(
-          'plan,status,price_id,current_period_end,cancel_at_period_end,stripe_customer_id,payment_provider',
+          'plan,status,price_id,current_period_end,cancel_at_period_end,stripe_customer_id,payment_provider,environment',
         )
         .eq('user_id', userIdLocal)
-        .eq('environment', env)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
       if (cancelled) return;
       if (error) {
         // Never downgrade a paying customer because of a transient/schema
@@ -63,8 +60,9 @@ export function useSubscription() {
         console.error('[useSubscription] subscription lookup failed', error.message);
         return;
       }
-      setSubscription((data as SubscriptionRow | null) ?? null);
+      setSubscription(pickSubscription((data ?? []) as (SubscriptionRow & { environment: string })[], env));
     }
+
 
     async function load() {
       const { data: userData } = await supabase.auth.getUser();
