@@ -2,17 +2,12 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getStripeEnvironment } from '@/lib/stripe';
 import { computeIsPro } from '@/lib/isPro';
+import { pickSubscription } from '@/lib/pickSubscription';
+import type { SubscriptionRow } from '@/lib/pickSubscription';
 import { PAYWALL_DISABLED } from '@/lib/paywallConfig';
 
-export type SubscriptionRow = {
-  plan: string | null;
-  status: string | null;
-  price_id: string | null;
-  current_period_end: string | null;
-  cancel_at_period_end: boolean | null;
-  stripe_customer_id: string | null;
-  payment_provider: string | null;
-};
+export type { SubscriptionRow };
+
 
 
 export function useSubscription() {
@@ -45,17 +40,14 @@ export function useSubscription() {
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     async function refetch() {
-      if (!userIdLocal || !env) return;
+      if (!userIdLocal) return;
       const { data, error } = await supabase
         .from('subscriptions')
         .select(
-          'plan,status,price_id,current_period_end,cancel_at_period_end,stripe_customer_id,payment_provider',
+          'plan,status,price_id,current_period_end,cancel_at_period_end,stripe_customer_id,payment_provider,environment',
         )
         .eq('user_id', userIdLocal)
-        .eq('environment', env)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
       if (cancelled) return;
       if (error) {
         // Never downgrade a paying customer because of a transient/schema
@@ -63,13 +55,14 @@ export function useSubscription() {
         console.error('[useSubscription] subscription lookup failed', error.message);
         return;
       }
-      setSubscription((data as SubscriptionRow | null) ?? null);
+      setSubscription(pickSubscription((data ?? []) as (SubscriptionRow & { environment: string })[], env));
     }
+
 
     async function load() {
       const { data: userData } = await supabase.auth.getUser();
       userIdLocal = userData.user?.id ?? null;
-      if (!userIdLocal || !env) {
+      if (!userIdLocal) {
         if (!cancelled) { setSubscription(null); setLoading(false); }
         return;
       }
