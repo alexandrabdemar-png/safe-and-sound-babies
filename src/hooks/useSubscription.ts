@@ -2,17 +2,12 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getStripeEnvironment } from '@/lib/stripe';
 import { computeIsPro } from '@/lib/isPro';
+import { pickSubscription } from '@/lib/pickSubscription';
+import type { SubscriptionRow } from '@/lib/pickSubscription';
 import { PAYWALL_DISABLED } from '@/lib/paywallConfig';
 
-export type SubscriptionRow = {
-  plan: string | null;
-  status: string | null;
-  price_id: string | null;
-  current_period_end: string | null;
-  cancel_at_period_end: boolean | null;
-  stripe_customer_id: string | null;
-  payment_provider: string | null;
-};
+export type { SubscriptionRow };
+
 
 
 export function useSubscription() {
@@ -67,7 +62,7 @@ export function useSubscription() {
     async function load() {
       const { data: userData } = await supabase.auth.getUser();
       userIdLocal = userData.user?.id ?? null;
-      if (!userIdLocal || !env) {
+      if (!userIdLocal) {
         if (!cancelled) { setSubscription(null); setLoading(false); }
         return;
       }
