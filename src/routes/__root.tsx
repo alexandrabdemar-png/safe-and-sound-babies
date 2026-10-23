@@ -118,6 +118,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "apple-touch-icon", sizes: "60x60", href: "/app-icons/icon-60x60.png" },
       { rel: "apple-touch-startup-image", href: "/splash.png" },
     ],
+    // iPhone app launch: the server-rendered marketing page would flash
+    // before the app can check the saved login. Hide it until the page's own
+    // code takes over (src/routes/index.tsx); the timeout is a safety net.
+    scripts: [{
+      children:
+        "(function(){try{var w=window,b=w.webkit&&w.webkit.messageHandlers&&w.webkit.messageHandlers.bridge;" +
+        "if(b&&location.pathname==='/'){var d=document.documentElement;d.setAttribute('data-native-launch','');" +
+        "setTimeout(function(){d.removeAttribute('data-native-launch')},5000)}}catch(e){}})();",
+    }],
   }),
   shellComponent: RootShell,
   component: RootComponent,

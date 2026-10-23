@@ -263,3 +263,72 @@ describe("runRecallBatch", () => {
     });
   });
 });
+
+describe("packaged foods are matched against the bulk FDA food feed", () => {
+  const otherSources = {
+    "saferproducts.gov": [],
+    "fsis.usda.gov": [],
+    "transportation.gov": [],
+    "canada.ca": [],
+    "opendatasoft.com": { results: [] },
+  };
+  const food = (o: Partial<BatchProduct>) => product({ product_type: "food", ...o });
+
+  it("matches brand + name and printed UPCs from one bulk download, with no per-food searches", async () => {
+    const fetchImpl = vi.fn(async (url: string) => {
+      if (url.includes("api.fda.gov")) {
+        expect(url).toContain("report_date:[");
+        return jsonResponse({
+          meta: { results: { total: 2 } },
+          results: [
+            {
+              recall_number: "F-10",
+              product_description: "Happy Baby Organics Clearly Crafted Pear Kale Spinach pouches",
+            },
+            {
+              recall_number: "F-11",
+              product_description: "Store brand chocolate chips, UPC 0 41220 12345 6",
+            },
+          ],
+        });
+      }
+      const body = Object.entries(otherSources).find(([k]) => url.includes(k))?.[1] ?? [];
+      return jsonResponse(body);
+    }) as unknown as typeof fetch;
+
+    const products = Array.from({ length: 150 }, (_, i) =>
+      food({ id: `filler-${i}`, name: `Cereal ${i}`, brand: "Nobody" }),
+    );
+    products.push(
+      food({ id: "pouch", name: "Pear Kale Spinach", brand: "Happy Baby" }),
+      food({ id: "chips", name: "Chocolate Chips", brand: "Other Brand", barcode: "041220123456" }),
+      food({ id: "wrong-brand", name: "Pear Kale Spinach", brand: "Gerber" }),
+    );
+
+    const result = await runRecallBatch(fetchImpl, products);
+    const fda = result.matches.filter((m) => m.source === "fda");
+    expect(fda.map((m) => m.product_id).sort()).toEqual(["chips", "pouch"]);
+    const fdaCalls = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock.calls.filter((c) =>
+      String(c[0]).includes("api.fda.gov"),
+    );
+    expect(fdaCalls).toHaveLength(1);
+  });
+
+  it("falls back to per-name searches when the bulk feed can't be read", async () => {
+    const fetchImpl = vi.fn(async (url: string) => {
+      if (url.includes("report_date"))
+        return { ok: false, status: 500, json: async () => ({}) } as Response;
+      if (url.includes("api.fda.gov"))
+        return jsonResponse({
+          results: [{ recall_number: "F-12", product_description: "Happy Baby Pear Kale Spinach" }],
+        });
+      return jsonResponse([]);
+    }) as unknown as typeof fetch;
+    const result = await runRecallBatch(fetchImpl, [
+      food({ id: "pouch", name: "Pear Kale Spinach", brand: "Happy Baby" }),
+    ]);
+    expect(result.matches.filter((m) => m.source === "fda").map((m) => m.product_id)).toEqual([
+      "pouch",
+    ]);
+  });
+});

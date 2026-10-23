@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Package, Sparkles, Utensils, ArrowRight } from "lucide-react";
+import { Package, Sparkles, Utensils, ArrowRight, ShoppingBasket } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { BottleIcon } from "@/components/BottleIcon";
 import { CategoryBadge } from "@/components/CategoryBadge";
@@ -37,6 +37,13 @@ export const addOptions = [
     title: "A first food",
     blurb: "Record a new food and note any allergen reactions.",
   },
+  {
+    to: "/groceries",
+    icon: ShoppingBasket,
+    illustration: undefined,
+    title: "This week's groceries",
+    blurb: "Add packaged foods you bought so we can watch them for recalls.",
+  },
 ] as const;
 
 export function AddSheet({
@@ -69,6 +76,7 @@ export function AddSheet({
                 onClick={() => {
                   onOpenChange(false);
                   if (to === "/first-foods") sessionStorage.setItem("firstFoods.openAdd", "1");
+                  if (to === "/groceries") sessionStorage.setItem("groceries.openAdd", "1");
                   navigate({ to });
                 }}
                 className="flex w-full items-center gap-4 rounded-3xl border border-border/60 bg-card p-4 text-left transition-all hover:border-primary/40 hover:shadow-md"

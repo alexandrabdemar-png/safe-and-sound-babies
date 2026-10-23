@@ -1,13 +1,14 @@
 import { logError } from "@/lib/sanitize-error";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Utensils, ClipboardList, Sparkles } from "lucide-react";
+import { ArrowRight, Utensils, ClipboardList, Sparkles, ShoppingBasket } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { AddSheet } from "@/components/AddSheet";
 import { BottleIcon } from "@/components/BottleIcon";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { useActiveChild } from "@/hooks/useActiveChild";
+import { GROCERY_CATEGORY } from "@/lib/groceries";
 import {
   bottlesSummary,
   checklistsSummary,
@@ -49,6 +50,7 @@ type Summaries = {
   foods: string | null;
   bottles: string | null;
   checklists: string | null;
+  groceries: string | null;
 };
 
 const EMPTY: Summaries = {
@@ -56,6 +58,7 @@ const EMPTY: Summaries = {
   foods: null,
   bottles: null,
   checklists: null,
+  groceries: null,
 };
 
 function TrackingPage() {
@@ -80,50 +83,52 @@ function TrackingPage() {
     // migration hasn't reached yet) must not blank the other cards, so
     // every query is settled separately and falls back to its static blurb.
     (async () => {
-      const [foods, bottlesActive, bottlesLast, moments, checklists] = await Promise.all([
-        childId
-          ? supabase
-              .from("first_foods")
-              .select("is_allergen")
-              .eq("child_id", childId)
-          : Promise.resolve({ data: null, error: null }),
-        supabase
-          .from("bottles")
-          .select("id", { count: "exact", head: true })
-          .is("finished_at", null)
-          .gt("expires_at", nowIso),
-        supabase
-          .from("bottles")
-          .select("started_at")
-          .order("started_at", { ascending: false })
-          .limit(1),
-        childId
-          ? supabase
-              .from("milestones")
-              .select("logged_at")
-              .eq("child_id", childId)
-              .order("logged_at", { ascending: false })
-          : Promise.resolve({ data: null, error: null }),
-        supabase.from("checklist_completions").select("id", { count: "exact", head: true }),
-      ]);
+      const [foods, bottlesActive, bottlesLast, moments, checklists, groceries] = await Promise.all(
+        [
+          childId
+            ? supabase.from("first_foods").select("is_allergen").eq("child_id", childId)
+            : Promise.resolve({ data: null, error: null }),
+          supabase
+            .from("bottles")
+            .select("id", { count: "exact", head: true })
+            .is("finished_at", null)
+            .gt("expires_at", nowIso),
+          supabase
+            .from("bottles")
+            .select("started_at")
+            .order("started_at", { ascending: false })
+            .limit(1),
+          childId
+            ? supabase
+                .from("milestones")
+                .select("logged_at")
+                .eq("child_id", childId)
+                .order("logged_at", { ascending: false })
+            : Promise.resolve({ data: null, error: null }),
+          supabase.from("checklist_completions").select("id", { count: "exact", head: true }),
+          supabase.from("products").select("recalled").eq("category", GROCERY_CATEGORY),
+        ],
+      );
 
       if (!mountedRef.current) return;
 
       const foodRows = (foods.data ?? []) as { is_allergen: boolean }[];
       const momentRows = (moments.data ?? []) as { logged_at: string | null }[];
-      const lastBottle = ((bottlesLast.data ?? []) as { started_at: string }[])[0]?.started_at ?? null;
+      const lastBottle =
+        ((bottlesLast.data ?? []) as { started_at: string }[])[0]?.started_at ?? null;
 
       setSummaries({
         foods: foods.error
           ? null
           : firstFoodsSummary(foodRows.length, foodRows.filter((f) => f.is_allergen).length),
-        bottles: bottlesActive.error
-          ? null
-          : bottlesSummary(bottlesActive.count ?? 0, lastBottle),
+        bottles: bottlesActive.error ? null : bottlesSummary(bottlesActive.count ?? 0, lastBottle),
         moments: moments.error
           ? null
           : momentsSummary(momentRows.length, momentRows[0]?.logged_at ?? null),
         checklists: checklists.error ? null : checklistsSummary(checklists.count ?? 0),
+        groceries: groceries.error
+          ? null
+          : groceriesSummary((groceries.data ?? []) as { recalled: boolean }[]),
       });
     })().catch((err) => logError("[tracking] failed to load summaries", err));
   }, [childLoading, activeChild?.id]);
@@ -139,8 +144,8 @@ function TrackingPage() {
             Track
           </h1>
           <p className="mt-2 font-body text-base text-muted-foreground">
-            Everything you've logged{activeChild ? ` for ${activeChild.name}` : ""} — tap any card to
-            see the full log.
+            Everything you've logged{activeChild ? ` for ${activeChild.name}` : ""} — tap any card
+            to see the full log.
           </p>
         </div>
       </header>
@@ -163,6 +168,14 @@ function TrackingPage() {
             title="First Foods"
             blurb="Foods introduced and any allergen reactions"
             summary={summaries.foods}
+            stagger="stagger-2"
+          />
+          <TrackCard
+            to="/groceries"
+            icon={ShoppingBasket}
+            title="Groceries"
+            blurb="Weekly snacks, pouches and pantry foods, checked for recalls"
+            summary={summaries.groceries}
             stagger="stagger-2"
           />
           <TrackCard
@@ -204,6 +217,15 @@ function TrackingPage() {
   );
 }
 
+function groceriesSummary(rows: { recalled: boolean }[]): string | null {
+  if (!rows.length) return null;
+  const recalled = rows.filter((r) => r.recalled).length;
+  const watched = `${rows.length} item${rows.length === 1 ? "" : "s"} watched for recalls`;
+  return recalled
+    ? `${recalled} possible recall${recalled === 1 ? "" : "s"} · ${watched}`
+    : watched;
+}
+
 function TrackCard({
   to,
   icon: Icon,
@@ -227,13 +249,7 @@ function TrackCard({
       className={`flex items-center justify-between rounded-3xl border border-border/60 bg-card p-5 transition-all hover:border-primary/40 animate-fade-up ${stagger}`}
     >
       <div className="flex items-center gap-4">
-        {illustration ? (
-          <CategoryBadge icon={Icon} illustration={illustration} className="h-12 w-12" />
-        ) : (
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-            <Icon className="h-5 w-5" />
-          </span>
-        )}
+        <CategoryBadge icon={Icon} illustration={illustration} className="h-12 w-12" />
         <div className="min-w-0">
           <p className="font-display text-base font-semibold tracking-tight">{title}</p>
           <p className="mt-0.5 font-body text-sm text-muted-foreground">{summary ?? blurb}</p>

@@ -1,9 +1,10 @@
 import { ensureNativeSessionRestored } from "@/lib/nativeSessionBackup";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
+import { Capacitor } from "@capacitor/core";
 import "@fontsource/cormorant-garamond/400.css";
 import "@fontsource/cormorant-garamond/400-italic.css";
 import "@fontsource/cormorant-garamond/500.css";
@@ -79,6 +80,14 @@ const categories = [
 ];
 
 
+function isNativeShell(): boolean {
+  try {
+    return Capacitor.isNativePlatform();
+  } catch {
+    return false;
+  }
+}
+
 function Index() {
   const navigate = useNavigate();
 
@@ -89,15 +98,33 @@ function Index() {
   // change, since this marketing page has no other reason to check auth
   // state. /home re-routes on to /onboarding itself for a brand-new user,
   // so sending everyone here to /home first is safe either way.
+  // In the iPhone app this marketing page is never the destination: while
+  // the saved login is restored, show a plain loading screen instead of a
+  // page full of "Sign in" buttons (which read as "you've been logged out"),
+  // then go straight to Home, or to sign-in if there's no saved login.
+  const [nativeLaunch, setNativeLaunch] = useState(false);
+
   useEffect(() => {
+    const native = isNativeShell();
+    if (native) setNativeLaunch(true);
+    document.documentElement.removeAttribute("data-native-launch");
     ensureNativeSessionRestored().then(() => supabase.auth.getSession()).then(({ data }) => {
-      if (data.session) navigate({ to: "/home" });
+      if (data.session) navigate({ to: "/home", replace: true });
+      else if (native) navigate({ to: "/auth", replace: true });
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) navigate({ to: "/home" });
     });
     return () => sub.subscription.unsubscribe();
   }, [navigate]);
+
+  if (nativeLaunch) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background" aria-busy="true">
+        <span className="sr-only">Loading</span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">

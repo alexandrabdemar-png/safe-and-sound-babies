@@ -310,6 +310,12 @@
   .text-caption { font-size: 0.75rem;  line-height: 1.6;  font-family: var(--font-caption); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; } /* 12px */
 }
 
+/* iPhone app launch on "/": hide the server-rendered marketing page until
+   src/routes/index.tsx has checked the saved login (set in __root.tsx). */
+html[data-native-launch] body {
+  visibility: hidden;
+}
+
 /* Native iOS barcode scanning (@capacitor-mlkit/barcode-scanning startScan).
    The ML Kit camera preview renders BEHIND the WebView, so while a scan is
    running the page itself must be transparent — otherwise the user sees the

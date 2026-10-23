@@ -26,6 +26,7 @@ import { Route as AuthenticatedBottlesRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedChecklistsRouteImport } from './routes/_authenticated/checklists'
 import { Route as AuthenticatedEmergencyInfoRouteImport } from './routes/_authenticated/emergency-info'
 import { Route as AuthenticatedFirstFoodsRouteImport } from './routes/_authenticated/first-foods'
+import { Route as AuthenticatedGroceriesRouteImport } from './routes/_authenticated/groceries'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedHomecomingChecklistRouteImport } from './routes/_authenticated/homecoming-checklist'
 import { Route as AuthenticatedMomentsRouteImport } from './routes/_authenticated/moments'
@@ -142,6 +143,11 @@ const AuthenticatedEmergencyInfoRoute =
 const AuthenticatedFirstFoodsRoute = AuthenticatedFirstFoodsRouteImport.update({
   id: '/first-foods',
   path: '/first-foods',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGroceriesRoute = AuthenticatedGroceriesRouteImport.update({
+  id: '/groceries',
+  path: '/groceries',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
@@ -341,6 +347,7 @@ export interface FileRoutesByFullPath {
   '/checklists': typeof AuthenticatedChecklistsRoute
   '/emergency-info': typeof AuthenticatedEmergencyInfoRoute
   '/first-foods': typeof AuthenticatedFirstFoodsRoute
+  '/groceries': typeof AuthenticatedGroceriesRoute
   '/home': typeof AuthenticatedHomeRoute
   '/homecoming-checklist': typeof AuthenticatedHomecomingChecklistRoute
   '/moments': typeof AuthenticatedMomentsRoute
@@ -391,6 +398,7 @@ export interface FileRoutesByTo {
   '/checklists': typeof AuthenticatedChecklistsRoute
   '/emergency-info': typeof AuthenticatedEmergencyInfoRoute
   '/first-foods': typeof AuthenticatedFirstFoodsRoute
+  '/groceries': typeof AuthenticatedGroceriesRoute
   '/home': typeof AuthenticatedHomeRoute
   '/homecoming-checklist': typeof AuthenticatedHomecomingChecklistRoute
   '/moments': typeof AuthenticatedMomentsRoute
@@ -443,6 +451,7 @@ export interface FileRoutesById {
   '/_authenticated/checklists': typeof AuthenticatedChecklistsRoute
   '/_authenticated/emergency-info': typeof AuthenticatedEmergencyInfoRoute
   '/_authenticated/first-foods': typeof AuthenticatedFirstFoodsRoute
+  '/_authenticated/groceries': typeof AuthenticatedGroceriesRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/homecoming-checklist': typeof AuthenticatedHomecomingChecklistRoute
   '/_authenticated/moments': typeof AuthenticatedMomentsRoute
@@ -495,6 +504,7 @@ export interface FileRouteTypes {
     | '/checklists'
     | '/emergency-info'
     | '/first-foods'
+    | '/groceries'
     | '/home'
     | '/homecoming-checklist'
     | '/moments'
@@ -545,6 +555,7 @@ export interface FileRouteTypes {
     | '/checklists'
     | '/emergency-info'
     | '/first-foods'
+    | '/groceries'
     | '/home'
     | '/homecoming-checklist'
     | '/moments'
@@ -596,6 +607,7 @@ export interface FileRouteTypes {
     | '/_authenticated/checklists'
     | '/_authenticated/emergency-info'
     | '/_authenticated/first-foods'
+    | '/_authenticated/groceries'
     | '/_authenticated/home'
     | '/_authenticated/homecoming-checklist'
     | '/_authenticated/moments'
@@ -771,6 +783,13 @@ declare module '@tanstack/react-router' {
       path: '/first-foods'
       fullPath: '/first-foods'
       preLoaderRoute: typeof AuthenticatedFirstFoodsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/groceries': {
+      id: '/_authenticated/groceries'
+      path: '/groceries'
+      fullPath: '/groceries'
+      preLoaderRoute: typeof AuthenticatedGroceriesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/home': {
@@ -1007,6 +1026,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedChecklistsRoute: typeof AuthenticatedChecklistsRoute
   AuthenticatedEmergencyInfoRoute: typeof AuthenticatedEmergencyInfoRoute
   AuthenticatedFirstFoodsRoute: typeof AuthenticatedFirstFoodsRoute
+  AuthenticatedGroceriesRoute: typeof AuthenticatedGroceriesRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedHomecomingChecklistRoute: typeof AuthenticatedHomecomingChecklistRoute
   AuthenticatedMomentsRoute: typeof AuthenticatedMomentsRoute
@@ -1039,6 +1059,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChecklistsRoute: AuthenticatedChecklistsRoute,
   AuthenticatedEmergencyInfoRoute: AuthenticatedEmergencyInfoRoute,
   AuthenticatedFirstFoodsRoute: AuthenticatedFirstFoodsRoute,
+  AuthenticatedGroceriesRoute: AuthenticatedGroceriesRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedHomecomingChecklistRoute: AuthenticatedHomecomingChecklistRoute,
   AuthenticatedMomentsRoute: AuthenticatedMomentsRoute,

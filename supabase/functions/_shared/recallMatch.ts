@@ -95,9 +95,16 @@ function stem(word: string): string {
   return w;
 }
 
-
 export function fuzzyMatchProduct(productName: string, recallText: string): boolean {
-  const text = recallText.toLowerCase();
+  return matchProductTokens(productName, recallTextTokens(recallText), recallText);
+}
+
+/**
+ * The stemmed whole-word token set fuzzyMatchProduct compares against.
+ * Exposed so a batch matching many products against the same recall can
+ * build it once per recall instead of once per product.
+ */
+export function recallTextTokens(recallText: string): Set<string> {
   // Word-boundary set, not a raw string — checking token membership here
   // (rather than `text.includes(token)`) is what stops a short token from
   // matching as a *substring* of an unrelated word. Regression: a product
@@ -108,9 +115,12 @@ export function fuzzyMatchProduct(productName: string, recallText: string): bool
   // present — substring matching flagged that recall against Beech-Nut
   // baby food, a false positive with no real connection between the
   // products. Matching on whole tokens instead closes this off.
-  const textTokens = new Set(tokenize(text).map(stem));
+  return new Set(tokenize(recallText.toLowerCase()).map(stem));
+}
 
-  const tokens = [
+/** The meaningful stemmed tokens of a product name (see fuzzyMatchProduct). */
+export function productNameTokens(productName: string): string[] {
+  return [
     ...new Set(
       tokenize(productName)
         // Minimum length 2 (not 3) so short distinguishing suffixes like a
@@ -122,10 +132,19 @@ export function fuzzyMatchProduct(productName: string, recallText: string): bool
         .map(stem),
     ),
   ];
+}
 
-  if (tokens.length === 0) return text.includes(productName.toLowerCase().trim());
+/** fuzzyMatchProduct with the recall's token set already built. */
+export function matchProductTokens(
+  productName: string,
+  textTokens: Set<string>,
+  recallText: string,
+): boolean {
+  const tokens = productNameTokens(productName);
+
+  if (tokens.length === 0)
+    return recallText.toLowerCase().includes(productName.toLowerCase().trim());
   if (tokens.length === 1) return textTokens.has(tokens[0]);
-
   // Every meaningful token must appear (modulo the plural normalization
   // above) — not just a majority. A prior "75% of tokens for longer names"
   // rule let a product name whose non-brand words happen to be common food/

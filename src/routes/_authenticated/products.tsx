@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { GROCERY_CATEGORY } from "@/lib/groceries";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -68,7 +69,10 @@ function ProductsPage() {
         // correct immediately, independent of whether that migration has
         // reached this database yet.
         const rows = (data ?? []) as Product[];
-        setProducts(rows.filter((p) => !isOnboardingPlaceholderProduct(p)));
+        // Groceries have their own weekly list (/groceries).
+        setProducts(
+          rows.filter((p) => !isOnboardingPlaceholderProduct(p) && p.category !== GROCERY_CATEGORY),
+        );
       }
       setLoading(false);
     })();

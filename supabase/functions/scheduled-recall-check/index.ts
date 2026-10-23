@@ -45,6 +45,13 @@ import {
 } from "../_shared/notify.ts";
 import type { VapidConfig, VapidJwtCache, WebPushSubscription } from "../_shared/webPush.ts";
 
+/** Splits ids into groups small enough for one `.in()` filter in a URL. */
+function chunk<T>(items: T[], size = 200): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -137,10 +144,30 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { data: products, error: pErr } = await supabase
-      .from("products")
-      .select("id, user_id, name, brand, category, model, product_type, barcode");
-    if (pErr) throw pErr;
+    // Paged: a single select stops at the API's row limit (1,000 by
+    // default), and grocery tracking puts many more products than that in
+    // the scan. Ordered by id so pages don't overlap or skip rows.
+    type ScanProductRow = {
+      id: string;
+      user_id: string;
+      name: string;
+      brand: string | null;
+      category: string | null;
+      model: string | null;
+      product_type: string | null;
+      barcode: string | null;
+    };
+    const products: ScanProductRow[] = [];
+    for (let from = 0; ; from += 1000) {
+      const { data: page, error: pErr } = await supabase
+        .from("products")
+        .select("id, user_id, name, brand, category, model, product_type, barcode")
+        .order("id", { ascending: true })
+        .range(from, from + 999);
+      if (pErr) throw pErr;
+      products.push(...((page ?? []) as ScanProductRow[]));
+      if (!page || page.length < 1000) break;
+    }
 
     const batchProducts: BatchProduct[] = (products ?? []).map((p) => ({
       id: p.id,
@@ -322,11 +349,11 @@ Deno.serve(async (req) => {
     }
 
     const matchedProductIds = [...new Set(dedupedMatches.map((m) => m.product_id))];
-    if (matchedProductIds.length) {
+    for (const ids of chunk(matchedProductIds)) {
       const { error: flagErr } = await supabase
         .from("products")
         .update({ recalled: true })
-        .in("id", matchedProductIds);
+        .in("id", ids);
       if (flagErr) throw flagErr;
     }
 
@@ -336,11 +363,11 @@ Deno.serve(async (req) => {
     // that's only true for products with an active recall.
     const checkedAt = new Date().toISOString();
     const allProductIds = batchProducts.map((p) => p.id);
-    if (allProductIds.length) {
+    for (const ids of chunk(allProductIds)) {
       const { error: stampErr } = await supabase
         .from("products")
         .update({ recall_checked_at: checkedAt })
-        .in("id", allProductIds);
+        .in("id", ids);
       if (stampErr) throw stampErr;
     }
 
@@ -352,13 +379,15 @@ Deno.serve(async (req) => {
     // forever, because nothing ever clears it. Every product in this batch
     // was just re-checked against every source, so the link table is now
     // authoritative: clear the flag where no link exists.
-    if (allProductIds.length) {
-      const { data: linkedRows } = await supabase
+    for (const ids of chunk(allProductIds)) {
+      const { data: linkedRows, error: linkErr } = await supabase
         .from("product_recalls")
         .select("product_id")
-        .in("product_id", allProductIds);
+        .in("product_id", ids);
+      // Never clear flags based on a failed lookup.
+      if (linkErr) continue;
       const linked = new Set((linkedRows ?? []).map((r) => r.product_id as string));
-      const orphaned = allProductIds.filter((id) => !linked.has(id));
+      const orphaned = ids.filter((id) => !linked.has(id));
       if (orphaned.length) {
         const { error: clearErr } = await supabase
           .from("products")

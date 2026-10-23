@@ -10,7 +10,12 @@
 // the catalog rows, maps source_id -> uuid, then resolves these matches
 // against that map. This split is what makes the matching logic itself
 // testable under Vitest without a live Supabase connection.
-import { fuzzyMatchProduct } from "./recallMatch.ts";
+import {
+  fuzzyMatchProduct,
+  matchProductTokens,
+  productNameTokens,
+  recallTextTokens,
+} from "./recallMatch.ts";
 import {
   fetchAllExtraRecallSources,
   getLastSourceStatus,
@@ -310,6 +315,52 @@ export async function fetchFdaRecallsForName(
   }
 }
 
+/**
+ * Every FDA food enforcement report from the last `days` days, newest first.
+ * Packaged foods (First Foods and Groceries) are matched against this list
+ * locally instead of one FDA search per food, so the number of foods
+ * tracked across all users is no longer limited by the per-name search cap
+ * below. Returns null (not []) when the feed could not be read, so the
+ * caller can fall back to per-name searches rather than treat every food as
+ * "no recalls".
+ */
+export async function fetchRecentFdaFoodRecalls(
+  fetchImpl: typeof fetch,
+  days = 365,
+  now: Date = new Date(),
+): Promise<FdaRawRecall[] | null> {
+  const ymd = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, "");
+  const from = ymd(new Date(now.getTime() - days * 86_400_000));
+  const to = ymd(now);
+  const PAGE = 1000;
+  const MAX_PAGES = 10;
+  const all: FdaRawRecall[] = [];
+  try {
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const res = await fetchImpl(
+        `https://api.fda.gov/food/enforcement.json?search=report_date:[${from}+TO+${to}]` +
+          `&sort=report_date:desc&limit=${PAGE}&skip=${page * PAGE}`,
+      );
+      // 404 = no reports in the window (healthy, just empty).
+      if (res.status === 404) break;
+      if (!res.ok) {
+        recordSourceHealth("fda", false, `HTTP ${res.status}`);
+        return null;
+      }
+      const data = await res.json().catch(() => null);
+      const results: FdaRawRecall[] = Array.isArray(data?.results) ? data.results : [];
+      all.push(...results);
+      const total = Number(data?.meta?.results?.total ?? 0);
+      if (results.length < PAGE || all.length >= total) break;
+    }
+    recordSourceHealth("fda", true);
+    return all;
+  } catch (err) {
+    recordSourceHealth("fda", false, err instanceof Error ? err.message : "unknown");
+    return null;
+  }
+}
+
 export function fdaRecallSourceId(r: FdaRawRecall, productName: string): string {
   return r.recall_number ?? `fda-${productName.slice(0, 20)}`;
 }
@@ -378,6 +429,60 @@ function matchProductAgainstExtra(product: BatchProduct, recall: NormalizedRecal
     [product.name, product.brand ?? "", product.model ?? ""].filter(Boolean).join(" "),
     recallText,
   );
+}
+
+/**
+ * Matches packaged foods against a list of FDA food enforcement reports
+ * with the same rules as the per-name search (brand + name, every word
+ * present; or the food's UPC printed in the notice), using a word index so
+ * thousands of foods against a year of reports stays cheap.
+ */
+export function matchFoodsAgainstFdaReports(
+  foods: BatchProduct[],
+  reports: FdaRawRecall[],
+): { recall: FdaRawRecall; products: BatchProduct[] }[] {
+  const texts = reports.map((r) => r.product_description ?? "");
+  const tokenSets = texts.map(recallTextTokens);
+  const digitTexts = texts.map((t) => t.replace(/\D/g, ""));
+  const byToken = new Map<string, number[]>();
+  tokenSets.forEach((set, i) => {
+    for (const t of set) {
+      const list = byToken.get(t);
+      if (list) list.push(i);
+      else byToken.set(t, [i]);
+    }
+  });
+
+  const hits = new Map<number, BatchProduct[]>();
+  const add = (i: number, p: BatchProduct) => {
+    const list = hits.get(i) ?? [];
+    if (!list.includes(p)) list.push(p);
+    hits.set(i, list);
+  };
+
+  for (const food of foods) {
+    const query = fdaQueryFor(food);
+    const tokens = productNameTokens(query);
+    // Reports containing every word are a subset of those containing the
+    // rarest one; only those get the full check.
+    const candidates = tokens.length
+      ? tokens.map((t) => byToken.get(t) ?? []).reduce((a, b) => (b.length < a.length ? b : a))
+      : texts.map((_, i) => i);
+    for (const i of candidates) {
+      if (matchProductTokens(query, tokenSets[i]!, texts[i]!)) add(i, food);
+    }
+
+    const code = (food.barcode ?? "").replace(/\D/g, "").replace(/^0+/, "");
+    if (code.length >= 7) {
+      digitTexts.forEach((d, i) => {
+        if (d.includes(code) && recallTextHasBarcode(food.barcode, texts[i]!)) add(i, food);
+      });
+    }
+  }
+
+  return [...hits.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([i, group]) => ({ recall: reports[i]!, products: group }));
 }
 
 // ── Orchestration ────────────────────────────────────────────────────────
@@ -458,11 +563,34 @@ export async function runRecallBatch(
     }
   }
 
-  // 4. FDA — once per unique query (capped), then linked to every product
+  // 4a. FDA, packaged foods — matched locally against the last year of food
+  // enforcement reports (one bulk download, no per-food cap). If that feed
+  // can't be read, foods fall back to the per-name searches in 4b.
+  const recentFda = products.some(isFood) ? await fetchRecentFdaFoodRecalls(fetchImpl) : null;
+  if (recentFda) {
+    for (const { recall, products: group } of matchFoodsAgainstFdaReports(
+      products.filter(isFood),
+      recentFda,
+    )) {
+      const row = fdaRecallToCatalogRow(recall);
+      addCatalogRow(row);
+      for (const product of group) {
+        matches.push({
+          user_id: product.user_id,
+          product_id: product.id,
+          source: "fda",
+          source_id: row.source_id,
+        });
+      }
+    }
+  }
+
+  // 4b. FDA — once per unique query (capped), then linked to every product
   // sharing that query. The query is the product name, or brand + name for
   // foods (see fdaQueryFor).
   const productsByQuery = new Map<string, BatchProduct[]>();
   for (const p of products) {
+    if (recentFda && isFood(p)) continue;
     const q = fdaQueryFor(p);
     const arr = productsByQuery.get(q) ?? [];
     arr.push(p);
