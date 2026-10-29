@@ -263,3 +263,44 @@ describe("runRecallBatch", () => {
     });
   });
 });
+
+describe("runRecallBatch — category guard (reported bug: MAM pacifier matched a MAM'S muffin recall)", () => {
+  const muffin = {
+    recall_number: "F-0420-2026",
+    recalling_firm: "MAM'S Bakery LLC",
+    product_description: "MAM'S Strawberry Creme Cake Muffin, 4 oz",
+  };
+  const fetchImpl = vi.fn(async (url: string) => {
+    if (url.includes("api.fda.gov")) return jsonResponse({ results: [muffin] });
+    if (url.includes("opendatasoft.com")) return jsonResponse({ results: [] });
+    if (url.includes("saferproducts.gov"))
+      return jsonResponse([
+        {
+          RecallID: 7,
+          Title: "MAM Recalls Baby Bottles",
+          Products: [{ Name: "MAM Bottles", Type: "Baby Bottles" }],
+        },
+      ]);
+    return jsonResponse([]);
+  }) as unknown as typeof fetch;
+
+  it("a pacifier named 'MAM' matches neither the FDA muffin nor a MAM bottle recall", async () => {
+    const result = await runRecallBatch(fetchImpl, [
+      product({ id: "p1", name: "MAM", category: "Pacifier" }),
+    ]);
+    expect(result.matches).toEqual([]);
+  });
+
+  it("a baby food product still gets the FDA recall, linked to an FDA search for it", async () => {
+    const result = await runRecallBatch(fetchImpl, [
+      product({ id: "p2", name: "MAM'S Muffin", category: "Baby Food" }),
+    ]);
+    expect(result.matches).toEqual([
+      { user_id: "user-1", product_id: "p2", source: "fda", source_id: "F-0420-2026" },
+    ]);
+    const row = result.catalogRows.find((r) => r.source === "fda");
+    expect(row?.url).toBe(
+      "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts?search_api_fulltext=MAM'S%20Bakery%20LLC",
+    );
+  });
+});

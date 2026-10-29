@@ -13,6 +13,8 @@
 // include the Pipa, Pipa Lite, or Pipa RX") — naive substring matching
 // against that text can't tell the difference from an actual match.
 
+import { recallFitsCategory } from "./recallCategory.ts";
+
 const NOISE_WORDS = new Set([
   "baby",
   "babies",
@@ -292,6 +294,10 @@ export async function checkRecalls(
     shouldCheckNhtsa ? checkNhtsaRecalls(productName, brand, fetchImpl) : Promise.resolve([]),
   ]);
 
-  const recalls = [...cpscHits, ...nhtsaHits];
+  // Drop hits for a different kind of product than the one scanned (e.g. a
+  // same-brand bottle recall against a pacifier) — see recallCategory.ts.
+  const recalls = [...cpscHits, ...nhtsaHits].filter((r) =>
+    recallFitsCategory({ category, source: r.source, recallText: r.title }),
+  );
   return { recalled: recalls.length > 0, recalls };
 }

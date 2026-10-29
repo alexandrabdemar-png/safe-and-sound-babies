@@ -11,6 +11,7 @@
 // against that map. This split is what makes the matching logic itself
 // testable under Vitest without a live Supabase connection.
 import { fuzzyMatchProduct } from "./recallMatch.ts";
+import { recallFitsCategory } from "./recallCategory.ts";
 import {
   fetchAllExtraRecallSources,
   getLastSourceStatus,
@@ -87,6 +88,19 @@ function productDisplayName(p: BatchProduct): string {
 
 function isFood(p: BatchProduct): boolean {
   return p.product_type === "food";
+}
+
+/**
+ * Whether a recall can apply to this product's category at all — keeps a
+ * same-brand food recall off a pacifier (see recallCategory.ts). First
+ * Foods rows are always food, whatever their category text says.
+ */
+function fitsCategory(p: BatchProduct, source: string, recallText: string): boolean {
+  return recallFitsCategory({
+    category: isFood(p) ? "baby_food" : p.category,
+    source,
+    recallText,
+  });
 }
 
 /**
@@ -263,6 +277,13 @@ export function cpscRecallToCatalogRow(r: CpscRawRecall): RecallCatalogRow {
  * that made CPSC (the highest-volume source) slightly less precise than
  * it could be for products with a distinguishing model number.
  */
+function cpscCategoryText(recall: CpscRawRecall): string {
+  return [
+    recall.Title ?? recall.RecallHeading ?? "",
+    ...(recall.Products ?? []).flatMap((p) => [p.Name ?? "", p.Type ?? ""]),
+  ].join(" ");
+}
+
 export function matchProductAgainstCpsc(product: BatchProduct, recall: CpscRawRecall): boolean {
   const recallText = [
     recall.Title ?? recall.RecallHeading ?? "",
@@ -277,6 +298,7 @@ export function matchProductAgainstCpsc(product: BatchProduct, recall: CpscRawRe
 
 export type FdaRawRecall = {
   recall_number?: string;
+  recalling_firm?: string;
   product_description?: string;
   reason_for_recall?: string;
   recall_initiation_date?: string;
@@ -314,6 +336,19 @@ export function fdaRecallSourceId(r: FdaRawRecall, productName: string): string 
   return r.recall_number ?? `fda-${productName.slice(0, 20)}`;
 }
 
+/**
+ * openFDA records have no link of their own — search FDA's recall listing
+ * for the firm instead of linking every FDA recall to the bare landing page.
+ * Same as fdaRecallSearchUrl in src/lib/recallCheck.ts.
+ */
+export function fdaRecallSearchUrl(r: FdaRawRecall): string {
+  const base = "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts";
+  const query =
+    r.recalling_firm?.trim() ||
+    (r.product_description ?? "").split(/\s+/).slice(0, 6).join(" ").trim();
+  return query ? `${base}?search_api_fulltext=${encodeURIComponent(query)}` : base;
+}
+
 export function fdaRecallToCatalogRow(r: FdaRawRecall): RecallCatalogRow {
   return {
     source: "fda",
@@ -325,7 +360,7 @@ export function fdaRecallToCatalogRow(r: FdaRawRecall): RecallCatalogRow {
     description: r.reason_for_recall?.slice(0, 2000) ?? null,
     hazard: null,
     remedy: null,
-    url: "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts",
+    url: fdaRecallSearchUrl(r),
     image_url: null,
     recall_date: r.recall_initiation_date?.slice(0, 10) ?? null,
     model: null,
@@ -436,6 +471,7 @@ export async function runRecallBatch(
     // 2. CPSC
     for (const recall of cpscRecalls) {
       if (!matchProductAgainstCpsc(product, recall)) continue;
+      if (!fitsCategory(product, "cpsc", cpscCategoryText(recall))) continue;
       addCatalogRow(cpscRecallToCatalogRow(recall));
       matches.push({
         user_id: product.user_id,
@@ -448,6 +484,14 @@ export async function runRecallBatch(
     // 3. Extra sources (USDA/NHTSA/Health Canada/EU Safety Gate)
     for (const recall of extraRecalls) {
       if (!matchProductAgainstExtra(product, recall)) continue;
+      if (
+        !fitsCategory(
+          product,
+          recall.source,
+          [recall.title, recall.product_name, recall.category].filter(Boolean).join(" "),
+        )
+      )
+        continue;
       addCatalogRow(extraRecallToCatalogRow(recall));
       matches.push({
         user_id: product.user_id,
@@ -475,8 +519,9 @@ export async function runRecallBatch(
       const nameMatch = matchProductAgainstFda(query, hit);
       const group = (productsByQuery.get(query) ?? []).filter(
         (p) =>
-          nameMatch ||
-          (isFood(p) && recallTextHasBarcode(p.barcode, hit.product_description ?? "")),
+          (nameMatch ||
+            (isFood(p) && recallTextHasBarcode(p.barcode, hit.product_description ?? ""))) &&
+          fitsCategory(p, "fda", hit.product_description ?? ""),
       );
       if (!group.length) continue;
       const row = fdaRecallToCatalogRow(hit);

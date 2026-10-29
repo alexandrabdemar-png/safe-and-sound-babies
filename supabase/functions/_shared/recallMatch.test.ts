@@ -287,3 +287,39 @@ describe("checkRecalls orchestration", () => {
     expect(result.recalls).toEqual([]);
   });
 });
+
+describe("checkRecalls — scan flow keeps only recalls for the scanned category", () => {
+  const fetchImpl = vi.fn(async () => ({
+    ok: true,
+    json: async () => [
+      {
+        RecallID: 1,
+        Title: "MAM Recalls Baby Bottles",
+        Products: [{ Name: "MAM Bottles" }],
+        URL: "https://www.cpsc.gov/Recalls/2026/mam-bottles",
+      },
+      {
+        RecallID: 2,
+        Title: "MAM Recalls Pacifiers",
+        Products: [{ Name: "MAM Pacifiers" }],
+        URL: "https://www.cpsc.gov/Recalls/2026/mam-pacifiers",
+      },
+    ],
+  }));
+
+  it("a scanned MAM pacifier only gets the pacifier recall", async () => {
+    const result = await checkRecalls(
+      "MAM",
+      null,
+      "pacifier",
+      fetchImpl as unknown as typeof fetch,
+    );
+    expect(result.recalls.map((r) => r.id)).toEqual(["2"]);
+    expect(result.recalls[0].url).toBe("https://www.cpsc.gov/Recalls/2026/mam-pacifiers");
+  });
+
+  it("with no category, both are still shown", async () => {
+    const result = await checkRecalls("MAM", null, null, fetchImpl as unknown as typeof fetch);
+    expect(result.recalls).toHaveLength(2);
+  });
+});

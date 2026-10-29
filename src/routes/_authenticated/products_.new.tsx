@@ -207,7 +207,7 @@ function NewProductPage() {
         });
 
         // Inline recall check — must complete before navigating
-        const hit = await checkRecallsForProduct(name.trim());
+        const hit = await checkRecallsForProduct(name.trim(), category);
         void stampRecallCheckedAt(productId);
         if (hit) {
           await recordRecallInDb(productId, hit);
@@ -849,7 +849,7 @@ function SaveProductSheet({
         });
 
         // Inline recall check — must complete before navigating
-        const hit = await checkRecallsForProduct(product.name);
+        const hit = await checkRecallsForProduct(product.name, product.category);
         void stampRecallCheckedAt(productId);
         if (hit) {
           await recordRecallInDb(productId, hit);

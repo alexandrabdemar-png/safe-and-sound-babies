@@ -14,6 +14,7 @@ import {
   lotMatches,
   isLikelyNonFoodProduct,
   checkRecallsForProduct,
+  fdaRecallSearchUrl,
   fetchProductDetailResilient,
   recallFallbackUrl,
   recallSourceLabel,
@@ -787,5 +788,115 @@ describe("recallSourceLabel — narrative agency name now covers every source, n
     );
     expect(recallSourceLabel({ source: "health_canada" })).toBe("Health Canada");
     expect(recallSourceLabel({ source: "eu_safety_gate" })).toBe("EU Safety Gate");
+  });
+});
+
+describe("checkRecallsForProduct — selected category (reported bug: MAM pacifier matched a MAM'S muffin recall)", () => {
+  let originalFetch: typeof fetch;
+  beforeEach(() => {
+    originalFetch = globalThis.fetch;
+  });
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  const muffinFda = {
+    results: [
+      {
+        recall_number: "F-0420-2026",
+        recalling_firm: "MAM'S Bakery LLC",
+        product_description: "MAM'S Strawberry Creme Cake Muffin, 4 oz",
+        reason_for_recall: "Undeclared milk",
+        recall_initiation_date: "2026-09-30",
+      },
+    ],
+  };
+
+  function stubFetch(cpsc: unknown[], fda: unknown) {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes("saferproducts.gov")) return { ok: true, json: async () => cpsc };
+      if (url.includes("api.fda.gov")) return { ok: true, json: async () => fda };
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    return fetchMock;
+  }
+
+  it("a pacifier named just 'MAM' never gets the FDA muffin recall, and FDA isn't even queried", async () => {
+    const fetchMock = stubFetch([], muffinFda);
+    expect(await checkRecallsForProduct("MAM", "pacifier")).toBeNull();
+    const urls = fetchMock.mock.calls.map((c: unknown[]) => c[0] as string);
+    expect(urls.some((u: string) => u.includes("api.fda.gov"))).toBe(false);
+  });
+
+  it("the same pacifier saved via the AI-search flow (category stored as a label)", async () => {
+    stubFetch([], muffinFda);
+    expect(await checkRecallsForProduct("MAM", "Pacifier")).toBeNull();
+  });
+
+  it("a same-brand CPSC recall for a different kind of product is ignored", async () => {
+    stubFetch(
+      [
+        {
+          RecallID: "1",
+          RecallHeading: "MAM Recalls Baby Bottles Due to Choking Hazard",
+          Products: [{ Name: "MAM Easy Start Anti-Colic Bottles" }],
+          URL: "https://www.cpsc.gov/Recalls/2026/mam-bottles",
+        },
+      ],
+      { results: [] },
+    );
+    expect(await checkRecallsForProduct("MAM", "pacifier")).toBeNull();
+  });
+
+  it("a real MAM pacifier recall is still found, with its own CPSC notice link", async () => {
+    stubFetch(
+      [
+        {
+          RecallID: "2",
+          RecallHeading: "MAM Recalls Pacifiers Due to Choking Hazard",
+          Products: [{ Name: "MAM Air Pacifiers" }],
+          URL: "https://www.cpsc.gov/Recalls/2026/mam-pacifiers",
+        },
+      ],
+      { results: [] },
+    );
+    const hit = await checkRecallsForProduct("MAM", "pacifier");
+    expect(hit).toMatchObject({
+      source: "cpsc",
+      url: "https://www.cpsc.gov/Recalls/2026/mam-pacifiers",
+    });
+  });
+
+  it("a food product still gets the FDA recall, linked to a search for that recall rather than FDA's homepage", async () => {
+    stubFetch([], muffinFda);
+    const hit = await checkRecallsForProduct("MAM'S muffin", "baby_food");
+    expect(hit).toMatchObject({ source: "fda", id: "F-0420-2026" });
+    expect(hit?.url).toBe(
+      "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts?search_api_fulltext=MAM'S%20Bakery%20LLC",
+    );
+    expect(isAllowedRecallUrl(hit!.url)).toBe(true);
+  });
+
+  it("the critical Nara formula recall doesn't fire for a pacifier, but does for formula", async () => {
+    stubFetch([], { results: [] });
+    expect(await checkRecallsForProduct("Nara", "pacifier")).toBeNull();
+    expect(await checkRecallsForProduct("Nara", "formula")).toMatchObject({ source: "critical" });
+  });
+});
+
+describe("fdaRecallSearchUrl", () => {
+  it("searches by recalling firm, falling back to the start of the product description", () => {
+    expect(fdaRecallSearchUrl({ recalling_firm: "Acme Foods" })).toBe(
+      "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts?search_api_fulltext=Acme%20Foods",
+    );
+    expect(
+      fdaRecallSearchUrl({ product_description: "Acme Oat Puffs Banana 1.5 oz cups, 6 per case" }),
+    ).toBe(
+      "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts?search_api_fulltext=Acme%20Oat%20Puffs%20Banana%201.5%20oz",
+    );
+    expect(fdaRecallSearchUrl({})).toBe(
+      "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts",
+    );
   });
 });

@@ -2,6 +2,7 @@ import { logError } from "@/lib/sanitize-error";
 import { supabase } from "@/integrations/supabase/client";
 import { guessCategoryFromText } from "@/lib/productCategories";
 import { isColumnUnavailableError } from "@/lib/errors";
+import { normalizeRecallCategory, isFoodCategory, recallFitsCategory } from "@/lib/recallCategory";
 
 /**
  * recallCheck.ts — Inline and background product recall detection
@@ -426,10 +427,30 @@ export async function fetchCpscRecallsForProduct(productName: string): Promise<R
   }
 }
 
+/**
+ * openFDA enforcement records carry no link to their own notice, so every
+ * FDA hit used to point at the generic FDA recalls landing page — reported
+ * bug: "View official recall notice" didn't open the recall it was about.
+ * This searches FDA's recall listing for the recalling firm (or the start of
+ * the product description) so the notice is at the top of the page; if FDA
+ * ignores the query the parent still lands on the same official listing.
+ */
+export function fdaRecallSearchUrl(r: {
+  recalling_firm?: string | null;
+  product_description?: string | null;
+}): string {
+  const base = RECALL_AGENCY_HOME_URL.fda;
+  const query =
+    r.recalling_firm?.trim() ||
+    (r.product_description ?? "").split(/\s+/).slice(0, 6).join(" ").trim();
+  return query ? `${base}?search_api_fulltext=${encodeURIComponent(query)}` : base;
+}
+
 // ── FDA API ──────────────────────────────────────────────────────────────────
 
 type RawFdaResult = {
   recall_number?: string;
+  recalling_firm?: string;
   product_description?: string;
   reason_for_recall?: string;
   recall_initiation_date?: string;
@@ -487,7 +508,7 @@ export async function fetchFdaRecallsForProduct(productName: string): Promise<Re
         title: (r.product_description ?? "FDA Food/Formula Recall").slice(0, 120),
         productDescription: r.product_description ?? "",
         reason: r.reason_for_recall || "See the official FDA recall notice for hazard details.",
-        url: "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts",
+        url: fdaRecallSearchUrl(r),
         recallDate: r.recall_initiation_date,
       }));
   } catch {
@@ -514,6 +535,18 @@ export function isLikelyNonFoodProduct(productName: string): boolean {
   return category !== "" && !FOOD_CATEGORIES.has(category);
 }
 
+/**
+ * The structured text a hit's category is judged on: its title plus the
+ * product description, never the free-text reason (see fuzzyMatchProduct).
+ */
+function hitFitsCategory(hit: RecallHit, category: string | null | undefined): boolean {
+  return recallFitsCategory({
+    category,
+    source: hit.source,
+    recallText: `${hit.title} ${hit.productDescription}`,
+  });
+}
+
 // ── Main entry point ─────────────────────────────────────────────────────────
 
 /**
@@ -532,10 +565,20 @@ export function isLikelyNonFoodProduct(productName: string): boolean {
  *
  * IMPORTANT: CRITICAL_RECALLS must be manually updated for new recalls.
  */
-export async function checkRecallsForProduct(productName: string): Promise<RecallHit | null> {
+export async function checkRecallsForProduct(
+  productName: string,
+  category?: string | null,
+): Promise<RecallHit | null> {
+  // The category the parent picked wins over guessing from the name — a
+  // product named just "MAM" says nothing about being a pacifier.
+  const categoryKey = normalizeRecallCategory(category);
+
   // Step 1 — critical recalls (instant, no network)
   const critical = checkCriticalRecalls(productName);
-  if (critical) {
+  if (
+    critical &&
+    recallFitsCategory({ category, source: "critical", recallText: critical.title })
+  ) {
     return {
       source: "critical",
       id: critical.id,
@@ -546,17 +589,20 @@ export async function checkRecallsForProduct(productName: string): Promise<Recal
     };
   }
 
-  // Step 2 — CPSC always; FDA (food-only data) skipped for names that
-  // clearly name non-food gear, so a same-brand food recall can't outrank
-  // "no recall found" for a stroller/crib/etc. search (see
-  // isLikelyNonFoodProduct).
-  const skipFda = isLikelyNonFoodProduct(productName);
+  // Step 2 — CPSC always; FDA (food-only data) skipped when the product's
+  // category rules it out, so a same-brand food recall can't show up
+  // against a pacifier/stroller/etc. With no category picked, fall back to
+  // guessing from the name (see isLikelyNonFoodProduct). Every hit must
+  // then fit the category (see recallFitsCategory).
+  const skipFda = categoryKey
+    ? !isFoodCategory(categoryKey) && categoryKey !== "vitamins"
+    : isLikelyNonFoodProduct(productName);
   const [cpscHits, fdaHits] = await Promise.all([
     fetchCpscRecallsForProduct(productName),
     skipFda ? Promise.resolve<RecallHit[]>([]) : fetchFdaRecallsForProduct(productName),
   ]);
 
-  return cpscHits[0] ?? fdaHits[0] ?? null;
+  return [...cpscHits, ...fdaHits].find((h) => hitFitsCategory(h, category)) ?? null;
 }
 
 // ── Persisting a recall hit against a saved product ──────────────────────────
