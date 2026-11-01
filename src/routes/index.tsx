@@ -1,6 +1,7 @@
 import { ensureNativeSessionRestored } from "@/lib/nativeSessionBackup";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
