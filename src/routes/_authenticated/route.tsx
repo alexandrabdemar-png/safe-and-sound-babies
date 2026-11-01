@@ -23,7 +23,12 @@ export const Route = createFileRoute("/_authenticated")({
     // screen — not just at signup, since existing users need to accept a
     // material terms update too (see src/lib/legalConsent.ts, which also
     // documents the fail-open-on-missing-table behavior).
-    if (await checkNeedsLegalConsentCached(supabase, session.user.id)) {
+    const needsConsent = await Promise.race([
+      checkNeedsLegalConsentCached(supabase, session.user.id),
+      // Never strand a just-signed-in user on a spinner if this check stalls.
+      new Promise<boolean>((r) => setTimeout(() => r(false), 8000)),
+    ]);
+    if (needsConsent) {
       throw redirect({ to: "/legal-consent", search: { next: location.pathname } });
     }
 
