@@ -8,7 +8,11 @@
  * rejection of their own (no postMessage, popup never closed) — without
  * this, a caller `await`-ing such a promise has no way to recover.
  */
-export function withTimeout<T>(promise: Promise<T>, timeoutMs: number, onTimeout: () => void): Promise<T> {
+export function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  onTimeout: () => void,
+): Promise<T> {
   let timedOut = false;
   const timer = setTimeout(() => {
     timedOut = true;
@@ -27,4 +31,36 @@ export function withTimeout<T>(promise: Promise<T>, timeoutMs: number, onTimeout
       throw err;
     },
   );
+}
+
+/**
+ * Like `promise`, but rejects with a timeout error if it hasn't settled
+ * within `timeoutMs`. Unlike withTimeout above, the result always settles,
+ * so callers' catch/finally blocks still run.
+ *
+ * Used around native (Capacitor) plugin calls: if a native call never
+ * answers, anything awaiting it — including Supabase's auth lock — would
+ * otherwise wait forever.
+ */
+export function settleWithin<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  label = "Operation",
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error(`${label} timed out after ${timeoutMs}ms`)),
+      timeoutMs,
+    );
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
 }

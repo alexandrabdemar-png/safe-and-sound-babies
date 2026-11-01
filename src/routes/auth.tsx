@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { friendlyAuthError, isAlreadyRegisteredAuthError } from "@/lib/errors";
-import { withTimeout } from "@/lib/promiseTimeout";
+import { settleWithin, withTimeout } from "@/lib/promiseTimeout";
 import { oauthRedirectUri } from "@/lib/authCallbackRouting";
 import { Mail, Lock, Sparkles, Loader2, ArrowLeft } from "lucide-react";
 
@@ -28,6 +28,16 @@ export const Route = createFileRoute("/auth")({
 });
 
 type Mode = "signin" | "signup" | "magic" | "forgot" | "reset";
+
+// Safety net so an email form can never spin forever: if the auth request
+// hasn't come back by then, stop the spinner and say so.
+const EMAIL_AUTH_TIMEOUT_MS = 25000;
+const EMAIL_AUTH_TIMEOUT_MESSAGE =
+  "This is taking longer than expected. Check your connection and try again.";
+
+function isTimeoutError(err: unknown): boolean {
+  return err instanceof Error && /timed out/i.test(err.message);
+}
 
 /**
  * A Supabase recovery link can announce itself in three ways depending on
@@ -87,11 +97,15 @@ function AuthPage() {
     setLoading("email");
     try {
       if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-        });
+        const { data, error } = await settleWithin(
+          supabase.auth.signUp({
+            email,
+            password,
+            options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+          }),
+          EMAIL_AUTH_TIMEOUT_MS,
+          "Sign-up",
+        );
         if (error) throw error;
         if (data.session) {
           toast.success("Welcome to Peace of Mine ✨");
@@ -100,9 +114,15 @@ function AuthPage() {
           toast.success("Check your inbox to confirm your email ✨");
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await settleWithin(
+          supabase.auth.signInWithPassword({ email, password }),
+          EMAIL_AUTH_TIMEOUT_MS,
+          "Sign-in",
+        );
         if (error) throw error;
         toast.success("Welcome back!");
+        // Navigate here too rather than relying only on the auth listener.
+        if (data.session) navigate({ to: "/home" });
       }
     } catch (err) {
       // Signup specifically avoids confirming "that email already has an
@@ -112,7 +132,9 @@ function AuthPage() {
       // the user their credentials didn't match (see friendlyAuthError's
       // "invalid login credentials" mapping) since a login form already
       // requires guessing a password, not just an email.
-      if (mode === "signup" && isAlreadyRegisteredAuthError(err)) {
+      if (isTimeoutError(err)) {
+        toast.error(EMAIL_AUTH_TIMEOUT_MESSAGE);
+      } else if (mode === "signup" && isAlreadyRegisteredAuthError(err)) {
         toast.success("Check your inbox to confirm your email ✨");
       } else {
         toast.error(friendlyAuthError(err));

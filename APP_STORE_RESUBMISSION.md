@@ -1,3 +1,22 @@
+# Apple review follow-up — Guideline 2.1(a), email sign-in hangs (November 1, 2026)
+
+## Root cause
+
+On a fresh install (exactly how App Review tests), email sign-in and account creation spun forever. The app’s saved-login code returned a native Capacitor plugin object from an async function. Capacitor plugin objects answer *every* property, including `then`, so JavaScript treated the object as a promise and waited for a native `then` call that never answers. Supabase reads that saved login while it starts up, so every email sign-in and sign-up request waited on that read forever. Devices that already had a saved login usually skipped that read, which is why it didn’t show up in our own testing.
+
+## Fix
+
+- The Keychain and Preferences helpers now return plain wrapper objects, never the plugin itself.
+- Every native storage call gives up after 3 seconds, and the signed-in check stops waiting on the session restore after 6 seconds, so a native call can’t freeze the app again.
+- The email form stops its spinner and shows a message if a request takes longer than 25 seconds.
+- A new regression test reproduces the hang with a Capacitor-shaped plugin. It fails on the old code and passes on the new code.
+
+## Before resubmitting
+
+1. **Publish in Lovable.** The fix is in the hosted app, so a new binary isn’t required.
+2. On an iPhone **and an iPad**, delete the app, reinstall it from TestFlight, then create a new account with email, sign out, and sign back in with email. Also test with the App Review demo account.
+3. Reply to App Review: “We fixed an issue where email sign-in and account creation could load indefinitely on a fresh install. The fix is live. Please try again with the demo account.”
+
 # Apple review follow-up — build 24 (October 21, 2026)
 
 ## Root cause found for "unable to purchase subscription"
