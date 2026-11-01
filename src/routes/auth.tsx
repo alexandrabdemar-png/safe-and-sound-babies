@@ -456,14 +456,3 @@ function AppleIcon() {
   );
 }
 
-function withTimeout<T>(p: Promise<T>, ms = 20000): Promise<T> {
-  return Promise.race([
-    p,
-    new Promise<T>((_, rej) =>
-      setTimeout(
-        () => rej(new Error("This is taking longer than expected. Check your connection and try again.")),
-        ms,
-      ),
-    ),
-  ]);
-}
