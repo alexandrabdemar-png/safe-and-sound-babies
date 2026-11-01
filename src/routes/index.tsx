@@ -81,6 +81,18 @@ const categories = [
 
 function Index() {
   const navigate = useNavigate();
+  // Inside the iPhone app, never show the marketing page: show a plain
+  // splash, then go straight to Home (signed in) or the sign-in screen.
+  const [nativeSplash, setNativeSplash] = useState(false);
+  useLayoutEffect(() => {
+    const cap = (window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
+    if (!cap?.isNativePlatform?.()) return;
+    setNativeSplash(true);
+    ensureNativeSessionRestored()
+      .then(() => supabase.auth.getSession())
+      .then(({ data }) => navigate({ to: data.session ? "/home" : "/auth", replace: true }))
+      .catch(() => navigate({ to: "/auth", replace: true }));
+  }, [navigate]);
 
   // Google/Apple sign-in redirects back to this bare origin once Google or
   // Apple's own auth server has finished (the OAuth broker doesn't route
@@ -98,6 +110,14 @@ function Index() {
     });
     return () => sub.subscription.unsubscribe();
   }, [navigate]);
+
+  if (nativeSplash) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" aria-label="Loading" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
