@@ -87,11 +87,11 @@ function AuthPage() {
     setLoading("email");
     try {
       if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
+        const { data, error } = await withTimeout(supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-        });
+        }));
         if (error) throw error;
         if (data.session) {
           toast.success("Welcome to Peace of Mine ✨");
@@ -100,9 +100,13 @@ function AuthPage() {
           toast.success("Check your inbox to confirm your email ✨");
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await withTimeout(
+          supabase.auth.signInWithPassword({ email, password }),
+        );
         if (error) throw error;
         toast.success("Welcome back!");
+        // Navigate explicitly instead of relying only on the auth listener.
+        if (data.session) navigate({ to: "/home" });
       }
     } catch (err) {
       // Signup specifically avoids confirming "that email already has an
@@ -450,4 +454,16 @@ function AppleIcon() {
       <path d="M17.05 12.04c-.03-2.86 2.34-4.23 2.44-4.3-1.33-1.95-3.4-2.22-4.14-2.25-1.76-.18-3.43 1.04-4.32 1.04-.9 0-2.27-1.02-3.74-.99-1.92.03-3.7 1.12-4.69 2.83-2 3.46-.51 8.59 1.44 11.4.95 1.38 2.08 2.93 3.55 2.87 1.43-.06 1.97-.93 3.7-.93s2.22.93 3.74.9c1.55-.03 2.52-1.4 3.47-2.79 1.09-1.6 1.54-3.15 1.57-3.23-.03-.02-3.01-1.16-3.04-4.55zM14.39 3.73c.79-.96 1.32-2.29 1.17-3.61-1.13.05-2.5.75-3.32 1.7-.73.84-1.37 2.2-1.2 3.5 1.26.1 2.55-.64 3.35-1.59z"/>
     </svg>
   );
+}
+
+function withTimeout<T>(p: Promise<T>, ms = 20000): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, rej) =>
+      setTimeout(
+        () => rej(new Error("This is taking longer than expected. Check your connection and try again.")),
+        ms,
+      ),
+    ),
+  ]);
 }
