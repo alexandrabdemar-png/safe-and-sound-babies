@@ -87,7 +87,7 @@ function AuthPage() {
     setLoading("email");
     try {
       if (mode === "signup") {
-        const { data, error } = await withTimeout(supabase.auth.signUp({
+        const { data, error } = await timeoutAfter(supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
@@ -100,7 +100,7 @@ function AuthPage() {
           toast.success("Check your inbox to confirm your email ✨");
         }
       } else {
-        const { data, error } = await withTimeout(
+        const { data, error } = await timeoutAfter(
           supabase.auth.signInWithPassword({ email, password }),
         );
         if (error) throw error;
@@ -456,3 +456,10 @@ function AppleIcon() {
   );
 }
 
+
+function timeoutAfter<T>(p: Promise<T>, ms = 20000): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms)),
+  ]);
+}
