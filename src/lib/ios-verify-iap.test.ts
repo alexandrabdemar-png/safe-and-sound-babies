@@ -5,7 +5,8 @@ import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const script = resolve('scripts/ios-verify-iap.mjs');
-function runFixture(registered: boolean, linked: boolean) {
+const SIGN_IN_PLUGINS = ['NativeBiometricPlugin', 'PreferencesPlugin'];
+function runFixture(registered: boolean, linked: boolean, plugins: string[] = SIGN_IN_PLUGINS) {
   const root = mkdtempSync(join(tmpdir(), 'iap-preflight-'));
   const write = (path: string, value: string) => {
     const destination = join(root, path);
@@ -13,7 +14,7 @@ function runFixture(registered: boolean, linked: boolean) {
     writeFileSync(destination, value);
   };
   try {
-    write('ios/App/App/capacitor.config.json', JSON.stringify({ appId: 'com.peaceofmine.baby', packageClassList: registered ? ['AppleIAPPlugin'] : [] }));
+    write('ios/App/App/capacitor.config.json', JSON.stringify({ appId: 'com.peaceofmine.baby', packageClassList: [...(registered ? ['AppleIAPPlugin'] : []), ...plugins] }));
     write('ios/App/CapApp-SPM/Package.swift', linked ? '.product(name: "AppleIap", package: "AppleIap")' : 'OtherPlugin');
     write('node_modules/apple-iap/ios/Sources/AppleIAPPlugin/AppleIAPPlugin.swift', 'let monthly = "monthlyplan"; let annual = "annualplan"');
     return spawnSync(process.execPath, [script], { cwd: root, encoding: 'utf8' });
@@ -31,6 +32,13 @@ describe('native Apple purchase preflight', () => {
     const result = runFixture(true, false);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('missing');
+  });
+  it('blocks a build missing the sign-in storage plugins', () => {
+    for (const missing of SIGN_IN_PLUGINS) {
+      const result = runFixture(true, true, SIGN_IN_PLUGINS.filter((p) => p !== missing));
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain(`${missing} (`);
+    }
   });
   it('accepts registered and linked current products', () => {
     expect(runFixture(true, true).status).toBe(0);

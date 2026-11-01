@@ -15,6 +15,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { useDeepLinks } from "@/hooks/useDeepLinks";
 import { useAuthAutoRefresh } from "@/hooks/useAuthAutoRefresh";
+import { startAuthEventDiagnostics } from "@/lib/authDiagnostics";
+import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
   return (
@@ -143,6 +145,9 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   useDeepLinks();
   useAuthAutoRefresh();
+  useEffect(() => {
+    startAuthEventDiagnostics(supabase);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

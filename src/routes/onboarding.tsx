@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { WelcomeIntroModal } from "@/components/WelcomeIntroModal";
 import { cn } from "@/lib/utils";
 import { friendlyError } from "@/lib/errors";
-import { checkNeedsLegalConsent } from "@/lib/legalConsent";
+import { checkNeedsLegalConsentWithin } from "@/lib/legalConsent";
 import { CATEGORY_BY_KEY, type CategoryKey } from "@/lib/productCategories";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { logError } from "@/lib/sanitize-error";
@@ -43,7 +43,7 @@ export const Route = createFileRoute("/onboarding")({
       data: { session },
     } = await supabase.auth.getSession();
     if (!session) throw redirect({ to: "/auth" });
-    if (await checkNeedsLegalConsent(supabase, session.user.id)) {
+    if (await checkNeedsLegalConsentWithin(supabase, session.user.id)) {
       throw redirect({ to: "/legal-consent", search: { next: "/onboarding" } });
     }
   },

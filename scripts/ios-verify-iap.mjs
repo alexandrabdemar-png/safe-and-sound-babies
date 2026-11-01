@@ -9,6 +9,12 @@ if (!existsSync(configPath)) fail('Run bun run ios:sync on your Mac first.');
 const config = JSON.parse(read(configPath));
 if (config.appId !== 'com.peaceofmine.baby') fail('The native app identifier must match the App Store app: com.peaceofmine.baby.');
 if (!config.packageClassList?.includes('AppleIAPPlugin')) fail('AppleIAPPlugin is not registered. Install dependencies and sync iOS again before archiving.');
+// Sign-in depends on these too: they keep the login across launches (Keychain
+// and UserDefaults copies of the session). A build without them still signs
+// in, but users get logged out whenever iOS clears the web view's storage.
+for (const [plugin, pkg] of [['NativeBiometricPlugin', '@capgo/capacitor-native-biometric'], ['PreferencesPlugin', '@capacitor/preferences']]) {
+  if (!config.packageClassList?.includes(plugin)) fail(`${plugin} (${pkg}) is not registered. Install dependencies and sync iOS again before archiving.`);
+}
 const swiftPackage = read('ios/App/CapApp-SPM/Package.swift');
 const podfile = read('ios/App/Podfile');
 const podLock = read('ios/App/Podfile.lock');
@@ -19,5 +25,5 @@ if (swiftPackage) {
 }
 const swift = read('node_modules/apple-iap/ios/Sources/AppleIAPPlugin/AppleIAPPlugin.swift');
 if (!swift.includes('"monthlyplan"') || !swift.includes('"annualplan"')) fail('The installed AppleIAP plugin does not contain both current product IDs. Reinstall dependencies.');
-console.log('Apple purchase preflight passed: plugin registration, native dependency, app identifier, monthlyplan and annualplan.');
+console.log('Apple purchase preflight passed: plugin registration (purchases, Keychain, Preferences), native dependency, app identifier, monthlyplan and annualplan.');
 console.log('This does not verify an Xcode archive or App Store availability. Test BOTH plans in the new TestFlight build before submitting.');

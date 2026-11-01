@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 import { brokeredPreviewStorage } from './previewAuthStorage';
 import { isNativeIOS, keychainBackedStorage } from './nativeAuthStorage';
+import { createAuthFetch } from './authFetch';
 
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
@@ -21,6 +22,8 @@ function createSupabaseClient() {
   }
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    // Time-limits and logs auth requests only (see authFetch.ts).
+    global: { fetch: createAuthFetch() },
     auth: {
       // iPhone app: also keep the login in the Keychain so it survives iOS
       // clearing the web view's storage (see nativeAuthStorage.ts).

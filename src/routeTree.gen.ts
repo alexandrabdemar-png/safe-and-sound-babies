@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthDiagnosticsRouteImport } from './routes/auth-diagnostics'
 import { Route as LegalConsentRouteImport } from './routes/legal-consent'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
@@ -71,6 +72,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthDiagnosticsRoute = AuthDiagnosticsRouteImport.update({
+  id: '/auth-diagnostics',
+  path: '/auth-diagnostics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LegalConsentRoute = LegalConsentRouteImport.update({
@@ -327,6 +333,7 @@ const ApiPublicPaymentsWebhookRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
+  '/auth-diagnostics': typeof AuthDiagnosticsRoute
   '/legal-consent': typeof LegalConsentRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -377,6 +384,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
+  '/auth-diagnostics': typeof AuthDiagnosticsRoute
   '/legal-consent': typeof LegalConsentRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -429,6 +437,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
+  '/auth-diagnostics': typeof AuthDiagnosticsRoute
   '/legal-consent': typeof LegalConsentRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -481,6 +490,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/auth-diagnostics'
     | '/legal-consent'
     | '/onboarding'
     | '/privacy-policy'
@@ -531,6 +541,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/auth-diagnostics'
     | '/legal-consent'
     | '/onboarding'
     | '/privacy-policy'
@@ -582,6 +593,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/auth-diagnostics'
     | '/legal-consent'
     | '/onboarding'
     | '/privacy-policy'
@@ -634,6 +646,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
+  AuthDiagnosticsRoute: typeof AuthDiagnosticsRoute
   LegalConsentRoute: typeof LegalConsentRoute
   OnboardingRoute: typeof OnboardingRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
@@ -673,6 +686,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth-diagnostics': {
+      id: '/auth-diagnostics'
+      path: '/auth-diagnostics'
+      fullPath: '/auth-diagnostics'
+      preLoaderRoute: typeof AuthDiagnosticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/legal-consent': {
@@ -1085,6 +1105,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
+  AuthDiagnosticsRoute: AuthDiagnosticsRoute,
   LegalConsentRoute: LegalConsentRoute,
   OnboardingRoute: OnboardingRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,

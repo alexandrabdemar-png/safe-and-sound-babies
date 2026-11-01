@@ -11,6 +11,20 @@ On a fresh install (exactly how App Review tests), email sign-in and account cre
 - The email form stops its spinner and shows a message if a request takes longer than 25 seconds.
 - A new regression test reproduces the hang with a Capacitor-shaped plugin. It fails on the old code and passes on the new code.
 
+## Follow-up hardening (audit fixes)
+
+- **Signup goes straight to onboarding.** The auth listener no longer races the form's own navigation.
+- **`/onboarding` can't hang.** Its Terms check now gives up after 8 seconds, like the other signed-in screens.
+- **Every Supabase auth request has a 20-second limit**, and each request is logged. Database, storage and edge-function requests are unchanged.
+- **Pre-build check:** `bun run ios:sync` now also fails if the Keychain (`NativeBiometricPlugin`) or Preferences (`PreferencesPlugin`) plugin isn't registered.
+- **Hidden sign-in diagnostics screen.** On the sign-in screen, tap the sparkle icon above "Welcome back" **five times quickly**. The screen shows:
+  - auth events, and each auth request with its status code and duration
+  - timeouts and errors
+  - device details
+  - a **Test connection** button and a **Copy report** button
+
+  It never records passwords, tokens or email addresses. If sign-in fails on a device, send that report.
+
 ## Before resubmitting
 
 1. **Publish in Lovable.** The fix is in the hosted app, so a new binary isn’t required.
