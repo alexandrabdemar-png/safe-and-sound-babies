@@ -29,7 +29,15 @@ async function getPrefs() {
 /** Awaited by the signed-in gate before it checks for a session. */
 export function ensureNativeSessionRestored(): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
-  if (!restorePromise) restorePromise = restore();
+  // Hard cap: a native plugin that never answers (e.g. missing from the
+  // installed binary, or a stalled token refresh) must never leave sign-in
+  // or app start spinning forever — App Review hit exactly that on iPad.
+  if (!restorePromise) {
+    restorePromise = Promise.race([
+      restore().catch(() => undefined),
+      new Promise<void>((r) => setTimeout(r, 4000)),
+    ]);
+  }
   return restorePromise;
 }
 
