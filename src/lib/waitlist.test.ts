@@ -58,9 +58,12 @@ describe("joinWaitlist", () => {
     expect(insert).not.toHaveBeenCalled();
   });
 
-  it("reports a real failure", async () => {
-    const { client } = fakeClient({ code: "500", message: "boom" });
-    expect(await joinWaitlist(client, valid)).toMatchObject({ ok: false, reason: "failed" });
+  it("reports a real failure with its error code", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const { client } = fakeClient({ code: "PGRST205", message: "Could not find the table" });
+    const result = await joinWaitlist(client, valid);
+    expect(result).toMatchObject({ ok: false, reason: "failed" });
+    expect(result.ok ? "" : result.message).toContain("(error PGRST205)");
   });
 });
 
