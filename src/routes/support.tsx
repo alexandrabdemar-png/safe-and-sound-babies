@@ -13,7 +13,7 @@ const FAQ = [
   },
   {
     q: "What does the app track?",
-    a: "Peace of Mine tracks your baby's products (car seats, cribs, strollers, bottles, formula, pacifiers, and more) for recalls and expiration, age-based safety milestones, feeding and first foods, bottles, and safety reminders. You stay in control of what you log.",
+    a: "Peace of Mine tracks your baby's products (car seats, cribs, strollers, bottles, formula, pacifiers, and more) for recalls and expiration, age-based safety milestones, feeding and a food log that checks packaged foods for recalls, bottles, and safety reminders. You stay in control of what you log.",
   },
   {
     q: "Is my child's data private?",

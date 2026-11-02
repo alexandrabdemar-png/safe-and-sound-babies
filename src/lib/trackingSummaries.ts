@@ -22,9 +22,11 @@ function plural(n: number, one: string, many = `${one}s`) {
   return `${n} ${n === 1 ? one : many}`;
 }
 
-export function firstFoodsSummary(total: number, allergens: number): string {
-  if (total === 0) return "Nothing logged yet — start with a single food";
-  const base = `${plural(total, "food")} introduced`;
+/** Food Log card: distinct foods tried, plus this week's logs (or allergens if none this week). */
+export function firstFoodsSummary(foods: number, allergens: number, loggedThisWeek = 0): string {
+  if (foods === 0) return "Nothing logged yet — log what your baby eats today";
+  const base = `${plural(foods, "food")} tried`;
+  if (loggedThisWeek > 0) return `${base} · ${loggedThisWeek} logged this week`;
   return allergens > 0 ? `${base} · ${plural(allergens, "allergen")} tried` : base;
 }
 

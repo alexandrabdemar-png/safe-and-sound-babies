@@ -27,10 +27,11 @@ describe("formatRelativeTime", () => {
 });
 
 describe("summaries", () => {
-  it("first foods pluralises and mentions allergens", () => {
+  it("food log pluralises and mentions this week or allergens", () => {
     expect(firstFoodsSummary(0, 0)).toMatch(/Nothing logged yet/);
-    expect(firstFoodsSummary(1, 0)).toBe("1 food introduced");
-    expect(firstFoodsSummary(14, 1)).toBe("14 foods introduced · 1 allergen tried");
+    expect(firstFoodsSummary(1, 0)).toBe("1 food tried");
+    expect(firstFoodsSummary(14, 1)).toBe("14 foods tried · 1 allergen tried");
+    expect(firstFoodsSummary(14, 1, 9)).toBe("14 foods tried · 9 logged this week");
   });
 
   it("bottles prefers active count then last bottle", () => {

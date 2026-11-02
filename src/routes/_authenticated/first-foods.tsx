@@ -13,6 +13,8 @@ import {
   ShieldAlert,
   Utensils,
   Loader2,
+  RotateCcw,
+  Sparkles,
   X,
 } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
@@ -20,13 +22,22 @@ import { friendlyError } from "@/lib/errors";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { lookupBarcode } from "@/lib/barcodeLookup";
 import { allergensFromTags, collectIngredients, parseIngredients } from "@/lib/foodIngredients";
+import {
+  firstTryIds,
+  groupByPeriod,
+  isNewFood,
+  localISODate,
+  recentDistinctFoods,
+  uniqueFoodCount,
+  weekStats,
+} from "@/lib/foodLog";
 
 const DISMISSED_4DAY_KEY = "safesound.dismissed4DayReminder";
 
 export const Route = createFileRoute("/_authenticated/first-foods")({
   ssr: false,
   component: FirstFoodsPage,
-  head: () => ({ meta: [{ title: "First Foods — Peace of Mine" }] }),
+  head: () => ({ meta: [{ title: "Food Log — Peace of Mine" }] }),
 });
 
 import { TOP_ALLERGENS, type Allergen } from "@/lib/topAllergens";
@@ -125,6 +136,8 @@ function RecallStatusBadge({ food }: { food: FoodEntry }) {
   return <p className={`mt-0.5 font-body text-[11px] ${tone}`}>{label}</p>;
 }
 
+// The route stays /first-foods so existing links and bookmarks keep working;
+// the page itself is the everyday Food Log (new foods AND daily favourites).
 function FirstFoodsPage() {
   const navigate = useNavigate();
   const [child, setChild] = useState<Child | null>(null);
@@ -140,7 +153,7 @@ function FirstFoodsPage() {
   // an existing first_foods row while editing one (see openEdit/handleSave).
   const [editingId, setEditingId] = useState<string | null>(null);
   const [foodName, setFoodName] = useState("");
-  const [dateIntroduced, setDateIntroduced] = useState(new Date().toISOString().slice(0, 10));
+  const [dateIntroduced, setDateIntroduced] = useState(localISODate());
   const [isAllergen, setIsAllergen] = useState(false);
   const [selectedAllergen, setSelectedAllergen] = useState<Allergen | "">("");
   const [reactionNotes, setReactionNotes] = useState("");
@@ -154,11 +167,12 @@ function FirstFoodsPage() {
   const [scanOpen, setScanOpen] = useState(false);
   const [lookingUp, setLookingUp] = useState(false);
   const { requirePro } = useProGate();
+  const [loggingAgainId, setLoggingAgainId] = useState<string | null>(null);
 
   function openAdd() {
     setEditingId(null);
     setFoodName("");
-    setDateIntroduced(new Date().toISOString().slice(0, 10));
+    setDateIntroduced(localISODate());
     setIsAllergen(false);
     setSelectedAllergen("");
     setReactionNotes("");
@@ -170,6 +184,52 @@ function FirstFoodsPage() {
     requestAnimationFrame(() =>
       formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
     );
+  }
+
+  /** "Your usual foods" chip: pre-fill the form from a food already in the log. */
+  function fillFrom(f: FoodEntry) {
+    const { base, allergen } = parseFoodName(f.food_name);
+    setFoodName(base);
+    setDateIntroduced(localISODate());
+    setIsAllergen(f.is_allergen);
+    setSelectedAllergen(f.is_allergen ? allergen : "");
+    setReactionNotes("");
+    setIngredients(f.ingredients ?? "");
+    setBrand(f.brand ?? "");
+    setBarcode(f.barcode ?? "");
+    setIsPackaged(f.is_packaged ?? null);
+  }
+
+  /**
+   * One tap to log a food the baby has had before as eaten today — the
+   * everyday pouch, puffs or yogurt — so it stays in the recall check without
+   * re-typing it. Reaction notes aren't copied; they belong to that day.
+   * product_id isn't copied either: the database trigger links the new entry
+   * to the same recall-tracked product (see food_log_shared_products).
+   */
+  async function logAgain(f: FoodEntry) {
+    if (!child || loggingAgainId) return;
+    setLoggingAgainId(f.id);
+    const { error } = await supabase.from("first_foods").insert({
+      child_id: child.id,
+      food_name: f.food_name,
+      date_introduced: localISODate(),
+      is_allergen: f.is_allergen,
+      reaction_notes: null,
+      ingredients: f.ingredients,
+      brand: f.brand,
+      barcode: f.barcode,
+      is_packaged: f.is_packaged,
+    });
+    if (!mountedRef.current) return;
+    setLoggingAgainId(null);
+    if (error) {
+      logError("[food-log] failed to log again:", error.message);
+      toast.error(friendlyError(error.message));
+      return;
+    }
+    toast.success(`${f.food_name} logged for today.`);
+    loadData().catch((err) => logError("[food-log] background refresh failed:", err));
   }
 
   function openEdit(f: FoodEntry) {
@@ -281,8 +341,7 @@ function FirstFoodsPage() {
       // /profile instead of looping back into onboarding.
       const { data: prof } = await supabase.from("profiles").select("profile_type").maybeSingle();
       const pt = (prof as { profile_type?: string } | null)?.profile_type as
-        | import("@/lib/profileType").ProfileType
-        | undefined;
+        import("@/lib/profileType").ProfileType | undefined;
       const { usesAgeRangeFlow } = await import("@/lib/profileType");
       if (pt && usesAgeRangeFlow(pt)) {
         navigate({ to: "/profile" });
@@ -347,6 +406,11 @@ function FirstFoodsPage() {
     }
 
     const isEditing = editingId !== null;
+    const firstTry = isNewFood(
+      foods,
+      { food_name: finalName, brand: brand.trim() || null },
+      editingId,
+    );
     const shared = {
       food_name: finalName,
       date_introduced: dateIntroduced,
@@ -372,11 +436,15 @@ function FirstFoodsPage() {
     }
 
     toast.success(
-      isEditing ? `${finalName} updated.` : `${finalName} added to ${child.name}'s food log.`,
+      isEditing
+        ? `${finalName} updated.`
+        : firstTry
+          ? `${finalName} added — a new food for ${child.name}!`
+          : `${finalName} logged in ${child.name}'s food log.`,
     );
     setEditingId(null);
     setFoodName("");
-    setDateIntroduced(new Date().toISOString().slice(0, 10));
+    setDateIntroduced(localISODate());
     setIsAllergen(false);
     setSelectedAllergen("");
     setReactionNotes("");
@@ -384,7 +452,8 @@ function FirstFoodsPage() {
     setBrand("");
     setBarcode("");
     setShowForm(false);
-    if (!isEditing) {
+    // The 4-day wait only applies to a brand-new food, not a daily staple.
+    if (!isEditing && firstTry) {
       let dismissedForGood = false;
       try {
         dismissedForGood = localStorage.getItem(DISMISSED_4DAY_KEY) === "1";
@@ -409,6 +478,14 @@ function FirstFoodsPage() {
     ? foods.filter((f) => f.food_name.toLowerCase().includes(search.trim().toLowerCase()))
     : foods;
   const filtered = sortFoods(searched, sortMode);
+  const firsts = firstTryIds(foods);
+  const usualFoods = recentDistinctFoods(foods, 8);
+  const week = weekStats(foods);
+  const allergensTried = computeAllergenProgress(foods).introduced.length;
+  const groups =
+    sortMode === "recent"
+      ? groupByPeriod(filtered)
+      : [{ period: "all", label: "", items: filtered }];
 
   if (loading) {
     return (
@@ -436,7 +513,7 @@ function FirstFoodsPage() {
                 <Utensils className="h-4 w-4" />
               </span>
               <div>
-                <h1 className="font-display text-xl font-semibold tracking-tight">First Foods</h1>
+                <h1 className="font-display text-xl font-semibold tracking-tight">Food Log</h1>
                 <p className="font-body text-xs text-muted-foreground">{child?.name}</p>
               </div>
             </div>
@@ -464,15 +541,36 @@ function FirstFoodsPage() {
             </div>
           </div>
           <p className="font-body text-xs leading-relaxed text-muted-foreground">
-            A quick log of the first time your baby tries each food, and any reactions. Scan a pouch
-            or puffs package and we'll fill in the product and its full ingredient list. Any
-            caregiver with access to {child?.name || "this child"} can add to it too.
+            Log everything {child?.name || "your baby"} eats — new foods and everyday favorites — so
+            packaged foods are checked for recalls every 30 minutes. Scan a pouch or puffs package
+            for the most accurate match. Any caregiver with access to {child?.name || "this child"}{" "}
+            can add to it too.
           </p>
         </div>
       </header>
 
       <main className="px-5 sm:px-6">
         <div className="mx-auto max-w-md space-y-4">
+          {/* This week at a glance */}
+          {foods.length > 0 && (
+            <div className="flex gap-3">
+              <div className="flex-1 rounded-2xl border border-border/60 bg-card p-3 text-center">
+                <p className="font-display text-xl font-semibold">{week.loggedThisWeek}</p>
+                <p className="font-body text-[11px] text-muted-foreground">logged this week</p>
+              </div>
+              <div className="flex-1 rounded-2xl border border-border/60 bg-card p-3 text-center">
+                <p className="font-display text-xl font-semibold text-primary">
+                  {week.newThisWeek}
+                </p>
+                <p className="font-body text-[11px] text-muted-foreground">new this week</p>
+              </div>
+              <div className="flex-1 rounded-2xl border border-border/60 bg-card p-3 text-center">
+                <p className="font-display text-xl font-semibold">{uniqueFoodCount(foods)}</p>
+                <p className="font-body text-[11px] text-muted-foreground">foods tried</p>
+              </div>
+            </div>
+          )}
+
           {/* Allergen progress */}
           {foods.length > 0 && <AllergenProgressCard foods={foods} />}
 
@@ -515,15 +613,42 @@ function FirstFoodsPage() {
               className="scroll-mt-4 rounded-2xl border border-border/60 bg-card p-4 animate-scale-in"
             >
               <p className="mb-3 font-display text-sm font-semibold">
-                {editingId ? "Edit food" : "Add a new food"}
+                {editingId ? "Edit food" : "Log a food"}
               </p>
+
+              {!editingId && usualFoods.length > 0 && (
+                <div className="mb-3">
+                  <p className="mb-1 font-body text-xs text-muted-foreground">Your usual foods</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {usualFoods.map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => fillFrom(f)}
+                        className="rounded-full border border-border/60 bg-background px-3 py-1 font-body text-xs text-foreground/80 hover:border-primary/60"
+                      >
+                        {parseFoodName(f.food_name).base}
+                        {f.brand ? (
+                          <span className="text-muted-foreground"> · {f.brand}</span>
+                        ) : null}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {!editingId && (
                 <FoodSearch
+                  knownBrands={foods.map((f) => f.brand)}
                   onPick={(p) => {
                     setFoodName(p.name);
                     if (p.kind === "fresh") {
                       setIsPackaged(false);
+                    } else if (p.kind === "typed") {
+                      if (p.brand) {
+                        setBrand(p.brand);
+                        setIsPackaged(true);
+                      }
                     } else {
                       setIsPackaged(true);
                       if (p.brand) setBrand(p.brand);
@@ -535,11 +660,15 @@ function FirstFoodsPage() {
 
               <div className="mb-3">
                 <label className="mb-1 block font-body text-xs text-muted-foreground">
-                  Food name
+                  Food name{" "}
+                  <span className="text-muted-foreground/60">
+                    (full product name for packaged foods)
+                  </span>
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Sweet potato purée"
+                  autoComplete="off"
+                  placeholder="e.g. Tractor Wheels Oat Bites, or Sweet potato purée"
                   value={foodName}
                   onChange={(e) => setFoodName(e.target.value)}
                   className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 font-body text-sm outline-none focus:border-primary"
@@ -548,12 +677,12 @@ function FirstFoodsPage() {
 
               <div className="mb-3">
                 <label className="mb-1 block font-body text-xs text-muted-foreground">
-                  Date introduced
+                  Date eaten
                 </label>
                 <input
                   type="date"
                   value={dateIntroduced}
-                  max={new Date().toISOString().slice(0, 10)}
+                  max={localISODate()}
                   onChange={(e) => setDateIntroduced(e.target.value)}
                   className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 font-body text-sm outline-none focus:border-primary"
                 />
@@ -712,7 +841,7 @@ function FirstFoodsPage() {
                   disabled={saving}
                   className="flex-1 rounded-full bg-primary py-2 font-body text-sm font-semibold text-primary-foreground disabled:opacity-60"
                 >
-                  {saving ? "Saving…" : editingId ? "Save changes" : "Save food"}
+                  {saving ? "Saving…" : editingId ? "Save changes" : "Log food"}
                 </button>
                 <button
                   type="button"
@@ -735,7 +864,7 @@ function FirstFoodsPage() {
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Search foods introduced…"
+                  placeholder="Search your food log…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full rounded-2xl border border-border/60 bg-card py-2.5 pl-9 pr-4 font-body text-sm outline-none focus:border-primary"
@@ -773,74 +902,108 @@ function FirstFoodsPage() {
 
           {/* Food list */}
           {filtered.length > 0 ? (
-            <div className="rounded-3xl border border-border/60 bg-card divide-y divide-border/40">
-              {filtered.map((f) => (
-                <div key={f.id} className="flex items-start gap-3 px-4 py-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-body text-sm font-medium text-foreground">{f.food_name}</p>
-                      {f.is_allergen && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-200 px-2 py-0.5 font-body text-[10px] font-semibold text-amber-700">
-                          <ShieldAlert className="h-2.5 w-2.5" /> Allergen
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-0.5 font-body text-[11px] text-muted-foreground">
-                      Introduced{" "}
-                      {new Date(f.date_introduced + "T00:00:00").toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </p>
-                    {f.brand && (
-                      <p className="mt-0.5 font-body text-[11px] text-muted-foreground">
-                        {f.brand}
-                      </p>
-                    )}
-                    <RecallStatusBadge food={f} />
-
-                    {f.reaction_notes && (
-                      <p className="mt-1 font-body text-xs text-foreground/70 italic">
-                        "{f.reaction_notes}"
-                      </p>
-                    )}
-                    {f.ingredients && (
-                      <details className="mt-1.5">
-                        <summary className="cursor-pointer font-body text-[11px] font-semibold text-primary">
-                          {parseIngredients(f.ingredients).length} ingredients
-                        </summary>
-                        <div className="mt-1.5 flex flex-wrap gap-1">
-                          {parseIngredients(f.ingredients).map((ing) => (
-                            <span
-                              key={ing}
-                              className="rounded-full bg-muted px-2 py-0.5 font-body text-[10px] text-foreground/70"
-                            >
-                              {ing}
+            groups.map((g) => (
+              <div key={g.period} className="space-y-1.5">
+                {g.label && (
+                  <p className="px-1 font-body text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {g.label}
+                  </p>
+                )}
+                <div className="rounded-3xl border border-border/60 bg-card divide-y divide-border/40">
+                  {g.items.map((f) => (
+                    <div key={f.id} className="flex items-start gap-3 px-4 py-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-body text-sm font-medium text-foreground">
+                            {f.food_name}
+                          </p>
+                          {firsts.has(f.id) && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 font-body text-[10px] font-semibold text-primary">
+                              <Sparkles className="h-2.5 w-2.5" /> New food
                             </span>
-                          ))}
+                          )}
+                          {f.is_allergen && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-200 px-2 py-0.5 font-body text-[10px] font-semibold text-amber-700">
+                              <ShieldAlert className="h-2.5 w-2.5" /> Allergen
+                            </span>
+                          )}
                         </div>
-                      </details>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => openEdit(f)}
-                    aria-label={`Edit ${f.food_name}`}
-                    className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-muted"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </button>
+                        <p className="mt-0.5 font-body text-[11px] text-muted-foreground">
+                          {firsts.has(f.id) ? "First tried" : "Eaten"}{" "}
+                          {new Date(f.date_introduced + "T00:00:00").toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </p>
+                        {f.brand && (
+                          <p className="mt-0.5 font-body text-[11px] text-muted-foreground">
+                            {f.brand}
+                          </p>
+                        )}
+                        <RecallStatusBadge food={f} />
+
+                        {f.reaction_notes && (
+                          <p className="mt-1 font-body text-xs text-foreground/70 italic">
+                            "{f.reaction_notes}"
+                          </p>
+                        )}
+                        {f.ingredients && (
+                          <details className="mt-1.5">
+                            <summary className="cursor-pointer font-body text-[11px] font-semibold text-primary">
+                              {parseIngredients(f.ingredients).length} ingredients
+                            </summary>
+                            <div className="mt-1.5 flex flex-wrap gap-1">
+                              {parseIngredients(f.ingredients).map((ing) => (
+                                <span
+                                  key={ing}
+                                  className="rounded-full bg-muted px-2 py-0.5 font-body text-[10px] text-foreground/70"
+                                >
+                                  {ing}
+                                </span>
+                              ))}
+                            </div>
+                          </details>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <button
+                          type="button"
+                          onClick={() => openEdit(f)}
+                          aria-label={`Edit ${f.food_name}`}
+                          className="rounded-full p-1.5 text-muted-foreground hover:bg-muted"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        {g.period !== "today" && (
+                          <button
+                            type="button"
+                            onClick={() => void logAgain(f)}
+                            disabled={loggingAgainId !== null}
+                            aria-label={`Log ${f.food_name} again for today`}
+                            className="flex items-center gap-1 rounded-full border border-primary/40 px-2 py-1 font-body text-[11px] font-semibold text-primary disabled:opacity-60"
+                          >
+                            {loggingAgainId === f.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <RotateCcw className="h-3 w-3" />
+                            )}
+                            Today
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))
           ) : search.trim() ? (
             <div className="rounded-3xl border border-dashed border-border bg-card/40 px-6 py-8 text-center">
               <p className="font-body text-sm text-muted-foreground">
                 No foods found matching "<strong>{search}</strong>"
                 {!filtered.find((f) => f.food_name.toLowerCase().includes(search.toLowerCase())) &&
                 foods.length > 0
-                  ? " — this food hasn't been introduced yet."
+                  ? " — this food hasn't been logged yet."
                   : "."}
               </p>
             </div>
@@ -849,8 +1012,8 @@ function FirstFoodsPage() {
               <span style={{ fontSize: 36 }}>🥣</span>
               <p className="mt-3 font-display text-base font-semibold">No foods logged yet</p>
               <p className="mt-1 font-body text-sm text-muted-foreground max-w-xs mx-auto">
-                Tap <strong>Add food</strong> to start tracking {child?.name}'s first foods and
-                allergen introductions.
+                Tap <strong>Add food</strong> to log what {child?.name} eats — new foods, daily
+                favorites and allergen introductions — so packaged foods get checked for recalls.
               </p>
             </div>
           )}
@@ -860,13 +1023,13 @@ function FirstFoodsPage() {
             <div className="flex gap-3">
               <div className="flex-1 rounded-2xl border border-border/60 bg-card p-3 text-center">
                 <p className="font-display text-xl font-semibold">{foods.length}</p>
-                <p className="font-body text-[11px] text-muted-foreground">foods tried</p>
+                <p className="font-body text-[11px] text-muted-foreground">total logs</p>
               </div>
               <div className="flex-1 rounded-2xl border border-border/60 bg-card p-3 text-center">
                 <p className="font-display text-xl font-semibold text-amber-600">
-                  {foods.filter((f) => f.is_allergen).length}
+                  {allergensTried}
                 </p>
-                <p className="font-body text-[11px] text-muted-foreground">allergens</p>
+                <p className="font-body text-[11px] text-muted-foreground">allergens tried</p>
               </div>
               <div className="flex-1 rounded-2xl border border-border/60 bg-card p-3 text-center">
                 <p className="font-display text-xl font-semibold text-destructive">
@@ -880,9 +1043,9 @@ function FirstFoodsPage() {
           {/* 4-day guidance note */}
           <div className="rounded-2xl bg-muted/40 px-4 py-3">
             <p className="font-body text-xs text-muted-foreground leading-relaxed">
-              Many pediatricians suggest introducing one new food at a time and waiting around 4
-              days before the next — this helps identify any reactions. Always follow your own
-              doctor's guidance.
+              When trying something new, many pediatricians suggest one new food at a time and
+              waiting around 4 days before the next — this helps identify any reactions. Always
+              follow your own doctor's guidance.
             </p>
           </div>
         </div>
