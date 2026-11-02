@@ -217,7 +217,7 @@ function WaitlistPage() {
                 required
                 autoComplete="email"
                 inputMode="email"
-                placeholder="you@example.com"
+                placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className={`${input} mt-2`}
