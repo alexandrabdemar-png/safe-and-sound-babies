@@ -80,10 +80,15 @@ export async function joinWaitlist(
   // 23505 = already on the list. Treat it as success, so the form never
   // reveals whether a particular email has signed up.
   if (!error || error.code === "23505") return { ok: true };
+  // Full error in the browser console; a short code in the message, so a
+  // screenshot is enough to tell what went wrong (e.g. 42P01 or PGRST205 =
+  // table missing, 42501 = permission denied).
+  console.error("[waitlist] signup failed:", error);
+  const code = error.code ? ` (error ${error.code})` : "";
   return {
     ok: false,
     reason: "failed",
-    message: "We couldn't add you just now. Please try again in a moment.",
+    message: `We couldn't add you just now. Please try again in a moment.${code}`,
   };
 }
 
