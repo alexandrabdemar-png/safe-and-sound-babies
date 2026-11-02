@@ -3,6 +3,7 @@ import {
   matchCriticalRecall,
   matchProductAgainstCpsc,
   matchProductAgainstFda,
+  fdaFoodCheckApplies,
   runRecallBatch,
   type BatchProduct,
 } from "./recallBatch";
@@ -190,6 +191,48 @@ describe("runRecallBatch", () => {
     // not one per product.
     const fdaCalls = fetchSpy.mock.calls.filter((c) => String(c[0]).includes("api.fda.gov"));
     expect(fdaCalls).toHaveLength(2);
+  });
+
+  it('regression: a pacifier named "Mam" never matches an FDA food recall', async () => {
+    const fetchImpl = mockFetch({
+      "saferproducts.gov": [],
+      "fsis.usda.gov": [],
+      "transportation.gov": [],
+      "canada.ca": [],
+      "opendatasoft.com": { results: [] },
+      "api.fda.gov": {
+        results: [
+          {
+            recall_number: "F-0001-2026",
+            product_description: "Nuoc Mam fish sauce 24 oz",
+            reason_for_recall: "Undeclared Allergen: Eggs.",
+          },
+        ],
+      },
+    });
+    const fetchSpy = fetchImpl as unknown as ReturnType<typeof vi.fn>;
+    const products = [
+      product({ id: "pacifier", name: "Mam", category: "pacifier" }),
+      product({ id: "bottle", name: "Mam", category: "bottle" }),
+      product({ id: "uncategorized", name: "Mam", category: null }),
+    ];
+    const result = await runRecallBatch(fetchImpl, products);
+    const fdaMatched = result.matches.filter((m) => m.source === "fda").map((m) => m.product_id);
+    // Gear is skipped; an uncategorized product is still checked, so it
+    // could still be a food (the name match itself is unchanged).
+    expect(fdaMatched).toEqual(["uncategorized"]);
+    expect(fetchSpy.mock.calls.filter((c) => String(c[0]).includes("api.fda.gov"))).toHaveLength(1);
+  });
+
+  it("fdaFoodCheckApplies: food and unknown categories yes, gear no", () => {
+    expect(fdaFoodCheckApplies(product({ category: "formula" }))).toBe(true);
+    expect(fdaFoodCheckApplies(product({ category: "baby_food" }))).toBe(true);
+    expect(fdaFoodCheckApplies(product({ category: "vitamins" }))).toBe(true);
+    expect(fdaFoodCheckApplies(product({ category: "other" }))).toBe(true);
+    expect(fdaFoodCheckApplies(product({ category: null }))).toBe(true);
+    expect(fdaFoodCheckApplies(product({ category: "pacifier", product_type: "food" }))).toBe(true);
+    expect(fdaFoodCheckApplies(product({ category: "pacifier" }))).toBe(false);
+    expect(fdaFoodCheckApplies(product({ category: "car_seat" }))).toBe(false);
   });
 
   it("a source failing entirely doesn't prevent matches from the others", async () => {

@@ -90,6 +90,29 @@ function isFood(p: BatchProduct): boolean {
 }
 
 /**
+ * Categories whose recalls can show up in FDA's *food* enforcement feed
+ * (the only FDA feed this checks). Dietary supplements are FDA-food
+ * regulated, so vitamins count.
+ */
+const FDA_FOOD_CATEGORIES = new Set(["formula", "breast_milk", "baby_food", "vitamins"]);
+
+/**
+ * Whether to run the FDA food-recall check for a product at all. Gear saved
+ * under a non-food category (pacifier, bottle, car seat…) is skipped.
+ * Reported bug: a product named "Mam" (the pacifier/bottle brand) matched an
+ * FDA food recall for an undeclared egg allergen, because a one-word name
+ * matches any food recall that contains that word (e.g. "nuoc mam" fish
+ * sauce). Products with no category or "other" are still checked, so an
+ * uncategorized food is never silently skipped.
+ */
+export function fdaFoodCheckApplies(p: BatchProduct): boolean {
+  if (isFood(p)) return true;
+  const category = (p.category ?? "").trim().toLowerCase();
+  if (!category || category === "other") return true;
+  return FDA_FOOD_CATEGORIES.has(category);
+}
+
+/**
  * True when the product's UPC/EAN appears in the recall text. FDA and USDA
  * notices print UPCs with arbitrary spacing ("UPC 0 15000 07418 6"), so this
  * compares digit runs with separators stripped. A 12-digit UPC-A and its
@@ -463,6 +486,7 @@ export async function runRecallBatch(
   // foods (see fdaQueryFor).
   const productsByQuery = new Map<string, BatchProduct[]>();
   for (const p of products) {
+    if (!fdaFoodCheckApplies(p)) continue;
     const q = fdaQueryFor(p);
     const arr = productsByQuery.get(q) ?? [];
     arr.push(p);
