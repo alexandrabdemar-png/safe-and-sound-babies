@@ -44,6 +44,7 @@ export const Route = createFileRoute("/_authenticated/first-foods")({
 import { TOP_ALLERGENS, type Allergen } from "@/lib/topAllergens";
 import { useProGate } from "@/hooks/useProGate";
 import { FoodSearch } from "@/components/FoodSearch";
+import { PackagedFoodFields } from "@/components/PackagedFoodFields";
 
 export { TOP_ALLERGENS } from "@/lib/topAllergens";
 export type { Allergen } from "@/lib/topAllergens";
@@ -127,8 +128,11 @@ function RecallStatusBadge({ food, onFix }: { food: FoodEntry; onFix?: () => voi
   } else if (food.is_packaged && food.product_id) {
     label = "Recall-checked every 30 minutes";
     tone = "text-primary";
+  } else if (food.is_packaged && food.brand?.trim()) {
+    label = "Recall check didn't connect — tap to retry";
+    tone = "text-destructive";
   } else if (food.is_packaged) {
-    label = "Can't check for recalls — add the brand or scan it";
+    label = "Can't check for recalls — tap to add the brand";
     tone = "text-destructive";
   } else {
     label = "Not checked — edit to say if it's packaged";
@@ -221,17 +225,39 @@ function FirstFoodsPage() {
    */
   async function logAgain(f: FoodEntry) {
     if (!child || loggingAgainId) return;
+    // An older entry saved without a brand can't be recall-checked; copying
+    // it would just repeat the problem. Split a known brand off the name, or
+    // open the form so the parent can add it.
+    let foodNameToLog = f.food_name;
+    let brandToLog = f.brand?.trim() || null;
+    if (f.is_packaged !== false && !brandToLog) {
+      const { base, allergen } = parseFoodName(f.food_name);
+      const split = splitBrandFromQuery(base, [
+        ...foods.map((x) => x.brand),
+        ...COMMON_BABY_FOOD_BRANDS,
+      ]);
+      if (split.brand) {
+        brandToLog = split.brand;
+        foodNameToLog = allergen ? `${split.name} (${allergen})` : split.name;
+      } else if (f.is_packaged) {
+        openAdd();
+        fillFrom(f);
+        toast.info("Add the brand so this food can be checked for recalls, then tap Log food.");
+        requestAnimationFrame(() => brandInputRef.current?.focus());
+        return;
+      }
+    }
     setLoggingAgainId(f.id);
     const { error } = await supabase.from("first_foods").insert({
       child_id: child.id,
-      food_name: f.food_name,
+      food_name: foodNameToLog,
       date_introduced: localISODate(),
       is_allergen: f.is_allergen,
       reaction_notes: null,
       ingredients: f.ingredients,
-      brand: f.brand,
+      brand: brandToLog,
       barcode: f.barcode,
-      is_packaged: f.is_packaged,
+      is_packaged: brandToLog ? true : f.is_packaged,
     });
     if (!mountedRef.current) return;
     setLoggingAgainId(null);
@@ -240,23 +266,32 @@ function FirstFoodsPage() {
       toast.error(friendlyError(error.message));
       return;
     }
-    toast.success(`${f.food_name} logged for today.`);
+    toast.success(`${foodNameToLog} logged for today.`);
     loadData().catch((err) => logError("[food-log] background refresh failed:", err));
   }
 
   function openEdit(f: FoodEntry) {
     const { base, allergen } = parseFoodName(f.food_name);
+    // Older entries may have the brand typed into the name ("Once Upon a
+    // Farm ..."); split it into the Brand box so saving fixes the recall check.
+    const split =
+      f.is_packaged !== false && !f.brand?.trim()
+        ? splitBrandFromQuery(base, [...foods.map((x) => x.brand), ...COMMON_BABY_FOOD_BRANDS])
+        : { brand: null, name: base };
     setEditingId(f.id);
-    setFoodName(base);
+    setFoodName(split.brand ? split.name : base);
     setDateIntroduced(f.date_introduced);
     setIsAllergen(f.is_allergen);
     setSelectedAllergen(f.is_allergen ? allergen : "");
     setReactionNotes(f.reaction_notes ?? "");
     setIngredients(f.ingredients ?? "");
-    setBrand(f.brand ?? "");
+    setBrand(f.brand ?? split.brand ?? "");
     setBarcode(f.barcode ?? "");
-    setIsPackaged(f.is_packaged ?? null);
+    setIsPackaged(split.brand ? true : (f.is_packaged ?? null));
     setShowForm(true);
+    requestAnimationFrame(() =>
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
   }
 
   /**
@@ -402,7 +437,7 @@ function FirstFoodsPage() {
   async function handleSave() {
     if (!child) return;
     if (!foodName.trim()) {
-      toast.error("Enter a food name.");
+      toast.error(isPackaged ? "Enter the product name." : "Enter a food name.");
       return;
     }
 
@@ -426,9 +461,13 @@ function FirstFoodsPage() {
         setIsPackaged(true);
       } else if (isPackaged) {
         toast.error(
-          "Add the brand so we can check this food for recalls — or scan the package. If it's homemade, choose “No (fresh / homemade)”.",
+          "Add the brand so we can check this food for recalls — or scan the package. If it's homemade, choose “Fresh or homemade”.",
         );
         brandInputRef.current?.focus();
+        return;
+      } else {
+        toast.error("Choose Store-bought or Fresh or homemade.");
+        formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
         return;
       }
     }
@@ -461,9 +500,18 @@ function FirstFoodsPage() {
       barcode: barcode.trim().slice(0, 64) || null,
       is_packaged: packagedToSave ?? (barcode.trim() ? true : null),
     };
-    const { error } = isEditing
-      ? await supabase.from("first_foods").update(shared).eq("id", editingId)
-      : await supabase.from("first_foods").insert({ child_id: child.id, ...shared });
+    const { data: saved, error } = isEditing
+      ? await supabase
+          .from("first_foods")
+          .update(shared)
+          .eq("id", editingId)
+          .select("product_id")
+          .maybeSingle()
+      : await supabase
+          .from("first_foods")
+          .insert({ child_id: child.id, ...shared })
+          .select("product_id")
+          .maybeSingle();
 
     if (error) {
       logError("[first-foods] failed to save food:", error.message);
@@ -472,13 +520,21 @@ function FirstFoodsPage() {
       return;
     }
 
-    toast.success(
-      isEditing
-        ? `${finalName} updated.`
-        : firstTry
-          ? `${finalName} added — a new food for ${child.name}!`
-          : `${finalName} logged in ${child.name}'s food log.`,
-    );
+    // The recall link is made by a database trigger. If it didn't attach even
+    // though brand + packaged were saved, say so instead of claiming success.
+    if (shared.is_packaged && shared.brand && saved && !saved.product_id) {
+      logError("[food-log] packaged food saved without a recall product link");
+      toast.warning(
+        "Saved, but the recall check didn't connect. Tap the food's red recall line to retry.",
+      );
+    } else
+      toast.success(
+        isEditing
+          ? `${finalName} updated.`
+          : firstTry
+            ? `${finalName} added — a new food for ${child.name}!`
+            : `${finalName} logged in ${child.name}'s food log.`,
+      );
     setEditingId(null);
     setFoodName("");
     setDateIntroduced(localISODate());
@@ -517,6 +573,7 @@ function FirstFoodsPage() {
   const filtered = sortFoods(searched, sortMode);
   const firsts = firstTryIds(foods);
   const usualFoods = recentDistinctFoods(foods, 8);
+
   const week = weekStats(foods);
   const allergensTried = computeAllergenProgress(foods).introduced.length;
   const groups =
@@ -695,28 +752,130 @@ function FirstFoodsPage() {
                 />
               )}
 
+              {/* 1. What kind of food — decides which fields show */}
               <div className="mb-3">
-                <label className="mb-1 block font-body text-xs text-muted-foreground">
-                  Food name{" "}
-                  <span className="text-muted-foreground/60">
-                    (full product name for packaged foods)
-                  </span>
-                </label>
-                <input
-                  type="text"
-                  autoComplete="off"
-                  placeholder="e.g. Banana, or the full name on the package"
-                  value={foodName}
-                  onChange={(e) => setFoodName(e.target.value)}
-                  className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 font-body text-sm outline-none focus:border-primary"
-                />
+                <p className="mb-1.5 font-body text-xs font-semibold text-foreground">
+                  What kind of food is it?
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(
+                    [
+                      [true, "📦", "Store-bought", "Pouches, puffs, jars, snacks"],
+                      [false, "🍌", "Fresh or homemade", "Fruit, veggies, home-cooked"],
+                    ] as const
+                  ).map(([v, icon, title, hint]) => (
+                    <button
+                      key={String(v)}
+                      type="button"
+                      onClick={() => setIsPackaged(v)}
+                      aria-pressed={isPackaged === v}
+                      className={`rounded-2xl border px-3 py-2.5 text-left transition-colors ${
+                        isPackaged === v
+                          ? "border-primary bg-primary/10 ring-1 ring-primary"
+                          : "border-border/60 bg-background"
+                      }`}
+                    >
+                      <span className="block text-lg leading-none">{icon}</span>
+                      <span className="mt-1 block font-body text-sm font-semibold">{title}</span>
+                      <span className="block font-body text-[11px] text-muted-foreground">
+                        {hint}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
+              {/* 2a. Store-bought: scan, or Brand then Product name */}
+              {isPackaged === true && (
+                <div className="mb-3 space-y-3 rounded-2xl bg-muted/40 p-3">
+                  <button
+                    type="button"
+                    onClick={startScan}
+                    disabled={lookingUp}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/40 bg-background py-2.5 font-body text-sm font-semibold text-primary disabled:opacity-60"
+                  >
+                    {lookingUp ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <ScanLine className="h-4 w-4" />
+                    )}
+                    Scan the barcode (most accurate)
+                  </button>
+                  <p className="text-center font-body text-[11px] text-muted-foreground">
+                    or type it in exactly as printed on the package
+                  </p>
+
+                  <PackagedFoodFields
+                    brand={brand}
+                    onBrandChange={setBrand}
+                    name={foodName}
+                    onNameChange={setFoodName}
+                    knownBrands={foods.map((f) => f.brand)}
+                    brandInputRef={brandInputRef}
+                    onPickProduct={(h) => {
+                      // Database titles often repeat the brand ("Gerber Puffs");
+                      // keep the product name on its own.
+                      const split = h.brand
+                        ? splitBrandFromQuery(h.name, [h.brand])
+                        : { brand: null, name: h.name };
+                      setFoodName(split.name);
+                      if (h.brand) setBrand(h.brand);
+                      if (h.barcode) setBarcode(h.barcode);
+                    }}
+                  />
+
+                  <p
+                    className={`font-body text-[11px] font-semibold ${
+                      brand.trim() && foodName.trim() ? "text-primary" : "text-amber-700"
+                    }`}
+                  >
+                    {brand.trim() && foodName.trim()
+                      ? `✓ ${brand.trim()} ${foodName.trim()} will be checked for recalls every 30 minutes`
+                      : "Add the brand and product name so we can check it for recalls"}
+                  </p>
+                  {barcode && (
+                    <p className="font-body text-[11px] text-muted-foreground">
+                      Scanned code {barcode} — check the brand and name match the package.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* 2b. Fresh / homemade (or not chosen yet): just the food */}
+              {isPackaged !== true && (
+                <div className="mb-3">
+                  <label
+                    htmlFor="food-name"
+                    className="mb-1 block font-body text-xs font-semibold text-foreground"
+                  >
+                    Food name
+                  </label>
+                  <input
+                    id="food-name"
+                    type="text"
+                    autoComplete="off"
+                    placeholder="e.g. Banana, scrambled egg"
+                    value={foodName}
+                    onChange={(e) => setFoodName(e.target.value)}
+                    className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 font-body text-sm outline-none focus:border-primary"
+                  />
+                  {isPackaged === false && (
+                    <p className="mt-1.5 font-body text-[11px] text-muted-foreground">
+                      Fresh and homemade foods aren't checked against recalls.
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div className="mb-3">
-                <label className="mb-1 block font-body text-xs text-muted-foreground">
+                <label
+                  htmlFor="food-date"
+                  className="mb-1 block font-body text-xs font-semibold text-foreground"
+                >
                   Date eaten
                 </label>
                 <input
+                  id="food-date"
                   type="date"
                   value={dateIntroduced}
                   max={localISODate()}
@@ -733,7 +892,7 @@ function FirstFoodsPage() {
                     onChange={(e) => setIsAllergen(e.target.checked)}
                     className="rounded"
                   />
-                  <span>This is one of the top 9 allergens</span>
+                  <span>Contains a top 9 allergen</span>
                 </label>
               </div>
 
@@ -762,115 +921,49 @@ function FirstFoodsPage() {
               )}
 
               <div className="mb-3">
-                <label className="mb-1 block font-body text-xs text-muted-foreground">
-                  Is this a store-bought packaged food?
-                </label>
-                <div className="flex gap-2">
-                  {([true, false] as const).map((v) => (
-                    <button
-                      key={String(v)}
-                      type="button"
-                      onClick={() => setIsPackaged(v)}
-                      className={`flex-1 rounded-xl border px-3 py-2 font-body text-xs transition-colors ${
-                        isPackaged === v
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border/60 bg-background text-muted-foreground"
-                      }`}
-                    >
-                      {v ? "Yes, packaged" : "No (fresh / homemade)"}
-                    </button>
-                  ))}
-                </div>
-                {isPackaged === true && !barcode && (
-                  <p className="mt-1.5 font-body text-[11px] text-muted-foreground">
-                    For the most accurate recall checks,{" "}
-                    <button
-                      type="button"
-                      onClick={startScan}
-                      className="font-semibold text-primary"
-                    >
-                      scan the barcode
-                    </button>
-                    . Otherwise enter the brand and the product name exactly as printed.
-                  </p>
-                )}
-                {isPackaged === false && (
-                  <p className="mt-1.5 font-body text-[11px] text-muted-foreground">
-                    Fresh and homemade foods aren't checked against recalls.
-                  </p>
-                )}
-              </div>
-
-              <div className="mb-3">
-                <label className="mb-1 block font-body text-xs text-muted-foreground">
-                  Brand{" "}
-                  <span className="text-muted-foreground/60">
-                    {isPackaged ? "(needed for recall checks)" : "(optional)"}
-                  </span>
-                </label>
-                <input
-                  type="text"
-                  ref={brandInputRef}
-                  placeholder="e.g. Happy Baby"
-                  value={brand}
-                  onChange={(e) => setBrand(e.target.value)}
-                  className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 font-body text-sm outline-none focus:border-primary"
-                />
-              </div>
-
-              <div className="mb-3">
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <label className="block font-body text-xs text-muted-foreground">
-                    Ingredients <span className="text-muted-foreground/60">(optional)</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={startScan}
-                    disabled={lookingUp}
-                    className="flex items-center gap-1 font-body text-xs font-semibold text-primary disabled:opacity-60"
-                  >
-                    <ScanLine className="h-3 w-3" /> Scan package
-                  </button>
-                </div>
-                <textarea
-                  placeholder="Scan a package to fill this in, or type the ingredients as printed."
-                  value={ingredients}
-                  onChange={(e) => setIngredients(e.target.value)}
-                  rows={3}
-                  className="w-full resize-none rounded-xl border border-border/60 bg-background px-3 py-2 font-body text-sm outline-none focus:border-primary"
-                />
-                {parseIngredients(ingredients).length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {parseIngredients(ingredients).map((ing) => (
-                      <span
-                        key={ing}
-                        className="rounded-full bg-muted px-2 py-0.5 font-body text-[11px] text-foreground/70"
-                      >
-                        {ing}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {barcode && (
-                  <p className="mt-1.5 font-body text-[11px] text-muted-foreground">
-                    Scanned code {barcode} — please check the name and ingredients match the package
-                    before saving.
-                  </p>
-                )}
-              </div>
-
-              <div className="mb-4">
-                <label className="mb-1 block font-body text-xs text-muted-foreground">
-                  Reaction notes <span className="text-muted-foreground/60">(optional)</span>
+                <label
+                  htmlFor="food-notes"
+                  className="mb-1 block font-body text-xs font-semibold text-foreground"
+                >
+                  Reaction notes{" "}
+                  <span className="font-normal text-muted-foreground">(optional)</span>
                 </label>
                 <textarea
-                  placeholder="Any reaction to note? e.g. mild rash, no issues, etc."
+                  id="food-notes"
+                  placeholder="e.g. no issues, mild rash"
                   value={reactionNotes}
                   onChange={(e) => setReactionNotes(e.target.value)}
                   rows={2}
                   className="w-full resize-none rounded-xl border border-border/60 bg-background px-3 py-2 font-body text-sm outline-none focus:border-primary"
                 />
               </div>
+
+              {isPackaged !== false && (
+                <details className="mb-4" open={!!ingredients}>
+                  <summary className="cursor-pointer font-body text-xs font-semibold text-primary">
+                    Ingredients (optional)
+                  </summary>
+                  <textarea
+                    placeholder="Scan the package to fill this in, or type the ingredients as printed."
+                    value={ingredients}
+                    onChange={(e) => setIngredients(e.target.value)}
+                    rows={3}
+                    className="mt-2 w-full resize-none rounded-xl border border-border/60 bg-background px-3 py-2 font-body text-sm outline-none focus:border-primary"
+                  />
+                  {parseIngredients(ingredients).length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {parseIngredients(ingredients).map((ing) => (
+                        <span
+                          key={ing}
+                          className="rounded-full bg-muted px-2 py-0.5 font-body text-[11px] text-foreground/70"
+                        >
+                          {ing}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </details>
+              )}
 
               <div className="flex gap-2">
                 <button
