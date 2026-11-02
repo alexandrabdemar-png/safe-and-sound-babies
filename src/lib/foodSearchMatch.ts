@@ -115,3 +115,53 @@ export function splitBrandFromQuery(
   }
   return { brand: null, name: typed };
 }
+
+/**
+ * Common US baby / toddler food brands, so "Brand Product" typed into the
+ * search or the name field can be split even when the food databases return
+ * nothing. Longest match wins in splitBrandFromQuery, so "Gerber Organic"
+ * beats "Gerber".
+ */
+export const COMMON_BABY_FOOD_BRANDS = [
+  "Once Upon a Farm",
+  "Gerber",
+  "Gerber Organic",
+  "Happy Baby",
+  "Happy Tot",
+  "Earth's Best",
+  "Plum Organics",
+  "Sprout Organics",
+  "Serenity Kids",
+  "Little Spoon",
+  "Beech-Nut",
+  "Cerebelly",
+  "Yumi",
+  "Mama Bear",
+  "Parent's Choice",
+  "up&up",
+  "Good & Gather",
+  "Square Baby",
+  "Tiny Organics",
+  "Stonyfield",
+  "Little Journey",
+  "Amara",
+  "Lil Gourmets",
+  "Peter Rabbit Organics",
+  "Ella's Kitchen",
+  "GoGo SqueeZ",
+  "Annie's",
+  "Cheerios",
+  "Mum-Mum",
+  "Baby Mum-Mum",
+  "Bitsy's",
+  "Nurture Life",
+  "Little Bellies",
+  "Kendamil",
+  "Similac",
+  "Enfamil",
+  "Bobbie",
+  "ByHeart",
+  "Kirkland Signature",
+  "365 by Whole Foods Market",
+  "Simply Balanced",
+] as const;

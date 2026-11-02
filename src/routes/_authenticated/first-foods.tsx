@@ -22,6 +22,7 @@ import { friendlyError } from "@/lib/errors";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { lookupBarcode } from "@/lib/barcodeLookup";
 import { allergensFromTags, collectIngredients, parseIngredients } from "@/lib/foodIngredients";
+import { COMMON_BABY_FOOD_BRANDS, splitBrandFromQuery } from "@/lib/foodSearchMatch";
 import {
   firstTryIds,
   groupByPeriod,
@@ -114,7 +115,7 @@ type FoodEntry = {
   products: { recalled: boolean } | null;
 };
 
-function RecallStatusBadge({ food }: { food: FoodEntry }) {
+function RecallStatusBadge({ food, onFix }: { food: FoodEntry; onFix?: () => void }) {
   let label: string;
   let tone: string;
   if (food.is_packaged === false) {
@@ -132,6 +133,17 @@ function RecallStatusBadge({ food }: { food: FoodEntry }) {
   } else {
     label = "Not checked — edit to say if it's packaged";
     tone = "text-muted-foreground";
+  }
+  if (onFix && food.is_packaged && !food.product_id) {
+    return (
+      <button
+        type="button"
+        onClick={onFix}
+        className={`mt-0.5 block text-left font-body text-[11px] underline ${tone}`}
+      >
+        {label}
+      </button>
+    );
   }
   return <p className={`mt-0.5 font-body text-[11px] ${tone}`}>{label}</p>;
 }
@@ -316,6 +328,7 @@ function FirstFoodsPage() {
   // back to Home, even though the save itself had already succeeded.
   const mountedRef = useRef(true);
   const formRef = useRef<HTMLDivElement>(null);
+  const brandInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     mountedRef.current = true;
     return () => {
@@ -393,9 +406,36 @@ function FirstFoodsPage() {
       return;
     }
 
+    // Recall checks need a brand. If the parent typed "Brand Product" into
+    // the name field, split it for them; otherwise don't let a packaged food
+    // save silently un-checkable.
+    let nameToSave = foodName.trim();
+    let brandToSave = brand.trim();
+    let packagedToSave = isPackaged;
+    if (isPackaged !== false && !brandToSave) {
+      const split = splitBrandFromQuery(nameToSave, [
+        ...foods.map((f) => f.brand),
+        ...COMMON_BABY_FOOD_BRANDS,
+      ]);
+      if (split.brand) {
+        nameToSave = split.name;
+        brandToSave = split.brand;
+        packagedToSave = true;
+        setFoodName(nameToSave);
+        setBrand(brandToSave);
+        setIsPackaged(true);
+      } else if (isPackaged) {
+        toast.error(
+          "Add the brand so we can check this food for recalls — or scan the package. If it's homemade, choose “No (fresh / homemade)”.",
+        );
+        brandInputRef.current?.focus();
+        return;
+      }
+    }
+
     setSaving(true);
     const finalName =
-      isAllergen && selectedAllergen ? `${foodName.trim()} (${selectedAllergen})` : foodName.trim();
+      isAllergen && selectedAllergen ? `${nameToSave} (${selectedAllergen})` : nameToSave;
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -408,7 +448,7 @@ function FirstFoodsPage() {
     const isEditing = editingId !== null;
     const firstTry = isNewFood(
       foods,
-      { food_name: finalName, brand: brand.trim() || null },
+      { food_name: finalName, brand: brandToSave || null },
       editingId,
     );
     const shared = {
@@ -417,13 +457,10 @@ function FirstFoodsPage() {
       is_allergen: isAllergen,
       reaction_notes: reactionNotes.trim() || null,
       ingredients: ingredients.trim().slice(0, 4000) || null,
-      brand: brand.trim().slice(0, 120) || null,
+      brand: brandToSave.slice(0, 120) || null,
       barcode: barcode.trim().slice(0, 64) || null,
-      is_packaged: isPackaged ?? (barcode.trim() ? true : null),
+      is_packaged: packagedToSave ?? (barcode.trim() ? true : null),
     };
-    if (isPackaged && !brand.trim() && !barcode.trim()) {
-      toast.warning("Saved, but add the brand or scan it so we can check it for recalls.");
-    }
     const { error } = isEditing
       ? await supabase.from("first_foods").update(shared).eq("id", editingId)
       : await supabase.from("first_foods").insert({ child_id: child.id, ...shared });
@@ -773,6 +810,7 @@ function FirstFoodsPage() {
                 </label>
                 <input
                   type="text"
+                  ref={brandInputRef}
                   placeholder="e.g. Happy Baby"
                   value={brand}
                   onChange={(e) => setBrand(e.target.value)}
@@ -941,7 +979,7 @@ function FirstFoodsPage() {
                             {f.brand}
                           </p>
                         )}
-                        <RecallStatusBadge food={f} />
+                        <RecallStatusBadge food={f} onFix={() => openEdit(f)} />
 
                         {f.reaction_notes && (
                           <p className="mt-1 font-body text-xs text-foreground/70 italic">
