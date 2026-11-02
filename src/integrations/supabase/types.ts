@@ -804,6 +804,8 @@ export type Database = {
           acknowledged: boolean
           created_at: string
           id: string
+          notification_channel: string | null
+          notified_at: string | null
           notified_content_hash: string | null
           product_id: string
           recall_id: string
@@ -814,6 +816,8 @@ export type Database = {
           acknowledged?: boolean
           created_at?: string
           id?: string
+          notification_channel?: string | null
+          notified_at?: string | null
           notified_content_hash?: string | null
           product_id: string
           recall_id: string
@@ -824,6 +828,8 @@ export type Database = {
           acknowledged?: boolean
           created_at?: string
           id?: string
+          notification_channel?: string | null
+          notified_at?: string | null
           notified_content_hash?: string | null
           product_id?: string
           recall_id?: string
