@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { settleWithin } from "@/lib/promiseTimeout";
 import { describeError, recordAuthDiagnostic } from "@/lib/authDiagnostics";
+import { isNativeApp, nativeAppSignals } from "@/lib/isNativeApp";
 
 /**
  * Keeps the sign-in alive across app launches on iPhone.
@@ -96,14 +97,25 @@ async function restore() {
   try {
     const { data } = await supabase.auth.getSession();
     if (data.session) {
+      launchReport("signed-in=yes");
       await Preferences.set({ key: KEY, value: data.session.refresh_token });
       return;
     }
     const { value } = await Preferences.get({ key: KEY });
-    if (!value) return;
+    if (!value) {
+      launchReport("signed-in=no backup=none");
+      return;
+    }
     const { error } = await supabase.auth.refreshSession({ refresh_token: value });
-    if (error) await Preferences.remove({ key: KEY });
-  } catch {
+    launchReport(`signed-in=${error ? "no" : "restored"} backup=yes${error ? ` error=${error.status ?? "?"}` : ""}`);
+    // Only forget the backup when the server says it's no longer valid —
+    // a slow or dropped connection at launch must not log the user out
+    // for good.
+    if (error && (error.status === 400 || error.status === 401 || error.status === 403)) {
+      await Preferences.remove({ key: KEY });
+    }
+  } catch (err) {
+    launchReport(`restore-error=${describeError(err)}`);
     // Never block app start on this.
   }
 }
