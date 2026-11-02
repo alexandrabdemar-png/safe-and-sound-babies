@@ -668,7 +668,7 @@ function FirstFoodsPage() {
                 <input
                   type="text"
                   autoComplete="off"
-                  placeholder="e.g. Tractor Wheels Oat Bites, or Sweet potato purée"
+                  placeholder="e.g. Banana, or the full name on the package"
                   value={foodName}
                   onChange={(e) => setFoodName(e.target.value)}
                   className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 font-body text-sm outline-none focus:border-primary"

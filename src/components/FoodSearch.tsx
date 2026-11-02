@@ -119,7 +119,7 @@ export function FoodSearch({
           enterKeyHint="done"
           autoComplete="off"
           autoCorrect="off"
-          placeholder="Brand + full product name, e.g. Once Upon a Farm Tractor Wheels"
+          placeholder="Food, or brand + full product name"
           className="w-full rounded-xl border border-border/60 bg-background py-2 pl-8 pr-8 font-body text-sm outline-none focus:border-primary"
         />
         {loading && (
