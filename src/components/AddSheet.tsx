@@ -34,8 +34,8 @@ export const addOptions = [
     to: "/first-foods",
     icon: Utensils,
     illustration: illoFirstFood,
-    title: "A first food",
-    blurb: "Record a new food and note any allergen reactions.",
+    title: "A food",
+    blurb: "Log a new food or a daily favorite — packaged foods get checked for recalls.",
   },
 ] as const;
 

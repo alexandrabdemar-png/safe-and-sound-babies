@@ -8,6 +8,7 @@ import { BottleIcon } from "@/components/BottleIcon";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { useActiveChild } from "@/hooks/useActiveChild";
+import { allergensTriedCount, uniqueFoodCount, weekStats, type FoodLogRow } from "@/lib/foodLog";
 import {
   bottlesSummary,
   checklistsSummary,
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/tracking")({
       {
         name: "description",
         content:
-          "Everything you've logged for your baby: moments, first foods, bottles, and safety checklists.",
+          "Everything you've logged for your baby: moments, foods, bottles, and safety checklists.",
       },
       { property: "og:title", content: "Track — Peace of Mine" },
       {
@@ -84,7 +85,7 @@ function TrackingPage() {
         childId
           ? supabase
               .from("first_foods")
-              .select("is_allergen")
+              .select("id, food_name, brand, date_introduced, created_at")
               .eq("child_id", childId)
           : Promise.resolve({ data: null, error: null }),
         supabase
@@ -109,17 +110,20 @@ function TrackingPage() {
 
       if (!mountedRef.current) return;
 
-      const foodRows = (foods.data ?? []) as { is_allergen: boolean }[];
+      const foodRows = (foods.data ?? []) as FoodLogRow[];
       const momentRows = (moments.data ?? []) as { logged_at: string | null }[];
-      const lastBottle = ((bottlesLast.data ?? []) as { started_at: string }[])[0]?.started_at ?? null;
+      const lastBottle =
+        ((bottlesLast.data ?? []) as { started_at: string }[])[0]?.started_at ?? null;
 
       setSummaries({
         foods: foods.error
           ? null
-          : firstFoodsSummary(foodRows.length, foodRows.filter((f) => f.is_allergen).length),
-        bottles: bottlesActive.error
-          ? null
-          : bottlesSummary(bottlesActive.count ?? 0, lastBottle),
+          : firstFoodsSummary(
+              uniqueFoodCount(foodRows),
+              allergensTriedCount(foodRows),
+              weekStats(foodRows).loggedThisWeek,
+            ),
+        bottles: bottlesActive.error ? null : bottlesSummary(bottlesActive.count ?? 0, lastBottle),
         moments: moments.error
           ? null
           : momentsSummary(momentRows.length, momentRows[0]?.logged_at ?? null),
@@ -139,8 +143,8 @@ function TrackingPage() {
             Track
           </h1>
           <p className="mt-2 font-body text-base text-muted-foreground">
-            Everything you've logged{activeChild ? ` for ${activeChild.name}` : ""} — tap any card to
-            see the full log.
+            Everything you've logged{activeChild ? ` for ${activeChild.name}` : ""} — tap any card
+            to see the full log.
           </p>
         </div>
       </header>
@@ -160,8 +164,8 @@ function TrackingPage() {
             to="/first-foods"
             icon={Utensils}
             illustration={illoBabyFood}
-            title="First Foods"
-            blurb="Foods introduced and any allergen reactions"
+            title="Food Log"
+            blurb="Everything your baby eats, checked for recalls"
             summary={summaries.foods}
             stagger="stagger-2"
           />
