@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Loader2, Search } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { searchPackagedFoods, type FoodSearchHit } from "@/lib/foodSearch.functions";
-import { rankFoodHits, splitBrandFromQuery } from "@/lib/foodSearchMatch";
+import { COMMON_BABY_FOOD_BRANDS, rankFoodHits, splitBrandFromQuery } from "@/lib/foodSearchMatch";
 
 /** Common fresh / homemade foods — never recall-matched. */
 const COMMON_FOODS = [
@@ -91,7 +91,11 @@ export function FoodSearch({
 
   const typed =
     trimmed.length >= 2
-      ? splitBrandFromQuery(trimmed, [...knownBrands, ...results.map((r) => r.brand)])
+      ? splitBrandFromQuery(trimmed, [
+          ...knownBrands,
+          ...results.map((r) => r.brand),
+          ...COMMON_BABY_FOOD_BRANDS,
+        ])
       : null;
   const typedMatchesFresh = fresh.some((f) => f.toLowerCase() === trimmed.toLowerCase());
 

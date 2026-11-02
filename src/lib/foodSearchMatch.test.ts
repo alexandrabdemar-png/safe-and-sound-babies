@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { fallbackQueries, matchScore, rankFoodHits, splitBrandFromQuery } from "./foodSearchMatch";
+import {
+  COMMON_BABY_FOOD_BRANDS,
+  fallbackQueries,
+  matchScore,
+  rankFoodHits,
+  splitBrandFromQuery,
+} from "./foodSearchMatch";
 
 const tractor = { barcode: "1", name: "Tractor Wheels Oat Bites", brand: "Once Upon a Farm" };
 const pouch = { barcode: "2", name: "Wild Rumpus Avocado", brand: "Once Upon a Farm" };
@@ -58,5 +64,20 @@ describe("splitBrandFromQuery", () => {
 
   it("doesn't split when the text is only the brand", () => {
     expect(splitBrandFromQuery("Gerber", ["Gerber"])).toEqual({ brand: null, name: "Gerber" });
+  });
+});
+
+describe("COMMON_BABY_FOOD_BRANDS", () => {
+  it("splits a typed brand + product even with no search results or prior log", () => {
+    expect(
+      splitBrandFromQuery("once upon a farm tractor wheel", [...COMMON_BABY_FOOD_BRANDS]),
+    ).toEqual({ brand: "Once Upon a Farm", name: "tractor wheel" });
+    expect(
+      splitBrandFromQuery("Gerber Organic Banana Puffs", [...COMMON_BABY_FOOD_BRANDS]),
+    ).toEqual({ brand: "Gerber Organic", name: "Banana Puffs" });
+    expect(splitBrandFromQuery("Beech Nut oatmeal", [...COMMON_BABY_FOOD_BRANDS])).toEqual({
+      brand: "Beech-Nut",
+      name: "oatmeal",
+    });
   });
 });
