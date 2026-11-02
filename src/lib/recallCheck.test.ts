@@ -789,3 +789,17 @@ describe("recallSourceLabel — narrative agency name now covers every source, n
     expect(recallSourceLabel({ source: "eu_safety_gate" })).toBe("EU Safety Gate");
   });
 });
+
+describe("Tractor Wheels critical recall", () => {
+  it("flags the logged snack (singular or plural) but not other 'wheel'/'tractor' products", async () => {
+    const { checkCriticalRecalls } = await import("./recallCheck");
+    expect(checkCriticalRecalls("Once Upon a Farm tractor wheel")?.id).toBe(
+      "once-upon-a-farm-tractor-wheels-2026",
+    );
+    expect(checkCriticalRecalls("Tractor Wheels Oat Bites")?.id).toBe(
+      "once-upon-a-farm-tractor-wheels-2026",
+    );
+    expect(checkCriticalRecalls("Graco stroller wheel")).toBeNull();
+    expect(checkCriticalRecalls("John Deere toy tractor")).toBeNull();
+  });
+});

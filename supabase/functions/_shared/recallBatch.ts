@@ -136,6 +136,15 @@ export type CriticalRecall = {
 
 export const CRITICAL_RECALLS: CriticalRecall[] = [
   {
+    id: "once-upon-a-farm-tractor-wheels-2026",
+    title: "Once Upon a Farm Recalls Tractor Wheels Soft-Baked Bars (Choking Hazard)",
+    keywords: ["tractor wheel", "tractor-wheel", "tractorwheel"],
+    reason:
+      "Tractor Wheels bars are recalled because they can form a sticky mass that may block a toddler's airway — don't serve any flavor; throw it away or return it for a refund.",
+    url: "https://ir.onceuponafarmorganics.com/news-events/press-releases/detail/119/once-upon-a-farm-announces-recall-and-reformulation-of-tractor-wheels-due-to-potential-choking-hazard",
+    date: "2026-10-30",
+  },
+  {
     id: "nara-organics-infant-formula-2024",
     title: "Nara Organics Recalls All Lots of Nara Infant Formula",
     keywords: ["nara", "nara organics", "nara formula", "nara infant"],

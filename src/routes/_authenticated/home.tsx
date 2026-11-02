@@ -27,8 +27,11 @@ import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { evaluateInsights, URGENCY_LABEL, type Insight, type ProductInput } from "@/lib/insights";
 import { friendlyError, diagnosticDetail } from "@/lib/errors";
-import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
-import { checkCriticalRecalls, CRITICAL_RECALLS } from "@/lib/recallCheck";
+import { useServerFn } from "@tanstack/react-start";
+import { fetchFdaRecallNews } from "@/lib/fdaRecallFeed.functions";
+import { loadRecallRadarFeed } from "@/lib/recallRadarFeed";
+import { countRecentRecalls } from "@/lib/recallRadarMerge";
+import { checkCriticalRecalls } from "@/lib/recallCheck";
 import { recordProductRecall } from "@/lib/recallRecord.functions";
 import { selectDailyTip, dayIndexFromDate, dayKey as getTipDayKey } from "@/lib/safetyTips";
 import { WHATS_NEW, LATEST_VERSION, whatsNewDismissalKey } from "@/lib/whatsNew";
@@ -135,7 +138,6 @@ function HomePage() {
   const [recallRadarCount, setRecallRadarCount] = useState<number | null>(null);
 
   // FDA baby recall count (Wednesday only), cached daily
-  const [fdaRecallCount, setFdaRecallCount] = useState<number | null>(null);
 
   // Notification preferences (paused_until, expiry_advance_days) — the
   // daily safety tip has no "which day" setting to read here anymore
@@ -212,7 +214,6 @@ function HomePage() {
   const [homeProfileLoaded, setHomeProfileLoaded] = useState(false);
   const [hpStep, setHpStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6>(0);
 
-
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -235,13 +236,9 @@ function HomePage() {
         // Caregiver) intentionally never create a `children` row during
         // onboarding — sending them to /onboarding would trap them in a
         // loop. Route them to /profile, which renders fine with zero kids.
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("profile_type")
-          .maybeSingle();
+        const { data: prof } = await supabase.from("profiles").select("profile_type").maybeSingle();
         const pt = (prof as { profile_type?: string } | null)?.profile_type as
-          | import("@/lib/profileType").ProfileType
-          | undefined;
+          import("@/lib/profileType").ProfileType | undefined;
         if (pt && (await import("@/lib/profileType")).usesAgeRangeFlow(pt)) {
           navigate({ to: "/profile" });
           return;
@@ -440,12 +437,10 @@ function HomePage() {
             // doesn't flash the card before we've read the DB.
             setHomeProfileLoaded(true);
           }
-
         }
       } catch (err) {
         logError("[home] failed to load home_profile (network):", err);
       }
-
 
       // Load notification preferences
       try {
@@ -563,7 +558,8 @@ function HomePage() {
   const totalAlerts = alerts.recalls + alerts.replace;
   // Matches the icon/priority order the alert tiles below already use —
   // recalls (safety-critical) outrank replacements.
-  const HeaderAlertIcon = alerts.recalls > 0 ? AlertTriangle : alerts.replace > 0 ? RefreshCw : Sparkles;
+  const HeaderAlertIcon =
+    alerts.recalls > 0 ? AlertTriangle : alerts.replace > 0 ? RefreshCw : Sparkles;
   // evaluateInsights is driven by logged milestones and/or home_profile
   // answers, not age — so a brand-new account with nothing logged yet
   // could still get "Up next" recommendations before there's any real
@@ -698,9 +694,14 @@ function HomePage() {
     } catch {}
   }
 
-  // Recall Radar: fetch 30-day CPSC baby recall count, cached daily
+  // Recall Radar count: the same feed the Radar page lists (CPSC, FDA
+  // announcements + enforcement, USDA/NHTSA/Health Canada/EU, curated
+  // critical recalls), so the number always matches what a tap shows.
+  // Cached for an hour so Home doesn't refetch every visit, but a recall
+  // announced this morning still shows up today.
+  const fetchRecallNews = useServerFn(fetchFdaRecallNews);
   useEffect(() => {
-    const key = `safesound.recallRadar.${todayKey()}`;
+    const key = `safesound.recallRadarCount.${new Date().toISOString().slice(0, 13)}`;
     try {
       const cached = localStorage.getItem(key);
       if (cached !== null) {
@@ -708,42 +709,25 @@ function HomePage() {
         return;
       }
     } catch {}
-    const start30 = new Date();
-    start30.setDate(start30.getDate() - 30);
-    const startStr = start30.toISOString().slice(0, 10);
-    fetch(
-      `https://www.saferproducts.gov/RestWebServices/Recall?format=json&RecallDateStart=${startStr}`,
-    )
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data: CpscRecall[]) => {
-        const count = (Array.isArray(data) ? data : []).filter(isBabyRelated).length;
+    let cancelled = false;
+    loadRecallRadarFeed(() => fetchRecallNews())
+      .then(({ recalls, status }) => {
+        if (cancelled) return;
+        if (status.error) {
+          setRecallRadarCount(-1);
+          return;
+        }
+        const count = countRecentRecalls(recalls, 30);
         try {
           localStorage.setItem(key, String(count));
         } catch {}
         setRecallRadarCount(count);
       })
-      .catch(() => setRecallRadarCount(-1));
-  }, []);
-
-  // FDA recall count — fetched daily, cached per day
-  useEffect(() => {
-    const key = `safesound.fdaRecalls.${todayKey()}`;
-    try {
-      const cached = localStorage.getItem(key);
-      if (cached !== null) {
-        setFdaRecallCount(parseInt(cached, 10));
-        return;
-      }
-    } catch {}
-    fetchFdaBabyRecallCount(30)
-      .then((count) => {
-        try {
-          localStorage.setItem(key, String(count));
-        } catch {}
-        setFdaRecallCount(count);
-      })
-      .catch(() => setFdaRecallCount(0));
-  }, []);
+      .catch(() => !cancelled && setRecallRadarCount(-1));
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchRecallNews]);
 
   if (loading) {
     return (
@@ -916,7 +900,6 @@ function HomePage() {
         </div>
       </header>
 
-
       {/* Home Personalization Setup — one-time, shown after onboarding */}
       {shouldShowHomeProfileCard(homeProfileSetup, homeProfileLoaded) && child && (
         <div className="px-5 pt-4 sm:px-6">
@@ -1013,7 +996,7 @@ function HomePage() {
         <div className="px-5 pt-3 sm:px-6">
           <div className="mx-auto max-w-md">
             <RecallRadarCard
-              count={recallRadarCount + (fdaRecallCount ?? 0) + CRITICAL_RECALLS.length}
+              count={recallRadarCount}
               matchedCount={alerts.recalls}
               childName={child?.name ?? "your child"}
             />
@@ -1424,8 +1407,8 @@ export function RecallRadarCard({
             <p className="font-body text-sm font-semibold">Recall Radar</p>
             <p className="font-body text-[11px] text-muted-foreground">
               {count > 0
-                ? `${count} new recall${count > 1 ? "s" : ""} published this month, industry-wide`
-                : "No new recalls published this month, industry-wide"}
+                ? `${count} baby & kids recall${count > 1 ? "s" : ""} in the last 30 days — tap to see them all`
+                : "No new baby & kids recalls in the last 30 days"}
             </p>
           </div>
         </div>
@@ -1702,4 +1685,3 @@ function HomePersonalizationCard({
     </div>
   );
 }
-

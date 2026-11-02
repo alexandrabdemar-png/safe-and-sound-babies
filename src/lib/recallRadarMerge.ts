@@ -1,6 +1,7 @@
 // Pure helpers extracted from recall-radar.tsx so the merge/dedupe/mapping
 // logic is unit-testable independent of network calls and React.
 import type { CpscRecall } from "@/lib/cpscSearch";
+import type { FdaRecallNewsItem } from "@/lib/fdaRecallFeed";
 import { CRITICAL_RECALLS } from "@/lib/recallCheck";
 
 export type RadarRecall = {
@@ -75,6 +76,52 @@ export function mapCriticalRecalls(): RadarRecall[] {
   }));
 }
 
+function fmtDate(iso: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(`${iso.slice(0, 10)}T12:00:00`);
+  return Number.isFinite(d.getTime())
+    ? d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+    : null;
+}
+
+/**
+ * FDA recall announcements (live RSS, with article links). Items already
+ * covered by a curated critical recall are skipped so the same recall
+ * doesn't appear twice.
+ */
+export function mapFdaNewsResults(items: FdaRecallNewsItem[]): RadarRecall[] {
+  return items
+    .filter((i) => {
+      const t = i.title.toLowerCase();
+      return !CRITICAL_RECALLS.some((c) => c.keywords.some((k) => t.includes(k.toLowerCase())));
+    })
+    .map((i) => ({
+      id: `fda_news-${i.id}`,
+      source: "fda_news",
+      title: i.title,
+      description: i.description,
+      dateLabel: fmtDate(i.date),
+      sortDate: i.date ? new Date(`${i.date}T12:00:00`).getTime() : 0,
+      url: i.url,
+      official: true,
+      lotPattern: null,
+    }));
+}
+
+/**
+ * How many recalls were published in the last `days` days — what the Home
+ * card's "N new recalls" counts. Curated critical recalls stay pinned on the
+ * Radar but only count while they're recent.
+ */
+export function countRecentRecalls(recalls: RadarRecall[], days = 30, now = Date.now()): number {
+  const cutoff = now - days * 86400000;
+  return recalls.filter((r) => {
+    if (r.source !== "critical") return r.sortDate >= cutoff || r.sortDate === 0;
+    const t = r.dateLabel ? Date.parse(r.dateLabel) : NaN;
+    return Number.isFinite(t) && t >= cutoff;
+  }).length;
+}
+
 export function mapExtraResults(rows: ExtraRecallRow[]): RadarRecall[] {
   return rows
     .filter((r) => r && typeof r.id === "string" && typeof r.source === "string")
@@ -125,9 +172,11 @@ export function classifyRecallFetchStatus(
   cpscFailed: boolean,
   extraFailed: boolean,
   mergedCount: number,
+  fdaNewsFailed = false,
 ): RecallFetchStatus {
   const failedSources: string[] = [];
   if (cpscFailed) failedSources.push("CPSC & FDA");
+  if (fdaNewsFailed) failedSources.push("FDA recall announcements");
   if (extraFailed) failedSources.push("USDA FSIS, NHTSA, Health Canada & EU Safety Gate");
 
   if (failedSources.length === 0) {
