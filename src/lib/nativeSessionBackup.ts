@@ -61,9 +61,26 @@ export function ensureNativeSessionRestored(): Promise<void> {
   return restorePromise;
 }
 
+/** One line per launch on the diagnostics screen: why a launch was or wasn't signed in. */
+function launchReport(extra: string) {
+  try {
+    const s = nativeAppSignals(window, navigator.userAgent);
+    const hasLocal = Object.keys(localStorage).some((k) => /^sb-.*-auth-token$/.test(k));
+    recordAuthDiagnostic(
+      "info",
+      `launch: app=${s.native} bridge=${s.capacitor || s.bridge} webview=${s.webView} saved-login=${hasLocal} ${extra}`,
+    );
+  } catch {
+    /* diagnostics only */
+  }
+}
+
 async function restore() {
   const Preferences = await getPrefs();
-  if (!Preferences) return;
+  if (!Preferences) {
+    if (isNativeApp()) launchReport("native-storage=unavailable");
+    return;
+  }
 
   if (!listening) {
     listening = true;
