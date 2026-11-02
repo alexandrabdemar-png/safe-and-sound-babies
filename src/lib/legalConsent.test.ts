@@ -1,8 +1,9 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   needsLegalConsent,
   checkNeedsLegalConsent,
   checkNeedsLegalConsentCached,
+  checkNeedsLegalConsentWithin,
   markLegalConsentCleared,
   resetLegalConsentCache,
   CURRENT_TERMS_VERSION,
@@ -190,5 +191,29 @@ describe("checkNeedsLegalConsentCached", () => {
     resetLegalConsentCache();
     await checkNeedsLegalConsentCached(client, userId);
     expect(client.queryCount).toBe(2);
+  });
+});
+
+describe("checkNeedsLegalConsentWithin", () => {
+  const userId = "user-1";
+  afterEach(() => {
+    resetLegalConsentCache();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("returns the real answer when the check is quick", async () => {
+    expect(await checkNeedsLegalConsentWithin(makeFakeAgreementsClient(), userId)).toBe(true);
+  });
+
+  it("fails open instead of leaving a just-signed-in user stuck when the check stalls", async () => {
+    vi.useFakeTimers();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const stalled = {
+      from: () => ({ select: () => ({ eq: () => new Promise<never>(() => {}) }) }),
+    };
+    const result = checkNeedsLegalConsentWithin(stalled, userId, 8000);
+    await vi.advanceTimersByTimeAsync(8000);
+    await expect(result).resolves.toBe(false);
   });
 });

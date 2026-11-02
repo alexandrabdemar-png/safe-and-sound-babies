@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { settleWithin } from "@/lib/promiseTimeout";
+import { describeError, recordAuthDiagnostic } from "@/lib/authDiagnostics";
 
 /**
  * Keeps the sign-in alive across app launches on iPhone.
@@ -50,9 +51,12 @@ async function getPrefs(): Promise<Prefs | null> {
 export function ensureNativeSessionRestored(): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
   if (!restorePromise) {
-    restorePromise = settleWithin(restore(), RESTORE_TIMEOUT_MS, "Session restore").catch(() => {
-      // Carry on; the restore may still finish in the background.
-    });
+    restorePromise = settleWithin(restore(), RESTORE_TIMEOUT_MS, "Session restore").catch(
+      (err: unknown) => {
+        // Carry on; the restore may still finish in the background.
+        recordAuthDiagnostic("timeout", describeError(err));
+      },
+    );
   }
   return restorePromise;
 }

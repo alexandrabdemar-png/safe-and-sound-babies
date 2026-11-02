@@ -13,6 +13,7 @@
 // what it was before.
 import { Capacitor } from "@capacitor/core";
 import { settleWithin } from "@/lib/promiseTimeout";
+import { describeError, recordAuthDiagnostic } from "@/lib/authDiagnostics";
 
 type AuthStorage = {
   getItem: (key: string) => string | null | Promise<string | null>;
@@ -41,7 +42,11 @@ function withKeychain<T>(
     getKeychain().then((kc) => (kc ? run(kc) : undefined)),
     NATIVE_TIMEOUT_MS,
     "Keychain call",
-  );
+  ).catch((err: unknown) => {
+    // "Not found" on a fresh install is normal; only a hang is worth logging.
+    if (/timed out/i.test(describeError(err))) recordAuthDiagnostic("timeout", describeError(err));
+    throw err;
+  });
 }
 
 async function keychain(): Promise<KeychainData | null> {

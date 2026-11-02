@@ -1,12 +1,13 @@
 import { ensureNativeSessionRestored } from "@/lib/nativeSessionBackup";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { friendlyAuthError, isAlreadyRegisteredAuthError } from "@/lib/errors";
 import { settleWithin, withTimeout } from "@/lib/promiseTimeout";
 import { oauthRedirectUri } from "@/lib/authCallbackRouting";
+import { describeError, recordAuthDiagnostic } from "@/lib/authDiagnostics";
 import { Mail, Lock, Sparkles, Loader2, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
@@ -68,6 +69,21 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState<null | "email" | "google" | "apple" | "magic">(null);
+  // While the email form is submitting, it decides where to go (signup →
+  // /onboarding, sign-in → /home). Without this the auth listener also
+  // navigated to /home on SIGNED_IN, racing the form's own navigation.
+  const emailSubmitInFlight = useRef(false);
+  // Five quick taps on the sparkle icon open the hidden sign-in diagnostics
+  // screen, for capturing exactly why a login failed on a real device.
+  const diagnosticTaps = useRef<number[]>([]);
+  function handleDiagnosticTap() {
+    const now = Date.now();
+    diagnosticTaps.current = [...diagnosticTaps.current.filter((t) => now - t < 3000), now];
+    if (diagnosticTaps.current.length >= 5) {
+      diagnosticTaps.current = [];
+      navigate({ to: "/auth-diagnostics" });
+    }
+  }
 
   // Redirect if already signed in — but NOT while resetting a password. A
   // recovery link creates a real session, so without this guard the reset
@@ -82,7 +98,7 @@ function AuthPage() {
         setMode("reset");
         return;
       }
-      if (session && !isRecoveryUrl()) navigate({ to: "/home" });
+      if (session && !isRecoveryUrl() && !emailSubmitInFlight.current) navigate({ to: "/home" });
     });
     return () => sub.subscription.unsubscribe();
   }, [navigate, mode]);
@@ -94,6 +110,8 @@ function AuthPage() {
       toast.error("Choose a password with at least 8 characters.");
       return;
     }
+    emailSubmitInFlight.current = true;
+    recordAuthDiagnostic("info", `${mode === "signup" ? "Sign-up" : "Sign-in"} with email started`);
     setLoading("email");
     try {
       if (mode === "signup") {
@@ -107,6 +125,10 @@ function AuthPage() {
           "Sign-up",
         );
         if (error) throw error;
+        recordAuthDiagnostic(
+          "info",
+          `Sign-up finished: ${data.session ? "signed in" : "email confirmation required"}`,
+        );
         if (data.session) {
           toast.success("Welcome to Peace of Mine ✨");
           navigate({ to: "/onboarding" });
@@ -120,6 +142,10 @@ function AuthPage() {
           "Sign-in",
         );
         if (error) throw error;
+        recordAuthDiagnostic(
+          "info",
+          `Sign-in finished: ${data.session ? "signed in" : "no session returned"}`,
+        );
         toast.success("Welcome back!");
         // Navigate here too rather than relying only on the auth listener.
         if (data.session) navigate({ to: "/home" });
@@ -132,6 +158,10 @@ function AuthPage() {
       // the user their credentials didn't match (see friendlyAuthError's
       // "invalid login credentials" mapping) since a login form already
       // requires guessing a password, not just an email.
+      recordAuthDiagnostic(
+        isTimeoutError(err) ? "timeout" : "error",
+        `${mode}: ${describeError(err)}`,
+      );
       if (isTimeoutError(err)) {
         toast.error(EMAIL_AUTH_TIMEOUT_MESSAGE);
       } else if (mode === "signup" && isAlreadyRegisteredAuthError(err)) {
@@ -140,6 +170,7 @@ function AuthPage() {
         toast.error(friendlyAuthError(err));
       }
     } finally {
+      emailSubmitInFlight.current = false;
       setLoading(null);
     }
   }
@@ -278,7 +309,10 @@ function AuthPage() {
         {/* Card */}
         <div className="rounded-[2rem] border border-border/60 bg-card/90 p-8 shadow-[0_20px_60px_-30px_rgba(180,120,90,0.35)] backdrop-blur-sm sm:p-10">
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/15">
+            <div
+              onClick={handleDiagnosticTap}
+              className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/15"
+            >
               <Sparkles className="h-6 w-6 text-primary" />
             </div>
             <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">

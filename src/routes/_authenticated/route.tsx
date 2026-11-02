@@ -6,7 +6,7 @@ import { AppLock } from "@/components/AppLock";
 import { toast } from "sonner";
 import { AlertTriangle, Users, WifiOff } from "lucide-react";
 import { usePushRegistration } from "@/hooks/usePushRegistration";
-import { checkNeedsLegalConsentCached } from "@/lib/legalConsent";
+import { checkNeedsLegalConsentWithin } from "@/lib/legalConsent";
 import { ensureNativeSessionRestored } from "@/lib/nativeSessionBackup";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -23,11 +23,7 @@ export const Route = createFileRoute("/_authenticated")({
     // screen — not just at signup, since existing users need to accept a
     // material terms update too (see src/lib/legalConsent.ts, which also
     // documents the fail-open-on-missing-table behavior).
-    const needsConsent = await Promise.race([
-      checkNeedsLegalConsentCached(supabase, session.user.id),
-      // Never strand a just-signed-in user on a spinner if this check stalls.
-      new Promise<boolean>((r) => setTimeout(() => r(false), 8000)),
-    ]);
+    const needsConsent = await checkNeedsLegalConsentWithin(supabase, session.user.id);
     if (needsConsent) {
       throw redirect({ to: "/legal-consent", search: { next: location.pathname } });
     }

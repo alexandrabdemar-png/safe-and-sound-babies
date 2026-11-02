@@ -1,6 +1,6 @@
 import { SUPPORT_EMAIL } from "@/lib/constants";
 
-export const PRIVACY_POLICY_UPDATED = "September 22, 2026";
+export const PRIVACY_POLICY_UPDATED = "November 2, 2026";
 
 export const PRIVACY_POLICY = `Peace of Mine — Privacy Policy
 Last updated: ${PRIVACY_POLICY_UPDATED}
@@ -12,6 +12,9 @@ Note: Peace of Mine is an informational organization tool only. It is not a medi
 ──────────────────────────────────────
 1. WHAT INFORMATION WE COLLECT
 ──────────────────────────────────────
+
+Waitlist (optional)
+• If you join our launch waitlist, we store your email address, your first name and your baby's stage if you give them, which link you came from (for example, TikTok), and that you agreed to be emailed. We use this only to tell you when Peace of Mine launches and to send occasional launch updates. You can unsubscribe at any time, or email us to have your waitlist entry deleted.
 
 About your child
 • Name — used to personalize the app and label the moments and products you log.

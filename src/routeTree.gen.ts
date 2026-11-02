@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthDiagnosticsRouteImport } from './routes/auth-diagnostics'
 import { Route as LegalConsentRouteImport } from './routes/legal-consent'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
@@ -20,6 +21,7 @@ import { Route as RecallsRouteImport } from './routes/recalls'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as WaitlistRouteImport } from './routes/waitlist'
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedBottlesRouteImport } from './routes/_authenticated/bottles'
@@ -73,6 +75,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthDiagnosticsRoute = AuthDiagnosticsRouteImport.update({
+  id: '/auth-diagnostics',
+  path: '/auth-diagnostics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LegalConsentRoute = LegalConsentRouteImport.update({
   id: '/legal-consent',
   path: '/legal-consent',
@@ -111,6 +118,11 @@ const SupportRoute = SupportRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WaitlistRoute = WaitlistRouteImport.update({
+  id: '/waitlist',
+  path: '/waitlist',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAddRoute = AuthenticatedAddRouteImport.update({
@@ -327,6 +339,7 @@ const ApiPublicPaymentsWebhookRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
+  '/auth-diagnostics': typeof AuthDiagnosticsRoute
   '/legal-consent': typeof LegalConsentRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -335,6 +348,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/waitlist': typeof WaitlistRoute
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
   '/bottles': typeof AuthenticatedBottlesRoute
@@ -377,6 +391,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
+  '/auth-diagnostics': typeof AuthDiagnosticsRoute
   '/legal-consent': typeof LegalConsentRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -385,6 +400,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/waitlist': typeof WaitlistRoute
   '/add': typeof AuthenticatedAddRoute
   '/alerts': typeof AuthenticatedAlertsRoute
   '/bottles': typeof AuthenticatedBottlesRoute
@@ -429,6 +445,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
+  '/auth-diagnostics': typeof AuthDiagnosticsRoute
   '/legal-consent': typeof LegalConsentRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -437,6 +454,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/waitlist': typeof WaitlistRoute
   '/_authenticated/add': typeof AuthenticatedAddRoute
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
   '/_authenticated/bottles': typeof AuthenticatedBottlesRoute
@@ -481,6 +499,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/auth-diagnostics'
     | '/legal-consent'
     | '/onboarding'
     | '/privacy-policy'
@@ -489,6 +508,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/support'
     | '/terms'
+    | '/waitlist'
     | '/add'
     | '/alerts'
     | '/bottles'
@@ -531,6 +551,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/auth-diagnostics'
     | '/legal-consent'
     | '/onboarding'
     | '/privacy-policy'
@@ -539,6 +560,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/support'
     | '/terms'
+    | '/waitlist'
     | '/add'
     | '/alerts'
     | '/bottles'
@@ -582,6 +604,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/auth-diagnostics'
     | '/legal-consent'
     | '/onboarding'
     | '/privacy-policy'
@@ -590,6 +613,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/support'
     | '/terms'
+    | '/waitlist'
     | '/_authenticated/add'
     | '/_authenticated/alerts'
     | '/_authenticated/bottles'
@@ -634,6 +658,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
+  AuthDiagnosticsRoute: typeof AuthDiagnosticsRoute
   LegalConsentRoute: typeof LegalConsentRoute
   OnboardingRoute: typeof OnboardingRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
@@ -642,6 +667,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
+  WaitlistRoute: typeof WaitlistRoute
   CaregiverInviteTokenRoute: typeof CaregiverInviteTokenRoute
   EmergencyShareTokenRoute: typeof EmergencyShareTokenRoute
   ApiPublicCaregiverInviteRoute: typeof ApiPublicCaregiverInviteRoute
@@ -673,6 +699,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth-diagnostics': {
+      id: '/auth-diagnostics'
+      path: '/auth-diagnostics'
+      fullPath: '/auth-diagnostics'
+      preLoaderRoute: typeof AuthDiagnosticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/legal-consent': {
@@ -729,6 +762,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/waitlist': {
+      id: '/waitlist'
+      path: '/waitlist'
+      fullPath: '/waitlist'
+      preLoaderRoute: typeof WaitlistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/add': {
@@ -1085,6 +1125,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
+  AuthDiagnosticsRoute: AuthDiagnosticsRoute,
   LegalConsentRoute: LegalConsentRoute,
   OnboardingRoute: OnboardingRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
@@ -1093,6 +1134,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
+  WaitlistRoute: WaitlistRoute,
   CaregiverInviteTokenRoute: CaregiverInviteTokenRoute,
   EmergencyShareTokenRoute: EmergencyShareTokenRoute,
   ApiPublicCaregiverInviteRoute: ApiPublicCaregiverInviteRoute,

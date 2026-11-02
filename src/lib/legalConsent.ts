@@ -123,3 +123,30 @@ export async function checkNeedsLegalConsentCached(
   if (!needsConsent) clearedForSession.add(userId);
   return needsConsent;
 }
+
+/**
+ * The consent check used by route gates (_authenticated and /onboarding).
+ * Capped so a stalled request can never leave a just-signed-in user on a
+ * blank screen: after `timeoutMs` it fails open, the same way the check
+ * already does when the table is unreachable.
+ */
+export async function checkNeedsLegalConsentWithin(
+  supabase: unknown,
+  userId: string,
+  timeoutMs = 8000,
+): Promise<boolean> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      checkNeedsLegalConsentCached(supabase, userId).catch(() => false),
+      new Promise<boolean>((resolve) => {
+        timer = setTimeout(() => {
+          logError("[legal-consent] check timed out — letting the user through");
+          resolve(false);
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
