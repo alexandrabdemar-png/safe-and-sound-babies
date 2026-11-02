@@ -1257,6 +1257,36 @@ export type Database = {
         }
         Relationships: []
       }
+      waitlist_signups: {
+        Row: {
+          consented_to_emails: boolean
+          created_at: string
+          email: string
+          first_name: string | null
+          id: string
+          source: string | null
+          stage: string | null
+        }
+        Insert: {
+          consented_to_emails: boolean
+          created_at?: string
+          email: string
+          first_name?: string | null
+          id?: string
+          source?: string | null
+          stage?: string | null
+        }
+        Update: {
+          consented_to_emails?: boolean
+          created_at?: string
+          email?: string
+          first_name?: string | null
+          id?: string
+          source?: string | null
+          stage?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       recall_brand_coverage: {
@@ -1294,6 +1324,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      waitlist_count: { Args: never; Returns: number }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

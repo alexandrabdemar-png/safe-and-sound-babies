@@ -8,6 +8,13 @@
       "when": 1792583060988,
       "tag": "0000_apple_iap_full_unique_constraint",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793583789600,
+      "tag": "0001_waitlist_signups",
+      "breakpoints": true
     }
   ]
 }
