@@ -1,4 +1,5 @@
 import { ensureNativeSessionRestored } from "@/lib/nativeSessionBackup";
+import { isNativeApp } from "@/lib/isNativeApp";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
@@ -86,8 +87,7 @@ function Index() {
   // splash, then go straight to Home (signed in) or the sign-in screen.
   const [nativeSplash, setNativeSplash] = useState(false);
   useLayoutEffect(() => {
-    const cap = (window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
-    if (!cap?.isNativePlatform?.()) return;
+    if (!isNativeApp()) return;
     setNativeSplash(true);
     ensureNativeSessionRestored()
       .then(() => supabase.auth.getSession())
