@@ -15,20 +15,13 @@ import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/BottomNav";
 import { DataAsOf } from "@/components/DataAsOf";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchRecentBabyRecalls } from "@/lib/cpscSearch";
+import { useServerFn } from "@tanstack/react-start";
+import { fetchFdaRecallNews } from "@/lib/fdaRecallFeed.functions";
+import { loadRecallRadarFeed } from "@/lib/recallRadarFeed";
 import { recallFallbackUrl } from "@/lib/recallCheck";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/errors";
-import {
-  mapCpscResults,
-  mapCriticalRecalls,
-  mapExtraResults,
-  mergeRecallSources,
-  classifyRecallFetchStatus,
-  filterDismissedRecalls,
-  type ExtraRecallRow,
-  type RadarRecall,
-} from "@/lib/recallRadarMerge";
+import { filterDismissedRecalls, type RadarRecall } from "@/lib/recallRadarMerge";
 
 export const Route = createFileRoute("/_authenticated/recall-radar")({
   ssr: false,
@@ -40,6 +33,7 @@ const SOURCE_LABEL: Record<string, string> = {
   cpsc: "CPSC",
   fda: "FDA",
   critical: "Critical alert",
+  fda_news: "FDA",
   usda_fsis: "USDA FSIS",
   nhtsa: "NHTSA",
   health_canada: "Health Canada",
@@ -53,6 +47,7 @@ function RecallRadarPage() {
   const [degradedSources, setDegradedSources] = useState<string[]>([]);
   const [reloadKey, setReloadKey] = useState(0);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+  const fetchNews = useServerFn(fetchFdaRecallNews);
 
   const retry = useCallback(() => {
     setReloadKey((k) => k + 1);
@@ -99,76 +94,28 @@ function RecallRadarPage() {
       setError(null);
       setDegradedSources([]);
 
-      // Critical recalls are manually curated, synchronous, and can never
-      // fail — always available regardless of what happens below.
-      const criticalItems = mapCriticalRecalls();
-
-      // Each remote source is isolated so one failing source degrades
-      // gracefully instead of blanking the whole page. Both promises always
-      // resolve (never reject) — failures are caught here and logged.
-      const [cpscSettled, extraSettled, dismissedSettled] = await Promise.allSettled([
-        // fetchRecentBabyRecalls already merges CPSC + FDA internally
-        // (FDA results are mapped into the same shape, RecallID prefixed
-        // "fda-") — this is where Nara-class food/formula recalls live,
-        // since FDA and CPSC are separate agencies with separate data.
-        // It's already internally error-safe (returns [] on failure), but
-        // Promise.allSettled gives us a second layer of protection.
-        fetchRecentBabyRecalls(30),
-        // USDA FSIS, NHTSA, Health Canada, and EU Safety Gate are synced
-        // daily into our own recalls table by check-extra-recalls.ts
-        // rather than fetched live here — Health Canada is a multi-MB
-        // bulk dump unsuitable for a page load, and USDA/NHTSA/EU CORS
-        // support couldn't be confirmed from this build environment.
+      const [feed, dismissedSettled] = await Promise.all([
+        loadRecallRadarFeed(() => fetchNews()),
+        // A failure here shouldn't block the list — fail open (nothing hidden).
         supabase
-          .from("recalls")
-          .select("id, source, title, description, hazard, url, recall_date, official, lot_pattern")
-          .in("source", ["usda_fsis", "nhtsa", "health_canada", "eu_safety_gate"])
-          .order("recall_date", { ascending: false })
-          .limit(50),
-        // A failure here shouldn't block the radar list itself — fail open
-        // (nothing hidden) the same way the other two sources degrade
-        // gracefully rather than blank the page.
-        supabase.from("recall_radar_dismissals").select("recall_id"),
+          .from("recall_radar_dismissals")
+          .select("recall_id")
+          .then(
+            (r) => r,
+            (reason) => ({ data: null, error: reason }),
+          ),
       ]);
 
       if (cancelled) return;
 
-      if (dismissedSettled.status === "fulfilled" && !dismissedSettled.value.error) {
-        setDismissedIds(new Set((dismissedSettled.value.data ?? []).map((d) => d.recall_id)));
-      } else if (dismissedSettled.status === "rejected") {
-        logError("Recall Radar: dismissals fetch rejected", dismissedSettled.reason);
-      } else if (dismissedSettled.status === "fulfilled" && dismissedSettled.value.error) {
-        logError("Recall Radar: dismissals fetch failed", dismissedSettled.value.error);
-      }
-
-      let cpscFailed = false;
-      let cpscItems: RadarRecall[] = [];
-      if (cpscSettled.status === "fulfilled") {
-        cpscItems = mapCpscResults(cpscSettled.value);
+      if (!dismissedSettled.error) {
+        setDismissedIds(new Set((dismissedSettled.data ?? []).map((d) => d.recall_id)));
       } else {
-        logError("Recall Radar: CPSC/FDA fetch failed", cpscSettled.reason);
-        cpscFailed = true;
+        logError("Recall Radar: dismissals fetch failed", dismissedSettled.error);
       }
 
-      let extraFailed = false;
-      let extraItems: RadarRecall[] = [];
-      if (extraSettled.status === "fulfilled") {
-        if (extraSettled.value.error) {
-          logError("Recall Radar: extra-sources query failed", extraSettled.value.error);
-          extraFailed = true;
-        } else {
-          extraItems = mapExtraResults(
-            (extraSettled.value.data ?? []) as unknown as ExtraRecallRow[],
-          );
-        }
-      } else {
-        logError("Recall Radar: extra-sources query rejected", extraSettled.reason);
-        extraFailed = true;
-      }
-
-      const merged = mergeRecallSources(criticalItems, cpscItems, extraItems);
-      const status = classifyRecallFetchStatus(cpscFailed, extraFailed, merged.length);
-
+      const merged = feed.recalls;
+      const status = feed.status;
       setRecalls(merged);
       setError(status.error);
       setDegradedSources(status.degradedSources);
@@ -178,7 +125,7 @@ function RecallRadarPage() {
     return () => {
       cancelled = true;
     };
-  }, [reloadKey]);
+  }, [reloadKey, fetchNews]);
 
   const visibleRecalls = useMemo(
     () => filterDismissedRecalls(recalls, dismissedIds),
@@ -206,7 +153,7 @@ function RecallRadarPage() {
             <div>
               <h1 className="font-display text-3xl font-semibold tracking-tight">Recall Radar</h1>
               <p className="font-body text-xs text-muted-foreground">
-                Baby &amp; kids product recalls
+                Every baby &amp; kids recall from the last 30 days — not just your products
               </p>
             </div>
           </div>
@@ -287,8 +234,8 @@ function RecallRadarPage() {
 
           <div className="rounded-2xl border border-border/40 bg-muted/30 px-4 py-3 font-body text-xs text-muted-foreground space-y-1">
             <p>
-              Data sourced from CPSC, the FDA, USDA FSIS, NHTSA, and Health Canada. For the complete
-              CPSC list visit{" "}
+              Data sourced from CPSC, FDA recall announcements and enforcement reports, USDA FSIS,
+              NHTSA, and Health Canada. For the complete CPSC list visit{" "}
               <a
                 href="https://cpsc.gov/Recalls"
                 target="_blank"
@@ -328,9 +275,14 @@ function RecallCard({ recall, onDone }: { recall: RadarRecall; onDone?: () => vo
           <ShieldAlert className="h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="font-body text-sm font-semibold leading-snug text-foreground">
+          <a
+            href={recall.url || recallFallbackUrl(recall.title, recall.source)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-body text-sm font-semibold leading-snug text-foreground hover:underline"
+          >
             {recall.title}
-          </p>
+          </a>
           <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
             {recall.dateLabel && (
               <span className="font-body text-xs text-muted-foreground">{recall.dateLabel}</span>
@@ -364,7 +316,7 @@ function RecallCard({ recall, onDone }: { recall: RadarRecall; onDone?: () => vo
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 font-body text-xs font-semibold text-destructive underline underline-offset-2"
         >
-          Full recall details <ArrowUpRight className="h-3 w-3" />
+          Read the full recall <ArrowUpRight className="h-3 w-3" />
         </a>
         {onDone && (
           <Button

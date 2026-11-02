@@ -270,3 +270,74 @@ describe("classifyRecallFetchStatus", () => {
     expect(result.degradedSources).not.toContain("CPSC & FDA");
   });
 });
+
+describe("FDA announcements + Home count", () => {
+  it("maps announcements with their article link and skips ones a critical recall already covers", async () => {
+    const { mapFdaNewsResults } = await import("./recallRadarMerge");
+    const mapped = mapFdaNewsResults([
+      {
+        id: "a",
+        title: "Once Upon a Farm Announces Recall of Tractor Wheels",
+        url: "https://www.fda.gov/x/tw",
+        description: "",
+        date: "2026-10-31",
+      },
+      {
+        id: "b",
+        title: "Brand X Recalls Baby Teething Wafers",
+        url: "https://www.fda.gov/x/wafers",
+        description: "infants",
+        date: "2026-10-28",
+      },
+    ]);
+    expect(mapped.map((m) => [m.source, m.url])).toEqual([
+      ["fda_news", "https://www.fda.gov/x/wafers"],
+    ]);
+  });
+
+  it("counts recent recalls only, so an old pinned critical recall isn't 'new this month'", async () => {
+    const { countRecentRecalls } = await import("./recallRadarMerge");
+    const now = Date.parse("2026-11-02T12:00:00Z");
+    const base = { description: "", url: "", official: true, lotPattern: null };
+    expect(
+      countRecentRecalls(
+        [
+          {
+            ...base,
+            id: "1",
+            source: "critical",
+            title: "old",
+            dateLabel: "Jun 13, 2024",
+            sortDate: Number.MAX_SAFE_INTEGER,
+          },
+          {
+            ...base,
+            id: "2",
+            source: "critical",
+            title: "new",
+            dateLabel: "Oct 30, 2026",
+            sortDate: Number.MAX_SAFE_INTEGER,
+          },
+          {
+            ...base,
+            id: "3",
+            source: "cpsc",
+            title: "c",
+            dateLabel: null,
+            sortDate: Date.parse("2026-10-20"),
+          },
+          {
+            ...base,
+            id: "4",
+            source: "cpsc",
+            title: "d",
+            dateLabel: null,
+            sortDate: Date.parse("2026-08-01"),
+          },
+        ],
+        30,
+        now,
+      ),
+    ).toBe(2);
+  });
+});

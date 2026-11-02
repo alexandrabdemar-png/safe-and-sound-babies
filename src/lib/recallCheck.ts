@@ -216,7 +216,6 @@ function stem(word: string): string {
   return w;
 }
 
-
 /**
  * Fuzzy-match a product name against a block of recall text.
  *
@@ -304,6 +303,12 @@ type CriticalRecall = {
   reason: string;
   url: string;
   date: string;
+  /**
+   * Only match the keyword phrases themselves — skip the single-word
+   * reverse check, for recalls whose words are common on their own
+   * ("tractor", "wheel").
+   */
+  exactOnly?: boolean;
 };
 
 /**
@@ -313,6 +318,16 @@ type CriticalRecall = {
  * that are not yet reliably queryable via CPSC or FDA APIs.
  */
 export const CRITICAL_RECALLS: CriticalRecall[] = [
+  {
+    id: "once-upon-a-farm-tractor-wheels-2026",
+    title: "Once Upon a Farm Recalls Tractor Wheels Soft-Baked Bars (Choking Hazard)",
+    keywords: ["tractor wheel", "tractor-wheel", "tractorwheel"],
+    exactOnly: true,
+    reason:
+      "Tractor Wheels bars are recalled because they can form a sticky mass that may block a toddler's airway — don't serve any flavor; throw it away or return it for a refund.",
+    url: "https://ir.onceuponafarmorganics.com/news-events/press-releases/detail/119/once-upon-a-farm-announces-recall-and-reformulation-of-tractor-wheels-due-to-potential-choking-hazard",
+    date: "Oct 30, 2026",
+  },
   {
     id: "nara-organics-infant-formula-2024",
     title: "Nara Organics Recalls All Lots of Nara Infant Formula",
@@ -335,6 +350,7 @@ export function checkCriticalRecalls(productName: string): CriticalRecall | null
     for (const kw of recall.keywords) {
       if (name.includes(kw.toLowerCase())) return recall;
     }
+    if (recall.exactOnly) continue;
     // Reverse-check: any meaningful keyword word appears in product name
     const kwWords = recall.keywords
       .flatMap((kw) => kw.toLowerCase().split(/\s+/))
@@ -676,7 +692,8 @@ export async function fetchProductDetailResilient(productId: string): Promise<{
       (isColumnUnavailableError("recall_checked_at", first.error) ||
         isColumnUnavailableError("lot_number", first.error))
     ) {
-      logError("[fetchProductDetailResilient] recall_checked_at/lot_number unavailable — retrying without them",
+      logError(
+        "[fetchProductDetailResilient] recall_checked_at/lot_number unavailable — retrying without them",
         first.error,
       );
       const retry = await supabase
