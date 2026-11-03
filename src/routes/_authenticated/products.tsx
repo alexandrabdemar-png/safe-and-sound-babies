@@ -8,6 +8,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
 import { Button } from "@/components/ui/button";
 import { useActiveChild } from "@/hooks/useActiveChild";
+import { useProGate } from "@/hooks/useProGate";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 import { CategoryBadge } from "@/components/CategoryBadge";
 
