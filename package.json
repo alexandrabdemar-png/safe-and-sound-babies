@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.82",
+    "@ai-sdk/openai": "^4.0.106",
     "@ai-sdk/openai-compatible": "^2.0.48",
     "@apple/app-store-server-library": "3.1.0",
     "@capacitor-mlkit/barcode-scanning": "^8.1.0",
