@@ -143,7 +143,7 @@ function ReceiptImportPage() {
         if (error) throw error;
       }
       toast.success(`Added ${chosen.length} item${chosen.length === 1 ? "" : "s"} to watch for recalls.`);
-      navigate({ to: products(chosen) ? "/products" : "/first-foods" });
+      navigate({ to: hasProduct(chosen) ? "/products" : "/first-foods" });
     } catch (e) {
       logError("[receipt-import] save failed:", e);
       toast.error("We couldn't save those items. Please try again.");
@@ -281,6 +281,6 @@ function ReceiptImportPage() {
   );
 }
 
-function products(list: ReceiptItem[]) {
+function hasProduct(list: ReceiptItem[]) {
   return list.some((i) => i.kind === "product");
 }
