@@ -570,6 +570,13 @@ function FirstFoodsPage() {
               </button>
               <button
                 type="button"
+                onClick={() => navigate({ to: "/receipt-import" })}
+                className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 font-body text-xs font-semibold"
+              >
+                Receipt
+              </button>
+              <button
+                type="button"
                 onClick={() => (showForm ? setShowForm(false) : openAdd())}
                 className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 font-body text-xs font-semibold text-primary-foreground"
               >

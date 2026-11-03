@@ -99,6 +99,15 @@ function ProductsPage() {
             <Button
               type="button"
               size="sm"
+              variant="outline"
+              className="rounded-full px-3 font-body text-xs font-semibold"
+              onClick={() => navigate({ to: "/receipt-import" })}
+            >
+              Receipt
+            </Button>
+            <Button
+              type="button"
+              size="sm"
               className="rounded-full bg-primary px-4 font-body text-xs font-semibold"
               onClick={() => navigate({ to: "/products/new" })}
             >
