@@ -36,6 +36,7 @@ import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedRecallCheckRouteImport } from './routes/_authenticated/recall-check'
 import { Route as AuthenticatedRecallRadarRouteImport } from './routes/_authenticated/recall-radar'
+import { Route as AuthenticatedReceiptImportRouteImport } from './routes/_authenticated/receipt-import'
 import { Route as AuthenticatedRegistryCheckRouteImport } from './routes/_authenticated/registry-check'
 import { Route as AuthenticatedSafetyGuidesRouteImport } from './routes/_authenticated/safety-guides'
 import { Route as AuthenticatedTrackingRouteImport } from './routes/_authenticated/tracking'
@@ -197,6 +198,12 @@ const AuthenticatedRecallRadarRoute =
   AuthenticatedRecallRadarRouteImport.update({
     id: '/recall-radar',
     path: '/recall-radar',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedReceiptImportRoute =
+  AuthenticatedReceiptImportRouteImport.update({
+    id: '/receipt-import',
+    path: '/receipt-import',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedRegistryCheckRoute =
@@ -363,6 +370,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/recall-check': typeof AuthenticatedRecallCheckRoute
   '/recall-radar': typeof AuthenticatedRecallRadarRoute
+  '/receipt-import': typeof AuthenticatedReceiptImportRoute
   '/registry-check': typeof AuthenticatedRegistryCheckRoute
   '/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/tracking': typeof AuthenticatedTrackingRoute
@@ -415,6 +423,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/recall-check': typeof AuthenticatedRecallCheckRoute
   '/recall-radar': typeof AuthenticatedRecallRadarRoute
+  '/receipt-import': typeof AuthenticatedReceiptImportRoute
   '/registry-check': typeof AuthenticatedRegistryCheckRoute
   '/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/tracking': typeof AuthenticatedTrackingRoute
@@ -469,6 +478,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/recall-check': typeof AuthenticatedRecallCheckRoute
   '/_authenticated/recall-radar': typeof AuthenticatedRecallRadarRoute
+  '/_authenticated/receipt-import': typeof AuthenticatedReceiptImportRoute
   '/_authenticated/registry-check': typeof AuthenticatedRegistryCheckRoute
   '/_authenticated/safety-guides': typeof AuthenticatedSafetyGuidesRoute
   '/_authenticated/tracking': typeof AuthenticatedTrackingRoute
@@ -523,6 +533,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/recall-check'
     | '/recall-radar'
+    | '/receipt-import'
     | '/registry-check'
     | '/safety-guides'
     | '/tracking'
@@ -575,6 +586,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/recall-check'
     | '/recall-radar'
+    | '/receipt-import'
     | '/registry-check'
     | '/safety-guides'
     | '/tracking'
@@ -628,6 +640,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/recall-check'
     | '/_authenticated/recall-radar'
+    | '/_authenticated/receipt-import'
     | '/_authenticated/registry-check'
     | '/_authenticated/safety-guides'
     | '/_authenticated/tracking'
@@ -869,6 +882,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRecallRadarRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/receipt-import': {
+      id: '/_authenticated/receipt-import'
+      path: '/receipt-import'
+      fullPath: '/receipt-import'
+      preLoaderRoute: typeof AuthenticatedReceiptImportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/registry-check': {
       id: '/_authenticated/registry-check'
       path: '/registry-check'
@@ -1055,6 +1075,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRecallCheckRoute: typeof AuthenticatedRecallCheckRoute
   AuthenticatedRecallRadarRoute: typeof AuthenticatedRecallRadarRoute
+  AuthenticatedReceiptImportRoute: typeof AuthenticatedReceiptImportRoute
   AuthenticatedRegistryCheckRoute: typeof AuthenticatedRegistryCheckRoute
   AuthenticatedSafetyGuidesRoute: typeof AuthenticatedSafetyGuidesRoute
   AuthenticatedTrackingRoute: typeof AuthenticatedTrackingRoute
@@ -1087,6 +1108,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRecallCheckRoute: AuthenticatedRecallCheckRoute,
   AuthenticatedRecallRadarRoute: AuthenticatedRecallRadarRoute,
+  AuthenticatedReceiptImportRoute: AuthenticatedReceiptImportRoute,
   AuthenticatedRegistryCheckRoute: AuthenticatedRegistryCheckRoute,
   AuthenticatedSafetyGuidesRoute: AuthenticatedSafetyGuidesRoute,
   AuthenticatedTrackingRoute: AuthenticatedTrackingRoute,
