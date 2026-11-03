@@ -44,6 +44,7 @@ type Product = {
 function ProductsPage() {
   const navigate = useNavigate();
   const { activeChildId } = useActiveChild();
+  const { requirePro } = useProGate();
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -102,7 +103,10 @@ function ProductsPage() {
               size="sm"
               variant="outline"
               className="rounded-full px-3 font-body text-xs font-semibold"
-              onClick={() => navigate({ to: "/receipt-import" })}
+              onClick={() => {
+                if (!requirePro("Receipt import", "Upload a receipt photo and pick which products and foods to watch for recalls.")) return;
+                navigate({ to: "/receipt-import" });
+              }}
             >
               Receipt
             </Button>
