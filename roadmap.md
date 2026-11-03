@@ -4,3 +4,5 @@
 - [x] Investigate Apple subscription discovery; repair hidden lookup failures and add native build preflight (rejected archive unavailable)
 - [x] Verify purchase fixes with automated tests and signed-in web pricing checks (physical StoreKit purchase remains below)
 - [ ] Complete physical-iPhone sandbox recording and App Store resubmission (requires owner’s device and Apple account)
+
+- [x] Receipt import for products/foods (Pro, with recall-accuracy warning)
