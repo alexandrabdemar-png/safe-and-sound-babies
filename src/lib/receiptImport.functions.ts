@@ -52,6 +52,22 @@ For each item:
 - category_key: best matching category for products, null for foods.
 - confident: true only if both brand and full name are clearly identifiable from the receipt.`;
 
+/**
+ * Receipt import is Pro-only (user decision, Nov 2026): the AI read costs a
+ * metered model call per receipt, and the extracted items are the least
+ * reliable product identities in the app, so it sits behind the same paywall
+ * as the barcode scanner. Enforced here (authoritative) and again in the UI
+ * via useProGate().
+ */
+export async function assertReceiptImportPro(
+  supabase: { from: (t: string) => any },
+  userId: string,
+): Promise<void> {
+  if (!(await hasProSubscription(supabase, userId))) {
+    throw new Error("Receipt import is a Pro feature. Start your free trial to use it.");
+  }
+}
+
 export const extractReceiptItems = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { image: string }) => {
@@ -62,9 +78,7 @@ export const extractReceiptItems = createServerFn({ method: "POST" })
     return { image };
   })
   .handler(async ({ data, context }) => {
-    if (!(await hasProSubscription(context.supabase, context.userId))) {
-      throw new Error("Receipt import is a Pro feature. Start your free trial to use it.");
-    }
+    await assertReceiptImportPro(context.supabase, context.userId);
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) throw new Error("Receipt reading isn't configured yet.");
 

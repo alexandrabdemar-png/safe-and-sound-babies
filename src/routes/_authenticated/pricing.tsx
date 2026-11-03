@@ -44,6 +44,7 @@ const PRO_FEATURES = [
   'Custom reminder timing',
   'Share access with a co-parent or caregiver',
   'Barcode scanner for instant product entry',
+  'Receipt import from a photo',
   'Multi-child support',
   'Export & backup your data',
 ];
