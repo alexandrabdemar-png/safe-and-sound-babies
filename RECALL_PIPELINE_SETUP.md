@@ -137,6 +137,19 @@ below (a different place than Step 4, even though it's the same three values).
    they set up push (the recall match itself is still recorded either way,
    so nothing is lost, it's only delivery that's skipped).
 
+5. **(Recommended) Free FDA API key** — get one at
+   https://open.fda.gov/apis/authentication/ and set it as `FDA_API_KEY` on
+   both `scheduled-recall-check` and `check-recalls`
+   (`supabase secrets set FDA_API_KEY=...`). What each scan checks:
+   - every product against every CPSC recall;
+   - every product against every FDA food enforcement report from the last
+     3 years (one bulk download per scan, however many products there are);
+   - every product against FDA's recall press releases (RSS), which appear
+     days to weeks before the enforcement data does;
+   - a full-history FDA search by name: **with** the key, for every product
+     on every scan; **without** it (openFDA allows ~1,000 calls/day without a
+     key), only for products added in the last 48 hours.
+
 Without step 5, recalls are no longer checked or notified at all — the two
 hooks that used to do this were removed. Steps 1–3 remain required for the
 unrelated size-up/replacement reminders, which are unaffected by this change.

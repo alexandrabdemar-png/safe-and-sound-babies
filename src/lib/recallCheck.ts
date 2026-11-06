@@ -300,6 +300,9 @@ type CriticalRecall = {
   title: string;
   /** Any keyword match against the product name triggers the alert */
   keywords: string[];
+  /** When set, the product text must ALSO contain one of these (e.g. the
+   *  brand), and only exact keyword phrases count — no single-word fallback. */
+  requireAny?: string[];
   /** Plain-English one-sentence summary shown directly to the parent */
   reason: string;
   url: string;
@@ -322,6 +325,16 @@ export const CRITICAL_RECALLS: CriticalRecall[] = [
     url: "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts/nara-organics-recalls-all-lots-nara-infant-formula-because-possible-health-risk",
     date: "Jun 13, 2026",
   },
+  {
+    id: "once-upon-a-farm-tractor-wheels-2026",
+    title: "Once Upon A Farm Recalls All Lots and Varieties of Tractor Wheels Organic Toddler Soft-Baked Bars Due to Potential Choking Hazard",
+    keywords: ["tractor wheel", "tractorwheel"],
+    requireAny: ["once upon a farm", "once upon farm", "onceuponafarm"],
+    reason:
+      "All lots and flavors of Once Upon a Farm Tractor Wheels Organic Toddler Soft-Baked Bars are recalled because they can form a sticky mass that may cause choking — do not open or serve them; return them for a refund or throw them away.",
+    url: "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts/once-upon-farm-recalls-all-lots-and-varieties-tractor-wheels-organic-toddler-soft-baked-bars-due",
+    date: "Oct 30, 2026",
+  },
 ];
 
 /**
@@ -332,6 +345,11 @@ export const CRITICAL_RECALLS: CriticalRecall[] = [
 export function checkCriticalRecalls(productName: string): CriticalRecall | null {
   const name = productName.toLowerCase().trim();
   for (const recall of CRITICAL_RECALLS) {
+    if (recall.requireAny) {
+      if (!recall.requireAny.some((kw) => name.includes(kw.toLowerCase()))) continue;
+      if (recall.keywords.some((kw) => name.includes(kw.toLowerCase()))) return recall;
+      continue;
+    }
     for (const kw of recall.keywords) {
       if (name.includes(kw.toLowerCase())) return recall;
     }
@@ -442,15 +460,49 @@ type RawFdaResult = {
  *   2. product_description:{name}
  * Deduplicate by recall_number, then fuzzy-match against productName.
  */
+/**
+ * openFDA search terms for a product: its meaningful words (plus each word's
+ * singular/plural sibling — openFDA doesn't stem), grouped inside the field
+ * so every word is scoped to it. The old `field:${whole name}` form only
+ * scoped the first word, and limit=10 let unrelated hits crowd out the real
+ * recall; results are filtered locally by fuzzyMatchProduct either way.
+ */
+export function fdaSearchTerms(productName: string): string | null {
+  const words = [
+    ...new Set(
+      productName
+        .toLowerCase()
+        .replace(/[^a-z0-9 ]+/g, " ")
+        .split(/\s+/)
+        .filter((w) => w.length >= 2 && !NOISE_WORDS.has(w) && !["a", "an", "of", "the"].includes(w)),
+    ),
+  ];
+  // Only generic words ("infant formula")? Search them anyway — the local
+  // match then falls back to a whole-phrase check.
+  if (!words.length) {
+    words.push(
+      ...productName.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter((w) => w.length >= 2),
+    );
+  }
+  if (!words.length) return null;
+  const expanded = new Set<string>();
+  for (const w of words) {
+    expanded.add(w);
+    expanded.add(w.endsWith("s") ? w.slice(0, -1) : `${w}s`);
+  }
+  return `(${[...expanded].map(encodeURIComponent).join("+")})`;
+}
+
 export async function fetchFdaRecallsForProduct(productName: string): Promise<RecallHit[]> {
   try {
-    const enc = encodeURIComponent(productName);
+    const terms = fdaSearchTerms(productName);
+    if (!terms) return [];
     const [res1, res2] = await Promise.all([
       fetchWithTimeout(
-        `https://api.fda.gov/food/enforcement.json?search=recalling_firm_name:${enc}+OR+product_description:${enc}&limit=10`,
+        `https://api.fda.gov/food/enforcement.json?search=recalling_firm:${terms}&limit=100`,
       ),
       fetchWithTimeout(
-        `https://api.fda.gov/food/enforcement.json?search=product_description:${enc}&limit=10`,
+        `https://api.fda.gov/food/enforcement.json?search=product_description:${terms}&limit=100`,
       ),
     ]);
 
@@ -557,6 +609,30 @@ export async function checkRecallsForProduct(productName: string): Promise<Recal
   ]);
 
   return cpscHits[0] ?? fdaHits[0] ?? null;
+}
+
+// ── Add-time check for a just-saved product ──────────────────────────────────
+
+/**
+ * Runs the full recall check (critical list, CPSC, FDA) for a product the
+ * user just added — from any screen — then stamps recall_checked_at and
+ * records a hit so it shows (and gets notified) immediately instead of
+ * waiting for the next scheduled scan. `label` should be brand + name.
+ * Never throws; returns the hit (if any) so the caller can alert the user.
+ */
+export async function checkAndRecordRecall(
+  productId: string,
+  label: string,
+): Promise<RecallHit | null> {
+  try {
+    const hit = await checkRecallsForProduct(label.trim());
+    void stampRecallCheckedAt(productId);
+    if (hit) await recordRecallInDb(productId, hit);
+    return hit;
+  } catch (err) {
+    logError(`[recall-check] add-time check failed for product ${productId}`, err);
+    return null;
+  }
 }
 
 // ── Persisting a recall hit against a saved product ──────────────────────────

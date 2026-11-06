@@ -186,10 +186,11 @@ describe("runRecallBatch", () => {
     const result = await runRecallBatch(fetchImpl, products);
     const fdaMatches = result.matches.filter((m) => m.source === "fda");
     expect(fdaMatches.map((m) => m.product_id).sort()).toEqual(["p1", "p2"]);
-    // Exactly one FDA fetch per unique product name (2 unique names here),
-    // not one per product.
+    // Products without a recent created_at and no API key are covered by the
+    // single bulk enforcement fetch (not one call per product).
     const fdaCalls = fetchSpy.mock.calls.filter((c) => String(c[0]).includes("api.fda.gov"));
-    expect(fdaCalls).toHaveLength(2);
+    expect(fdaCalls).toHaveLength(1);
+    expect(String(fdaCalls[0][0])).toContain("report_date:[");
   });
 
   it("a source failing entirely doesn't prevent matches from the others", async () => {

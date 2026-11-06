@@ -137,10 +137,31 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { data: products, error: pErr } = await supabase
-      .from("products")
-      .select("id, user_id, name, brand, category, model, product_type, barcode");
-    if (pErr) throw pErr;
+    // Paged: a single select is cut off at PostgREST's max-rows (1,000 by
+    // default), which silently left every product past that out of the scan.
+    const PAGE = 1000;
+    type ProductRow = {
+      id: string;
+      user_id: string;
+      name: string;
+      brand: string | null;
+      category: string | null;
+      model: string | null;
+      product_type: string | null;
+      barcode: string | null;
+      created_at: string | null;
+    };
+    const products: ProductRow[] = [];
+    for (let from = 0; ; from += PAGE) {
+      const { data: page, error: pErr } = await supabase
+        .from("products")
+        .select("id, user_id, name, brand, category, model, product_type, barcode, created_at")
+        .order("id")
+        .range(from, from + PAGE - 1);
+      if (pErr) throw pErr;
+      products.push(...((page ?? []) as ProductRow[]));
+      if (!page || page.length < PAGE) break;
+    }
 
     const batchProducts: BatchProduct[] = (products ?? []).map((p) => ({
       id: p.id,
@@ -151,11 +172,13 @@ Deno.serve(async (req) => {
       model: p.model ?? null,
       product_type: p.product_type ?? null,
       barcode: p.barcode ?? null,
+      created_at: p.created_at ?? null,
     }));
 
     const { catalogRows, matches, fetchCounts, sourceStats } = await runRecallBatch(
       fetch,
       batchProducts,
+      { fdaApiKey: Deno.env.get("FDA_API_KEY") ?? null },
     );
 
     // ── Upsert the recall catalog ("known recalls") ──────────────────────

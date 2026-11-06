@@ -14,6 +14,7 @@ import { CATEGORIES } from "@/lib/productCategories";
 import { extractReceiptItems } from "@/lib/receiptImport.functions";
 import { isRecallReady, RECEIPT_ACCURACY_WARNING, type ReceiptItem } from "@/lib/receiptItems";
 import { logError } from "@/lib/sanitize-error";
+import { checkAndRecordRecall } from "@/lib/recallCheck";
 
 export const Route = createFileRoute("/_authenticated/receipt-import")({
   head: () => ({
@@ -111,10 +112,11 @@ function ReceiptImportPage() {
       return;
     }
     setSaving(true);
+    const recallChecks: Array<{ productId: string; label: string }> = [];
     try {
       const products = chosen.filter((c) => c.kind === "product");
       if (products.length) {
-        const { error } = await supabase.from("products").insert(
+        const { data: insertedProducts, error } = await supabase.from("products").insert(
           products.map((p) => ({
             user_id: session.user.id,
             child_id: activeChildId,
@@ -125,12 +127,15 @@ function ReceiptImportPage() {
             product_type: p.categoryKey === "car_seat" ? "car_seat" : "other",
             notes: isRecallReady(p) ? "Added from receipt" : "Added from receipt — needs full brand and product name for accurate recall checks",
           })) as never,
-        );
+        ).select("id, name, brand");
         if (error) throw error;
+        for (const p of (insertedProducts ?? []) as Array<{ id: string; name: string; brand: string | null }>) {
+          recallChecks.push({ productId: p.id, label: [p.brand, p.name].filter(Boolean).join(" ") });
+        }
       }
       if (foods.length && activeChildId) {
         const today = new Date().toISOString().slice(0, 10);
-        const { error } = await supabase.from("first_foods").insert(
+        const { data: insertedFoods, error } = await supabase.from("first_foods").insert(
           foods.map((f) => ({
             child_id: activeChildId,
             food_name: f.name.trim().slice(0, 200),
@@ -139,10 +144,25 @@ function ReceiptImportPage() {
             is_allergen: false,
             is_packaged: true,
           })),
-        );
+        ).select("product_id, food_name, brand");
         if (error) throw error;
+        for (const f of (insertedFoods ?? []) as Array<{ product_id: string | null; food_name: string; brand: string | null }>) {
+          if (f.product_id && f.brand) recallChecks.push({ productId: f.product_id, label: `${f.brand} ${f.food_name}` });
+        }
       }
       toast.success(`Added ${chosen.length} item${chosen.length === 1 ? "" : "s"} to watch for recalls.`);
+      // Check each new item now (critical list, CPSC, FDA) rather than at
+      // the next scheduled scan; a hit raises a persistent alert.
+      for (const c of recallChecks) {
+        void checkAndRecordRecall(c.productId, c.label).then((hit) => {
+          if (hit) {
+            toast.error(`Recall alert: ${c.label}`, {
+              description: hit.reason || hit.title,
+              duration: Infinity,
+            });
+          }
+        });
+      }
       navigate({ to: hasProduct(chosen) ? "/products" : "/first-foods" });
     } catch (e) {
       logError("[receipt-import] save failed:", e);

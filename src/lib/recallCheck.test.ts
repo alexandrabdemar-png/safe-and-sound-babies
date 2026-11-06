@@ -18,6 +18,8 @@ import {
   recallFallbackUrl,
   recallSourceLabel,
   recallVerifyLinkLabel,
+  checkCriticalRecalls,
+  fdaSearchTerms,
 } from "./recallCheck";
 
 // Minimal thenable chain mimicking Supabase's query builder — every
@@ -787,5 +789,32 @@ describe("recallSourceLabel — narrative agency name now covers every source, n
     );
     expect(recallSourceLabel({ source: "health_canada" })).toBe("Health Canada");
     expect(recallSourceLabel({ source: "eu_safety_gate" })).toBe("EU Safety Gate");
+  });
+});
+
+// ── Regression: Once Upon a Farm Tractor Wheels (FDA recall, Oct 30 2026)
+// logged in the Food Log produced no alert. ─────────────────────────────────
+describe("critical recall: Once Upon a Farm Tractor Wheels", () => {
+  it("flags the product however it was typed", () => {
+    for (const q of [
+      "Once Upon a Farm tractor wheel",
+      "Once Upon a Farm Tractor Wheels Apple Sweet Potato & Spinach",
+      "once upon a farm tractor wheels bars",
+    ]) {
+      expect(checkCriticalRecalls(q)?.id).toBe("once-upon-a-farm-tractor-wheels-2026");
+    }
+  });
+  it("does not flag other products that share a word", () => {
+    expect(checkCriticalRecalls("Green Toys tractor wheel")).toBeNull();
+    expect(checkCriticalRecalls("Stroller wheel replacement")).toBeNull();
+    expect(checkCriticalRecalls("Once Upon a Farm Wild Rumpus Avocado")).toBeNull();
+  });
+});
+
+describe("fdaSearchTerms", () => {
+  it("groups every meaningful word (with plural forms) for a field-scoped search", () => {
+    expect(fdaSearchTerms("Once Upon a Farm tractor wheel")).toBe(
+      "(once+onces+upon+upons+farm+farms+tractor+tractors+wheel+wheels)",
+    );
   });
 });

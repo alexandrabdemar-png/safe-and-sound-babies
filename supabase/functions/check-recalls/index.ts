@@ -5,8 +5,8 @@
 //
 // On-demand, per-product recall check — this is what the scan flow (Feature
 // 4) calls right after a product is identified, so it's deliberately scoped
-// to exactly what the spec asks for: CPSC always, NHTSA additionally when
-// the product looks like a car seat. The existing daily batch sync
+// to CPSC always, NHTSA additionally when the product looks like a car seat,
+// and FDA food/formula enforcement for everything else. The existing daily batch sync
 // (src/routes/api/public/hooks/check-recalls.ts) and its broader source set
 // (FDA, USDA, Health Canada, EU Safety Gate, the hardcoded CRITICAL_RECALLS
 // fast-path) are a separate, already-shipped system for populating the
@@ -55,6 +55,6 @@ Deno.serve(async (req) => {
     return json({ error: "name/brand too long" }, 400);
   }
 
-  const result = await checkRecalls(name, brand, category, fetch);
+  const result = await checkRecalls(name, brand, category, fetch, Deno.env.get("FDA_API_KEY"));
   return json(result);
 });

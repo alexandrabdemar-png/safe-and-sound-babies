@@ -142,8 +142,131 @@ export function fuzzyMatchProduct(productName: string, recallText: string): bool
   return tokens.every((t) => textTokens.has(t));
 }
 
+/** A product name's meaningful words, unstemmed and in order. */
+export function meaningfulWords(productName: string): string[] {
+  return tokenize(productName).filter((w) => w.length >= 2 && !NOISE_WORDS.has(w));
+}
+
+/** The stemmed, de-noised tokens fuzzyMatchProduct requires for a product name. */
+export function productMatchTokens(productName: string): string[] {
+  return [
+    ...new Set(
+      tokenize(productName)
+        .filter((w) => w.length >= 2 && !NOISE_WORDS.has(w))
+        .map(stem),
+    ),
+  ];
+}
+
+/**
+ * Pre-tokenized index over a whole recall feed, so every product can be
+ * matched against every recall without re-tokenizing the feed per product.
+ * `match(productName)` returns exactly the items for which
+ * `fuzzyMatchProduct(productName, textOf(item))` is true.
+ */
+export class RecallTokenIndex<T> {
+  private readonly texts: string[];
+  private readonly tokenSets: Set<string>[];
+  private readonly postings = new Map<string, number[]>();
+
+  constructor(
+    private readonly items: T[],
+    textOf: (item: T) => string,
+  ) {
+    this.texts = items.map((it) => textOf(it).toLowerCase());
+    this.tokenSets = this.texts.map((t) => new Set(tokenize(t).map(stem)));
+    this.tokenSets.forEach((set, i) => {
+      for (const tok of set) {
+        const list = this.postings.get(tok);
+        if (list) list.push(i);
+        else this.postings.set(tok, [i]);
+      }
+    });
+  }
+
+  match(productName: string): T[] {
+    const tokens = productMatchTokens(productName);
+    if (tokens.length === 0) {
+      const needle = productName.toLowerCase().trim();
+      if (!needle) return [];
+      return this.items.filter((_, i) => this.texts[i].includes(needle));
+    }
+    let smallest: number[] | undefined;
+    for (const t of tokens) {
+      const list = this.postings.get(t);
+      if (!list) return [];
+      if (!smallest || list.length < smallest.length) smallest = list;
+    }
+    return (smallest ?? [])
+      .filter((i) => tokens.every((t) => this.tokenSets[i].has(t)))
+      .map((i) => this.items[i]);
+  }
+}
+
+/**
+ * openFDA search clause for a product: the meaningful words, grouped so every
+ * word is scoped to product_description (an unquoted, ungrouped query only
+ * scopes the FIRST word to the field and searches the rest across every
+ * field). Words are OR'ed — openFDA doesn't stem, so AND-ing "wheel" would
+ * miss "Wheels" — and the caller keeps a large result page and filters
+ * locally with fuzzyMatchProduct (which does require every word).
+ */
+export function fdaSearchClause(productName: string): string | null {
+  const words = [
+    ...new Set(
+      tokenize(productName).filter((w) => w.length >= 2 && !NOISE_WORDS.has(w)),
+    ),
+  ];
+  // Only generic words ("infant formula")? Search them anyway — the local
+  // match then falls back to a whole-phrase check.
+  if (!words.length) words.push(...tokenize(productName).filter((w) => w.length >= 2));
+  if (!words.length) return null;
+  // Add the plural/singular sibling of each word so OR-ranking favors notices
+  // that use either form.
+  const expanded = new Set<string>();
+  for (const w of words) {
+    expanded.add(w);
+    expanded.add(w.endsWith("s") ? w.slice(0, -1) : `${w}s`);
+  }
+  return `product_description:(${[...expanded].map(encodeURIComponent).join("+")})`;
+}
+
+type FdaEnforcementRaw = {
+  recall_number?: string;
+  product_description?: string;
+  reason_for_recall?: string;
+  recall_initiation_date?: string;
+};
+
+/** FDA food-enforcement lookup for the add-time (check-recalls) path. */
+export async function checkFdaRecalls(
+  query: string,
+  fetchImpl: typeof fetch,
+  apiKey?: string | null,
+): Promise<RecallHit[]> {
+  const clause = fdaSearchClause(query);
+  if (!clause) return [];
+  const key = apiKey ? `&api_key=${encodeURIComponent(apiKey)}` : "";
+  const data = (await fetchJson(
+    fetchImpl,
+    `https://api.fda.gov/food/enforcement.json?search=${clause}&limit=100${key}`,
+  )) as { results?: FdaEnforcementRaw[] } | null;
+  const results = Array.isArray(data?.results) ? data!.results! : [];
+  return results
+    .filter((r) => fuzzyMatchProduct(query, r.product_description ?? ""))
+    .slice(0, 5)
+    .map((r) => ({
+      source: "fda" as const,
+      id: r.recall_number ?? `fda-${(r.product_description ?? "").slice(0, 20)}`,
+      title: (r.product_description ?? "FDA Food Recall").slice(0, 500),
+      reason: r.reason_for_recall || "See the official FDA recall notice for details.",
+      url: "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts",
+      recallDate: r.recall_initiation_date ?? null,
+    }));
+}
+
 export type RecallHit = {
-  source: "cpsc" | "nhtsa";
+  source: "cpsc" | "nhtsa" | "fda";
   id: string;
   title: string;
   reason: string;
@@ -281,17 +404,22 @@ export async function checkRecalls(
   brand: string | null,
   category: string | null,
   fetchImpl: typeof fetch,
+  fdaApiKey?: string | null,
 ): Promise<CheckRecallsResult> {
   const query = [brand, productName].filter(Boolean).join(" ").trim();
   const shouldCheckNhtsa =
     category === "car_seat" ||
     CAR_SEAT_HINT.test(`${productName} ${brand ?? ""} ${category ?? ""}`);
 
-  const [cpscHits, nhtsaHits] = await Promise.all([
+  // FDA (food/formula enforcement) is checked for everything except car
+  // seats: a scanned pouch or formula tub must be checked against FDA at add
+  // time too, not only by the next scheduled scan.
+  const [cpscHits, nhtsaHits, fdaHits] = await Promise.all([
     checkCpscRecalls(query || productName, fetchImpl),
     shouldCheckNhtsa ? checkNhtsaRecalls(productName, brand, fetchImpl) : Promise.resolve([]),
+    shouldCheckNhtsa ? Promise.resolve([]) : checkFdaRecalls(query || productName, fetchImpl, fdaApiKey),
   ]);
 
-  const recalls = [...cpscHits, ...nhtsaHits];
+  const recalls = [...cpscHits, ...nhtsaHits, ...fdaHits];
   return { recalled: recalls.length > 0, recalls };
 }

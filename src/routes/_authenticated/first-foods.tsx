@@ -23,6 +23,7 @@ import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { lookupBarcode } from "@/lib/barcodeLookup";
 import { allergensFromTags, collectIngredients, parseIngredients } from "@/lib/foodIngredients";
 import { COMMON_BABY_FOOD_BRANDS, splitBrandFromQuery } from "@/lib/foodSearchMatch";
+import { checkAndRecordRecall } from "@/lib/recallCheck";
 import {
   firstTryIds,
   groupByPeriod,
@@ -222,7 +223,7 @@ function FirstFoodsPage() {
   async function logAgain(f: FoodEntry) {
     if (!child || loggingAgainId) return;
     setLoggingAgainId(f.id);
-    const { error } = await supabase.from("first_foods").insert({
+    const { data: logged, error } = await supabase.from("first_foods").insert({
       child_id: child.id,
       food_name: f.food_name,
       date_introduced: localISODate(),
@@ -232,7 +233,7 @@ function FirstFoodsPage() {
       brand: f.brand,
       barcode: f.barcode,
       is_packaged: f.is_packaged,
-    });
+    }).select("product_id").maybeSingle();
     if (!mountedRef.current) return;
     setLoggingAgainId(null);
     if (error) {
@@ -241,6 +242,14 @@ function FirstFoodsPage() {
       return;
     }
     toast.success(`${f.food_name} logged for today.`);
+    const loggedProductId = (logged as { product_id?: string | null } | null)?.product_id ?? null;
+    if (f.is_packaged && f.brand && loggedProductId) {
+      void checkLoggedFoodForRecalls(
+        loggedProductId,
+        f.brand,
+        f.food_name.replace(/\s*\([^)]*\)\s*$/, ""),
+      );
+    }
     loadData().catch((err) => logError("[food-log] background refresh failed:", err));
   }
 
@@ -399,6 +408,27 @@ function FirstFoodsPage() {
     }
   }, []);
 
+  async function checkLoggedFoodForRecalls(productId: string, foodBrand: string, name: string) {
+    try {
+      const label = `${foodBrand} ${name}`.trim();
+      const hit = await checkAndRecordRecall(productId, label);
+      if (!hit) return;
+      toast.error(`Recall alert: ${label}`, {
+        description: hit.reason || hit.title,
+        duration: Infinity,
+        action: {
+          label: "View",
+          onClick: () => navigate({ to: "/products/$id", params: { id: productId } }),
+        },
+      });
+      loadData().catch((err) => {
+        logError("[first-foods] refresh after recall hit failed:", err);
+      });
+    } catch (err) {
+      logError("[first-foods] add-time recall check failed:", err);
+    }
+  }
+
   async function handleSave() {
     if (!child) return;
     if (!foodName.trim()) {
@@ -461,9 +491,20 @@ function FirstFoodsPage() {
       barcode: barcode.trim().slice(0, 64) || null,
       is_packaged: packagedToSave ?? (barcode.trim() ? true : null),
     };
-    const { error } = isEditing
-      ? await supabase.from("first_foods").update(shared).eq("id", editingId)
-      : await supabase.from("first_foods").insert({ child_id: child.id, ...shared });
+    // product_id comes back from the trigger that mirrors packaged foods into
+    // Products, so the recall check below can run against that product now.
+    const { data: saved, error } = isEditing
+      ? await supabase
+          .from("first_foods")
+          .update(shared)
+          .eq("id", editingId)
+          .select("product_id")
+          .maybeSingle()
+      : await supabase
+          .from("first_foods")
+          .insert({ child_id: child.id, ...shared })
+          .select("product_id")
+          .maybeSingle();
 
     if (error) {
       logError("[first-foods] failed to save food:", error.message);
@@ -498,6 +539,12 @@ function FirstFoodsPage() {
       if (!dismissedForGood) setShow4DayCard(true);
     }
     setSaving(false);
+    // Check the food against recalls right away (critical list, CPSC, FDA)
+    // instead of waiting for the next scheduled scan.
+    const savedProductId = (saved as { product_id?: string | null } | null)?.product_id ?? null;
+    if (shared.is_packaged && shared.brand && savedProductId) {
+      void checkLoggedFoodForRecalls(savedProductId, shared.brand, nameToSave);
+    }
     // Deliberately not awaited/surfaced as an error toast: the save above
     // already succeeded and the user has already moved on by the time this
     // resolves. Previously this called loadData() (which does toast on

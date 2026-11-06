@@ -209,6 +209,31 @@ describe("checkNhtsaRecalls", () => {
 });
 
 describe("checkRecalls orchestration", () => {
+  it("checks FDA for a scanned food and returns an FDA hit (regression: scan flow skipped FDA)", async () => {
+    const fetchImpl = vi.fn(async (url: string) => {
+      if (url.includes("api.fda.gov")) {
+        return jsonResponse({
+          results: [
+            {
+              recall_number: "F-0001-2027",
+              product_description: "Once Upon a Farm Tractor Wheels Organic Toddler Soft-Baked Bars",
+              reason_for_recall: "Choking hazard",
+            },
+          ],
+        });
+      }
+      return jsonResponse([]);
+    });
+    const result = await checkRecalls(
+      "Tractor Wheels",
+      "Once Upon a Farm",
+      null,
+      fetchImpl as unknown as typeof fetch,
+    );
+    expect(result.recalled).toBe(true);
+    expect(result.recalls[0]).toMatchObject({ source: "fda", id: "F-0001-2027" });
+  });
+
   it("only queries NHTSA when category is car_seat", async () => {
     const calledHosts: string[] = [];
     const fetchImpl = vi.fn(async (url: string) => {
