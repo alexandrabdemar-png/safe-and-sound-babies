@@ -179,29 +179,11 @@ const RollIcon = ({ px }: { px: number }) =>
     px,
     g(
       <>
-        {/* a little round shape with a curling arrow all the way around it */}
-        <path d="M80 50 c0 17 -13 30 -30 30 c-17 0 -30 -13 -30 -30 c0 -17 13 -30 30 -30 c10 0 18 4 23 11" />
-        <path d="M75 17 l-1 15 l-14 -2" />
-        <circle cx="50" cy="50" r="9" />
-      </>,
-      3.5,
-    ),
-  );
-
-const CribPeekIcon = ({ px }: { px: number }) =>
-  wrap(
-    px,
-    g(
-      <>
-        {/* baby peeking over the crib rail, hands gripping the top */}
-        <circle cx="50" cy="30" r="14" />
-        <Dot cx={45} cy={28} r={1.8} />
-        <Dot cx={55} cy={28} r={1.8} />
-        <path d="M12 46 c20 -1 56 1 76 0" />
-        <path d="M14 88 c20 1 54 -1 74 0" />
-        <path d="M20 46 v42 M38 46 v42 M62 46 v42 M80 46 v42" />
-        <path d="M30 47 c-1 -6 3 -9 7 -8 c4 1 5 5 3 8" fill="#FFFDF9" />
-        <path d="M70 47 c1 -6 -3 -9 -7 -8 c-4 1 -5 5 -3 8" fill="#FFFDF9" />
+        {/* two arrows chasing each other round in a circle */}
+        <path d="M22 44 c4 -16 18 -26 34 -24 c10 1 18 6 22 14" />
+        <path d="M80 22 l-1 13 l-13 -1" />
+        <path d="M78 56 c-4 16 -18 26 -34 24 c-10 -1 -18 -6 -22 -14" />
+        <path d="M20 78 l1 -13 l13 1" />
       </>,
       3.5,
     ),
@@ -222,7 +204,7 @@ const MILESTONE_GLYPHS: (MomentGlyph & { pattern: RegExp })[] = [
   {
     key: "pulling_to_stand",
     label: "Pulling to stand",
-    Icon: CribPeekIcon,
+    Icon: FootprintsIcon,
     pattern: /\bpull(ed|ing|s)?\s+(up|to\s+stand|(him|her|them)sel(f|ves)\s+up)|\bstood\b|\bstand(ing)?\b/i,
   },
   { key: "rolled_over", label: "Rolled over", Icon: RollIcon, pattern: /\broll(ed|ing|s)?\b/i },
