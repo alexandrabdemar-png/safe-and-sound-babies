@@ -1,10 +1,9 @@
 import {
-  MOMENT_ICONS,
-  MOMENT_ICON_LABELS,
   MOMENT_ICON_ACCENT,
   SketchDefs,
   parseLegacyNotes,
   resolveMomentIcon,
+  momentGlyph,
 } from "@/lib/momentIcons";
 
 const CARD_BG = "#FFFFFF";
@@ -53,7 +52,7 @@ export function MomentTimeline({
       {moments.map((m) => {
         const { legacyType, displayNotes } = parseLegacyNotes(m.notes);
         const resolvedIcon = resolveMomentIcon(m.icon, legacyType);
-        const Icon = MOMENT_ICONS[resolvedIcon];
+        const { Icon, label: iconLabel } = momentGlyph(m.title, resolvedIcon);
         const age = childName && childDob && m.logged_at ? calcAgeAt(childDob, m.logged_at) : null;
         return (
           <li
@@ -65,7 +64,7 @@ export function MomentTimeline({
               <span
                 className="flex items-center justify-center rounded-full p-1.5"
                 style={{ backgroundColor: MOMENT_ICON_ACCENT + "22" }}
-                aria-label={MOMENT_ICON_LABELS[resolvedIcon]}
+                aria-label={iconLabel}
               >
                 <Icon px={14} />
               </span>

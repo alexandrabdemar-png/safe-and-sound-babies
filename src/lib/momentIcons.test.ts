@@ -15,6 +15,8 @@ import {
   isIconColumnUnavailableError,
   fetchMilestonesResilient,
   saveMomentResilient,
+  milestoneGlyphFor,
+  momentGlyph,
 } from "./momentIcons";
 
 // Minimal thenable chain mimicking Supabase's query builder — every
@@ -433,5 +435,47 @@ describe("save then re-fetch (integration)", () => {
       notes: "so proud",
       icon: "heart",
     });
+  });
+});
+
+describe("milestoneGlyphFor", () => {
+  it.each([
+    ["First steps", "first_steps"],
+    ["Took 3 steps to Grandma!", "first_steps"],
+    ["Walked across the room", "first_steps"],
+    ["First smile", "first_smile"],
+    ["Smiled at the dog", "first_smile"],
+    ["Rolled over", "rolled_over"],
+    ["Rolling tummy to back", "rolled_over"],
+    ["Pulling to stand", "pulling_to_stand"],
+    ["Pulled up on the couch", "pulling_to_stand"],
+    ["Stood up in the crib", "pulling_to_stand"],
+  ])("maps %s to %s", (title, key) => {
+    expect(milestoneGlyphFor(title)?.key).toBe(key);
+  });
+
+  it("returns null for titles without a milestone mark", () => {
+    expect(milestoneGlyphFor("First tooth")).toBeNull();
+    expect(milestoneGlyphFor("First word")).toBeNull();
+    expect(milestoneGlyphFor("")).toBeNull();
+    expect(milestoneGlyphFor(null)).toBeNull();
+  });
+
+  it("prefers first steps when a title mentions standing and steps", () => {
+    expect(milestoneGlyphFor("Pulled up to stand and took steps")?.key).toBe("first_steps");
+  });
+});
+
+describe("momentGlyph", () => {
+  it("falls back to the saved category icon and label", () => {
+    const g = momentGlyph("First word", "smiley");
+    expect(g.Icon).toBe(MOMENT_ICONS.smiley);
+    expect(g.label).toBe(MOMENT_ICON_LABELS.smiley);
+  });
+
+  it("uses the milestone mark and label when the title matches", () => {
+    const g = momentGlyph("First steps", "star");
+    expect(g.label).toBe("First steps");
+    expect(g.Icon).not.toBe(MOMENT_ICONS.star);
   });
 });

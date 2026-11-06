@@ -10,10 +10,9 @@ import { BottomNav } from "@/components/BottomNav";
 import { SparkleIllustration } from "@/components/EmptyIllustration";
 import {
   SketchDefs,
-  MOMENT_ICONS,
-  MOMENT_ICON_LABELS,
   parseLegacyNotes,
   resolveMomentIcon,
+  momentGlyph,
   fetchMilestonesResilient,
   type MomentIconKey,
 } from "@/lib/momentIcons";
@@ -221,7 +220,7 @@ function MomentsPage() {
               <ul>
                 {filtered.map((m, i) => {
                   const onLeft = i % 2 === 0;
-                  const Icon = MOMENT_ICONS[m.resolvedIcon];
+                  const { Icon, label: iconLabel } = momentGlyph(m.title, m.resolvedIcon);
                   return (
                     <li
                       key={m.id}
@@ -263,7 +262,7 @@ function MomentsPage() {
                           backgroundColor: "#FFFDF9",
                           border: "2px solid #A9B7C9",
                         }}
-                        aria-label={MOMENT_ICON_LABELS[m.resolvedIcon]}
+                        aria-label={iconLabel}
                       >
                         <Icon px={22} />
                       </span>

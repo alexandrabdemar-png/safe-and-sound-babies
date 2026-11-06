@@ -129,6 +129,122 @@ export const MOMENT_ICONS: Record<MomentIconKey, (props: { px: number }) => Reac
   sparkles: SparklesIcon,
 };
 
+// Milestone-specific hand-drawn marks. When a moment's title names one of
+// these milestones, the timeline shows its own mark instead of the generic
+// category icon. Same ink, stroke and sketchy filter as the icons above.
+const Dot = ({ cx, cy, r }: { cx: number; cy: number; r: number }) => (
+  <circle cx={cx} cy={cy} r={r} fill={INK} stroke="none" />
+);
+
+const FootprintsIcon = ({ px }: { px: number }) =>
+  wrap(
+    px,
+    g(
+      <>
+        {/* two baby footprints with toes, like an ink footprint keepsake */}
+        <path d="M31 91 c-6 0 -10 -5 -9 -12 c1 -6 4 -10 3 -17 c-1 -9 4 -17 13 -17 c8 0 12 7 10 15 c-2 8 -7 12 -8 20 c-1 7 -3 11 -9 11 Z" />
+        <Dot cx={46} cy={37} r={4} />
+        <Dot cx={39} cy={34.5} r={3.1} />
+        <Dot cx={32.8} cy={35.5} r={2.6} />
+        <Dot cx={27.6} cy={38.6} r={2.3} />
+        <Dot cx={24} cy={43.6} r={2} />
+        <path d="M69 65 c6 0 10 -5 9 -12 c-1 -6 -4 -10 -3 -17 c1 -9 -4 -17 -13 -17 c-8 0 -12 7 -10 15 c2 8 7 12 8 20 c1 7 3 11 9 11 Z" />
+        <Dot cx={54} cy={11} r={4} />
+        <Dot cx={61} cy={8.5} r={3.1} />
+        <Dot cx={67.2} cy={9.5} r={2.6} />
+        <Dot cx={72.4} cy={12.6} r={2.3} />
+        <Dot cx={76} cy={17.6} r={2} />
+      </>,
+      3.5,
+    ),
+  );
+
+const SmileIcon = ({ px }: { px: number }) =>
+  wrap(
+    px,
+    g(
+      <>
+        {/* wobbly hand-drawn smiley face */}
+        <path d="M52 15 c19 0 33 15 33 34 c0 20 -15 36 -35 36 c-19 0 -35 -15 -35 -35 c0 -19 15 -34 33 -35 c5 0 9 1 12 3" />
+        <Dot cx={38} cy={42} r={3.6} />
+        <Dot cx={62} cy={42} r={3.6} />
+        <path d="M33 58 c5 10 13 14 18 14 c7 0 14 -5 17 -14" />
+      </>,
+      3.5,
+    ),
+  );
+
+const RollIcon = ({ px }: { px: number }) =>
+  wrap(
+    px,
+    g(
+      <>
+        {/* a little round shape with a curling arrow all the way around it */}
+        <path d="M80 50 c0 17 -13 30 -30 30 c-17 0 -30 -13 -30 -30 c0 -17 13 -30 30 -30 c10 0 18 4 23 11" />
+        <path d="M75 17 l-1 15 l-14 -2" />
+        <circle cx="50" cy="50" r="9" />
+      </>,
+      3.5,
+    ),
+  );
+
+const CribPeekIcon = ({ px }: { px: number }) =>
+  wrap(
+    px,
+    g(
+      <>
+        {/* baby peeking over the crib rail, hands gripping the top */}
+        <circle cx="50" cy="30" r="14" />
+        <Dot cx={45} cy={28} r={1.8} />
+        <Dot cx={55} cy={28} r={1.8} />
+        <path d="M12 46 c20 -1 56 1 76 0" />
+        <path d="M14 88 c20 1 54 -1 74 0" />
+        <path d="M20 46 v42 M38 46 v42 M62 46 v42 M80 46 v42" />
+        <path d="M30 47 c-1 -6 3 -9 7 -8 c4 1 5 5 3 8" fill="#FFFDF9" />
+        <path d="M70 47 c1 -6 -3 -9 -7 -8 c-4 1 -5 5 -3 8" fill="#FFFDF9" />
+      </>,
+      3.5,
+    ),
+  );
+
+export type MilestoneGlyphKey = "first_steps" | "first_smile" | "rolled_over" | "pulling_to_stand";
+
+type MomentGlyph = {
+  key: MilestoneGlyphKey;
+  label: string;
+  Icon: (props: { px: number }) => React.ReactElement;
+};
+
+// Order matters: "pulled up to stand and took steps" should read as steps,
+// so the more advanced milestone is checked first.
+const MILESTONE_GLYPHS: (MomentGlyph & { pattern: RegExp })[] = [
+  { key: "first_steps", label: "First steps", Icon: FootprintsIcon, pattern: /\bsteps?\b|\bwalk(ed|ing|s)?\b/i },
+  {
+    key: "pulling_to_stand",
+    label: "Pulling to stand",
+    Icon: CribPeekIcon,
+    pattern: /\bpull(ed|ing|s)?\s+(up|to\s+stand|(him|her|them)sel(f|ves)\s+up)|\bstood\b|\bstand(ing)?\b/i,
+  },
+  { key: "rolled_over", label: "Rolled over", Icon: RollIcon, pattern: /\broll(ed|ing|s)?\b/i },
+  { key: "first_smile", label: "First smile", Icon: SmileIcon, pattern: /\bsmil(e|ed|es|ing)\b/i },
+];
+
+/** The milestone-specific mark for a moment title, or null if none applies. */
+export function milestoneGlyphFor(title: string | null | undefined): MomentGlyph | null {
+  if (!title) return null;
+  const hit = MILESTONE_GLYPHS.find(({ pattern }) => pattern.test(title));
+  return hit ? { key: hit.key, label: hit.label, Icon: hit.Icon } : null;
+}
+
+/** Icon and accessible label to draw for a moment: its milestone mark when
+ * the title names one, otherwise its saved category icon. */
+export function momentGlyph(
+  title: string | null | undefined,
+  resolvedIcon: MomentIconKey,
+): { Icon: (props: { px: number }) => React.ReactElement; label: string } {
+  return milestoneGlyphFor(title) ?? { Icon: MOMENT_ICONS[resolvedIcon], label: MOMENT_ICON_LABELS[resolvedIcon] };
+}
+
 function isMomentIconKey(value: string | null | undefined): value is MomentIconKey {
   return !!value && (MOMENT_ICON_KEYS as string[]).includes(value);
 }
