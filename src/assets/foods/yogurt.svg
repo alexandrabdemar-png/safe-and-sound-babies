@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.6"/></filter>
+  <g filter="url(#s)" stroke="#6E7F96" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+  <path d="M27 36 h46 l-6 42 c0 4 -3 6 -6 6 h-22 c-3 0 -6 -2 -6 -6 Z"/><path d="M23 28 c18 -1 36 -1 54 0 v8 c-18 1 -36 1 -54 0 Z"/>
+  <path d="M30 52 c13 2 27 2 40 0 M32 68 c12 2 24 2 36 0"/><circle cx="50" cy="60" r="4"/><path d="M64 28 l10 -16 c2 -3 6 -1 5 2 l-9 15"/>
+  </g>
+</svg>

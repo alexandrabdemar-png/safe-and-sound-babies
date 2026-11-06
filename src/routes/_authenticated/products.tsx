@@ -14,6 +14,7 @@ import { CategoryBadge } from "@/components/CategoryBadge";
 
 import { formatMonthYear, isOverdue } from "@/lib/predictions";
 import { CATEGORY_BY_KEY, categoryFromLabel, type CategoryKey } from "@/lib/productCategories";
+import { foodIllustrationFor } from "@/lib/foodIllustrations";
 import { isOnboardingPlaceholderProduct } from "@/lib/onboardingPlaceholderProduct";
 
 export const Route = createFileRoute("/_authenticated/products")({
@@ -148,6 +149,8 @@ function ProductsPage() {
 
 function ProductCard({ product }: { product: Product }) {
   const cat = categoryFromLabel(product.category) ?? CATEGORY_BY_KEY.other;
+  // Baby foods get a drawing of the food itself when we have one.
+  const food = cat.key === "baby_food" ? foodIllustrationFor(product.name) : null;
   const meta = [product.brand, product.size, cat?.label ?? product.category].filter(Boolean).join(" · ");
 
   const replaceDate = product.predicted_replacement_date ?? product.replace_at;
@@ -167,7 +170,7 @@ function ProductCard({ product }: { product: Product }) {
         <div className="flex items-start gap-3">
           <CategoryBadge
             icon={cat.icon}
-            illustration={cat.illustration}
+            illustration={food?.src ?? cat.illustration}
             className="h-14 w-14"
           />
           <div className="min-w-0 flex-1">
