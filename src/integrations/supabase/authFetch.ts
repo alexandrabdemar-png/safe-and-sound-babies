@@ -14,7 +14,8 @@ import { recordAuthDiagnostic } from "@/lib/authDiagnostics";
 
 type Fetch = typeof fetch;
 
-export const AUTH_REQUEST_TIMEOUT_MS = 20000;
+export const AUTH_REQUEST_TIMEOUT_MS = 10000;
+export const DATA_REQUEST_TIMEOUT_MS = 15000;
 
 function requestUrl(input: Parameters<Fetch>[0]): string {
   if (typeof input === "string") return input;
@@ -41,7 +42,8 @@ export function createAuthFetch(
 ): Fetch {
   return async (input, init) => {
     const url = requestUrl(input);
-    if (!url.includes("/auth/v1/")) return baseFetch(input, init);
+    const isAuth = url.includes("/auth/v1/");
+    const requestTimeout = isAuth ? timeoutMs : DATA_REQUEST_TIMEOUT_MS;
 
     const method = (
       init?.method ?? (input instanceof Request ? input.method : "GET")
@@ -52,7 +54,7 @@ export function createAuthFetch(
     const timer = setTimeout(() => {
       timedOut = true;
       controller.abort();
-    }, timeoutMs);
+    }, requestTimeout);
     const outer = init?.signal;
     const onOuterAbort = () => controller.abort();
     if (outer) {
@@ -67,8 +69,8 @@ export function createAuthFetch(
       return res;
     } catch (err) {
       if (timedOut) {
-        recordAuthDiagnostic("timeout", `${label} gave up after ${timeoutMs}ms`);
-        throw new Error(`Auth request timed out after ${timeoutMs}ms`);
+        if (isAuth) recordAuthDiagnostic("timeout", `${label} gave up after ${requestTimeout}ms`);
+        throw new Error(`${isAuth ? "Auth" : "Data"} request timed out after ${requestTimeout}ms`);
       }
       recordAuthDiagnostic(
         "error",

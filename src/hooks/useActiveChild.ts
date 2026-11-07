@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { logError } from "@/lib/sanitize-error";
+import { settleWithin } from '@/lib/promiseTimeout';
 
 export type ChildOption = {
   id: string;
@@ -28,18 +29,23 @@ export function useActiveChild() {
   const [children, setChildren] = useState<ChildOption[]>([]);
   const [activeId, setActiveIdState] = useState<string | null>(readStored());
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    const { data, error } = await supabase
+    setLoading(true);
+    setError(null);
+    try {
+    const { data, error } = await settleWithin(Promise.resolve(supabase
       .from('children')
       .select('id, name')
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true })), 10000, 'Child profiles');
 
     if (error) {
       // Log it and leave the existing list untouched rather than silently
       // replacing a previously-successful fetch with an empty one, which
       // would make the app think the user's children just disappeared.
       logError('[useActiveChild] failed to load children', error);
+      setError("Couldn't load your child profiles. Please try again.");
       setLoading(false);
       return;
     }
@@ -57,6 +63,12 @@ export function useActiveChild() {
     } else {
       setActiveIdState(null);
     }
+    } catch (err) {
+      logError('[useActiveChild] failed to load children', err);
+      setError("Couldn't load your child profiles. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
 
@@ -69,5 +81,5 @@ export function useActiveChild() {
   }, []);
 
   const activeChild = children.find((c) => c.id === activeId) ?? null;
-  return { children, activeChild, activeChildId: activeId, setActiveChildId, refresh, loading };
+  return { children, activeChild, activeChildId: activeId, setActiveChildId, refresh, loading, error };
 }
