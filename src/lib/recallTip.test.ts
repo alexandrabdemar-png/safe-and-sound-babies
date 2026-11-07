@@ -3,7 +3,7 @@ import { buildRecallTip } from "./recallTip";
 import { selectDailyTip, SAFETY_TIPS } from "./safetyTips";
 
 const wed = new Date(2026, 10, 11, 12);
-const r = (daysAgo: number) => ({ id: "x", source: "CPSC", title: "Crib", description: "", dateLabel: null, sortDate: wed.getTime() - daysAgo * 86400000, url: "https://cpsc.gov/x", official: true });
+const r = (daysAgo: number) => ({ id: "x", source: "CPSC", title: "Crib", description: "", dateLabel: null, sortDate: wed.getTime() - daysAgo * 86400000, url: "https://cpsc.gov/x", official: true, lotPattern: null });
 
 describe("recall roundup tip", () => {
   it("shows a recall from the last 7 days on Wednesday", () => {
