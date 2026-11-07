@@ -6,3 +6,7 @@
 - [ ] Complete physical-iPhone sandbox recording and App Store resubmission (requires owner’s device and Apple account)
 
 - [x] Receipt import for products/foods (Pro, with recall-accuracy warning)
+- [ ] Bound email authentication to 10 seconds, immediate signup, persistent webview sessions
+- [ ] Fix stalled Track/Milestones and bounded page loading with retry
+- [ ] Share Recall Radar count/list and move home card first
+- [ ] Test account flows and every mobile tab
