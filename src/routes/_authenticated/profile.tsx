@@ -28,7 +28,8 @@ import { extractFunctionsErrorMessage } from "@/lib/functionsError";
 import { DevRoleSwitcher } from "@/components/DevRoleSwitcher";
 import { amICatalogAdmin } from "@/lib/catalogModeration.functions";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { settleWithin } from '@/lib/promiseTimeout';
 
 
 
@@ -41,6 +42,7 @@ export const Route = createFileRoute("/_authenticated/profile")({
 
 function ProfilePage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [email, setEmail] = useState<string | null>(null);
   const checkCatalogAdmin = useServerFn(amICatalogAdmin);
   const catalogAdmin = useQuery({
@@ -64,9 +66,14 @@ function ProfilePage() {
   }, []);
 
   async function signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) toast.error(error.message);
-    else { toast.success("Signed out"); navigate({ to: "/auth" }); }
+    try {
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      const { error } = await settleWithin(supabase.auth.signOut({ scope: 'local' }), 10000, 'Sign-out');
+      if (error) throw error;
+      toast.success("Signed out");
+      navigate({ to: "/auth", replace: true });
+    } catch (error) { toast.error(error instanceof Error ? error.message : 'Could not sign out. Please try again.'); }
   }
 
   async function handleManage() {

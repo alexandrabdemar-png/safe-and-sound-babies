@@ -7,6 +7,7 @@ import { ArrowLeft, Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { BottomNav } from "@/components/BottomNav";
+import { settleWithin } from '@/lib/promiseTimeout';
 import { SparkleIllustration } from "@/components/EmptyIllustration";
 import {
   SketchDefs,
@@ -44,14 +45,17 @@ function formatDateLarge(dateStr: string | null) {
 }
 
 function MomentsPage() {
-  const { activeChildId } = useActiveChild();
+  const { activeChildId, loading: childLoading, error: childError, refresh } = useActiveChild();
   const [moments, setMoments] = useState<ParsedMoment[]>([]);
   const [loading, setLoading] = useState(true);
   const [childName, setChildName] = useState("");
   const [search, setSearch] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    if (!activeChildId) return;
+    if (childLoading) return;
+    if (!activeChildId || childError) { setLoading(false); setError(childError); setMoments([]); return; }
     // `cancelled` stops a stale response from toasting or setting state
     // after the user has already navigated off this page — sonner toasts
     // render globally, not scoped to the current route, so an unguarded
@@ -61,13 +65,15 @@ function MomentsPage() {
     let cancelled = false;
     (async () => {
       setLoading(true);
+      setError(null);
       try {
-        const [mRes, cRes] = await Promise.all([
+        const [mRes, cRes] = await settleWithin(Promise.all([
           fetchMilestonesResilient(activeChildId),
           supabase.from("children").select("name").eq("id", activeChildId).maybeSingle(),
-        ]);
+        ]), 10000, 'Milestones');
         if (cancelled) return;
-        if (mRes.error) toast.error(mRes.error.message);
+        if (mRes.error) throw mRes.error;
+        if (cRes.error) throw cRes.error;
         const parsed: ParsedMoment[] = (mRes.data ?? []).map((m: RawMoment) => {
           const { legacyType, displayNotes } = parseLegacyNotes(m.notes);
           const resolvedIcon = resolveMomentIcon(m.icon, legacyType);
@@ -82,6 +88,7 @@ function MomentsPage() {
         // is the safety net that keeps the page from being stuck on its
         // loading spinner forever with no error shown).
         logError("[moments] failed to load", err);
+        setError("Couldn't load your milestones. Please try again.");
         toast.error(err instanceof Error ? err.message : "Couldn't load your moments");
       } finally {
         if (!cancelled) setLoading(false);
@@ -90,7 +97,7 @@ function MomentsPage() {
     return () => {
       cancelled = true;
     };
-  }, [activeChildId]);
+  }, [activeChildId, childLoading, childError, reloadKey]);
 
   const filtered = useMemo(() => {
     let result = moments;
@@ -174,7 +181,7 @@ function MomentsPage() {
 
       <main className="flex-1 px-4 pt-6 sm:px-6">
         <div className="mx-auto max-w-md">
-          {loading ? (
+          {error ? <div role="alert" className="py-10 text-center"><p>{error}</p><Button className="mt-3" onClick={() => { void refresh(); setReloadKey(k => k + 1); }}>Try again</Button></div> : loading ? (
             <div className="py-10 text-center font-body text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
               Loading…
             </div>
