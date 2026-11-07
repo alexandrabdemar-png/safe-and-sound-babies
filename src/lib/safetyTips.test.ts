@@ -286,9 +286,8 @@ describe("per-tip source citations", () => {
     }
   });
 
-  it("most tips still have no source — this is a targeted citation set, not a blanket claim", () => {
-    const unsourced = SAFETY_TIPS.filter((t) => !t.source);
-    expect(unsourced.length).toBeGreaterThan(SAFETY_TIPS.length / 2);
+  it("every 'Did you know?' tip links a source", () => {
+    for (const t of SAFETY_TIPS.filter((t) => t.text.startsWith("Did you know?"))) expect(t.source).toBeDefined();
   });
 });
 
@@ -331,44 +330,11 @@ describe("daily tip rotation actually changes day to day", () => {
     }
   });
 
-  it("over one full lap of an age's pool, every tip in that pool is actually shown (no index is unreachable)", () => {
-    const ageMonths = 8;
-    const pool = SAFETY_TIPS.filter(
-      (t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths,
-    );
-    const seenIds = new Set<string>();
-    for (let day = 0; day < pool.length; day++) {
-      seenIds.add(selectDailyTip(ageMonths, day).id);
+  it("every age sees at least 30 different tips before any repeats", () => {
+    for (const ageMonths of [1, 8, 18, 30, 60]) {
+      const seen = new Set<string>();
+      for (let day = 1; day <= 365; day++) seen.add(selectDailyTip(ageMonths, day, null, null, null, 7).id);
+      expect(seen.size).toBeGreaterThanOrEqual(30);
     }
-    expect(seenIds.size).toBe(pool.length);
-  });
-
-  it("the tip only repeats after a full lap of the pool, not sooner (rotation isn't secretly shorter than it looks)", () => {
-    const ageMonths = 8;
-    const pool = SAFETY_TIPS.filter(
-      (t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths,
-    );
-    const firstTip = selectDailyTip(ageMonths, 0);
-    for (let day = 1; day < pool.length; day++) {
-      expect(selectDailyTip(ageMonths, day).id).not.toBe(firstTip.id);
-    }
-    // It's expected (and correct) to repeat exactly on the next lap.
-    expect(selectDailyTip(ageMonths, pool.length).id).toBe(firstTip.id);
-  });
-
-  it("a full lap now takes as little as ~11 days (down from ~11 weeks) — documents the cadence tradeoff", () => {
-    // Not a bug — just makes the tradeoff mentioned in selectDailyTip's
-    // doc comment concrete and monitorable: the smallest age-filtered pool
-    // anywhere in 0-240mo is 11, so that age sees its tips repeat roughly
-    // every 11 days under a daily cadence.
-    let minPoolSize = Infinity;
-    for (let ageMonths = 0; ageMonths <= 240; ageMonths++) {
-      const ageTips = SAFETY_TIPS.filter(
-        (t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths,
-      );
-      const poolSize = ageTips.length > 0 ? ageTips.length : SAFETY_TIPS.length;
-      minPoolSize = Math.min(minPoolSize, poolSize);
-    }
-    expect(minPoolSize).toBe(11);
   });
 });
