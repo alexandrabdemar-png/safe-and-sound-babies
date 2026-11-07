@@ -29,6 +29,7 @@ import { evaluateInsights, URGENCY_LABEL, type Insight, type ProductInput } from
 import { friendlyError, diagnosticDetail } from "@/lib/errors";
 import { useQuery } from "@tanstack/react-query";
 import { recallRadarQueryOptions } from "@/lib/recallRadarQuery";
+import { buildRecallTip } from "@/lib/recallTip";
 import { checkCriticalRecalls } from "@/lib/recallCheck";
 import { recordProductRecall } from "@/lib/recallRecord.functions";
 import { selectDailyTip, dayIndexFromDate, dayKey as getTipDayKey } from "@/lib/safetyTips";
@@ -677,7 +678,7 @@ function HomePage() {
       } = await supabase.auth.getSession();
       if (!sess?.user) return;
       const tip = child
-        ? selectDailyTip(
+        ? buildRecallTip(radar.data?.recalls) ?? selectDailyTip(
             null,
             dayIndexFromDate(),
             homeProfile?.has_stairs,
@@ -791,13 +792,15 @@ function HomePage() {
   // Daily safety tip
   const alertsPaused = notifPrefs.paused_until && new Date(notifPrefs.paused_until) > new Date();
   const showTipCard = !alertsPaused && !tipCompleted;
-  const dailyTip = selectDailyTip(
-    null,
-    dayIndexFromDate(),
-    homeProfile?.has_stairs,
-    homeProfile?.home_type,
-    homeProfile?.has_pool,
-  );
+  const dailyTip =
+    buildRecallTip(radar.data?.recalls) ??
+    selectDailyTip(
+      null,
+      dayIndexFromDate(),
+      homeProfile?.has_stairs,
+      homeProfile?.home_type,
+      homeProfile?.has_pool,
+    );
 
   // Low-urgency, informational nudges — daily tip, what's-new — get
   // bundled into a single compact digest once 2+ are active at the same
@@ -1441,7 +1444,16 @@ function DailySafetyTipCard({
           <p className="font-body text-[11px] font-semibold uppercase tracking-widest text-primary mb-1">
             Today's safety tip
           </p>
-          <p className="font-body text-sm text-foreground leading-relaxed">{tip.text}</p>
+          <p className="font-body text-sm text-foreground leading-relaxed">
+            {tip.text.startsWith("Did you know?") ? (
+              <>
+                <span className="font-semibold">Did you know?</span>
+                {tip.text.slice("Did you know?".length)}
+              </>
+            ) : (
+              tip.text
+            )}
+          </p>
           <div className="mt-3 flex items-center gap-2">
             <Button
               size="sm"
@@ -1460,9 +1472,8 @@ function DailySafetyTipCard({
             </Button>
           </div>
           <p className="mt-3 font-body text-[9px] italic leading-relaxed text-muted-foreground">
-            Written in-house from general child-safety guidance and rotated by your child's age —
-            not pulled live from CPSC, FDA, or any other database. Always confirm safety-critical
-            steps against current guidance from your pediatrician or the product manufacturer.
+            General guidance for families, not medical advice — check with your pediatrician or the
+            product manufacturer for your situation.
             {tip.source && (
               <>
                 {" "}
