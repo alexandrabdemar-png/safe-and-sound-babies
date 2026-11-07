@@ -1001,18 +1001,16 @@ function HomePage() {
           {totalAlerts === 0 ? (
             <Link
               to="/alerts"
-              className="flex items-center justify-between rounded-3xl border border-border/60 bg-card p-4 transition-all hover:border-primary/40"
+              className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card px-4 py-3.5 transition-colors hover:border-primary/40"
             >
-              <div>
-                <p className="font-display text-base font-semibold tracking-tight">
-                  ✨ You're all caught up
-                </p>
-                <p className="mt-0.5 font-body text-xs text-muted-foreground">
+              <div className="min-w-0">
+                <p className="font-body text-sm font-semibold">You're all caught up</p>
+                <p className="font-body text-[11px] text-muted-foreground">
                   No recalls, replacements, or size changes found right now — we'll flag it here if
                   that changes based on what we're able to check.
                 </p>
               </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
             </Link>
           ) : (
             <div className="grid grid-cols-2 gap-2.5">
