@@ -27,8 +27,9 @@ import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { evaluateInsights, URGENCY_LABEL, type Insight, type ProductInput } from "@/lib/insights";
 import { friendlyError, diagnosticDetail } from "@/lib/errors";
-import { isBabyRelated, fetchFdaBabyRecallCount, type CpscRecall } from "@/lib/cpscSearch";
-import { checkCriticalRecalls, CRITICAL_RECALLS } from "@/lib/recallCheck";
+import { useQuery } from "@tanstack/react-query";
+import { recallRadarQueryOptions } from "@/lib/recallRadarQuery";
+import { checkCriticalRecalls } from "@/lib/recallCheck";
 import { recordProductRecall } from "@/lib/recallRecord.functions";
 import { selectDailyTip, dayIndexFromDate, dayKey as getTipDayKey } from "@/lib/safetyTips";
 import { WHATS_NEW, LATEST_VERSION, whatsNewDismissalKey } from "@/lib/whatsNew";
@@ -131,11 +132,8 @@ function HomePage() {
     }
   });
 
-  // Recall radar: live 30-day CPSC count, cached daily
-  const [recallRadarCount, setRecallRadarCount] = useState<number | null>(null);
-
-  // FDA baby recall count (Wednesday only), cached daily
-  const [fdaRecallCount, setFdaRecallCount] = useState<number | null>(null);
+  const { user } = Route.useRouteContext();
+  const radar = useQuery(recallRadarQueryOptions(user.id));
 
   // Notification preferences (paused_until, expiry_advance_days) — the
   // daily safety tip has no "which day" setting to read here anymore
@@ -698,53 +696,6 @@ function HomePage() {
     } catch {}
   }
 
-  // Recall Radar: fetch 30-day CPSC baby recall count, cached daily
-  useEffect(() => {
-    const key = `safesound.recallRadar.${todayKey()}`;
-    try {
-      const cached = localStorage.getItem(key);
-      if (cached !== null) {
-        setRecallRadarCount(parseInt(cached, 10));
-        return;
-      }
-    } catch {}
-    const start30 = new Date();
-    start30.setDate(start30.getDate() - 30);
-    const startStr = start30.toISOString().slice(0, 10);
-    fetch(
-      `https://www.saferproducts.gov/RestWebServices/Recall?format=json&RecallDateStart=${startStr}`,
-    )
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data: CpscRecall[]) => {
-        const count = (Array.isArray(data) ? data : []).filter(isBabyRelated).length;
-        try {
-          localStorage.setItem(key, String(count));
-        } catch {}
-        setRecallRadarCount(count);
-      })
-      .catch(() => setRecallRadarCount(-1));
-  }, []);
-
-  // FDA recall count — fetched daily, cached per day
-  useEffect(() => {
-    const key = `safesound.fdaRecalls.${todayKey()}`;
-    try {
-      const cached = localStorage.getItem(key);
-      if (cached !== null) {
-        setFdaRecallCount(parseInt(cached, 10));
-        return;
-      }
-    } catch {}
-    fetchFdaBabyRecallCount(30)
-      .then((count) => {
-        try {
-          localStorage.setItem(key, String(count));
-        } catch {}
-        setFdaRecallCount(count);
-      })
-      .catch(() => setFdaRecallCount(0));
-  }, []);
-
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -917,6 +868,13 @@ function HomePage() {
       </header>
 
 
+      <section className="px-5 pt-3 sm:px-6" aria-label="Recall Radar">
+        <div className="mx-auto max-w-md">
+          <RecallRadarCard count={radar.isPending || radar.isError ? null : (radar.data?.visibleRecalls.length ?? 0)} matchedCount={alerts.recalls} childName={child?.name ?? "your child"} />
+          {radar.isError && <Button variant="outline" onClick={() => radar.refetch()}>Couldn't load recalls — Try again</Button>}
+        </div>
+      </section>
+
       {/* Home Personalization Setup — one-time, shown after onboarding */}
       {shouldShowHomeProfileCard(homeProfileSetup, homeProfileLoaded) && child && (
         <div className="px-5 pt-4 sm:px-6">
@@ -1004,19 +962,6 @@ function HomePage() {
                 <X className="h-4 w-4" />
               </button>
             </Link>
-          </div>
-        </div>
-      )}
-
-      {/* Recall Radar — live 30-day CPSC + FDA count, plus always-relevant critical recalls */}
-      {recallRadarCount !== null && recallRadarCount !== -1 && (
-        <div className="px-5 pt-3 sm:px-6">
-          <div className="mx-auto max-w-md">
-            <RecallRadarCard
-              count={recallRadarCount + (fdaRecallCount ?? 0) + CRITICAL_RECALLS.length}
-              matchedCount={alerts.recalls}
-              childName={child?.name ?? "your child"}
-            />
           </div>
         </div>
       )}
@@ -1209,7 +1154,7 @@ function SummaryTile({
   tone,
 }: {
   icon: React.ComponentType<{ className?: string }>;
-  count: number;
+  count: number | null;
   label: string;
   tone?: "danger" | "muted";
 }) {
@@ -1403,7 +1348,7 @@ export function RecallRadarCard({
   matchedCount,
   childName,
 }: {
-  count: number;
+  count: number | null;
   matchedCount: number;
   childName: string;
 }) {
@@ -1423,9 +1368,9 @@ export function RecallRadarCard({
           <div>
             <p className="font-body text-sm font-semibold">Recall Radar</p>
             <p className="font-body text-[11px] text-muted-foreground">
-              {count > 0
-                ? `${count} new recall${count > 1 ? "s" : ""} published this month, industry-wide`
-                : "No new recalls published this month, industry-wide"}
+              {count === null ? "Checking recalls…" : count > 0
+                ? `${count} new recall${count > 1 ? "s" : ""} to review, industry-wide`
+                : "No new recalls to review, industry-wide"}
             </p>
           </div>
         </div>
