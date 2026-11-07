@@ -90,16 +90,6 @@ function RecallRadarPage() {
 
   const visibleRecalls = query.data?.visibleRecalls ?? [];
 
-  return () => {
-      cancelled = true;
-    };
-  }, [reloadKey]);
-
-  const visibleRecalls = useMemo(
-    () => filterDismissedRecalls(recalls, dismissedIds),
-    [recalls, dismissedIds],
-  );
-
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28 animate-fade-in">
       <header className="px-5 pt-8 pb-4 sm:px-6">
