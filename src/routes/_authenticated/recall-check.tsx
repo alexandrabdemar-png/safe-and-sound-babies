@@ -9,7 +9,12 @@ import { searchCpsc, type CpscRecall } from "@/lib/cpscSearch";
 export const Route = createFileRoute("/_authenticated/recall-check")({
   ssr: false,
   component: RecallCheckPage,
-  head: () => ({ meta: [{ title: "Recall Check — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Recall Check in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Recall Check \u2014 Peace of Mine" },
+      { property: "og:description", content: "Recall Check in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Recall Check — Peace of Mine" }] }),
 });
 
 const BarcodeScanner = React.lazy(() =>

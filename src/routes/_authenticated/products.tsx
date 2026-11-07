@@ -19,7 +19,12 @@ import { isOnboardingPlaceholderProduct } from "@/lib/onboardingPlaceholderProdu
 export const Route = createFileRoute("/_authenticated/products")({
   ssr: false,
   component: ProductsPage,
-  head: () => ({ meta: [{ title: "Products — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Products in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Products \u2014 Peace of Mine" },
+      { property: "og:description", content: "Products in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Products — Peace of Mine" }] }),
 });
 
 type Product = {
@@ -80,7 +85,7 @@ function ProductsPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28 animate-fade-in">
       <header className="px-5 pt-10 pb-6 sm:px-6">
-        <div className="mx-auto flex max-w-md items-end justify-between">
+        <div className="mx-auto flex max-w-md flex-wrap items-end justify-between gap-3">
           <div>
             <p className="font-body text-xs font-semibold uppercase tracking-[0.2em] text-accent">
               Your baby gear

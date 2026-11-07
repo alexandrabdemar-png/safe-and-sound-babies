@@ -90,7 +90,12 @@ class SearchErrorBoundary extends Component<{ children: ReactNode }, { failed: b
 export const Route = createFileRoute("/_authenticated/products_/new")({
   ssr: false,
   component: NewProductPage,
-  head: () => ({ meta: [{ title: "Add product — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Add product in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Add product \u2014 Peace of Mine" },
+      { property: "og:description", content: "Add product in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Add product — Peace of Mine" }] }),
 });
 
 function toISODate(d: Date) {

@@ -8,6 +8,8 @@ export const Route = createFileRoute("/recalls")({
   component: PublicRecallsPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Latest Baby Product Recalls — Peace of Mine" },
       { name: "description", content: "Free list of CPSC baby and kids product recalls from the last 30 days. Updated daily. No login required." },
       { property: "og:title", content: "Latest Baby Product Recalls — Peace of Mine" },

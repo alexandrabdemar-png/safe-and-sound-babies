@@ -10,7 +10,12 @@ import { TRAVEL_SECTIONS } from "@/lib/travelChecklistData";
 export const Route = createFileRoute("/_authenticated/travel-checklist")({
   ssr: false,
   component: TravelChecklistPage,
-  head: () => ({ meta: [{ title: "Travel Checklist — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Travel Checklist in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Travel Checklist \u2014 Peace of Mine" },
+      { property: "og:description", content: "Travel Checklist in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Travel Checklist — Peace of Mine" }] }),
 });
 
 const STORAGE_KEY = "safesound.travelChecklist.v1";

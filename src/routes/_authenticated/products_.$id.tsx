@@ -29,7 +29,12 @@ import {
 export const Route = createFileRoute("/_authenticated/products_/$id")({
   ssr: false,
   component: ProductDetailPage,
-  head: () => ({ meta: [{ title: "Product — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Product in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Product \u2014 Peace of Mine" },
+      { property: "og:description", content: "Product in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Product — Peace of Mine" }] }),
 });
 type Product = {
   id: string;

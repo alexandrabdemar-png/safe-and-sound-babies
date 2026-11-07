@@ -28,7 +28,8 @@ import { extractFunctionsErrorMessage } from "@/lib/functionsError";
 import { DevRoleSwitcher } from "@/components/DevRoleSwitcher";
 import { amICatalogAdmin } from "@/lib/catalogModeration.functions";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { settleWithin } from '@/lib/promiseTimeout';
 
 
 
@@ -36,11 +37,17 @@ import { useQuery } from "@tanstack/react-query";
 export const Route = createFileRoute("/_authenticated/profile")({
   ssr: false,
   component: ProfilePage,
-  head: () => ({ meta: [{ title: "Profile — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Profile in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Profile \u2014 Peace of Mine" },
+      { property: "og:description", content: "Profile in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Profile — Peace of Mine" }] }),
 });
 
 function ProfilePage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [email, setEmail] = useState<string | null>(null);
   const checkCatalogAdmin = useServerFn(amICatalogAdmin);
   const catalogAdmin = useQuery({
@@ -64,9 +71,14 @@ function ProfilePage() {
   }, []);
 
   async function signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) toast.error(error.message);
-    else { toast.success("Signed out"); navigate({ to: "/auth" }); }
+    try {
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      const { error } = await settleWithin(supabase.auth.signOut({ scope: 'local' }), 10000, 'Sign-out');
+      if (error) throw error;
+      toast.success("Signed out");
+      navigate({ to: "/auth", replace: true });
+    } catch (error) { toast.error(error instanceof Error ? error.message : 'Could not sign out. Please try again.'); }
   }
 
   async function handleManage() {

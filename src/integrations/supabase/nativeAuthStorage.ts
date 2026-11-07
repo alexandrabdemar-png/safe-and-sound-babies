@@ -83,11 +83,13 @@ export function keychainBackedStorage(
   local: Storage = localStorage,
   getKeychain: () => Promise<KeychainData | null> = keychain,
 ): AuthStorage {
+  let pendingWrite: Promise<unknown> = Promise.resolve();
   return {
     async getItem(key) {
       const value = local.getItem(key);
       if (value !== null) return value;
       try {
+        await pendingWrite;
         const saved = (
           await withKeychain(getKeychain, (kc) => kc.getData({ key: KEY_PREFIX + key }))
         )?.value;
@@ -98,17 +100,15 @@ export function keychainBackedStorage(
         return null; // nothing saved yet, or no Keychain in this build
       }
     },
-    async setItem(key, value) {
+    setItem(key, value) {
       local.setItem(key, value);
-      try {
-        await withKeychain(getKeychain, (kc) => kc.setData({ key: KEY_PREFIX + key, value }));
-      } catch {
-        /* localStorage copy still stands */
-      }
+      // Never hold the auth lock while waiting for a native write.
+      pendingWrite = pendingWrite.then(() => withKeychain(getKeychain, (kc) => kc.setData({ key: KEY_PREFIX + key, value }))).catch(() => {});
     },
     async removeItem(key) {
       local.removeItem(key);
       try {
+        await pendingWrite;
         await withKeychain(getKeychain, (kc) => kc.deleteData({ key: KEY_PREFIX + key }));
       } catch {
         /* already gone */

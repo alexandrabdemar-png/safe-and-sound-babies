@@ -25,6 +25,11 @@ export const Route = createFileRoute("/auth-diagnostics")({
   component: AuthDiagnosticsPage,
   head: () => ({
     meta: [
+      { name: "description", content: "Sign-in diagnostics in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Sign-in diagnostics \u2014 Peace of Mine" },
+      { property: "og:description", content: "Sign-in diagnostics in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Sign-in diagnostics — Peace of Mine" },
       { name: "robots", content: "noindex" },
     ],

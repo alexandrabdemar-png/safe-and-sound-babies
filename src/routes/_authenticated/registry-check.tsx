@@ -9,7 +9,12 @@ import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 export const Route = createFileRoute("/_authenticated/registry-check")({
   ssr: false,
   component: RegistryCheckPage,
-  head: () => ({ meta: [{ title: "Recall Check — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Registry Recall Check in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Registry Recall Check \u2014 Peace of Mine" },
+      { property: "og:description", content: "Registry Recall Check in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Registry Recall Check — Peace of Mine" }] }),
 });
 
 function RegistryCheckPage() {

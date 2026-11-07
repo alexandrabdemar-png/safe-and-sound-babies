@@ -343,4 +343,12 @@ function ChecklistsPage() {
 export const Route = createFileRoute("/_authenticated/checklists")({
   component: ChecklistsPage,
   ssr: false,
+  head: () => ({ meta: [
+    { title: 'Safety Checklists — Peace of Mine' },
+    { name: 'description', content: 'Your room-by-room baby safety checklists and saved progress in Peace of Mine.' },
+    { property: 'og:title', content: 'Safety Checklists — Peace of Mine' },
+    { property: 'og:description', content: 'Baby safety checklists and saved progress in Peace of Mine.' },
+    { property: 'og:type', content: 'website' },
+    { name: 'twitter:card', content: 'summary' },
+  ] }),
 });

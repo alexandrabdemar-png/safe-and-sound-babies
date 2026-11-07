@@ -38,7 +38,12 @@ const DISMISSED_4DAY_KEY = "safesound.dismissed4DayReminder";
 export const Route = createFileRoute("/_authenticated/first-foods")({
   ssr: false,
   component: FirstFoodsPage,
-  head: () => ({ meta: [{ title: "Food Log — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Food Log in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Food Log \u2014 Peace of Mine" },
+      { property: "og:description", content: "Food Log in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Food Log — Peace of Mine" }] }),
 });
 
 import { TOP_ALLERGENS, type Allergen } from "@/lib/topAllergens";
@@ -537,7 +542,7 @@ function FirstFoodsPage() {
       {/* Header */}
       <header className="px-5 pt-10 pb-4 sm:px-6">
         <div className="mx-auto max-w-md">
-          <div className="mb-4 flex items-center gap-3">
+          <div className="mb-4 flex flex-wrap items-center gap-3">
             <button
               type="button"
               onClick={() => navigate({ to: "/tracking" })}

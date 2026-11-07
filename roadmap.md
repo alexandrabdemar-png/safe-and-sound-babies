@@ -6,3 +6,9 @@
 - [ ] Complete physical-iPhone sandbox recording and App Store resubmission (requires owner’s device and Apple account)
 
 - [x] Receipt import for products/foods (Pro, with recall-accuracy warning)
+- [x] Bound email authentication to 10 seconds and preserve webview sessions
+- [ ] Enable immediate signup (blocked: current hosted auth settings cannot be read by available tools; owner must enable Auto-confirm email)
+- [x] Fix stalled Track/Milestones and bounded page loading with retry
+- [x] Share Recall Radar count/list and move home card first
+- [x] Test every mobile tab, Add, sign-out, invalid login, stalled login, and Milestones retry
+- [ ] Verify successful fresh email signup/login and physical iOS session persistence (requires auto-confirm setting and device)

@@ -7,7 +7,12 @@ import { SUPPORT_EMAIL } from "@/lib/constants";
 export const Route = createFileRoute("/_authenticated/profile_/privacy-policy")({
   ssr: false,
   component: PrivacyPolicyPage,
-  head: () => ({ meta: [{ title: "Privacy Policy — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Account Privacy Policy in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Account Privacy Policy \u2014 Peace of Mine" },
+      { property: "og:description", content: "Account Privacy Policy in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Account Privacy Policy — Peace of Mine" }] }),
 });
 
 function PrivacyPolicyPage() {

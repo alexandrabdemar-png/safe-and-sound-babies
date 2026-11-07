@@ -7,6 +7,8 @@ import { AddSheet } from "@/components/AddSheet";
 import { BottleIcon } from "@/components/BottleIcon";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { supabase } from "@/integrations/supabase/client";
+import { settleWithin } from '@/lib/promiseTimeout';
+import { Button } from '@/components/ui/button';
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { allergensTriedCount, uniqueFoodCount, weekStats, type FoodLogRow } from "@/lib/foodLog";
 import {
@@ -60,7 +62,9 @@ const EMPTY: Summaries = {
 };
 
 function TrackingPage() {
-  const { activeChild, loading: childLoading } = useActiveChild();
+  const { activeChild, loading: childLoading, error: childError, refresh } = useActiveChild();
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const [summaries, setSummaries] = useState<Summaries>(EMPTY);
   const [addOpen, setAddOpen] = useState(false);
 
@@ -74,6 +78,7 @@ function TrackingPage() {
 
   useEffect(() => {
     if (childLoading) return;
+    setError(childError);
     const childId = activeChild?.id;
     const nowIso = new Date().toISOString();
 
@@ -81,7 +86,7 @@ function TrackingPage() {
     // migration hasn't reached yet) must not blank the other cards, so
     // every query is settled separately and falls back to its static blurb.
     (async () => {
-      const [foods, bottlesActive, bottlesLast, moments, checklists] = await Promise.all([
+      const [foods, bottlesActive, bottlesLast, moments, checklists] = await settleWithin(Promise.all([
         childId
           ? supabase
               .from("first_foods")
@@ -106,9 +111,10 @@ function TrackingPage() {
               .order("logged_at", { ascending: false })
           : Promise.resolve({ data: null, error: null }),
         supabase.from("checklist_completions").select("id", { count: "exact", head: true }),
-      ]);
+      ]), 10000, 'Tracking history');
 
       if (!mountedRef.current) return;
+      if ([foods, bottlesActive, bottlesLast, moments, checklists].some(r => r.error)) setError("Some history couldn't load. Please try again.");
 
       const foodRows = (foods.data ?? []) as FoodLogRow[];
       const momentRows = (moments.data ?? []) as { logged_at: string | null }[];
@@ -129,8 +135,8 @@ function TrackingPage() {
           : momentsSummary(momentRows.length, momentRows[0]?.logged_at ?? null),
         checklists: checklists.error ? null : checklistsSummary(checklists.count ?? 0),
       });
-    })().catch((err) => logError("[tracking] failed to load summaries", err));
-  }, [childLoading, activeChild?.id]);
+    })().catch((err) => { logError("[tracking] failed to load summaries", err); if (mountedRef.current) setError("Couldn't load your history. Please try again."); });
+  }, [childLoading, activeChild?.id, childError, reloadKey]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28 animate-fade-in">
@@ -150,6 +156,7 @@ function TrackingPage() {
       </header>
 
       <main className="px-5 sm:px-6">
+        {error && <div role="alert" className="mx-auto mb-4 max-w-md"><p className="text-sm text-destructive">{error}</p><Button variant="outline" className="mt-2" onClick={() => { void refresh(); setReloadKey(k => k + 1); }}>Try again</Button></div>}
         <div className="mx-auto max-w-md space-y-3">
           <TrackCard
             to="/moments"

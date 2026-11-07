@@ -5,6 +5,7 @@ import { computeIsPro } from '@/lib/isPro';
 import { pickSubscription } from '@/lib/pickSubscription';
 import type { SubscriptionRow } from '@/lib/pickSubscription';
 import { PAYWALL_DISABLED } from '@/lib/paywallConfig';
+import { settleWithin } from '@/lib/promiseTimeout';
 
 export type { SubscriptionRow };
 
@@ -60,7 +61,7 @@ export function useSubscription() {
 
 
     async function load() {
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData } = await settleWithin(supabase.auth.getUser(), 10000, 'Subscription sign-in');
       userIdLocal = userData.user?.id ?? null;
       if (!userIdLocal) {
         if (!cancelled) { setSubscription(null); setLoading(false); }
@@ -81,7 +82,10 @@ export function useSubscription() {
         }, () => { refetch(); })
         .subscribe();
     }
-    load();
+    load().catch((error) => {
+      console.error('[useSubscription] could not load plan', error instanceof Error ? error.message : 'Request failed');
+      if (!cancelled) setLoading(false);
+    });
 
     return () => {
       cancelled = true;

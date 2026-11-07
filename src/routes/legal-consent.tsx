@@ -9,12 +9,18 @@ import { CURRENT_TERMS_VERSION, markLegalConsentCleared } from "@/lib/legalConse
 import { friendlyError, isColumnUnavailableError, isSchemaMissingTableError } from "@/lib/errors";
 import { parseNextParam } from "@/lib/authCallbackRouting";
 import { logError } from "@/lib/sanitize-error";
+import { settleWithin } from '@/lib/promiseTimeout';
 
 export const Route = createFileRoute("/legal-consent")({
   ssr: false,
   component: LegalConsentPage,
   head: () => ({
-    meta: [{ title: "Please review — Peace of Mine" }],
+    meta: [
+      { name: "description", content: "Please review in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Please review \u2014 Peace of Mine" },
+      { property: "og:description", content: "Please review in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Please review — Peace of Mine" }],
   }),
   validateSearch: (s: Record<string, unknown>): { next?: string } => ({
     next: typeof s.next === "string" ? s.next : undefined,
@@ -70,14 +76,14 @@ function LegalConsentPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    settleWithin(supabase.auth.getSession(), 10000, 'Session').then(({ data }) => {
       if (!data.session) {
         navigate({ to: "/auth" });
         return;
       }
       setUserId(data.session.user.id);
       setChecking(false);
-    });
+    }).catch(() => navigate({ to: '/auth', search: { error: 'Could not restore your sign-in. Please try again.' } }));
   }, [navigate]);
 
   async function handleContinue() {

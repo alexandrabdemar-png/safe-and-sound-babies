@@ -31,6 +31,13 @@ function fakeKeychain() {
 }
 
 describe("keychainBackedStorage", () => {
+  it('writes localStorage immediately even when the native backup stalls', async () => {
+    const local = memoryStorage();
+    const storage = keychainBackedStorage(local, async () => new Promise(() => {}));
+    expect(storage.setItem('sb-auth-token', 'saved-session')).toBeUndefined();
+    expect(local.getItem('sb-auth-token')).toBe('saved-session');
+    expect(await storage.getItem('sb-auth-token')).toBe('saved-session');
+  });
   it("restores the login from the Keychain after iOS clears localStorage", async () => {
     const local = memoryStorage();
     const kc = fakeKeychain();

@@ -13,7 +13,12 @@ import { diagnosticDetail } from "@/lib/errors";
 export const Route = createFileRoute("/_authenticated/emergency-info")({
   ssr: false,
   component: EmergencyInfoPage,
-  head: () => ({ meta: [{ title: "Emergency Info — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Emergency Info in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Emergency Info \u2014 Peace of Mine" },
+      { property: "og:description", content: "Emergency Info in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Emergency Info — Peace of Mine" }] }),
 });
 
 interface Child {

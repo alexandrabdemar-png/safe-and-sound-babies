@@ -20,6 +20,7 @@ import { Loader2 } from "lucide-react";
 export const Route = createFileRoute("/auth/callback")({
   ssr: false,
   component: AuthCallbackPage,
+  head: () => ({ meta: [{ title: "Complete sign-in — Peace of Mine" }, { name: "description", content: "Complete your Peace of Mine sign-in." }, { property: "og:title", content: "Complete sign-in — Peace of Mine" }, { property: "og:description", content: "Complete your Peace of Mine sign-in." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 function getNextParam(): string | null {

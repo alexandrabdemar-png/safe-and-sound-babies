@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createAuthFetch } from "./authFetch";
+import { createAuthFetch, AUTH_REQUEST_TIMEOUT_MS } from "./authFetch";
 import { clearAuthDiagnostics, readAuthDiagnostics } from "@/lib/authDiagnostics";
 
 function memoryLocalStorage() {
@@ -50,15 +50,26 @@ describe("createAuthFetch", () => {
     });
   });
 
-  it("leaves database, storage and function requests alone", async () => {
+  it("aborts a stalled data request instead of loading forever", async () => {
     vi.useFakeTimers();
     const base = stalledFetch();
     const authFetch = createAuthFetch(base as unknown as typeof fetch, 20000);
-    let settled = false;
-    void authFetch("https://x.supabase.co/functions/v1/ai-advice").finally(() => (settled = true));
-    await vi.advanceTimersByTimeAsync(60000);
-    expect(settled).toBe(false);
-    expect(base.mock.calls[0][1]).toBeUndefined(); // passed through untouched
+    const req = authFetch("https://x.supabase.co/rest/v1/children");
+    const assertion = expect(req).rejects.toThrow('Data request timed out after 15000ms');
+    await vi.advanceTimersByTimeAsync(15000);
+    await assertion;
+    expect(base.mock.calls[0][1]?.signal?.aborted).toBe(true);
+  });
+
+  it('uses the requested 10 second auth limit by default', async () => {
+    vi.useFakeTimers();
+    expect(AUTH_REQUEST_TIMEOUT_MS).toBe(10000);
+    const req = createAuthFetch(stalledFetch() as typeof fetch)(AUTH_URL);
+    const assertion = expect(req).rejects.toThrow('10000ms');
+    await vi.advanceTimersByTimeAsync(9999);
+    expect(readAuthDiagnostics()).toHaveLength(0);
+    await vi.advanceTimersByTimeAsync(1);
+    await assertion;
   });
 
   it("logs the status code and duration, without query values", async () => {

@@ -95,7 +95,7 @@ async function restore() {
   }
 
   try {
-    const { data } = await supabase.auth.getSession();
+    const { data } = await settleWithin(supabase.auth.getSession(), 10000, 'Saved session');
     if (data.session) {
       launchReport("signed-in=yes");
       await Preferences.set({ key: KEY, value: data.session.refresh_token });
@@ -106,7 +106,7 @@ async function restore() {
       launchReport("signed-in=no backup=none");
       return;
     }
-    const { error } = await supabase.auth.refreshSession({ refresh_token: value });
+    const { error } = await settleWithin(supabase.auth.refreshSession({ refresh_token: value }), 10000, 'Session refresh');
     launchReport(`signed-in=${error ? "no" : "restored"} backup=yes${error ? ` error=${error.status ?? "?"}` : ""}`);
     // Only forget the backup when the server says it's no longer valid —
     // a slow or dropped connection at launch must not log the user out

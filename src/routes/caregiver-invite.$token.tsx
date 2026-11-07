@@ -9,6 +9,8 @@ export const Route = createFileRoute("/caregiver-invite/$token")({
   component: CaregiverInvitePage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Caregiver Invite — Peace of Mine" },
       { name: "description", content: "You've been invited as a caregiver on Peace of Mine — sign in to accept access to a child's profile and help track their safety." },
       { property: "og:title", content: "Caregiver Invite — Peace of Mine" },
