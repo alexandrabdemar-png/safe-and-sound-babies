@@ -1,4 +1,5 @@
 import { ensureNativeSessionRestored } from "@/lib/nativeSessionBackup";
+import { settleWithin } from '@/lib/promiseTimeout';
 import { isNativeApp } from "@/lib/isNativeApp";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useState } from "react";
@@ -89,8 +90,8 @@ function Index() {
   useLayoutEffect(() => {
     if (!isNativeApp()) return;
     setNativeSplash(true);
-    ensureNativeSessionRestored()
-      .then(() => supabase.auth.getSession())
+    settleWithin(ensureNativeSessionRestored()
+      .then(() => supabase.auth.getSession()), 10000, 'App sign-in')
       .then(({ data }) => navigate({ to: data.session ? "/home" : "/auth", replace: true }))
       .catch(() => navigate({ to: "/auth", replace: true }));
   }, [navigate]);

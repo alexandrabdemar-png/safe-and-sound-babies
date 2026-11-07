@@ -24,9 +24,11 @@ export function PageReliability({ children }: { children: ReactNode }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => {
     const original = window.fetch;
+    let pageGeneration = 0;
     const bounded: typeof fetch = async (input, init) => {
       const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
       const auth = url.includes('/auth/v1/');
+      const generation = pageGeneration;
       const controller = new AbortController();
       const signal = init?.signal ?? (input instanceof Request ? input.signal : undefined);
       const abort = () => controller.abort();
@@ -35,18 +37,30 @@ export function PageReliability({ children }: { children: ReactNode }) {
       try {
         // Image analysis legitimately takes longer than small page reads.
         const ms = auth ? 10000 : /receipt|image|ai-advice/.test(url) ? 60000 : 15000;
-        return await settleWithin(original.call(window, input, { ...init, signal: controller.signal }), ms, 'Request');
+        const response = await settleWithin(original.call(window, input, { ...init, signal: controller.signal }), ms, 'Request');
+        if (!auth && response.status >= 500 && generation === pageGeneration) setFailed(true);
+        return response;
       } catch (error) {
         if (error instanceof Error && /timed out/i.test(error.message)) {
           abort();
-          if (!auth) setFailed(true);
+          if (!auth && generation === pageGeneration) setFailed(true);
         }
         throw error;
       } finally { signal?.removeEventListener('abort', abort); }
     };
     window.fetch = bounded;
-    const unsub = router.subscribe('onResolved', () => setFailed(false));
-    return () => { window.fetch = original; unsub(); };
+    let timer: ReturnType<typeof setTimeout>;
+    const startWatchdog = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const text = document.body.innerText;
+        const spinner = document.querySelector('main .animate-spin, [role="status"] .animate-spin');
+        if (/(^|\n)\s*Loading(?:…|\.\.\.|\s)/i.test(text) || (spinner && !document.querySelector('main h1, main h2'))) setFailed(true);
+      }, 20000);
+    };
+    startWatchdog();
+    const unsub = router.subscribe('onResolved', () => { pageGeneration++; setFailed(false); startWatchdog(); });
+    return () => { window.fetch = original; unsub(); clearTimeout(timer); };
   }, [router]);
   if (failed) return <div role="alert" className="mx-auto max-w-md px-6 py-16 text-center">
     <h1 className="font-display text-xl">This page took too long to load</h1>

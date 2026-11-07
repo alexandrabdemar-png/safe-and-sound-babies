@@ -8,9 +8,9 @@
 // hits, the request is aborted; supabase-js then returns an ordinary error,
 // which the UI already handles.
 //
-// Only /auth/v1/ requests get the limit. Database queries, storage uploads
-// and edge functions (some legitimately slow, like AI calls) are untouched.
+// Auth is bounded at 10 seconds; ordinary data reads at 15 seconds.
 import { recordAuthDiagnostic } from "@/lib/authDiagnostics";
+import { settleWithin } from '@/lib/promiseTimeout';
 
 type Fetch = typeof fetch;
 
@@ -64,8 +64,8 @@ export function createAuthFetch(
 
     const started = Date.now();
     try {
-      const res = await baseFetch(input, { ...init, signal: controller.signal });
-      recordAuthDiagnostic("request", `${label} → ${res.status} (${Date.now() - started}ms)`);
+      const res = await settleWithin(baseFetch(input, { ...init, signal: controller.signal }), requestTimeout, isAuth ? 'Auth request' : 'Data request');
+      if (isAuth) recordAuthDiagnostic("request", `${label} → ${res.status} (${Date.now() - started}ms)`);
       return res;
     } catch (err) {
       if (timedOut) {

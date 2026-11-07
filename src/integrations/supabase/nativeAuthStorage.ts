@@ -98,13 +98,10 @@ export function keychainBackedStorage(
         return null; // nothing saved yet, or no Keychain in this build
       }
     },
-    async setItem(key, value) {
+    setItem(key, value) {
       local.setItem(key, value);
-      try {
-        await withKeychain(getKeychain, (kc) => kc.setData({ key: KEY_PREFIX + key, value }));
-      } catch {
-        /* localStorage copy still stands */
-      }
+      // Never hold the auth lock while waiting for a native write.
+      void withKeychain(getKeychain, (kc) => kc.setData({ key: KEY_PREFIX + key, value })).catch(() => {});
     },
     async removeItem(key) {
       local.removeItem(key);

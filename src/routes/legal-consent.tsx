@@ -9,6 +9,7 @@ import { CURRENT_TERMS_VERSION, markLegalConsentCleared } from "@/lib/legalConse
 import { friendlyError, isColumnUnavailableError, isSchemaMissingTableError } from "@/lib/errors";
 import { parseNextParam } from "@/lib/authCallbackRouting";
 import { logError } from "@/lib/sanitize-error";
+import { settleWithin } from '@/lib/promiseTimeout';
 
 export const Route = createFileRoute("/legal-consent")({
   ssr: false,
@@ -70,14 +71,14 @@ function LegalConsentPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    settleWithin(supabase.auth.getSession(), 10000, 'Session').then(({ data }) => {
       if (!data.session) {
         navigate({ to: "/auth" });
         return;
       }
       setUserId(data.session.user.id);
       setChecking(false);
-    });
+    }).catch(() => navigate({ to: '/auth', search: { error: 'Could not restore your sign-in. Please try again.' } }));
   }, [navigate]);
 
   async function handleContinue() {
