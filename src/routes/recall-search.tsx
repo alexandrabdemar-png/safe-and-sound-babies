@@ -12,6 +12,8 @@ export const Route = createFileRoute("/recall-search")({
   component: PublicRecallSearchPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Recall Search — Peace of Mine" },
       {
         name: "description",

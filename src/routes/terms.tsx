@@ -19,6 +19,8 @@ const TERMS_LAST_UPDATED = new Date(`${CURRENT_TERMS_VERSION}T00:00:00Z`).toLoca
 export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Terms & Conditions — Peace of Mine" },
       { name: "description", content: "Read the Peace of Mine terms and conditions covering suggestions-only guidance, user responsibility, and limitations of liability for our baby safety tracking app." },
       { property: "og:title", content: "Terms & Conditions — Peace of Mine" },

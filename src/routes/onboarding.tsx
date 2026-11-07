@@ -50,6 +50,8 @@ export const Route = createFileRoute("/onboarding")({
   component: OnboardingPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Welcome — Peace of Mine" },
       {
         name: "description",

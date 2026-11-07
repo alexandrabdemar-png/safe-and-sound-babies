@@ -18,7 +18,12 @@ export const Route = createFileRoute(
 )({
   ssr: false,
   component: NotificationSettingsPage,
-  head: () => ({ meta: [{ title: "Notification Settings — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Notification Settings in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Notification Settings \u2014 Peace of Mine" },
+      { property: "og:description", content: "Notification Settings in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Notification Settings — Peace of Mine" }] }),
 });
 
 type AlertSettings = {

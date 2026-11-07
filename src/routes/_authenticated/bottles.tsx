@@ -21,7 +21,12 @@ import {
 export const Route = createFileRoute("/_authenticated/bottles")({
   ssr: false,
   component: BottlesPage,
-  head: () => ({ meta: [{ title: "Bottles — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Bottles in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Bottles \u2014 Peace of Mine" },
+      { property: "og:description", content: "Bottles in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Bottles — Peace of Mine" }] }),
 });
 
 type Bottle = {

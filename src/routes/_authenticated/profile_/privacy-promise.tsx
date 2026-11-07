@@ -8,7 +8,12 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated/profile_/privacy-promise")({
   ssr: false,
   component: PrivacyPromisePage,
-  head: () => ({ meta: [{ title: "Privacy Promise — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Privacy Promise in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Privacy Promise \u2014 Peace of Mine" },
+      { property: "og:description", content: "Privacy Promise in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Privacy Promise — Peace of Mine" }] }),
 });
 
 const PROMISES = [

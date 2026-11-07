@@ -38,7 +38,12 @@ export { type SafetyTip, MOMENT_SAFETY_MAP, getSafetyTip, getMilestoneKey };
 export const Route = createFileRoute("/_authenticated/moments_/new")({
   ssr: false,
   component: NewMomentPage,
-  head: () => ({ meta: [{ title: "Log a moment — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Log a moment in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Log a moment \u2014 Peace of Mine" },
+      { property: "og:description", content: "Log a moment in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Log a moment — Peace of Mine" }] }),
 });
 
 export const PROMPTS = [

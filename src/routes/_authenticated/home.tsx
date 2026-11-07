@@ -52,7 +52,12 @@ import { SoftBlob } from "@/components/SoftBlob";
 export const Route = createFileRoute("/_authenticated/home")({
   ssr: false,
   component: HomePage,
-  head: () => ({ meta: [{ title: "Home — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Home in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Home \u2014 Peace of Mine" },
+      { property: "og:description", content: "Home in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Home — Peace of Mine" }] }),
 });
 
 type Child = {

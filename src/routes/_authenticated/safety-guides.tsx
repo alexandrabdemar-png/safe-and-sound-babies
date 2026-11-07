@@ -10,7 +10,12 @@ import { SUPPORT_EMAIL } from "@/lib/constants";
 export const Route = createFileRoute("/_authenticated/safety-guides")({
   ssr: false,
   component: SafetyGuidesPage,
-  head: () => ({ meta: [{ title: "Safety Guides — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Safety Guides in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Safety Guides \u2014 Peace of Mine" },
+      { property: "og:description", content: "Safety Guides in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Safety Guides — Peace of Mine" }] }),
 });
 
 export const SAFETY_MILESTONES = [

@@ -22,7 +22,12 @@ import {
 export const Route = createFileRoute("/_authenticated/moments")({
   ssr: false,
   component: MomentsPage,
-  head: () => ({ meta: [{ title: "Memory Book — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Memory Book in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Memory Book \u2014 Peace of Mine" },
+      { property: "og:description", content: "Memory Book in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Memory Book — Peace of Mine" }] }),
 });
 
 type RawMoment = {

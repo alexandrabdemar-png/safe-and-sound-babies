@@ -28,6 +28,8 @@ import catBabyfood from "@/assets/hd-babyfood.png";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Peace of Mine — Baby Safety Tracking" },
       {
         name: "description",

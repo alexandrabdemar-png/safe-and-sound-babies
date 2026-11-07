@@ -16,6 +16,8 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Sign in — Peace of Mine" },
       { name: "description", content: "Sign in or create your Peace of Mine account to start tracking your little one's milestones, products, and safety recalls." },
       { property: "og:title", content: "Sign in — Peace of Mine" },

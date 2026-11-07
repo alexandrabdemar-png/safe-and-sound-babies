@@ -37,7 +37,12 @@ import { settleWithin } from '@/lib/promiseTimeout';
 export const Route = createFileRoute("/_authenticated/profile")({
   ssr: false,
   component: ProfilePage,
-  head: () => ({ meta: [{ title: "Profile — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Profile in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Profile \u2014 Peace of Mine" },
+      { property: "og:description", content: "Profile in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Profile — Peace of Mine" }] }),
 });
 
 function ProfilePage() {

@@ -14,6 +14,8 @@ import { PRIVACY_POLICY, PRIVACY_POLICY_UPDATED } from "@/lib/privacy-policy";
 export const Route = createFileRoute("/privacy-policy")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Privacy Policy — Peace of Mine" },
       {
         name: "description",

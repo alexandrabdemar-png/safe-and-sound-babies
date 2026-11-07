@@ -24,7 +24,12 @@ import {
 export const Route = createFileRoute("/_authenticated/bottles_/new")({
   ssr: false,
   component: NewBottlePage,
-  head: () => ({ meta: [{ title: "Log a bottle — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Log a bottle in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Log a bottle \u2014 Peace of Mine" },
+      { property: "og:description", content: "Log a bottle in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Log a bottle — Peace of Mine" }] }),
 });
 
 function NewBottlePage() {

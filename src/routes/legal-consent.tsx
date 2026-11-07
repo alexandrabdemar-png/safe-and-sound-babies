@@ -15,7 +15,12 @@ export const Route = createFileRoute("/legal-consent")({
   ssr: false,
   component: LegalConsentPage,
   head: () => ({
-    meta: [{ title: "Please review — Peace of Mine" }],
+    meta: [
+      { name: "description", content: "Please review in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Please review \u2014 Peace of Mine" },
+      { property: "og:description", content: "Please review in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Please review — Peace of Mine" }],
   }),
   validateSearch: (s: Record<string, unknown>): { next?: string } => ({
     next: typeof s.next === "string" ? s.next : undefined,

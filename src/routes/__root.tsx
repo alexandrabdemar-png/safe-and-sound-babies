@@ -97,15 +97,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Stay on top of safety — track recalls, milestones, and product safety for your baby." },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Peace of Mine" },
-      { property: "og:image", content: "https://peace-of-mine.lovable.app/app-icon-1024.png" },
-      { property: "og:image:width", content: "1024" },
-      { property: "og:image:height", content: "1024" },
       // Twitter / X
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@PeaceOfMineApp" },
       { name: "twitter:title", content: "Peace of Mine — Baby Safety Tracking" },
       { name: "twitter:description", content: "Stay on top of safety — track recalls, milestones, and product safety for your baby." },
-      { name: "twitter:image", content: "https://peace-of-mine.lovable.app/app-icon-1024.png" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },

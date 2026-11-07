@@ -19,7 +19,12 @@ import { isOnboardingPlaceholderProduct } from "@/lib/onboardingPlaceholderProdu
 export const Route = createFileRoute("/_authenticated/products")({
   ssr: false,
   component: ProductsPage,
-  head: () => ({ meta: [{ title: "Products — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Products in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Products \u2014 Peace of Mine" },
+      { property: "og:description", content: "Products in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Products — Peace of Mine" }] }),
 });
 
 type Product = {

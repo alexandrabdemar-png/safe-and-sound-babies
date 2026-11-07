@@ -16,7 +16,12 @@ import { computeBlockedRuleIds } from "@/lib/insightDismissals";
 export const Route = createFileRoute("/_authenticated/alerts")({
   ssr: false,
   component: AlertsPage,
-  head: () => ({ meta: [{ title: "Alerts — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Alerts in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Alerts \u2014 Peace of Mine" },
+      { property: "og:description", content: "Alerts in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Alerts — Peace of Mine" }] }),
 });
 
 type Product = {

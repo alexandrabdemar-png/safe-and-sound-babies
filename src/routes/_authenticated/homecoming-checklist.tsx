@@ -8,7 +8,12 @@ import { hapticSuccess, hapticLight } from "@/lib/haptic";
 export const Route = createFileRoute("/_authenticated/homecoming-checklist")({
   ssr: false,
   component: HomecomingChecklistPage,
-  head: () => ({ meta: [{ title: "Bringing Baby Home — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Bringing Baby Home in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Bringing Baby Home \u2014 Peace of Mine" },
+      { property: "og:description", content: "Bringing Baby Home in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Bringing Baby Home — Peace of Mine" }] }),
 });
 
 export interface HomecomingItem {

@@ -26,7 +26,12 @@ import { useActiveChild } from "@/hooks/useActiveChild";
 export const Route = createFileRoute("/_authenticated/products_/scan")({
   ssr: false,
   component: ScanPage,
-  head: () => ({ meta: [{ title: "Scan a barcode — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Scan a barcode in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Scan a barcode \u2014 Peace of Mine" },
+      { property: "og:description", content: "Scan a barcode in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Scan a barcode — Peace of Mine" }] }),
 });
 
 import {

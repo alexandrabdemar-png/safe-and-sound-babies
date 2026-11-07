@@ -6,7 +6,12 @@ import { SUPPORT_EMAIL } from "@/lib/constants";
 export const Route = createFileRoute("/_authenticated/profile_/support")({
   ssr: false,
   component: SupportPage,
-  head: () => ({ meta: [{ title: "Help & Support — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Help & Support in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Help & Support \u2014 Peace of Mine" },
+      { property: "og:description", content: "Help & Support in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Help & Support — Peace of Mine" }] }),
 });
 
 const FAQ = [

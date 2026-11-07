@@ -35,7 +35,12 @@ import {
 export const Route = createFileRoute("/_authenticated/recall-radar")({
   ssr: false,
   component: RecallRadarPage,
-  head: () => ({ meta: [{ title: "Recall Radar — Peace of Mine" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Recall Radar in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:title", content: "Recall Radar \u2014 Peace of Mine" },
+      { property: "og:description", content: "Recall Radar in Peace of Mine: baby safety, saved products, and family tracking." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Recall Radar — Peace of Mine" }] }),
 });
 
 const SOURCE_LABEL: Record<string, string> = {

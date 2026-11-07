@@ -7,6 +7,8 @@ export const Route = createFileRoute("/emergency-share/$token")({
   component: SharedEmergencyInfoPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Emergency Info — Peace of Mine" },
       { name: "description", content: "A parent has shared their child's emergency info with you through Peace of Mine — allergies, medications, blood type, and emergency contacts in one place." },
       { property: "og:title", content: "Emergency Info — Peace of Mine" },
