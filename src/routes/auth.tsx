@@ -193,6 +193,7 @@ function AuthPage() {
       if (error) throw error;
       toast.success("Magic link sent — check your inbox ✉️");
     } catch (err) {
+      setFormError(isTimeoutError(err) ? EMAIL_AUTH_TIMEOUT_MESSAGE : friendlyAuthError(err));
       toast.error(friendlyAuthError(err));
     } finally {
       setLoading(null);
@@ -211,6 +212,7 @@ function AuthPage() {
       toast.success("Password reset email sent — check your inbox");
       setMode("signin");
     } catch (err) {
+      setFormError(isTimeoutError(err) ? EMAIL_AUTH_TIMEOUT_MESSAGE : friendlyAuthError(err));
       toast.error(friendlyAuthError(err));
     } finally {
       setLoading(null);
@@ -226,6 +228,7 @@ function AuthPage() {
       toast.success("Password updated — you're signed in!");
       navigate({ to: "/home" });
     } catch (err) {
+      setFormError(isTimeoutError(err) ? EMAIL_AUTH_TIMEOUT_MESSAGE : friendlyAuthError(err));
       toast.error(friendlyAuthError(err));
     } finally {
       setLoading(null);

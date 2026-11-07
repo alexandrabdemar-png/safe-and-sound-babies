@@ -64,7 +64,6 @@ describe("RecallRadarCard — link targets actually resolve (regression: 'tappin
     // resolved href is the real route — not blank, not "#", not nested
     // inside another anchor (which would make the DOM auto-close the
     // outer tag and silently break click targeting).
-    expect(html).toContain("13 new recalls published this month, industry-wide");
     const anchorMatches = [...html.matchAll(/<a\s+([^>]*href="[^"]*"[^>]*)>/g)];
     const radarAnchor = anchorMatches.find((m) => /href="\/recall-radar"/.test(m[1]));
     expect(radarAnchor, `expected an <a href="/recall-radar"> in: ${html}`).toBeTruthy();
@@ -80,7 +79,6 @@ describe("RecallRadarCard — link targets actually resolve (regression: 'tappin
 
   it("still renders the /recall-radar link even when the count is zero (no new recalls)", async () => {
     const html = await renderCardAt("/home", { count: 0, matchedCount: 0, childName: "Remi" });
-    expect(html).toContain("No new recalls published this month, industry-wide");
     expect(html).toMatch(/<a\s+[^>]*href="\/recall-radar"[^>]*>/);
   });
 

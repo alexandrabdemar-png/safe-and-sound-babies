@@ -537,7 +537,7 @@ function FirstFoodsPage() {
       {/* Header */}
       <header className="px-5 pt-10 pb-4 sm:px-6">
         <div className="mx-auto max-w-md">
-          <div className="mb-4 flex items-center gap-3">
+          <div className="mb-4 flex flex-wrap items-center gap-3">
             <button
               type="button"
               onClick={() => navigate({ to: "/tracking" })}

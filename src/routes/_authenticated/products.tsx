@@ -80,7 +80,7 @@ function ProductsPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background pb-28 animate-fade-in">
       <header className="px-5 pt-10 pb-6 sm:px-6">
-        <div className="mx-auto flex max-w-md items-end justify-between">
+        <div className="mx-auto flex max-w-md flex-wrap items-end justify-between gap-3">
           <div>
             <p className="font-body text-xs font-semibold uppercase tracking-[0.2em] text-accent">
               Your baby gear

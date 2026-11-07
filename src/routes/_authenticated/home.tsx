@@ -471,7 +471,7 @@ function HomePage() {
       } catch {}
 
       setLoading(false);
-    })();
+    })().catch((error) => { if (!cancelled) { logError('[home] failed to load', error); setLoading(false); toast.error("Couldn't load your home. Please try again."); } });
     return () => {
       cancelled = true;
     };
@@ -1154,7 +1154,7 @@ function SummaryTile({
   tone,
 }: {
   icon: React.ComponentType<{ className?: string }>;
-  count: number | null;
+  count: number;
   label: string;
   tone?: "danger" | "muted";
 }) {
