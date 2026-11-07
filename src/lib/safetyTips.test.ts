@@ -106,7 +106,7 @@ describe("daily safety tip dismissal (via the dayKey-scoped storage key)", () =>
 // — this tip pool (t021, t035) didn't get the same treatment.
 describe("selectDailyTip with hasStairs === false", () => {
   it("never returns a stair-gate tip across a full lap of the pool, at ages where one would otherwise be selected", () => {
-    for (let day = 1; day <= 60; day++) {
+    for (let day = 1; day <= 600; day++) {
       const tip = selectDailyTip(12, day, false);
       expect(tip.text).not.toMatch(/stair/i);
     }
@@ -115,7 +115,7 @@ describe("selectDailyTip with hasStairs === false", () => {
   it("can still return the stair-gate tip when hasStairs is true or unset (unchanged default behavior)", () => {
     const seenWithStairs = new Set<string>();
     const seenUnset = new Set<string>();
-    for (let day = 1; day <= 60; day++) {
+    for (let day = 1; day <= 600; day++) {
       seenWithStairs.add(selectDailyTip(12, day, true).id);
       seenUnset.add(selectDailyTip(12, day).id);
     }
@@ -142,7 +142,7 @@ describe("selectDailyTip with hasStairs === false", () => {
 // single-family-house features and had the same gap.
 describe("selectDailyTip with homeType === 'apartment'", () => {
   it("never returns a house-only tip (outdoor gate, driveway, fireplace/hearth) across a full lap of the pool", () => {
-    for (let day = 1; day <= 60; day++) {
+    for (let day = 1; day <= 600; day++) {
       const tip = selectDailyTip(24, day, undefined, "apartment");
       expect(tip.text).not.toMatch(/outdoor gate|driveway|fireplace|woodburner|hearth/i);
     }
@@ -151,7 +151,7 @@ describe("selectDailyTip with homeType === 'apartment'", () => {
   it("can still return a house-only tip when homeType is 'house' or unset (unchanged default behavior)", () => {
     const seenWithHouse = new Set<string>();
     const seenUnset = new Set<string>();
-    for (let day = 1; day <= 60; day++) {
+    for (let day = 1; day <= 600; day++) {
       seenWithHouse.add(selectDailyTip(24, day, undefined, "house").id);
       seenUnset.add(selectDailyTip(24, day).id);
     }
@@ -162,7 +162,7 @@ describe("selectDailyTip with homeType === 'apartment'", () => {
 
   it("doesn't also exclude the pool-fence-gate tip (t054) — that's gated on hasPool, not homeType", () => {
     const seen = new Set<string>();
-    for (let day = 1; day <= 20; day++) {
+    for (let day = 1; day <= 600; day++) {
       seen.add(selectDailyTip(24, day, undefined, "apartment").id);
     }
     expect(seen.has("t054")).toBe(true);
@@ -170,7 +170,7 @@ describe("selectDailyTip with homeType === 'apartment'", () => {
 
   it("doesn't also exclude the stair-gate tips — that's gated on hasStairs, not homeType", () => {
     const seen = new Set<string>();
-    for (let day = 1; day <= 60; day++) {
+    for (let day = 1; day <= 600; day++) {
       seen.add(selectDailyTip(12, day, undefined, "apartment").id);
     }
     expect(seen.has("t021") || seen.has("t035")).toBe(true);
@@ -186,7 +186,7 @@ describe("selectDailyTip with homeType === 'apartment'", () => {
 // a family without one.
 describe("selectDailyTip with hasPool === false", () => {
   it("never returns a home-pool-only tip (t053, t054) across a full lap of the pool", () => {
-    for (let day = 1; day <= 60; day++) {
+    for (let day = 1; day <= 600; day++) {
       const tip = selectDailyTip(24, day, undefined, undefined, false);
       expect(tip.text).not.toMatch(/home pool|pool fence/i);
     }
@@ -195,7 +195,7 @@ describe("selectDailyTip with hasPool === false", () => {
   it("can still return a home-pool-only tip when hasPool is true or unset (unchanged default behavior)", () => {
     const seenWithPool = new Set<string>();
     const seenUnset = new Set<string>();
-    for (let day = 1; day <= 60; day++) {
+    for (let day = 1; day <= 600; day++) {
       seenWithPool.add(selectDailyTip(24, day, undefined, undefined, true).id);
       seenUnset.add(selectDailyTip(24, day).id);
     }
@@ -205,7 +205,7 @@ describe("selectDailyTip with hasPool === false", () => {
 
   it("doesn't also exclude general water-safety tips that apply regardless of home pool ownership", () => {
     const seen = new Set<string>();
-    for (let day = 1; day <= 20; day++) {
+    for (let day = 1; day <= 600; day++) {
       seen.add(selectDailyTip(24, day, undefined, undefined, false).id);
     }
     // t055 (life jacket), t057 (swim lessons), t058 (CPR) are general water
@@ -218,7 +218,7 @@ describe("selectDailyTip with hasPool === false", () => {
 // all three categories at once, without emptying the pool ────────────────
 describe("selectDailyTip with multiple home_profile answers combined", () => {
   it("excludes stair-gate, house-only, and home-pool-only tips simultaneously", () => {
-    for (let day = 1; day <= 60; day++) {
+    for (let day = 1; day <= 600; day++) {
       const tip = selectDailyTip(24, day, false, "apartment", false);
       expect(tip.text).not.toMatch(/stair/i);
       expect(tip.text).not.toMatch(/outdoor gate|driveway|fireplace|woodburner|hearth/i);
@@ -242,7 +242,7 @@ describe("pacifier size-appropriateness tip", () => {
     // is deterministic (age-filtered pool, indexed by day index), so if
     // the tip is in range it must show up within one lap of the pool.
     const seen = new Set<string>();
-    for (let day = 1; day <= 60; day++) {
+    for (let day = 1; day <= 600; day++) {
       seen.add(selectDailyTip(3, day).id);
     }
     expect(seen.has("t061")).toBe(true);
