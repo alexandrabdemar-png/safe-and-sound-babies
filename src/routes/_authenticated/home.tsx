@@ -1010,7 +1010,7 @@ function HomePage() {
                   that changes based on what we're able to check.
                 </p>
               </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
             </Link>
           ) : (
             <div className="grid grid-cols-2 gap-2.5">
