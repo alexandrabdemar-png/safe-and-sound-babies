@@ -17,6 +17,7 @@ import { useDeepLinks } from "@/hooks/useDeepLinks";
 import { useAuthAutoRefresh } from "@/hooks/useAuthAutoRefresh";
 import { startAuthEventDiagnostics } from "@/lib/authDiagnostics";
 import { supabase } from "@/integrations/supabase/client";
+import { PageReliability } from '@/components/PageReliability';
 
 function NotFoundComponent() {
   return (
@@ -152,7 +153,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <PageReliability><Outlet /></PageReliability>
       <Toaster />
     </QueryClientProvider>
   );

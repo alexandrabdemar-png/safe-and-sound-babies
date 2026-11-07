@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { friendlyAuthError, isAlreadyRegisteredAuthError } from "@/lib/errors";
-import { settleWithin, withTimeout } from "@/lib/promiseTimeout";
+import { settleWithin } from "@/lib/promiseTimeout";
+import { Button } from '@/components/ui/button';
 import { oauthRedirectUri } from "@/lib/authCallbackRouting";
 import { describeError, recordAuthDiagnostic } from "@/lib/authDiagnostics";
 import { Mail, Lock, Sparkles, Loader2, ArrowLeft } from "lucide-react";
@@ -32,7 +33,7 @@ type Mode = "signin" | "signup" | "magic" | "forgot" | "reset";
 
 // Safety net so an email form can never spin forever: if the auth request
 // hasn't come back by then, stop the spinner and say so.
-const EMAIL_AUTH_TIMEOUT_MS = 25000;
+const EMAIL_AUTH_TIMEOUT_MS = 10000;
 const EMAIL_AUTH_TIMEOUT_MESSAGE =
   "This is taking longer than expected. Check your connection and try again.";
 
@@ -68,6 +69,7 @@ function AuthPage() {
   }, [authError]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
   const [loading, setLoading] = useState<null | "email" | "google" | "apple" | "magic">(null);
   // While the email form is submitting, it decides where to go (signup →
   // /onboarding, sign-in → /home). Without this the auth listener also
@@ -90,9 +92,9 @@ function AuthPage() {
   // screen instantly redirected to /home and the password was never changed.
   useEffect(() => {
     if (mode === "reset") return;
-    ensureNativeSessionRestored().then(() => supabase.auth.getSession()).then(({ data }) => {
+    settleWithin(ensureNativeSessionRestored().then(() => supabase.auth.getSession()), 10000, 'Session').then(({ data }) => {
       if (data.session && !isRecoveryUrl()) navigate({ to: "/home" });
-    });
+    }).catch(() => setFormError('Your saved sign-in could not be restored. Please sign in again.'));
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
         setMode("reset");
@@ -111,6 +113,7 @@ function AuthPage() {
       return;
     }
     emailSubmitInFlight.current = true;
+    setFormError(null);
     recordAuthDiagnostic("info", `${mode === "signup" ? "Sign-up" : "Sign-in"} with email started`);
     setLoading("email");
     try {
@@ -131,9 +134,9 @@ function AuthPage() {
         );
         if (data.session) {
           toast.success("Welcome to Peace of Mine ✨");
-          navigate({ to: "/onboarding" });
+          navigate({ to: "/home", replace: true });
         } else {
-          toast.success("Check your inbox to confirm your email ✨");
+          throw new Error('Your account was created, but email confirmation is still enabled. Please check your email to finish signing in.');
         }
       } else {
         const { data, error } = await settleWithin(
@@ -148,7 +151,8 @@ function AuthPage() {
         );
         toast.success("Welcome back!");
         // Navigate here too rather than relying only on the auth listener.
-        if (data.session) navigate({ to: "/home" });
+        if (!data.session) throw new Error('Sign-in did not finish. Please try again.');
+        navigate({ to: "/home", replace: true });
       }
     } catch (err) {
       // Signup specifically avoids confirming "that email already has an
@@ -163,10 +167,12 @@ function AuthPage() {
         `${mode}: ${describeError(err)}`,
       );
       if (isTimeoutError(err)) {
+        setFormError(EMAIL_AUTH_TIMEOUT_MESSAGE);
         toast.error(EMAIL_AUTH_TIMEOUT_MESSAGE);
       } else if (mode === "signup" && isAlreadyRegisteredAuthError(err)) {
-        toast.success("Check your inbox to confirm your email ✨");
+        setFormError('Unable to create this account. Try signing in or resetting your password.');
       } else {
+        setFormError(friendlyAuthError(err));
         toast.error(friendlyAuthError(err));
       }
     } finally {
@@ -177,12 +183,13 @@ function AuthPage() {
 
   async function handleMagicLink(e: React.FormEvent) {
     e.preventDefault();
+    setFormError(null);
     setLoading("magic");
     try {
-      const { error } = await supabase.auth.signInWithOtp({
+      const { error } = await settleWithin(supabase.auth.signInWithOtp({
         email,
         options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-      });
+      }), EMAIL_AUTH_TIMEOUT_MS, 'Magic link');
       if (error) throw error;
       toast.success("Magic link sent — check your inbox ✉️");
     } catch (err) {
@@ -194,11 +201,12 @@ function AuthPage() {
 
   async function handleForgotPassword(e: React.FormEvent) {
     e.preventDefault();
+    setFormError(null);
     setLoading("email");
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await settleWithin(supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
-      });
+      }), EMAIL_AUTH_TIMEOUT_MS, 'Password reset');
       if (error) throw error;
       toast.success("Password reset email sent — check your inbox");
       setMode("signin");
@@ -213,7 +221,7 @@ function AuthPage() {
     e.preventDefault();
     setLoading("email");
     try {
-      const { error } = await supabase.auth.updateUser({ password });
+      const { error } = await settleWithin(supabase.auth.updateUser({ password }), EMAIL_AUTH_TIMEOUT_MS, 'Password update');
       if (error) throw error;
       toast.success("Password updated — you're signed in!");
       navigate({ to: "/home" });
@@ -271,17 +279,12 @@ function AuthPage() {
       // that vendor code, so without one here the button spins forever with
       // no way out. This doesn't fire for the normal full-page-redirect
       // path, since the browser navigates away long before it could elapse.
-      const result = await withTimeout(
+      const result = await settleWithin(
         lovable.auth.signInWithOAuth(provider, {
           redirect_uri: oauthRedirectUri(window.location.origin),
         }),
-        20000,
-        () => {
-          setLoading(null);
-          toast.error(
-            "This is taking longer than expected. If a sign-in window opened, close it and try again — or use email instead.",
-          );
-        },
+        EMAIL_AUTH_TIMEOUT_MS,
+        'Social sign-in',
       );
       if (result.error) {
         toast.error(friendlyAuthError(result.error.message || `${provider} sign-in failed`));
@@ -374,6 +377,10 @@ function AuthPage() {
             }
             className="space-y-3"
           >
+            {formError && <div role="alert" className="text-sm text-destructive">
+              <p>{formError}</p>
+              <Button type="submit" variant="outline" disabled={loading !== null} className="mt-2">Try again</Button>
+            </div>}
             {mode !== "reset" && (
               <div className="relative">
                 <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
