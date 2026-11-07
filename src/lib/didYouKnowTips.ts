@@ -73,7 +73,7 @@ const RAW: Raw[] = [
   ["Did you know? Introducing peanut-containing foods early (around 4–6 months, after talking with your pediatrician) can lower the chance of peanut allergy.", 4, 12, S.aap],
   ["Did you know? Babies don't need juice before age 1, and water can start in small sips around 6 months.", 4, 18, S.aap],
   ["Did you know? Cow's milk as a main drink is usually recommended starting at 12 months.", 9, 15, S.aap],
-  ["Did you know? Never propping a bottle helps your baby control the flow — holding them during feeds is safer and lovely bonding time.", 0, 12, S.aap],
+  ["Did you know? Holding your baby during feeds (instead of propping the bottle) helps them control the flow — and it's lovely bonding time.", 0, 12, S.aap],
   ["Did you know? Offering a variety of grains (oats, barley, multigrain) instead of only rice cereal is a simple way to reduce arsenic exposure.", 4, 24, S.fdaFood],
   ["Did you know? Raw sprouts, unpasteurized juice, and undercooked eggs are best avoided for young kids, whose immune systems are still developing.", 6, 60, S.fdaFood],
   ["Did you know? Sitting upright at the table while eating — not walking or playing — is one of the easiest ways to make meals safer.", 6, 60, S.aap],

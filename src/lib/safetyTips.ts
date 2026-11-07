@@ -1,3 +1,5 @@
+import { DID_YOU_KNOW_TIPS } from "@/lib/didYouKnowTips";
+
 export type SafetyTip = {
   id: string;
   text: string;
@@ -12,13 +14,15 @@ export type SafetyTip = {
    * not guessed from a plausible-looking URL.
    */
   source?: { label: string; url: string };
+  /** Seasonal tips: calendar months (1–12) when this tip may appear. */
+  months?: number[];
 };
 
 // Safety tips shown one per day (see selectDailyTip below) — direct,
 // confident phrasing throughout (a clear "do this," not a hedged "some
 // families find it helpful to..."). minMonths/maxMonths define the age
 // range where the tip is most relevant.
-export const SAFETY_TIPS: SafetyTip[] = [
+const IN_HOUSE_TIPS: SafetyTip[] = [
   // ── 0–3 months ──
   {
     id: "t001",
@@ -421,6 +425,9 @@ export const SAFETY_TIPS: SafetyTip[] = [
   },
 ];
 
+// Sourced "Did you know?" tips first, then the original in-house tips.
+export const SAFETY_TIPS: SafetyTip[] = [...DID_YOU_KNOW_TIPS, ...IN_HOUSE_TIPS];
+
 // Tips that assume a feature of a single-family house — a private outdoor
 // gate/driveway, or a fireplace/woodburner — rather than something every
 // home has. Reported bug: an apartment-dwelling parent got "check the
@@ -471,6 +478,7 @@ export function selectDailyTip(
   hasStairs?: boolean | null,
   homeType?: string | null,
   hasPool?: boolean | null,
+  month: number = new Date().getMonth() + 1,
 ): SafetyTip {
   // ageMonths is null when the child's age isn't known (the app no longer
   // collects date of birth) — skip age filtering entirely rather than
@@ -481,6 +489,11 @@ export function selectDailyTip(
       ? []
       : SAFETY_TIPS.filter((t) => ageMonths >= t.minMonths && ageMonths <= t.maxMonths);
   let pool = ageTips.length > 0 ? ageTips : SAFETY_TIPS;
+  // Seasonal tips only appear in their months; every third day features
+  // an in-season tip when one exists so the card feels timely.
+  pool = excluding(pool, (t) => !!t.months && !t.months.includes(month));
+  const seasonal = pool.filter((t) => t.months?.includes(month));
+  if (seasonal.length > 0 && dayIndex % 3 === 0) pool = seasonal;
   if (hasStairs === false) pool = excluding(pool, (t) => /stair/i.test(t.text));
   if (homeType === "apartment") pool = excluding(pool, (t) => HOUSE_ONLY_PATTERN.test(t.text));
   if (hasPool === false) pool = excluding(pool, (t) => HOME_POOL_ONLY_PATTERN.test(t.text));
