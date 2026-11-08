@@ -186,7 +186,7 @@ function WaitlistPage() {
                 You're on the list!
               </h2>
               <p className="mt-2 font-body text-sm text-muted-foreground">
-                We'll email you the moment Peace of Mine is on the App Store. Know a parent who'd
+                We'll email you the moment Peace of Mine is in the App Store. Know a parent who'd
                 love it?
               </p>
               <button
