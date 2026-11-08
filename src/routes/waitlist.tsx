@@ -156,7 +156,7 @@ function WaitlistPage() {
           className="mt-6 max-w-md font-body text-base leading-relaxed"
         >
           Track your baby's gear and milestones, get reminded before a car seat expires or it's time
-          to size up, and hear about it if something you own is recalled.
+          to size up, and get notified if something you own is recalled.
         </p>
 
         <div className="mt-8 flex justify-center gap-3" aria-hidden="true">
