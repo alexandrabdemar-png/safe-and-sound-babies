@@ -40,9 +40,9 @@ export function WelcomeIntroModal({ open, onDismiss }: { open: boolean; onDismis
         if (!nextOpen) onDismiss();
       }}
     >
-      <DialogContent className="max-w-md rounded-3xl">
+      <DialogContent className="max-w-md rounded-3xl p-5 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="font-display text-2xl">Welcome to Peace of Mine</DialogTitle>
+          <DialogTitle className="pr-6 font-display text-2xl leading-tight">Welcome to Peace of Mine</DialogTitle>
           <DialogDescription className="font-body text-sm">
             Keep track of your little one's gear and safety — without the mental
             load. Here's a quick look at what you can do:
@@ -55,7 +55,7 @@ export function WelcomeIntroModal({ open, onDismiss }: { open: boolean; onDismis
               <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
                 <Icon className="h-4 w-4" />
               </span>
-              <div>
+              <div className="min-w-0">
                 <p className="font-body text-sm font-semibold text-foreground">{title}</p>
                 <p className="font-body text-xs text-muted-foreground">{body}</p>
               </div>

@@ -332,14 +332,14 @@ function OnboardingPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-background">
       <WelcomeIntroModal open={showIntro} onDismiss={dismissIntro} />
       <header className="w-full px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-2xl items-center justify-between">
-          <Link to="/" className="flex items-center">
+        <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
+          <Link to="/" className="flex min-w-0 items-center">
             <Logo />
           </Link>
-          <span className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          <span className="shrink-0 whitespace-nowrap font-body text-xs uppercase tracking-[0.15em] text-muted-foreground">
             Step {step + 1} of {TOTAL_STEPS}
           </span>
         </div>
