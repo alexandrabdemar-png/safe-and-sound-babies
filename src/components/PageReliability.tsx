@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useRouter, type ErrorComponentProps } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { settleWithin } from '@/lib/promiseTimeout';
+import { isSlowRequestUrl, SLOW_REQUEST_TIMEOUT_MS } from '@/integrations/supabase/authFetch';
 
 export function PageLoadError({ reset }: Partial<ErrorComponentProps>) {
   const router = useRouter();
@@ -29,6 +30,11 @@ export function PageReliability({ children }: { children: ReactNode }) {
       const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
       const auth = url.includes('/auth/v1/');
       const generation = pageGeneration;
+      const method = (init?.method ?? (input instanceof Request ? input.method : 'GET')).toUpperCase();
+      const slow = isSlowRequestUrl(url);
+      // Only plain page reads may replace the screen; uploads, saves and backend
+      // functions surface errors inline so unsaved form state is never lost.
+      const pageRead = !auth && !slow && (method === 'GET' || method === 'HEAD');
       const controller = new AbortController();
       const signal = init?.signal ?? (input instanceof Request ? input.signal : undefined);
       const abort = () => controller.abort();
@@ -36,14 +42,14 @@ export function PageReliability({ children }: { children: ReactNode }) {
       signal?.addEventListener('abort', abort, { once: true });
       try {
         // Image analysis legitimately takes longer than small page reads.
-        const ms = auth ? 10000 : /receipt|image|ai-advice/.test(url) ? 60000 : 15000;
+        const ms = auth ? 10000 : slow ? SLOW_REQUEST_TIMEOUT_MS : /receipt|image|ai-advice/.test(url) ? 60000 : 15000;
         const response = await settleWithin(original.call(window, input, { ...init, signal: controller.signal }), ms, 'Request');
-        if (!auth && response.status >= 500 && generation === pageGeneration) setFailed(true);
+        if (pageRead && response.status >= 500 && generation === pageGeneration) setFailed(true);
         return response;
       } catch (error) {
         if (error instanceof Error && /timed out/i.test(error.message)) {
           abort();
-          if (!auth && generation === pageGeneration) setFailed(true);
+          if (pageRead && generation === pageGeneration) setFailed(true);
         }
         throw error;
       } finally { signal?.removeEventListener('abort', abort); }

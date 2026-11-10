@@ -16,6 +16,9 @@ type Fetch = typeof fetch;
 
 export const AUTH_REQUEST_TIMEOUT_MS = 10000;
 export const DATA_REQUEST_TIMEOUT_MS = 15000;
+/** Storage uploads and backend functions (multi-source recall checks) can legitimately be slow. */
+export const SLOW_REQUEST_TIMEOUT_MS = 120000;
+export const isSlowRequestUrl = (url: string) => /\/storage\/v1\/|\/functions\/v1\//.test(url);
 
 function requestUrl(input: Parameters<Fetch>[0]): string {
   if (typeof input === "string") return input;
@@ -43,7 +46,7 @@ export function createAuthFetch(
   return async (input, init) => {
     const url = requestUrl(input);
     const isAuth = url.includes("/auth/v1/");
-    const requestTimeout = isAuth ? timeoutMs : DATA_REQUEST_TIMEOUT_MS;
+    const requestTimeout = isAuth ? timeoutMs : isSlowRequestUrl(url) ? SLOW_REQUEST_TIMEOUT_MS : DATA_REQUEST_TIMEOUT_MS;
 
     const method = (
       init?.method ?? (input instanceof Request ? input.method : "GET")
