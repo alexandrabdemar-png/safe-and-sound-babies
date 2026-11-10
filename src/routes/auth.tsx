@@ -9,6 +9,7 @@ import { settleWithin } from "@/lib/promiseTimeout";
 import { Button } from '@/components/ui/button';
 import { oauthRedirectUri } from "@/lib/authCallbackRouting";
 import { describeError, recordAuthDiagnostic } from "@/lib/authDiagnostics";
+import { isPreviewHost } from "@/lib/previewHost";
 import { Mail, Lock, Sparkles, Loader2, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
@@ -78,9 +79,11 @@ function AuthPage() {
   // navigated to /home on SIGNED_IN, racing the form's own navigation.
   const emailSubmitInFlight = useRef(false);
   // Five quick taps on the sparkle icon open the hidden sign-in diagnostics
-  // screen, for capturing exactly why a login failed on a real device.
+  // screen. Lovable preview / localhost only: App Review rejects hidden
+  // debug screens in the production app as beta features (Guideline 2.2).
   const diagnosticTaps = useRef<number[]>([]);
   function handleDiagnosticTap() {
+    if (!isPreviewHost(window.location.hostname)) return;
     const now = Date.now();
     diagnosticTaps.current = [...diagnosticTaps.current.filter((t) => now - t < 3000), now];
     if (diagnosticTaps.current.length >= 5) {

@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { isPreviewHost } from "@/lib/previewHost";
 import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, Copy, RefreshCw, Trash2, Wifi } from "lucide-react";
 import { toast } from "sonner";
@@ -19,9 +20,16 @@ import { settleWithin } from "@/lib/promiseTimeout";
  * connection test, with a Copy button, so a failed login on a real
  * iPhone/iPad can be reported exactly. Contains no passwords, tokens or
  * email addresses (see src/lib/authDiagnostics.ts).
+ *
+ * Lovable preview / localhost only. On the published site (which the iOS
+ * app loads) it redirects to /auth: App Review rejects hidden debug
+ * screens in the production app as beta features (Guideline 2.2).
  */
 export const Route = createFileRoute("/auth-diagnostics")({
   ssr: false,
+  beforeLoad: () => {
+    if (!isPreviewHost(window.location.hostname)) throw redirect({ to: "/auth" });
+  },
   component: AuthDiagnosticsPage,
   head: () => ({
     meta: [
