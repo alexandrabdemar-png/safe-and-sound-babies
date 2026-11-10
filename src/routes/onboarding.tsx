@@ -332,7 +332,7 @@ function OnboardingPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-background">
       <WelcomeIntroModal open={showIntro} onDismiss={dismissIntro} />
       <header className="w-full px-4 py-6 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-2xl items-center justify-between">
