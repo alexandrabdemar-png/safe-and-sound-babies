@@ -1,6 +1,17 @@
+import { useEffect, useState } from 'react';
+import { isPreviewHost } from '@/lib/previewHost';
+import { isNativeApp } from '@/lib/isNativeApp';
+
 const clientToken = import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN;
 
+// Only shown in the Lovable preview / localhost. Never in the iPhone app or
+// published site: App Review flags test-mode notices as beta features (2.2).
 export function PaymentTestModeBanner() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    setShow(isPreviewHost(window.location.hostname) && !isNativeApp());
+  }, []);
+  if (!show) return null;
   if (!clientToken) {
     return (
       <div className="w-full bg-red-100 border-b border-red-300 px-4 py-2 text-center text-sm text-red-800">
