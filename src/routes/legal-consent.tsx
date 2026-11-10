@@ -74,6 +74,7 @@ function LegalConsentPage() {
   const [agreedPrivacy, setAgreedPrivacy] = useState(false);
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [isReturning, setIsReturning] = useState(false);
 
   useEffect(() => {
     settleWithin(supabase.auth.getSession(), 10000, 'Session').then(({ data }) => {
@@ -83,6 +84,12 @@ function LegalConsentPage() {
       }
       setUserId(data.session.user.id);
       setChecking(false);
+      // Only people who accepted an earlier version see "We've updated…".
+      Promise.resolve(
+        supabase.from("user_agreements").select("id").eq("user_id", data.session.user.id).limit(1),
+      )
+        .then(({ data: rows }) => setIsReturning(!!rows && rows.length > 0))
+        .catch(() => {});
     }).catch(() => navigate({ to: '/auth', search: { error: 'Could not restore your sign-in. Please try again.' } }));
   }, [navigate]);
 
@@ -164,7 +171,9 @@ function LegalConsentPage() {
             Please review a few things
           </h1>
           <p className="mt-2 font-body text-sm text-muted-foreground">
-            We've updated our Terms of Service and Privacy Policy. Here's the short version of each
+            {isReturning
+              ? "We've updated our Terms of Service and Privacy Policy. Here's the short version of each"
+              : "Before you get started, here's the short version of our Terms of Service and Privacy Policy"}
             — the full text of both is linked below.
           </p>
 
