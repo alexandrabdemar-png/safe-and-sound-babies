@@ -331,7 +331,8 @@ export async function fetchHealthCanadaRecalls(
       });
 
     }
-    return out;
+    out.sort((a, b) => String(b.recall_date ?? "").localeCompare(String(a.recall_date ?? "")));
+    return out.slice(0, HEALTH_CANADA_MAX_RECORDS);
   } catch (err) {
     console.warn(
       "[allRecallSources] Health Canada fetch failed:",
