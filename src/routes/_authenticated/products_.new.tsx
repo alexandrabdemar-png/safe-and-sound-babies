@@ -39,7 +39,8 @@ import {
 import { useActiveChild } from "@/hooks/useActiveChild";
 import { useProGate } from "@/hooks/useProGate";
 
-import { CATEGORIES, type CategoryKey } from "@/lib/productCategories";
+import { CATEGORIES, guessCategoryFromText, type CategoryKey } from "@/lib/productCategories";
+import { searchProductCatalog, type CatalogSearchResult } from "@/lib/searchProductCatalog";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { ProductInfoFooter } from "@/components/ProductInfoFooter";
 import { resolveCarSeatReplaceAt } from "@/lib/carSeatExpiration";
@@ -332,12 +333,16 @@ function NewProductPage() {
             </Field>
 
             <Field label="Product name" required>
-              <Input
+              <ProductNameInput
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Nuna Pipa Lite"
-                maxLength={120}
-                className="h-12 rounded-2xl bg-card px-4 font-body text-base"
+                onChange={setName}
+                onPick={(r) => {
+                  setName(r.name);
+                  if (r.brand) setBrand(r.brand);
+                  if (r.barcode) setBarcode(r.barcode);
+                  const guessed = guessCategoryFromText(`${r.category ?? ""} ${r.name}`);
+                  if (guessed) setCategory(guessed);
+                }}
               />
             </Field>
 
@@ -630,30 +635,63 @@ function RecallAlertModal({
 
 // ─── AI Product Search ────────────────────────────────────────────────────────
 
+const SEARCH_MIN_CHARS = 3;
+const SEARCH_DEBOUNCE_MS = 600;
+
 function ProductSearchAI({ onPick }: { onPick: (r: ProductSearchResult) => void }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ProductSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Each search gets an id so a slow earlier response can't overwrite the
+  // results for what the parent has typed since.
+  const requestIdRef = useRef(0);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  async function runSearch() {
-    const q = query.trim();
+  async function runSearch(text: string = query) {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const q = text.trim();
     if (!q) return;
+    const requestId = ++requestIdRef.current;
     setLoading(true);
-    setSearched(true);
     try {
       const data = await runSearchProducts(q);
+      if (requestId !== requestIdRef.current) return;
       setResults(data);
+      setSearched(true);
     } catch {
+      if (requestId !== requestIdRef.current) return;
       toast.error("Search failed — please try again");
       setResults([]);
+      setSearched(true);
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
   }
 
+  // Search as the parent types: wait for a short pause (each search is an
+  // AI call, so not on every keystroke) and at least 3 characters.
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const q = query.trim();
+    if (q.length < SEARCH_MIN_CHARS) {
+      requestIdRef.current++;
+      setResults([]);
+      setSearched(false);
+      setLoading(false);
+      return;
+    }
+    debounceRef.current = setTimeout(() => void runSearch(q), SEARCH_DEBOUNCE_MS);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
+
   function clear() {
+    requestIdRef.current++;
+    setLoading(false);
     setQuery("");
     setResults([]);
     setSearched(false);
@@ -713,7 +751,7 @@ function ProductSearchAI({ onPick }: { onPick: (r: ProductSearchResult) => void 
         </div>
         <Button
           type="button"
-          onClick={runSearch}
+          onClick={() => runSearch()}
           disabled={loading || !query.trim()}
           className="h-11 rounded-2xl px-4 font-body text-sm"
         >
@@ -761,6 +799,131 @@ function ProductSearchAI({ onPick }: { onPick: (r: ProductSearchResult) => void 
                 <p className="mt-2 font-body text-xs text-muted-foreground line-clamp-2">
                   {r.safe_use_notes}
                 </p>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// ─── Product name with live suggestions ───────────────────────────────────────
+
+/**
+ * The manual form's name field. As the parent types it suggests matching
+ * products from the shared product catalog and UPCitemdb, so the saved name
+ * is the real product name the recall check can match. Picking one fills in
+ * name, brand, barcode and (when it can tell) category. Enter never saves
+ * the form from here — the parent still reviews and taps Save.
+ */
+function ProductNameInput({
+  value,
+  onChange,
+  onPick,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onPick: (r: CatalogSearchResult) => void;
+}) {
+  const [results, setResults] = useState<CatalogSearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  // Only search for what the parent typed, not after a pick fills the field.
+  const [typed, setTyped] = useState("");
+  const requestIdRef = useRef(0);
+
+  useEffect(() => {
+    const q = typed.trim();
+    const requestId = ++requestIdRef.current;
+    if (q.length < 2) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const t = setTimeout(() => {
+      searchProductCatalog(q, { supabase, fetchImpl: fetch })
+        .catch(() => [] as CatalogSearchResult[])
+        .then((r) => {
+          if (requestId !== requestIdRef.current) return;
+          setResults(r.slice(0, 6));
+          setLoading(false);
+        });
+    }, 350);
+    return () => clearTimeout(t);
+  }, [typed]);
+
+  const showList = open && typed.trim().length >= 2 && (loading || results.length > 0);
+
+  return (
+    <div className="relative">
+      <Input
+        value={value}
+        onChange={(e) => {
+          onChange(e.target.value);
+          setTyped(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        // Delay so a tap on a suggestion lands before the list closes.
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            if (results.length > 0 && showList) {
+              onPick(results[0]);
+              setOpen(false);
+              setTyped("");
+            }
+          } else if (e.key === "Escape") {
+            setOpen(false);
+          }
+        }}
+        placeholder="Start typing, e.g. Nuna Pipa Lite"
+        maxLength={120}
+        autoComplete="off"
+        className="h-12 rounded-2xl bg-card px-4 pr-10 font-body text-base"
+      />
+      {loading && (
+        <Loader2 className="absolute right-4 top-6 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+      )}
+      {showList && (
+        <ul className="mt-2 max-h-80 space-y-1.5 overflow-y-auto rounded-2xl border border-border bg-card p-1.5 shadow-warm-sm">
+          {loading && results.length === 0 && (
+            <li className="px-3 py-2 font-body text-xs text-muted-foreground">Finding products…</li>
+          )}
+          {results.map((r, i) => (
+            <li key={r.barcode ?? `${r.name}-${r.brand ?? ""}-${i}`}>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  onPick(r);
+                  setOpen(false);
+                  setTyped("");
+                }}
+                className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-primary/5"
+              >
+                {r.imageUrl ? (
+                  <img
+                    src={r.imageUrl}
+                    alt=""
+                    className="h-10 w-10 shrink-0 rounded-lg border border-border object-cover"
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-body text-sm font-semibold text-foreground">
+                    {r.name}
+                  </p>
+                  <p className="truncate font-body text-xs text-muted-foreground">
+                    {[r.brand, r.category].filter(Boolean).join(" · ") || "—"}
+                  </p>
+                </div>
               </button>
             </li>
           ))}
