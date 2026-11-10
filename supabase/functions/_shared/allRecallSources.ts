@@ -265,6 +265,9 @@ export async function fetchNhtsaRecalls(fetchImpl: typeof fetch): Promise<Normal
   }
 }
 
+export const HEALTH_CANADA_LOOKBACK_DAYS = 365;
+export const HEALTH_CANADA_MAX_RECORDS = 400;
+
 export async function fetchHealthCanadaRecalls(
   fetchImpl: typeof fetch,
 ): Promise<NormalizedRecall[]> {
@@ -285,7 +288,15 @@ export async function fetchHealthCanadaRecalls(
       ? data
       : (data?.results ?? data?.records ?? []);
     const out: NormalizedRecall[] = [];
+    // The feed holds every recall since ~2010 (~34k rows, 16 MB). Matching all
+    // of them against every product exceeded the worker CPU limit, so only
+    // recent notices are scanned; older matches are already in the catalog.
+    const cutoff = new Date(Date.now() - HEALTH_CANADA_LOOKBACK_DAYS * 86_400_000)
+      .toISOString()
+      .slice(0, 10);
     for (const r of rows) {
+      const updated = String(pick(r, "Last updated", "Date", "PublishDate", "publish_date") ?? "");
+      if (updated && updated.slice(0, 10) < cutoff) continue;
       const title = pick(r, "Title", "Title_En", "title_en", "title");
       if (!title) continue;
       const category = pick(r, "Category", "Category_En", "category_en");
@@ -320,7 +331,8 @@ export async function fetchHealthCanadaRecalls(
       });
 
     }
-    return out;
+    out.sort((a, b) => String(b.recall_date ?? "").localeCompare(String(a.recall_date ?? "")));
+    return out.slice(0, HEALTH_CANADA_MAX_RECORDS);
   } catch (err) {
     console.warn(
       "[allRecallSources] Health Canada fetch failed:",
