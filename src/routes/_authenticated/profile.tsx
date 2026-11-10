@@ -761,7 +761,7 @@ function ShareSection() {
   );
 }
 
-const FEEDBACK_TYPES = ["Bug report", "Feature request", "General feedback"] as const;
+const FEEDBACK_TYPES = ["Something isn't working", "Feature request", "General feedback"] as const;
 type FeedbackType = (typeof FEEDBACK_TYPES)[number];
 
 function FeedbackSection() {
