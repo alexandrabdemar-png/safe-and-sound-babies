@@ -141,7 +141,13 @@ function AuthPage() {
           toast.success("Welcome to Peace of Mine ✨");
           navigate({ to: "/home", replace: true });
         } else {
-          throw new Error('Your account was created, but email confirmation is still enabled. Please check your email to finish signing in.');
+          // Shown verbatim (not passed through friendlyAuthError, which would
+          // replace it with a vague "couldn't complete that").
+          const msg = 'Your account was created. Check your email to confirm it, then sign in.';
+          setFormError(msg);
+          toast.success(msg);
+          setMode("signin");
+          return;
         }
       } else {
         const { data, error } = await settleWithin(
