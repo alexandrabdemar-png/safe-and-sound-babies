@@ -9,10 +9,10 @@ import { AddSheet } from "@/components/AddSheet";
 const tabs = [
   { to: "/home", label: "Home", icon: Home },
   { to: "/tracking", label: "Track", icon: BarChart2 },
+  { to: "/alerts", label: "Alerts", icon: BellIcon },
 ] as const;
 
 const rightTabs = [
-  { to: "/alerts", label: "Alerts", icon: BellIcon },
   { to: "/products", label: "Products", icon: Package },
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
@@ -39,6 +39,7 @@ export function BottomNav() {
                 ? pathname === "/tracking" || pathname === "/first-foods"
                 : pathname === t.to
             }
+            badge={t.to === "/alerts" ? unackedRecalls : 0}
           />
         ))}
 
@@ -67,7 +68,6 @@ export function BottomNav() {
             key={t.to}
             {...t}
             active={t.to === "/profile" ? pathname.startsWith("/profile") : pathname === t.to}
-            badge={t.to === "/alerts" ? unackedRecalls : 0}
           />
         ))}
         </div>
