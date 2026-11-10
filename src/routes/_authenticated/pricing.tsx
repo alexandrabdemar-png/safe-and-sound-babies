@@ -243,30 +243,40 @@ function PricingPage() {
           </p>
         </div>
 
-        {(
-          <div className="mx-auto flex w-full max-w-xs items-center rounded-full border bg-muted/40 p-1">
-            {(['monthly', 'yearly'] as const).map((period) => (
-              <Button
+        <div role="radiogroup" aria-label="Billing period" className="grid grid-cols-2 gap-3">
+          {(['monthly', 'yearly'] as const).map((period) => {
+            const selected = billingPeriod === period;
+            const webPrice = period === 'yearly' ? '$34.99 / year' : '$3.39 / month';
+            const shownPrice = isNativeIOS === false
+              ? webPrice
+              : selected && appleProductReady
+                ? `${appleProduct?.displayPrice} / ${period === 'yearly' ? 'year' : 'month'}`
+                : period === 'yearly' ? 'Billed yearly' : 'Billed monthly';
+            return (
+              <button
                 key={period}
-                variant="ghost"
                 type="button"
+                role="radio"
+                aria-checked={selected}
                 disabled={applePurchasing}
                 onClick={() => setBillingPeriod(period)}
-                className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition ${
-                  billingPeriod === period
-                    ? 'bg-background shadow-sm text-foreground'
-                    : 'text-muted-foreground'
+                className={`min-w-0 rounded-2xl border-2 bg-card p-4 text-left transition ${
+                  selected ? 'border-primary shadow-sm' : 'border-border'
                 }`}
               >
-                {period === 'monthly' ? 'Monthly' : 'Yearly'}
-                {period === 'yearly' && (
-                  <span className="ml-1.5 text-xs font-semibold text-primary">Save 14%</span>
-                )}
-              </Button>
-            ))}
-          </div>
-        )}
-
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-base font-semibold text-foreground">
+                    {period === 'monthly' ? 'Monthly' : 'Annual'}
+                  </span>
+                  {period === 'yearly' && (
+                    <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">Save 14%</span>
+                  )}
+                </div>
+                <div className="mt-1 text-sm text-muted-foreground">{shownPrice}</div>
+              </button>
+            );
+          })}
+        </div>
 
         {/* Free plan */}
         <div className="rounded-2xl border bg-card p-6 space-y-4">
