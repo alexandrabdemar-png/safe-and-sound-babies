@@ -259,6 +259,8 @@ export type NotifyResult = {
   invalidApnsToken?: boolean;
   /** Endpoints the push service says are gone — caller should delete these web_push_subscriptions rows. */
   invalidWebPushEndpoints?: string[];
+  /** Per-channel failure reasons, for logging. */
+  failures?: string[];
 };
 
 /**
@@ -285,7 +287,7 @@ export async function notifyUser(
   const succeeded: string[] = [];
   let invalidApnsToken = false;
   const invalidWebPushEndpoints: string[] = [];
-  let hadTransientFailure = false;
+  const failures: string[] = [];
 
   if (target.apnsDeviceToken && apnsConfig && apnsJwt) {
     const result = await sendApnsPush(
@@ -296,8 +298,10 @@ export async function notifyUser(
       apnsJwt,
     );
     if (result.ok) succeeded.push("push");
-    else if (result.invalidToken) invalidApnsToken = true;
-    else hadTransientFailure = true;
+    else {
+      if (result.invalidToken) invalidApnsToken = true;
+      failures.push(`apns:${result.status} ${result.reason ?? "unknown"}`);
+    }
   }
 
   const webPushSubscriptions = target.webPushSubscriptions ?? [];
@@ -312,13 +316,20 @@ export async function notifyUser(
         vapidJwtCache,
       );
       if (result.ok) anyWebPushOk = true;
-      else if (result.invalidSubscription) invalidWebPushEndpoints.push(subscription.endpoint);
-      else hadTransientFailure = true;
+      else {
+        if (result.invalidSubscription) invalidWebPushEndpoints.push(subscription.endpoint);
+        failures.push("web_push:failed");
+      }
     }
     if (anyWebPushOk) succeeded.push("web_push");
   }
 
-  if (succeeded.length === 0 && !hadTransientFailure && target.email) {
+  if (target.apnsDeviceToken && !(apnsConfig && apnsJwt)) failures.push("apns:not_configured");
+
+  // Safety alerts must reach the parent: if no push channel delivered (for
+  // any reason, transient or permanent), fall back to email. A successful
+  // email stamps notified_at, so this cannot double-notify on the next run.
+  if (succeeded.length === 0 && target.email) {
     const emailResult = await sendFallbackEmail(
       fetchImpl,
       resendApiKey,
@@ -328,6 +339,7 @@ export async function notifyUser(
       notification.body,
     );
     if (emailResult.ok) succeeded.push("email");
+    else failures.push(`email:${emailResult.reason ?? "unknown"}`);
   }
 
   return {
@@ -336,5 +348,6 @@ export async function notifyUser(
     channel: succeeded.length ? succeeded.join("+") : null,
     ...(invalidApnsToken ? { invalidApnsToken: true } : {}),
     ...(invalidWebPushEndpoints.length ? { invalidWebPushEndpoints } : {}),
+    ...(failures.length ? { failures } : {}),
   };
 }

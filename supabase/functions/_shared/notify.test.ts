@@ -246,11 +246,11 @@ describe("notifyUser", () => {
     expect(result.invalidApnsToken).toBe(true);
   });
 
-  it("does NOT fall back to email on a transient (non-invalid-token) push failure", async () => {
-    // A network hiccup should be retried as push next run, not silently
-    // switched to a second channel — avoids double-notifying once the
-    // device token starts working again.
-    const fetchImpl = vi.fn().mockRejectedValue(new Error("network blip"));
+  it("falls back to email after a transient push failure so the recall still reaches the parent", async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("network blip"))
+      .mockResolvedValueOnce(jsonResponse({ id: "abc" }));
     const result = await notifyUser(
       fetchImpl,
       { userId: "u1", email: "u1@example.com", apnsDeviceToken: "tok" },
@@ -262,8 +262,9 @@ describe("notifyUser", () => {
       "resend-key",
       "alerts@test.app",
     );
-    expect(result).toEqual({ userId: "u1", channel: null, ok: false });
-    expect(fetchImpl).toHaveBeenCalledTimes(1); // email must not have been attempted too
+    expect(result.ok).toBe(true);
+    expect(result.channel).toBe("email");
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
   it("uses email when there is no device token at all", async () => {

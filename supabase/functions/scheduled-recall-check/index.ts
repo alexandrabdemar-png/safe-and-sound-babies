@@ -676,6 +676,8 @@ async function notifyAffectedUsers(
         (webPushByUser.get(userId) ?? []).length,
         "— had email:",
         Boolean(email),
+        "— reasons:",
+        (result.failures ?? []).join("; ") || "none attempted",
       );
     }
     if (result.invalidApnsToken) {
