@@ -59,9 +59,19 @@ function ReceiptImportPage() {
   const [items, setItems] = useState<ReceiptItem[] | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [acknowledged, setAcknowledged] = useState(false);
+  // Guideline 5.1.2(i): say which AI provider gets the photo and get the
+  // person's permission before sending it. Remembered on this device.
+  const [aiConsent, setAiConsent] = useState(() => {
+    try { return localStorage.getItem("pom.receiptAiConsent") === "1"; } catch { return false; }
+  });
+  function setAiConsentPersisted(v: boolean) {
+    setAiConsent(v);
+    try { if (v) localStorage.setItem("pom.receiptAiConsent", "1"); else localStorage.removeItem("pom.receiptAiConsent"); } catch { /* storage unavailable */ }
+  }
 
   async function onFile(file: File | undefined) {
     if (!file) return;
+    if (!aiConsent) { toast.error("Please agree to AI processing of the receipt photo first."); return; }
     if (!requirePro("Receipt import", "Upload a receipt and pick which products and foods to watch for recalls.")) return;
     setReading(true);
     try {
@@ -181,7 +191,20 @@ function ReceiptImportPage() {
             </div>
           </div>
 
-          <label className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-border bg-card p-6 text-center">
+          <div className="rounded-2xl border border-border bg-card p-4 font-body text-sm">
+            <p className="text-muted-foreground">
+              To read your receipt, the photo is sent to OpenAI (via our hosting provider Lovable's AI Gateway). Receipts
+              can show your name, address or card digits. The photo is used only to list the items and isn't stored by
+              Peace of Mine. See our{" "}
+              <Link to="/privacy-policy" className="underline">Privacy Policy</Link>.
+            </p>
+            <label className="mt-3 flex items-start gap-2">
+              <Checkbox checked={aiConsent} onCheckedChange={(v) => setAiConsentPersisted(v === true)} className="mt-0.5" />
+              <span>I agree to send my receipt photo to OpenAI for this.</span>
+            </label>
+          </div>
+
+          <label className={`flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed ${aiConsent ? "cursor-pointer" : "cursor-not-allowed opacity-50"} border-border bg-card p-6 text-center`}>
             {reading ? <Loader2 className="h-6 w-6 animate-spin text-primary" /> : <Receipt className="h-6 w-6 text-primary" />}
             <span className="font-body text-sm font-semibold">
               {reading ? "Reading your receipt…" : items ? "Upload a different receipt" : "Upload receipt photo or screenshot"}
@@ -190,7 +213,7 @@ function ReceiptImportPage() {
               type="file"
               accept="image/*"
               className="sr-only"
-              disabled={reading}
+              disabled={reading || !aiConsent}
               onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }}
             />
           </label>
