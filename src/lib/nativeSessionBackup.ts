@@ -65,7 +65,7 @@ export function ensureNativeSessionRestored(): Promise<void> {
 /** One line per launch on the diagnostics screen: why a launch was or wasn't signed in. */
 function launchReport(extra: string) {
   try {
-    const s = nativeAppSignals(window, navigator.userAgent);
+    const s = nativeAppSignals(window, navigator.userAgent, navigator.maxTouchPoints ?? 0);
     const hasLocal = Object.keys(localStorage).some((k) => /^sb-.*-auth-token$/.test(k));
     recordAuthDiagnostic(
       "info",

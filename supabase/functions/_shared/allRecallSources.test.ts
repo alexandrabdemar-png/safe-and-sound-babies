@@ -110,6 +110,11 @@ describe("fetchHealthCanadaRecalls", () => {
   // "What you should do" keys. Reading only the *_En variants made every
   // Canadian recall fall back to the generic landing page.
   it("uses the deep-linked URL and hazard/remedy from the real open-data field names", async () => {
+    // Pin "now": the fixture's 2025-03-04 date aged out of the 365-day
+    // lookback window on 2026-03-04 and the test silently started failing.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2025-06-01T00:00:00Z"));
+    try {
     const fetchImpl = vi.fn().mockResolvedValue(
       jsonResponse([
         {
@@ -133,7 +138,10 @@ describe("fetchHealthCanadaRecalls", () => {
       remedy: "Stop using the product immediately.",
       recall_date: "2025-03-04",
     });
-    expect(results[0].url).not.toBe("https://recalls-rappels.canada.ca/en");
+      expect(results[0].url).not.toBe("https://recalls-rappels.canada.ca/en");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
 

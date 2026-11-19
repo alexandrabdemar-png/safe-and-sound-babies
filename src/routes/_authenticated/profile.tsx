@@ -83,8 +83,16 @@ function ProfilePage() {
   }
 
   async function handleManage() {
+    // App Store subscriptions are managed by Apple — open Apple's own
+    // subscription management (works on iPhone, iPad and the web).
+    if (subscription?.payment_provider === 'apple') {
+      await openUrl('https://apps.apple.com/account/subscriptions');
+      return;
+    }
+    // A web (Stripe) plan can't be changed from inside the App Store app
+    // (Guideline 3.1.1) — access still works here.
     if (isNativeApp()) {
-      toast.info("Manage your plan in iPhone Settings > Apple ID > Subscriptions.");
+      toast.info("This plan was purchased outside the App Store, so it can't be changed in this app. Your Pro access still works here.");
       return;
     }
     setPortalLoading(true);
@@ -379,6 +387,19 @@ function ProfilePage() {
                 <p className="font-body text-xs text-muted-foreground leading-relaxed">
                   This will permanently delete your account and all data — children, products, moments, and safety alerts. This cannot be undone.
                 </p>
+                {subscription?.payment_provider === 'apple' && isPro && (
+                  <p className="mt-2 font-body text-xs text-muted-foreground leading-relaxed">
+                    Your Pro subscription is billed by Apple and is <strong>not</strong> cancelled by deleting your account.{' '}
+                    <button
+                      type="button"
+                      className="underline"
+                      onClick={() => { void openUrl('https://apps.apple.com/account/subscriptions'); }}
+                    >
+                      Cancel it in your App Store subscriptions
+                    </button>{' '}
+                    first to stop future charges.
+                  </p>
+                )}
               </div>
               <div className="flex gap-2">
                 <Button
@@ -606,12 +627,12 @@ function ReferFriendSection() {
           <Gift className="h-4 w-4" />
         </div>
         <div>
-          <p className="font-display text-base font-semibold">Refer a friend</p>
-          <p className="font-body text-xs text-muted-foreground">Both get 1 free month of Pro</p>
+          <p className="font-display text-base font-semibold">Share Peace of Mine</p>
+          <p className="font-body text-xs text-muted-foreground">Help another family stay on top of recalls</p>
         </div>
       </div>
       <p className="mb-4 font-body text-xs text-muted-foreground leading-relaxed">
-        Share Peace of Mine with another caregiver. When they sign up with your link and subscribe to Pro, you both get one free month added to your account.
+        Send your link to another parent or caregiver. Recall alerts and replacement reminders are free for every family.
       </p>
       {code ? (
         <div className="space-y-3">

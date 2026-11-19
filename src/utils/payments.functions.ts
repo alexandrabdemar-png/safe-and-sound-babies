@@ -1,6 +1,27 @@
 import { createServerFn } from '@tanstack/react-start';
+import { getRequest } from '@tanstack/react-start/server';
+import { isIOSAppWebView } from '@/lib/isNativeApp';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { type StripeEnv, createStripeClient, getStripeErrorMessage } from '@/lib/stripe.server';
+
+/**
+ * Apple 3.1.1: Pro is sold inside the iPhone/iPad app only through Apple
+ * In-App Purchase. The client already hides web checkout there; this is the
+ * server-side backstop, so no client-side detection miss (e.g. the iPad's
+ * desktop-style user agent) can ever start a Stripe checkout or open the
+ * Stripe billing portal from inside the App Store app.
+ */
+export const IN_APP_STRIPE_BLOCKED =
+  'Subscriptions in the Peace of Mine app are purchased through the App Store. Open Plans and use the App Store option.';
+
+function requestIsFromIOSApp(): boolean {
+  try {
+    const ua = getRequest()?.headers.get('user-agent') ?? '';
+    return isIOSAppWebView(ua);
+  } catch {
+    return false;
+  }
+}
 
 type CheckoutSessionResult = { clientSecret: string } | { error: string };
 type PortalSessionResult = { url: string } | { error: string };
@@ -50,6 +71,7 @@ export const createCheckoutSession = createServerFn({ method: 'POST' })
     return data;
   })
   .handler(async ({ data, context }): Promise<CheckoutSessionResult> => {
+    if (requestIsFromIOSApp()) return { error: IN_APP_STRIPE_BLOCKED };
     try {
       const { userId, claims } = context;
       const customerEmail = (claims as { email?: string } | undefined)?.email;
@@ -90,6 +112,9 @@ export const createPortalSession = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { returnUrl?: string; environment: StripeEnv }) => data)
   .handler(async ({ data, context }): Promise<PortalSessionResult> => {
+    if (requestIsFromIOSApp()) {
+      return { error: "This plan was purchased on the web, so it's managed there, not in the app. Your Pro access still works here." };
+    }
     const { supabase, userId } = context;
 
     const { data: sub, error: subError } = await supabase

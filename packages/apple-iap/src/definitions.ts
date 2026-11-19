@@ -21,6 +21,22 @@ export type AppleProduct = {
   price: number;
   /** Apple's own locale-formatted price string, e.g. "$3.33". */
   displayPrice: string;
+  /**
+   * The product's introductory offer as configured in App Store Connect,
+   * and whether the current Apple ID can still redeem it. Absent when no
+   * offer is configured, or on app builds older than November 2026 (whose
+   * native plugin doesn't report it) — the UI then advertises no trial.
+   */
+  introOffer?: AppleIntroOffer;
+};
+
+export type AppleIntroOffer = {
+  paymentMode: "freeTrial" | "payAsYouGo" | "payUpFront" | "other";
+  periodValue: number;
+  periodUnit: "day" | "week" | "month" | "year";
+  periodCount: number;
+  displayPrice: string;
+  eligible: boolean;
 };
 
 export type AppleTransactionResult = {

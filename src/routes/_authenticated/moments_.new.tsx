@@ -181,7 +181,7 @@ function NewMomentPage() {
               insights. Try free for 7 days.
             </p>
             <Button className="w-full rounded-full" onClick={() => navigate({ to: "/pricing" })}>
-              <Sparkles className="mr-2 h-4 w-4" /> Start free trial
+              <Sparkles className="mr-2 h-4 w-4" /> See Pro plans
             </Button>
             <Button
               variant="ghost"

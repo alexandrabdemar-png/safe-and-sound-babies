@@ -64,7 +64,7 @@ export async function assertReceiptImportPro(
   userId: string,
 ): Promise<void> {
   if (!(await hasProSubscription(supabase, userId))) {
-    throw new Error("Receipt import is a Pro feature. Start your free trial to use it.");
+    throw new Error("Receipt import is a Pro feature. Upgrade to Pro to use it.");
   }
 }
 

@@ -2,9 +2,11 @@ import { describe, it, expect } from "vitest";
 import { dayIndexFromDate, dayKey, SAFETY_TIPS, selectDailyTip } from "./safetyTips";
 
 describe("dayIndexFromDate", () => {
-  it("returns the same index for every moment within the same UTC calendar day", () => {
-    const morning = new Date("2026-07-13T00:00:01Z");
-    const evening = new Date("2026-07-13T23:59:59Z");
+  // Tips follow the family's own (local) calendar day, so these build
+  // local dates — UTC literals made the suite fail in any non-UTC zone.
+  it("returns the same index for every moment within the same local calendar day", () => {
+    const morning = new Date(2026, 6, 13, 0, 0, 1);
+    const evening = new Date(2026, 6, 13, 23, 59, 59);
     expect(dayIndexFromDate(evening)).toBe(dayIndexFromDate(morning));
   });
 
@@ -37,14 +39,14 @@ describe("dayKey", () => {
     expect(dayKey(nextDay)).not.toBe(dayKey(day));
   });
 
-  it("is stable across every moment within the same UTC calendar day", () => {
-    const morning = new Date("2026-07-13T00:00:01Z");
-    const evening = new Date("2026-07-13T23:59:59Z");
+  it("is stable across every moment within the same local calendar day", () => {
+    const morning = new Date(2026, 6, 13, 0, 0, 1);
+    const evening = new Date(2026, 6, 13, 23, 59, 59);
     expect(dayKey(evening)).toBe(dayKey(morning));
   });
 
   it("produces a YYYY-MM-DD formatted key", () => {
-    expect(dayKey(new Date("2026-07-13T00:00:00Z"))).toBe("2026-07-13");
+    expect(dayKey(new Date(2026, 6, 13, 0, 0, 0))).toBe("2026-07-13");
   });
 });
 
