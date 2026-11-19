@@ -47,6 +47,12 @@ function base64UrlEncode(bytes: ArrayBuffer | Uint8Array): string {
   return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
+}
+
 function pemToDer(pem: string): Uint8Array {
   const b64 = pem
     .replace(/-----BEGIN [^-]+-----/, "")
@@ -64,9 +70,13 @@ type JwtCache = { token: string; issuedAt: number } | null;
 
 async function importSigningKey(keyP8: string): Promise<CryptoKey> {
   const der = pemToDer(keyP8);
-  return crypto.subtle.importKey("pkcs8", der, { name: "ECDSA", namedCurve: "P-256" }, false, [
-    "sign",
-  ]);
+  return crypto.subtle.importKey(
+    "pkcs8",
+    toArrayBuffer(der),
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign"],
+  );
 }
 
 /**

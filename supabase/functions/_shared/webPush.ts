@@ -41,6 +41,12 @@ function base64UrlDecode(s: string): Uint8Array {
   return out;
 }
 
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
+}
+
 function concatBytes(...parts: Uint8Array[]): Uint8Array {
   const total = parts.reduce((n, p) => n + p.length, 0);
   const out = new Uint8Array(total);
@@ -134,12 +140,12 @@ export async function getVapidAuthHeader(
 async function hmacSha256(keyBytes: Uint8Array, data: Uint8Array): Promise<Uint8Array> {
   const key = await crypto.subtle.importKey(
     "raw",
-    keyBytes,
+    toArrayBuffer(keyBytes),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"],
   );
-  const sig = await crypto.subtle.sign("HMAC", key, data);
+  const sig = await crypto.subtle.sign("HMAC", key, toArrayBuffer(data));
   return new Uint8Array(sig);
 }
 
@@ -182,7 +188,7 @@ export async function encryptWebPushPayload(
 
   const receiverPubKey = await crypto.subtle.importKey(
     "raw",
-    receiverPubBytes,
+    toArrayBuffer(receiverPubBytes),
     { name: "ECDH", namedCurve: "P-256" },
     false,
     [],
@@ -235,11 +241,17 @@ export async function encryptWebPushPayload(
   // encrypted as one block; Web Crypto appends the auth tag to the
   // ciphertext automatically, which is exactly the wire format this needs.
   const withDelimiter = concatBytes(plaintext, new Uint8Array([2]));
-  const cekKey = await crypto.subtle.importKey("raw", cek, { name: "AES-GCM" }, false, ["encrypt"]);
+  const cekKey = await crypto.subtle.importKey(
+    "raw",
+    toArrayBuffer(cek),
+    { name: "AES-GCM" },
+    false,
+    ["encrypt"],
+  );
   const ciphertext = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv: nonce, tagLength: 128 },
+    { name: "AES-GCM", iv: toArrayBuffer(nonce), tagLength: 128 },
     cekKey,
-    withDelimiter,
+    toArrayBuffer(withDelimiter),
   );
 
   return concatBytes(header, new Uint8Array(ciphertext));
@@ -282,7 +294,7 @@ export async function sendWebPush(
         "Content-Encoding": "aes128gcm",
         TTL: "86400",
       },
-      body,
+      body: toArrayBuffer(body),
     });
 
     if (res.ok) return { ok: true, status: res.status, invalidSubscription: false };

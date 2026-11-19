@@ -51,8 +51,17 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
+type ProductCatalogCacheClient = {
+  from: (table: "product_catalog") => {
+    upsert: (
+      row: Record<string, unknown>,
+      options: { onConflict: "barcode" },
+    ) => PromiseLike<{ error: { message: string } | null }>;
+  };
+};
+
 async function cacheResult(
-  supabase: ReturnType<typeof createClient>,
+  supabase: ProductCatalogCacheClient,
   result: LookupResult,
 ): Promise<void> {
   const { error } = await supabase.from("product_catalog").upsert(
