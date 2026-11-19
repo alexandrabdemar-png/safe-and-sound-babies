@@ -167,7 +167,7 @@ function TermsPage() {
             <section>
               <h2 className="font-display text-xl font-semibold text-foreground">11. Subscriptions &amp; Billing</h2>
               <p className="mt-2 text-muted-foreground">
-                Core safety features — recall alerts, replacement reminders, and all safety notifications — are free and always will be. Pro is an optional paid subscription that unlocks additional convenience features (currently $3.33/month, with a 7-day free trial for new subscribers). Pricing, trial length, and included features are shown on the subscription screen before you purchase and may change over time; we will show you current terms before any purchase.
+                Core safety features — recall alerts, replacement reminders, and all safety notifications — are free and always will be. Pro is an optional paid subscription that unlocks additional convenience features (monthly or annual, with a free trial for eligible new subscribers where offered). Pricing, trial length, and included features are shown on the subscription screen before you purchase and may change over time; we will show you current terms before any purchase.
               </p>
               <p className="mt-2 text-muted-foreground">
                 On the web, Pro is billed through Stripe. On iOS, Pro is billed through Apple's In-App Purchase system, and Apple is the merchant of record for that purchase — Apple's own terms and refund policies apply to purchases made through the App Store, in addition to these Terms.
