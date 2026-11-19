@@ -84,7 +84,7 @@ function ProfilePage() {
 
   async function handleManage() {
     if (isNativeApp()) {
-      toast.info("Manage your plan in iPhone Settings > Apple ID > Subscriptions, or on the web if you bought it there.");
+      toast.info("Manage your plan in iPhone Settings > Apple ID > Subscriptions.");
       return;
     }
     setPortalLoading(true);

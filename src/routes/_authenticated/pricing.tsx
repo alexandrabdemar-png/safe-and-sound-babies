@@ -187,7 +187,7 @@ function PricingPage() {
       return;
     }
     if (isNativeIOS !== false) {
-      toast.info("This plan was purchased on the web. Manage it by signing in at peace-of-mine.lovable.app in a browser.");
+      toast.info("This plan was purchased outside the App Store, so it can't be changed from this app. Your Pro access still works here.");
       return;
     }
     setPortalLoading(true);
