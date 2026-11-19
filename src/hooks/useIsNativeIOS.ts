@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { isNativeApp } from "@/lib/isNativeApp";
 
 /**
  * True once we've confirmed this is running as a native iOS build (the
@@ -17,12 +18,15 @@ export function useIsNativeIOS(): boolean | null {
     (async () => {
       try {
         const { Capacitor } = await import("@capacitor/core");
-        const native = Capacitor.getPlatform() === "ios" && Capacitor.isNativePlatform();
+        // Also trust the multi-signal check: a missing bridge must never
+        // expose web (Stripe) checkout inside the App Store app (Apple 3.1.1).
+        const native =
+          (Capacitor.getPlatform() === "ios" && Capacitor.isNativePlatform()) || isNativeApp();
         if (!cancelled) setIsNativeIOS(native);
       } catch {
         // Capacitor isn't available at all (e.g. a plain web build that
         // never bundled it) — that's expected on web.
-        if (!cancelled) setIsNativeIOS(false);
+        if (!cancelled) setIsNativeIOS(isNativeApp());
       }
     })();
     return () => {

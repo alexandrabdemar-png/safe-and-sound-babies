@@ -12,3 +12,4 @@
 - [x] Share Recall Radar count/list and move home card first
 - [x] Test every mobile tab, Add, sign-out, invalid login, stalled login, and Milestones retry
 - [ ] Verify successful fresh email signup/login and physical iOS session persistence (requires auto-confirm setting and device)
+- [x] Apple 3.1.1: iOS app must never reach Stripe checkout/billing portal

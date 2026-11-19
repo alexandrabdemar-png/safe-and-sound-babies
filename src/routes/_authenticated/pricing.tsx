@@ -186,6 +186,10 @@ function PricingPage() {
       await openUrl('https://apps.apple.com/account/subscriptions');
       return;
     }
+    if (isNativeIOS !== false) {
+      toast.info("This plan was purchased on the web. Manage it by signing in at peace-of-mine.lovable.app in a browser.");
+      return;
+    }
     setPortalLoading(true);
     try {
       const result = await createPortalSession({
@@ -203,7 +207,7 @@ function PricingPage() {
     }
   };
 
-  if (checkoutOpen) {
+  if (checkoutOpen && isNativeIOS === false) {
     return (
       <div className="min-h-screen bg-background">
         <PaymentTestModeBanner />

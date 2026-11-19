@@ -18,6 +18,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useProGate } from "@/hooks/useProGate";
 import { useActiveChild, setActiveChildId } from "@/hooks/useActiveChild";
 import { createPortalSession } from "@/utils/payments.functions";
+import { isNativeApp } from "@/lib/isNativeApp";
 import { exportUserData } from "@/utils/export.functions";
 import { addChild } from "@/lib/children.functions";
 import { deleteMyAccount } from "@/utils/deleteAccount.functions";
@@ -82,6 +83,10 @@ function ProfilePage() {
   }
 
   async function handleManage() {
+    if (isNativeApp()) {
+      toast.info("Manage your plan in iPhone Settings > Apple ID > Subscriptions, or on the web if you bought it there.");
+      return;
+    }
     setPortalLoading(true);
     try {
       const result = await createPortalSession({
