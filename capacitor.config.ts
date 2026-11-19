@@ -22,7 +22,9 @@ const config: CapacitorConfig = {
       "peace-of-mine.lovable.app",
       "*.lovable.app",
       "*.supabase.co",
-      "*.stripe.com",
+      // No *.stripe.com: Pro is sold only through Apple In-App Purchase
+      // inside the app (Guideline 3.1.1), so the app's web view must never
+      // be able to navigate to Stripe checkout or its billing portal.
       "*.saferproducts.gov",
       "api.fda.gov",
       // Google Sign-In's OAuth flow (@lovable.dev/cloud-auth-js's
@@ -52,6 +54,11 @@ const config: CapacitorConfig = {
     },
   },
   ios: {
+    // Marks the app's web view so the hosted site (client and server) can
+    // always tell it is inside the App Store app — iPadOS otherwise sends
+    // a desktop Mac user agent. Keep in sync with APP_USER_AGENT_MARKER in
+    // src/lib/isNativeApp.ts.
+    appendUserAgent: "PeaceOfMineApp",
     contentInset: "automatic",
     backgroundColor: "#FAF8F5",
     limitsNavigationsToAppBoundDomains: false,

@@ -19,3 +19,15 @@ export async function loadAppleProduct(
   }
   return product;
 }
+/**
+ * "7-day", "1-month" … when StoreKit reports a free-trial introductory
+ * offer the current Apple ID can still redeem; null otherwise (no offer
+ * configured, already used, or an older app build that doesn't report it).
+ */
+export function appleTrialLabel(product: AppleProduct | null | undefined): string | null {
+  const offer = product?.introOffer;
+  if (!offer || !offer.eligible || offer.paymentMode !== 'freeTrial') return null;
+  const total = offer.periodValue * Math.max(1, offer.periodCount || 1);
+  if (!Number.isFinite(total) || total <= 0) return null;
+  return `${total}-${offer.periodUnit}`;
+}

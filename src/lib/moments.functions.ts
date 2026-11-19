@@ -51,7 +51,7 @@ export const saveMoment = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
 
     if (!(await hasProSubscription(supabase, userId))) {
-      throw new Error("Milestone logging is a Pro feature. Start your free trial to log moments.");
+      throw new Error("Milestone logging is a Pro feature. Upgrade to Pro to log moments.");
     }
 
     const payload = { ...data, completed: true };

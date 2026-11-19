@@ -1,3 +1,36 @@
+# Apple review follow-up — Guideline 3.1.1, web checkout reachable in the app (November 18, 2026)
+
+Submission 85c172fc-b98e-4e32-b6dc-79a5b1d6cc67, version 1.0 (25), reviewed on **iPad Air 11-inch (M3)**.
+
+## Root cause
+
+The app is a native shell that loads the hosted site. The site decides "App Store app → Apple In-App Purchase" or "web → Stripe" in the browser. On iPad, the in-app web view sends a **desktop Mac user agent**, and the fallback detection explicitly treated that as "not the app" (a unit test even asserted it). Whenever the Capacitor bridge signal wasn't available, the iPad was treated as a website and Plans offered Stripe checkout. The website header's "Pricing" link only appears at tablet width, so the website nav (Pricing / Sign in / Get started) was visible on iPad only.
+
+## Fix (hosted site + new binary)
+
+- Detection: the iPad app's desktop-style web view on a touch screen is now recognised as the app. Builds from now on also add `PeaceOfMineApp` to the user agent (`capacitor.config.ts` → `ios.appendUserAgent`), so detection doesn't rely on guesswork.
+- Server backstop: `createCheckoutSession` and `createPortalSession` refuse requests that come from the App Store app, so Stripe checkout and the Stripe billing portal can't open there even if a client-side check misses.
+- `StripeEmbeddedCheckout` refuses to render inside the app.
+- `*.stripe.com` removed from the native web view's allowed navigation.
+- The website marketing header is replaced by a plain logo bar inside the app.
+- Free trial: in the app, "free trial" text appears only when StoreKit reports an introductory offer this Apple ID is eligible for (Guideline 3.1.2). Older binaries report none, so they show "Subscribe" with no trial claim.
+- Pending (Ask to Buy) purchases show a "waiting for approval" message, not an error. Restore explains when the Apple ID's subscription belongs to another account.
+- Profile → Manage opens Apple's subscription management for App Store subscribers (it used to show a toast only). Account deletion warns App Store subscribers that Apple billing continues until they cancel.
+- Website subscribers who sign in on iPhone/iPad keep Pro access (multiplatform services, 3.1.3(b)). They are told their plan is managed outside the App Store, with no link or call to action to buy on the web.
+
+## Before resubmitting (must be done on your Mac / in App Store Connect)
+
+1. **Publish in Lovable** (the hosted fix).
+2. **Upload a new build (26+).** The user-agent marker, the Stripe navigation removal and the StoreKit trial information are native changes: `bun install && bun run ios:sync && bun run ios:open`, archive, upload.
+3. App Store Connect: make sure both `monthlyplan` and `annualplan` are attached to the submission. **Decide on the free trial:** if you want "7-day free trial" shown in the app, add a 1-week free introductory offer to both products. Otherwise the app correctly shows no trial.
+4. On a **physical iPad and iPhone** using TestFlight with a sandbox account: Profile → Upgrade to Pro shows Apple prices; purchase Monthly; Pro unlocks; Restore purchases; Manage opens Apple subscriptions. Tap through Terms / Privacy / Support from the sign-in screen and confirm no "Pricing / Get started" header appears.
+5. Sign in on the iPad with an account that has a **web (Stripe)** subscription: Pro is active, no purchase is offered, and Manage shows the "purchased outside the App Store" message.
+6. Record the iPad purchase flow from the Home Screen and attach it to the review notes.
+
+### Suggested reply to App Review
+
+"Thank you. On iPad the app could incorrectly show our website checkout. We have fixed this on both the app and our server: inside the app, Pro subscriptions are now sold only through Apple In-App Purchase (auto-renewable subscriptions monthlyplan and annualplan), and our server rejects any web checkout request that comes from the app. Customers who already subscribed on our website can sign in and use the Pro features they bought, as allowed under 3.1.3(b); the app does not link to or promote web purchasing. Path: sign in with the demo account → Profile → Upgrade to Pro. A recording on an iPad is attached."
+
 # Apple review follow-up — Guideline 2.1(a), email sign-in hangs (November 1, 2026)
 
 ## Root cause

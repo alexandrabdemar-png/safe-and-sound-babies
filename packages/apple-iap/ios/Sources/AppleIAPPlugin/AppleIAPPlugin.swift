@@ -83,13 +83,30 @@ public class AppleIAPPlugin: CAPPlugin, CAPBridgedPlugin {
                     call.reject(AppleIAPError.unknownProduct.localizedDescription)
                     return
                 }
-                call.resolve([
+                var payload: [String: Any] = [
                     "id": product.id,
                     "displayName": product.displayName,
                     "description": product.description,
                     "price": NSDecimalNumber(decimal: product.price).doubleValue,
                     "displayPrice": product.displayPrice,
-                ])
+                ]
+                // The app only advertises a free trial when App Store
+                // Connect actually has an introductory offer on this
+                // product AND this Apple ID is still eligible for it
+                // (Guideline 3.1.2 — the paywall must match the sheet).
+                if let subscription = product.subscription,
+                   let offer = subscription.introductoryOffer {
+                    let eligible = await subscription.isEligibleForIntroOffer
+                    payload["introOffer"] = [
+                        "paymentMode": introPaymentMode(offer.paymentMode),
+                        "periodValue": offer.period.value,
+                        "periodUnit": periodUnit(offer.period.unit),
+                        "periodCount": offer.periodCount,
+                        "displayPrice": offer.displayPrice,
+                        "eligible": eligible,
+                    ] as [String: Any]
+                }
+                call.resolve(payload)
             } catch {
                 call.reject("Could not load the Pro subscription product: \(error.localizedDescription)")
             }
@@ -168,6 +185,25 @@ public class AppleIAPPlugin: CAPPlugin, CAPBridgedPlugin {
             "productId": transaction.productID,
             "environment": transaction.environment == .sandbox ? "sandbox" : "live",
         ]
+    }
+
+    private func introPaymentMode(_ mode: Product.SubscriptionOffer.PaymentMode) -> String {
+        switch mode {
+        case .freeTrial: return "freeTrial"
+        case .payAsYouGo: return "payAsYouGo"
+        case .payUpFront: return "payUpFront"
+        default: return "other"
+        }
+    }
+
+    private func periodUnit(_ unit: Product.SubscriptionPeriod.Unit) -> String {
+        switch unit {
+        case .day: return "day"
+        case .week: return "week"
+        case .month: return "month"
+        case .year: return "year"
+        @unknown default: return "day"
+        }
     }
 
     private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {

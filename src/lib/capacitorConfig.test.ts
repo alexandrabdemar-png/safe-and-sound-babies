@@ -46,8 +46,20 @@ describe("capacitor.config allowNavigation", () => {
     expect(isAllowed("notapple.com")).toBe(false);
   });
 
-  it("still allows Stripe and Supabase, so this change didn't drop any existing trusted origin", () => {
-    expect(isAllowed("checkout.stripe.com")).toBe(true);
+  it("still allows Supabase, so this change didn't drop an existing trusted origin", () => {
     expect(isAllowed("xyzcompany.supabase.co")).toBe(true);
+  });
+
+  // Apple 3.1.1: the App Store app must not be able to reach web checkout.
+  it("does not allow Stripe checkout or billing portal inside the app", () => {
+    expect(isAllowed("checkout.stripe.com")).toBe(false);
+    expect(isAllowed("billing.stripe.com")).toBe(false);
+  });
+});
+
+describe("capacitor.config user agent marker", () => {
+  it("appends the marker the hosted site uses to detect the App Store app", async () => {
+    const { APP_USER_AGENT_MARKER } = await import("./isNativeApp");
+    expect(config.ios?.appendUserAgent).toBe(APP_USER_AGENT_MARKER);
   });
 });

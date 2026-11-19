@@ -26,7 +26,7 @@ export function UpgradePrompt() {
             className="w-full"
             onClick={() => { dismiss(); navigate({ to: '/pricing' }); }}
           >
-            Start free trial
+            See Pro plans
           </Button>
           <Button variant="ghost" className="w-full" onClick={dismiss}>
             Not now

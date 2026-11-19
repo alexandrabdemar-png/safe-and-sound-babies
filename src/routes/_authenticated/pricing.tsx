@@ -13,7 +13,7 @@ import { getStripeEnvironment } from '@/lib/stripe';
 import { openUrl } from '@/lib/browser';
 import { toast } from 'sonner';
 import type { AppleProduct } from 'apple-iap';
-import { appleProductIdForPeriod, loadAppleProduct } from '@/lib/appleProducts';
+import { appleProductIdForPeriod, appleTrialLabel, loadAppleProduct } from '@/lib/appleProducts';
 
 export const Route = createFileRoute('/_authenticated/pricing')({
   ssr: false,
@@ -75,6 +75,15 @@ function PricingPage() {
       : '$3.39';
   const periodLabel = isYearly ? 'per year' : 'per month';
   const renewalWord = isYearly ? 'year' : 'month';
+  // Web (Stripe) checkout always adds a 7-day trial. In the App Store app
+  // a trial is only shown when StoreKit reports an introductory offer this
+  // Apple ID is eligible for, so the paywall matches Apple's purchase
+  // sheet (Guideline 3.1.2). Null means: advertise no trial.
+  const trialLabel: string | null = isNativeIOS === false
+    ? '7-day'
+    : appleProductReady
+      ? appleTrialLabel(appleProduct)
+      : null;
 
 
   useEffect(() => {
@@ -127,9 +136,17 @@ function PricingPage() {
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Purchase failed';
+      const code = (err as { code?: string } | null)?.code;
       // userCancelled is Apple's own purchase-sheet dismissal, not a real
       // error — don't show a scary toast for someone just backing out.
-      if (message !== 'Purchase cancelled') toast.error(message);
+      if (code === 'userCancelled' || message === 'Purchase cancelled') return;
+      // Ask to Buy / bank approval: Apple will finish it later and the
+      // server notification (apple-webhook) unlocks Pro when it does.
+      if (code === 'pending' || /pending/i.test(message)) {
+        toast.info('Your purchase is waiting for approval. Pro will unlock automatically once Apple completes it.');
+        return;
+      }
+      toast.error(message);
     } finally {
       setApplePurchasing(false);
     }
@@ -149,13 +166,24 @@ function PricingPage() {
         toast('No previous purchases found for this Apple ID.');
         return;
       }
+      let restored = 0;
+      let otherAccount = false;
+      let lastError: string | null = null;
       for (const tx of transactions) {
         const verified = await verifyAppleTransaction({
           data: { transactionId: tx.transactionId, environment: tx.environment },
         });
-        if ('error' in verified) throw new Error(verified.error);
+        if ('error' in verified) {
+          if (/does not belong/i.test(verified.error)) otherAccount = true;
+          else lastError = verified.error;
+          continue;
+        }
+        if (verified.plan === 'pro') restored += 1;
       }
-      toast.success('Purchases restored.');
+      if (restored > 0) toast.success('Purchases restored — Pro is active.');
+      else if (otherAccount) toast.error('This Apple ID’s subscription belongs to a different Peace of Mine account. Sign in with that account to use it.');
+      else if (lastError) throw new Error(lastError);
+      else toast('No active subscription found for this Apple ID.');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not restore purchases');
     } finally {
@@ -272,7 +300,7 @@ function PricingPage() {
                   <span className="text-base font-semibold text-foreground">
                     {period === 'monthly' ? 'Monthly' : 'Annual'}
                   </span>
-                  {period === 'yearly' && (
+                  {period === 'yearly' && isNativeIOS === false && (
                     <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">Save 14%</span>
                   )}
                 </div>
@@ -322,7 +350,9 @@ function PricingPage() {
                   about $2.92/month — save 14%
                 </div>
               )}
-              <div className="text-xs text-primary font-medium">7-day free trial</div>
+              {trialLabel && (
+                <div className="text-xs text-primary font-medium">{trialLabel} free trial</div>
+              )}
             </div>
 
           </div>
@@ -356,7 +386,7 @@ function PricingPage() {
                 {applePurchasing || isNativeIOS === null || (isNativeIOS && !appleProductReady && !appleProductError) ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  appleProductError ? 'Subscription unavailable' : 'Start free trial'
+                  appleProductError ? 'Subscription unavailable' : trialLabel ? 'Start free trial' : 'Subscribe'
                 )}
               </Button>
               {isNativeIOS && appleProductError && (
@@ -366,7 +396,7 @@ function PricingPage() {
                 </div>
               )}
               <p className="text-xs text-center text-muted-foreground">
-                7 days free, then {priceLabel}/{renewalWord}. Cancel anytime.
+                {trialLabel ? `${trialLabel} free trial, then ` : ''}{priceLabel}/{renewalWord}. Cancel anytime.
               </p>
 
               {isNativeIOS && (
@@ -399,11 +429,10 @@ function PricingPage() {
             screen. Was previously missing entirely — see COMPLIANCE_REPORT.md §5/§7. */}
         <p className="text-xs text-center text-muted-foreground">
           <strong>Peace of Mine Pro — {isYearly ? 'Annual (1 year)' : 'Monthly (1 month)'}</strong>:{' '}
-          {priceLabel}/{renewalWord} after a 7-day free trial. Your subscription renews
-          automatically each {renewalWord} until you cancel; cancel anytime from{' '}
-          {isPro ? '"Manage subscription" above' : 'your account settings'} — no charge if you
-
-          cancel before the trial ends.{' '}
+          {priceLabel}/{renewalWord}{trialLabel ? ` after a ${trialLabel} free trial` : ''}. Your subscription renews
+          automatically each {renewalWord} until you cancel{isNativeIOS ? ' (at least 24 hours before the end of the current period)' : ''}; cancel anytime from{' '}
+          {isNativeIOS ? 'Settings → Apple ID → Subscriptions' : isPro ? '"Manage subscription" above' : 'your account settings'}
+          {trialLabel ? ' — no charge if you cancel before the trial ends' : ''}.{' '}
           {isNativeIOS
             ? 'Payment is charged to your Apple ID account and managed entirely through the App Store.'
             : null}{' '}

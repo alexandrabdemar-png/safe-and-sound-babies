@@ -427,14 +427,14 @@ function ScanPage() {
               Barcode scanner is a Pro feature
             </h2>
             <p className="mt-2 font-body text-sm text-muted-foreground">
-              Everything in free, plus AI-assisted product guidance, tips and tricks, and safety
-              insights. Try free for 7 days.
+              Scan a product's barcode to add it instantly, plus everything else in Pro: receipt
+              import, milestone tracking, caregiver sharing and more.
             </p>
             <Button
               asChild
               className="mt-6 h-12 w-full rounded-full font-body text-sm font-semibold"
             >
-              <Link to="/pricing">Start free trial</Link>
+              <Link to="/pricing">See Pro plans</Link>
             </Button>
           </div>
         </main>

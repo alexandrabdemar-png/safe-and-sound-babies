@@ -11,11 +11,14 @@ export type ProductLimits = {
   replacement_interval_months?: number | null;
 };
 
+// UTC arithmetic: added_at dates ("2026-01-15") parse as UTC midnight, and
+// toDateOnly() reads the UTC date back. Local setMonth() shifted the result
+// a day early for every user west of UTC (e.g. all US time zones).
 function addMonthsToDate(d: Date, months: number): Date {
   const out = new Date(d.getTime());
-  out.setMonth(out.getMonth() + Math.floor(months));
+  out.setUTCMonth(out.getUTCMonth() + Math.floor(months));
   const fractional = months - Math.floor(months);
-  if (fractional > 0) out.setDate(out.getDate() + Math.round(fractional * 30.44));
+  if (fractional > 0) out.setUTCDate(out.getUTCDate() + Math.round(fractional * 30.44));
   return out;
 }
 
