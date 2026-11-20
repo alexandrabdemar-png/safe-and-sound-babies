@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Package, Plus, BarChart2, User } from "lucide-react";
+import { Home, Package, Plus, BarChart2 } from "lucide-react";
 import { BellIcon } from "@/components/BellIcon";
 import { cn } from "@/lib/utils";
 import { useUnackedRecalls } from "@/hooks/useUnackedRecalls";
@@ -9,12 +9,11 @@ import { AddSheet } from "@/components/AddSheet";
 const tabs = [
   { to: "/home", label: "Home", icon: Home },
   { to: "/tracking", label: "Track", icon: BarChart2 },
-  { to: "/alerts", label: "Alerts", icon: BellIcon },
 ] as const;
 
 const rightTabs = [
+  { to: "/alerts", label: "Alerts", icon: BellIcon },
   { to: "/products", label: "Products", icon: Package },
-  { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
 export function BottomNav() {
@@ -39,7 +38,6 @@ export function BottomNav() {
                 ? pathname === "/tracking" || pathname === "/first-foods"
                 : pathname === t.to
             }
-            badge={t.to === "/alerts" ? unackedRecalls : 0}
           />
         ))}
 
@@ -67,7 +65,8 @@ export function BottomNav() {
           <TabItem
             key={t.to}
             {...t}
-            active={t.to === "/profile" ? pathname.startsWith("/profile") : pathname === t.to}
+            active={pathname === t.to}
+            badge={t.to === "/alerts" ? unackedRecalls : 0}
           />
         ))}
         </div>
